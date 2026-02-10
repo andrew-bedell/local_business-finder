@@ -1,0 +1,520 @@
+/* === Reset & Base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-surface: #0f3460;
+  --bg-canvas: #f0f0f0;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0b0;
+  --accent: #e94560;
+  --accent-hover: #ff6b81;
+  --border: #2a2a4a;
+  --input-bg: #1a1a3e;
+  --shadow: rgba(0,0,0,0.3);
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --radius: 6px;
+  --sidebar-width: 240px;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* === Top Bar === */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.top-bar-left, .top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+
+.doc-title-input {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  text-align: center;
+  width: 250px;
+}
+.doc-title-input:hover {
+  border-color: var(--border);
+}
+.doc-title-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+/* === Buttons === */
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.btn-secondary {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  background: var(--border);
+}
+.btn-small {
+  padding: 4px 10px;
+  font-size: 11px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-small:hover {
+  background: var(--border);
+}
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+}
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 16px;
+}
+.icon-btn:hover {
+  background: var(--bg-surface);
+  border-color: var(--border);
+}
+
+/* === Main Layout === */
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* === Sidebars === */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar-right {
+  border-right: none;
+  border-left: 1px solid var(--border);
+}
+
+.sidebar-section {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-heading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+/* === Element Buttons === */
+.element-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.element-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 10px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.element-btn:hover {
+  background: var(--bg-surface);
+  border-color: var(--accent);
+}
+
+.element-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.rect-icon {
+  width: 20px;
+  height: 14px;
+  border: 2px solid var(--text-primary);
+  border-radius: 2px;
+  font-size: 0;
+}
+.circle-icon {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  font-size: 0;
+}
+.line-icon {
+  width: 20px;
+  height: 0;
+  border-top: 2px solid var(--text-primary);
+  font-size: 0;
+}
+
+/* === Template Grid === */
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.template-thumb {
+  aspect-ratio: 2/3;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.15s;
+}
+.template-thumb:hover {
+  border-color: var(--accent);
+}
+.template-thumb-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  font-size: 6px;
+}
+.template-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 9px;
+  padding: 3px 6px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* === Icon Grid === */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.icon-grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 18px;
+  background: var(--input-bg);
+  transition: background 0.15s, border-color 0.15s;
+}
+.icon-grid-item:hover {
+  background: var(--bg-surface);
+  border-color: var(--accent);
+}
+
+/* === Canvas Area === */
+.canvas-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-primary);
+}
+
+.canvas-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+#zoom-level {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.canvas-scroll {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-conic-gradient(#1a1a2e 0% 25%, #16213e 0% 50%) 0 0 / 20px 20px;
+}
+
+.canvas-wrapper {
+  transform-origin: center center;
+  padding: 40px;
+}
+
+.canvas {
+  position: relative;
+  background: #ffffff;
+  box-shadow: 0 4px 40px var(--shadow);
+  overflow: hidden;
+}
+
+/* === Canvas Elements === */
+.canvas-element {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  outline: 2px solid transparent;
+  transition: outline-color 0.1s;
+}
+.canvas-element:hover {
+  outline-color: rgba(233, 69, 96, 0.4);
+}
+.canvas-element.selected {
+  outline-color: var(--accent);
+}
+.canvas-element.selected::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px dashed var(--accent);
+  pointer-events: none;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 1px solid #fff;
+  border-radius: 2px;
+  z-index: 10;
+}
+.resize-handle.nw { top: -5px; left: -5px; cursor: nw-resize; }
+.resize-handle.ne { top: -5px; right: -5px; cursor: ne-resize; }
+.resize-handle.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+.resize-handle.se { bottom: -5px; right: -5px; cursor: se-resize; }
+
+/* === Properties Panel === */
+.prop-group {
+  margin-bottom: 10px;
+}
+.prop-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.prop-group input[type="text"],
+.prop-group input[type="number"],
+.prop-group textarea,
+.prop-group select {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+}
+.prop-group input[type="text"]:focus,
+.prop-group input[type="number"]:focus,
+.prop-group textarea:focus,
+.prop-group select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.prop-group textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+.prop-group input[type="color"] {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+  cursor: pointer;
+  padding: 2px;
+}
+.prop-group input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.prop-row {
+  display: flex;
+  gap: 8px;
+}
+.prop-row .prop-group {
+  flex: 1;
+}
+
+.prop-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.layer-controls {
+  display: flex;
+  gap: 6px;
+}
+
+/* Data entry for charts */
+.data-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.data-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.data-row input {
+  flex: 1;
+  padding: 4px 6px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 11px;
+}
+.data-row input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.data-row .btn-remove-row {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.btn-add-row {
+  padding: 4px 8px;
+  font-size: 11px;
+  margin-top: 4px;
+}

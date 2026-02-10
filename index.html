@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infographic Maker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400;700;900&family=Roboto+Slab:wght@400;700&family=Montserrat:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- Top Toolbar -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <span class="logo">Infographic Maker</span>
+      </div>
+      <div class="top-bar-center">
+        <input type="text" id="doc-title" value="Untitled Infographic" class="doc-title-input">
+      </div>
+      <div class="top-bar-right">
+        <button id="btn-undo" class="icon-btn" title="Undo (Ctrl+Z)">&#8630;</button>
+        <button id="btn-redo" class="icon-btn" title="Redo (Ctrl+Y)">&#8631;</button>
+        <div class="separator"></div>
+        <button id="btn-export-png" class="btn btn-primary">Export PNG</button>
+        <button id="btn-export-svg" class="btn btn-secondary">Export SVG</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <!-- Left Sidebar: Elements Panel -->
+      <aside class="sidebar sidebar-left">
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">Templates</h3>
+          <div id="template-list" class="template-grid"></div>
+        </div>
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">Elements</h3>
+          <div class="element-buttons">
+            <button class="element-btn" data-element="heading" title="Add Heading">
+              <span class="element-icon">H</span>
+              <span>Heading</span>
+            </button>
+            <button class="element-btn" data-element="text" title="Add Text">
+              <span class="element-icon">T</span>
+              <span>Text</span>
+            </button>
+            <button class="element-btn" data-element="number" title="Add Statistic">
+              <span class="element-icon">#</span>
+              <span>Stat</span>
+            </button>
+            <button class="element-btn" data-element="rect" title="Add Rectangle">
+              <span class="element-icon rect-icon"></span>
+              <span>Rectangle</span>
+            </button>
+            <button class="element-btn" data-element="circle" title="Add Circle">
+              <span class="element-icon circle-icon"></span>
+              <span>Circle</span>
+            </button>
+            <button class="element-btn" data-element="line" title="Add Line">
+              <span class="element-icon line-icon"></span>
+              <span>Line</span>
+            </button>
+            <button class="element-btn" data-element="icon" title="Add Icon">
+              <span class="element-icon">&#9733;</span>
+              <span>Icon</span>
+            </button>
+            <button class="element-btn" data-element="image" title="Add Image">
+              <span class="element-icon">&#128247;</span>
+              <span>Image</span>
+            </button>
+            <button class="element-btn" data-element="bar-chart" title="Add Bar Chart">
+              <span class="element-icon">&#9615;</span>
+              <span>Bar Chart</span>
+            </button>
+            <button class="element-btn" data-element="pie-chart" title="Add Pie Chart">
+              <span class="element-icon">&#9684;</span>
+              <span>Pie Chart</span>
+            </button>
+            <button class="element-btn" data-element="progress" title="Add Progress Bar">
+              <span class="element-icon">&dash;</span>
+              <span>Progress</span>
+            </button>
+            <button class="element-btn" data-element="divider" title="Add Divider">
+              <span class="element-icon">&mdash;</span>
+              <span>Divider</span>
+            </button>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">Icons</h3>
+          <div id="icon-picker" class="icon-grid"></div>
+        </div>
+      </aside>
+
+      <!-- Canvas Area -->
+      <main class="canvas-area">
+        <div class="canvas-controls">
+          <button id="btn-zoom-out" class="icon-btn" title="Zoom Out">&#8722;</button>
+          <span id="zoom-level">100%</span>
+          <button id="btn-zoom-in" class="icon-btn" title="Zoom In">&#43;</button>
+          <button id="btn-zoom-fit" class="icon-btn" title="Fit to View">Fit</button>
+        </div>
+        <div class="canvas-scroll" id="canvas-scroll">
+          <div class="canvas-wrapper" id="canvas-wrapper">
+            <div class="canvas" id="canvas">
+              <!-- Elements are rendered here -->
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Sidebar: Properties Panel -->
+      <aside class="sidebar sidebar-right" id="properties-panel">
+        <div id="canvas-props" class="sidebar-section">
+          <h3 class="sidebar-heading">Canvas</h3>
+          <div class="prop-group">
+            <label>Width</label>
+            <input type="number" id="canvas-width" value="800" min="200" max="2000">
+          </div>
+          <div class="prop-group">
+            <label>Height</label>
+            <input type="number" id="canvas-height" value="1200" min="200" max="5000">
+          </div>
+          <div class="prop-group">
+            <label>Background</label>
+            <input type="color" id="canvas-bg" value="#ffffff">
+          </div>
+        </div>
+        <div id="element-props" class="sidebar-section" style="display:none;">
+          <h3 class="sidebar-heading">Element Properties</h3>
+          <div id="props-content"></div>
+          <div class="prop-group prop-actions">
+            <button id="btn-duplicate" class="btn btn-small">Duplicate</button>
+            <button id="btn-delete" class="btn btn-small btn-danger">Delete</button>
+          </div>
+          <div class="prop-group">
+            <label>Layer</label>
+            <div class="layer-controls">
+              <button id="btn-bring-front" class="btn btn-small" title="Bring to Front">&#8679; Front</button>
+              <button id="btn-send-back" class="btn btn-small" title="Send to Back">&#8681; Back</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <input type="file" id="image-upload" accept="image/*" style="display:none">
+  <script src="app.js"></script>
+</body>
+</html>
