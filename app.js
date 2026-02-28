@@ -659,148 +659,183 @@
     });
   }
 
+  // ── Timeout helper ──
+  function withTimeout(promise, ms, label) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s. Check your API key and network connection.`)), ms)
+      ),
+    ]);
+  }
+
   // ── Geocoding ──
   function geocodeLocation(address) {
     const country = countrySelect.value;
-    return new Promise((resolve) => {
-      geocoder.geocode(
-        { address, componentRestrictions: { country } },
-        (results, status) => {
-          if (status === 'OK' && results.length > 0) {
-            resolve({
-              latLng: results[0].geometry.location,
-              formattedAddress: results[0].formatted_address,
-            });
-          } else {
-            resolve(null);
+    return withTimeout(
+      new Promise((resolve) => {
+        geocoder.geocode(
+          { address, componentRestrictions: { country } },
+          (results, status) => {
+            if (status === 'OK' && results.length > 0) {
+              resolve({
+                latLng: results[0].geometry.location,
+                formattedAddress: results[0].formatted_address,
+              });
+            } else {
+              resolve(null);
+            }
           }
-        }
-      );
-    });
+        );
+      }),
+      15000,
+      'Geocoding'
+    );
   }
 
   // ── Places Search ──
   function searchPlaces(latLng, type, radius, maxCount) {
-    return new Promise((resolve) => {
-      const allPlaces = [];
+    return withTimeout(
+      new Promise((resolve) => {
+        const allPlaces = [];
 
-      const request = {
-        location: latLng,
-        radius: radius,
-        type: type,
-      };
+        const request = {
+          location: latLng,
+          radius: radius,
+          type: type,
+        };
 
-      function handleResults(results, status, pagination) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          allPlaces.push(...results);
+        function handleResults(results, status, pagination) {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            allPlaces.push(...results);
 
-          // Google returns up to 20 results per page, up to 3 pages (60 total)
-          if (pagination && pagination.hasNextPage && allPlaces.length < maxCount) {
-            updateProgress(20, t('foundSoFar', allPlaces.length));
-            // Google requires a short delay before requesting next page
-            setTimeout(() => {
-              pagination.nextPage();
-            }, 2000);
+            // Google returns up to 20 results per page, up to 3 pages (60 total)
+            if (pagination && pagination.hasNextPage && allPlaces.length < maxCount) {
+              updateProgress(20, t('foundSoFar', allPlaces.length));
+              // Google requires a short delay before requesting next page
+              setTimeout(() => {
+                pagination.nextPage();
+              }, 2000);
+            } else {
+              resolve(allPlaces.slice(0, maxCount));
+            }
+          } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+            resolve([]);
           } else {
-            resolve(allPlaces.slice(0, maxCount));
+            console.warn('Places search status:', status);
+            resolve(allPlaces);
           }
-        } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          resolve([]);
-        } else {
-          console.warn('Places search status:', status);
-          resolve(allPlaces);
         }
-      }
 
-      placesService.nearbySearch(request, handleResults);
-    });
+        placesService.nearbySearch(request, handleResults);
+      }),
+      30000,
+      'Places search'
+    );
   }
 
   // ── Place Details ──
   function getPlaceDetails(places, progressStart, progressEnd) {
-    return new Promise((resolve) => {
-      const detailed = [];
-      let completed = 0;
-      const total = places.length;
+    return withTimeout(
+      new Promise((resolve) => {
+        const detailed = [];
+        let completed = 0;
+        const total = places.length;
 
-      // Process in batches to respect rate limits
-      const batchSize = 5;
-      let batchIndex = 0;
+        // Process in batches to respect rate limits
+        const batchSize = 5;
+        let batchIndex = 0;
 
-      function processBatch() {
-        const start = batchIndex * batchSize;
-        const end = Math.min(start + batchSize, total);
-        const batch = places.slice(start, end);
+        function processBatch() {
+          const start = batchIndex * batchSize;
+          const end = Math.min(start + batchSize, total);
+          const batch = places.slice(start, end);
 
-        if (batch.length === 0) {
-          resolve(detailed);
-          return;
+          if (batch.length === 0) {
+            resolve(detailed);
+            return;
+          }
+
+          let batchCompleted = 0;
+
+          // Per-batch timeout: if a batch takes too long, skip remaining and move on
+          const batchTimeout = setTimeout(() => {
+            console.warn(`Batch ${batchIndex} timed out, moving on with ${detailed.length} results so far`);
+            completed += (batch.length - batchCompleted);
+            batchIndex++;
+            if (batchIndex * batchSize < total) {
+              processBatch();
+            } else {
+              resolve(detailed);
+            }
+          }, 10000);
+
+          batch.forEach((place) => {
+            const request = {
+              placeId: place.place_id,
+              fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'rating', 'user_ratings_total', 'business_status', 'url', 'types', 'reviews', 'photos', 'opening_hours'],
+            };
+
+            placesService.getDetails(request, (result, status) => {
+              if (status === google.maps.places.PlacesServiceStatus.OK) {
+                detailed.push({
+                  name: result.name || '',
+                  address: result.formatted_address || '',
+                  phone: result.formatted_phone_number || '',
+                  website: result.website || '',
+                  rating: result.rating || 0,
+                  reviewCount: result.user_ratings_total || 0,
+                  status: result.business_status || 'UNKNOWN',
+                  mapsUrl: result.url || '',
+                  types: result.types || [],
+                  placeId: place.place_id,
+                  reviewData: result.reviews || [],
+                  photos: result.photos || [],
+                  hours: result.opening_hours ? result.opening_hours.weekday_text || [] : [],
+                });
+              } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
+                // If rate limited, still add with basic info
+                detailed.push({
+                  name: place.name || '',
+                  address: place.vicinity || '',
+                  phone: '',
+                  website: '', // Unknown — treat as no website
+                  rating: place.rating || 0,
+                  reviewCount: place.user_ratings_total || 0,
+                  status: place.business_status || 'UNKNOWN',
+                  mapsUrl: '',
+                  types: place.types || [],
+                  placeId: place.place_id,
+                  reviewData: [],
+                  photos: place.photos || [],
+                  hours: [],
+                });
+              }
+
+              completed++;
+              batchCompleted++;
+              const pct = progressStart + ((completed / total) * (progressEnd - progressStart));
+              updateProgress(pct, t('checkingBusiness', completed, total));
+
+              if (batchCompleted === batch.length) {
+                clearTimeout(batchTimeout);
+                batchIndex++;
+                if (batchIndex * batchSize < total) {
+                  // Small delay between batches to avoid rate limiting
+                  setTimeout(processBatch, 300);
+                } else {
+                  resolve(detailed);
+                }
+              }
+            });
+          });
         }
 
-        let batchCompleted = 0;
-
-        batch.forEach((place) => {
-          const request = {
-            placeId: place.place_id,
-            fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'rating', 'user_ratings_total', 'business_status', 'url', 'types', 'reviews', 'photos', 'opening_hours'],
-          };
-
-          placesService.getDetails(request, (result, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-              detailed.push({
-                name: result.name || '',
-                address: result.formatted_address || '',
-                phone: result.formatted_phone_number || '',
-                website: result.website || '',
-                rating: result.rating || 0,
-                reviewCount: result.user_ratings_total || 0,
-                status: result.business_status || 'UNKNOWN',
-                mapsUrl: result.url || '',
-                types: result.types || [],
-                placeId: place.place_id,
-                reviewData: result.reviews || [],
-                photos: result.photos || [],
-                hours: result.opening_hours ? result.opening_hours.weekday_text || [] : [],
-              });
-            } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-              // If rate limited, still add with basic info
-              detailed.push({
-                name: place.name || '',
-                address: place.vicinity || '',
-                phone: '',
-                website: '', // Unknown — treat as no website
-                rating: place.rating || 0,
-                reviewCount: place.user_ratings_total || 0,
-                status: place.business_status || 'UNKNOWN',
-                mapsUrl: '',
-                types: place.types || [],
-                placeId: place.place_id,
-                reviewData: [],
-                photos: place.photos || [],
-                hours: [],
-              });
-            }
-
-            completed++;
-            batchCompleted++;
-            const pct = progressStart + ((completed / total) * (progressEnd - progressStart));
-            updateProgress(pct, t('checkingBusiness', completed, total));
-
-            if (batchCompleted === batch.length) {
-              batchIndex++;
-              if (batchIndex * batchSize < total) {
-                // Small delay between batches to avoid rate limiting
-                setTimeout(processBatch, 300);
-              } else {
-                resolve(detailed);
-              }
-            }
-          });
-        });
-      }
-
-      processBatch();
-    });
+        processBatch();
+      }),
+      120000,
+      'Place details lookup'
+    );
   }
 
   // ── Progress ──
