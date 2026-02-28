@@ -24,6 +24,7 @@
   const businessType = $('#business-type');
   const radiusSelect = $('#radius-select');
   const maxResults = $('#max-results');
+  const countrySelect = $('#country-select');
   const btnSearch = $('#btn-search');
   const progressSection = $('#progress-section');
   const progressBar = $('#progress-bar');
@@ -57,7 +58,9 @@
     sortSelect.addEventListener('change', applyFilterAndSort);
     btnExportCsv.addEventListener('click', exportCsv);
     btnClear.addEventListener('click', clearResults);
+    countrySelect.addEventListener('change', onCountryChange);
 
+    onCountryChange();
     updateSearchButton();
   }
 
@@ -202,19 +205,45 @@
     updateSearchButton();
   }
 
+  // ── Country Selection ──
+  function onCountryChange() {
+    const country = countrySelect.value;
+    if (country === 'mx') {
+      locationInput.placeholder = 'Ciudad, código postal o dirección (e.g., Ciudad de México, Guadalajara, Cancún)';
+      updateRadiusLabels(true);
+    } else {
+      locationInput.placeholder = 'City, zip code, or address (e.g., Austin TX, 90210, 123 Main St)';
+      updateRadiusLabels(false);
+    }
+  }
+
+  function updateRadiusLabels(useKm) {
+    const radiusOptions = radiusSelect.querySelectorAll('option');
+    const labels = useKm
+      ? ['1.5 km', '5 km', '8 km', '15 km', '30 km', '50 km']
+      : ['1 mile', '3 miles', '5 miles', '10 miles', '20 miles', '30 miles'];
+    radiusOptions.forEach((opt, i) => {
+      opt.textContent = labels[i];
+    });
+  }
+
   // ── Geocoding ──
   function geocodeLocation(address) {
+    const country = countrySelect.value;
     return new Promise((resolve) => {
-      geocoder.geocode({ address }, (results, status) => {
-        if (status === 'OK' && results.length > 0) {
-          resolve({
-            latLng: results[0].geometry.location,
-            formattedAddress: results[0].formatted_address,
-          });
-        } else {
-          resolve(null);
+      geocoder.geocode(
+        { address, componentRestrictions: { country } },
+        (results, status) => {
+          if (status === 'OK' && results.length > 0) {
+            resolve({
+              latLng: results[0].geometry.location,
+              formattedAddress: results[0].formatted_address,
+            });
+          } else {
+            resolve(null);
+          }
         }
-      });
+      );
     });
   }
 
