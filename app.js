@@ -310,7 +310,7 @@
         batch.forEach((place) => {
           const request = {
             placeId: place.place_id,
-            fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'rating', 'user_ratings_total', 'business_status', 'url', 'types'],
+            fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'rating', 'user_ratings_total', 'business_status', 'url', 'types', 'reviews', 'photos', 'opening_hours'],
           };
 
           placesService.getDetails(request, (result, status) => {
@@ -321,11 +321,14 @@
                 phone: result.formatted_phone_number || '',
                 website: result.website || '',
                 rating: result.rating || 0,
-                reviews: result.user_ratings_total || 0,
+                reviewCount: result.user_ratings_total || 0,
                 status: result.business_status || 'UNKNOWN',
                 mapsUrl: result.url || '',
                 types: result.types || [],
                 placeId: place.place_id,
+                reviewData: result.reviews || [],
+                photos: result.photos || [],
+                hours: result.opening_hours ? result.opening_hours.weekday_text || [] : [],
               });
             } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
               // If rate limited, still add with basic info
@@ -335,11 +338,14 @@
                 phone: '',
                 website: '', // Unknown — treat as no website
                 rating: place.rating || 0,
-                reviews: place.user_ratings_total || 0,
+                reviewCount: place.user_ratings_total || 0,
                 status: place.business_status || 'UNKNOWN',
                 mapsUrl: '',
                 types: place.types || [],
                 placeId: place.place_id,
+                reviewData: [],
+                photos: place.photos || [],
+                hours: [],
               });
             }
 
@@ -405,7 +411,7 @@
     filteredResults.sort((a, b) => {
       if (sort === 'name') return a.name.localeCompare(b.name);
       if (sort === 'rating') return (b.rating || 0) - (a.rating || 0);
-      if (sort === 'reviews') return (b.reviews || 0) - (a.reviews || 0);
+      if (sort === 'reviews') return (b.reviewCount || 0) - (a.reviewCount || 0);
       return 0;
     });
 
@@ -441,6 +447,11 @@
         ? `<a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
         : `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
 
+      const hasContent = (place.reviewData && place.reviewData.length > 0) || (place.photos && place.photos.length > 0);
+      const viewBtnHtml = hasContent
+        ? `<button class="btn btn-view" data-idx="${idx}">View</button>`
+        : `<span style="color:var(--text-dim);font-size:12px">No data</span>`;
+
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
         <td><strong>${escapeHtml(place.name)}</strong></td>
@@ -450,10 +461,17 @@
           <span class="stars">${starsHtml}</span>
           <span class="rating-num">${place.rating > 0 ? place.rating.toFixed(1) : 'N/A'}</span>
         </td>
-        <td class="td-center">${place.reviews > 0 ? place.reviews.toLocaleString() : '0'}</td>
+        <td class="td-center">${place.reviewCount > 0 ? place.reviewCount.toLocaleString() : '0'}</td>
         <td><span class="badge badge-no-site">No Website</span></td>
+        <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
       `;
+
+      // Attach click handler for View button
+      const viewBtn = tr.querySelector('.btn-view');
+      if (viewBtn) {
+        viewBtn.addEventListener('click', () => openDetailModal(place));
+      }
 
       resultsBody.appendChild(tr);
     });
@@ -470,7 +488,7 @@
       csvEscape(p.address),
       csvEscape(p.phone),
       p.rating || '',
-      p.reviews || '',
+      p.reviewCount || '',
       p.status || '',
       p.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.address)}`,
     ]);
@@ -514,6 +532,236 @@
       return '"' + str.replace(/"/g, '""') + '"';
     }
     return str;
+  }
+
+  // ── Sentiment Analysis ──
+  const positiveWords = [
+    'amazing', 'awesome', 'best', 'beautiful', 'clean', 'delicious', 'excellent',
+    'exceptional', 'fantastic', 'favorite', 'friendly', 'generous', 'genuine',
+    'good', 'gorgeous', 'great', 'happy', 'helpful', 'impressed', 'incredible',
+    'kind', 'love', 'loved', 'lovely', 'nice', 'outstanding', 'perfect',
+    'phenomenal', 'pleasant', 'polite', 'professional', 'quality', 'recommend',
+    'remarkable', 'satisfied', 'stellar', 'superb', 'terrific', 'top-notch',
+    'welcoming', 'wonderful', 'worth'
+  ];
+  const negativeWords = [
+    'awful', 'bad', 'cold', 'complaint', 'dirty', 'disappoint', 'disgusting',
+    'dreadful', 'horrible', 'mediocre', 'never', 'overpriced', 'poor', 'rude',
+    'slow', 'terrible', 'unfriendly', 'unprofessional', 'waste', 'worst'
+  ];
+
+  function analyzeSentiment(review) {
+    if (!review || !review.text) return { score: 0, label: 'neutral' };
+
+    const text = review.text.toLowerCase();
+    const words = text.split(/\s+/);
+
+    let positiveCount = 0;
+    let negativeCount = 0;
+
+    words.forEach((word) => {
+      const clean = word.replace(/[^a-z-]/g, '');
+      if (positiveWords.includes(clean)) positiveCount++;
+      if (negativeWords.includes(clean)) negativeCount++;
+    });
+
+    // Combine keyword sentiment with star rating
+    const keywordScore = (positiveCount - negativeCount) / Math.max(words.length, 1);
+    const ratingScore = ((review.rating || 3) - 3) / 2; // Normalize: 1=-1, 3=0, 5=1
+
+    // Weighted: 40% keywords, 60% rating
+    const score = (keywordScore * 0.4) + (ratingScore * 0.6);
+
+    // Bonus for review length (longer reviews are more useful for websites)
+    const lengthBonus = Math.min(text.length / 500, 0.2);
+
+    const finalScore = score + lengthBonus;
+
+    let label = 'neutral';
+    if (finalScore > 0.15) label = 'positive';
+    if (finalScore > 0.4) label = 'very positive';
+    if (finalScore < -0.1) label = 'negative';
+
+    return { score: finalScore, label, positiveCount, negativeCount };
+  }
+
+  function getTopReviews(reviewData, count) {
+    if (!reviewData || reviewData.length === 0) return [];
+
+    const scored = reviewData.map((review) => ({
+      ...review,
+      sentiment: analyzeSentiment(review),
+    }));
+
+    // Sort by sentiment score (best first), then filter to positive only
+    scored.sort((a, b) => b.sentiment.score - a.sentiment.score);
+
+    return scored
+      .filter((r) => r.sentiment.label === 'positive' || r.sentiment.label === 'very positive')
+      .slice(0, count);
+  }
+
+  // ── Photo URLs ──
+  function getPhotoUrl(photo, maxWidth) {
+    if (!photo || !photo.getUrl) return null;
+    return photo.getUrl({ maxWidth: maxWidth || 600 });
+  }
+
+  // ── Detail Modal ──
+  function openDetailModal(place) {
+    // Remove existing modal if any
+    const existing = document.getElementById('detail-modal');
+    if (existing) existing.remove();
+
+    const topReviews = getTopReviews(place.reviewData, 5);
+    const photos = (place.photos || []).slice(0, 8);
+
+    const modal = document.createElement('div');
+    modal.id = 'detail-modal';
+    modal.className = 'modal-overlay';
+
+    // Build photo gallery HTML
+    let photosHtml = '';
+    if (photos.length > 0) {
+      const photoItems = photos.map((photo) => {
+        const url = getPhotoUrl(photo, 600);
+        if (!url) return '';
+        return `<div class="photo-item"><img src="${url}" alt="Business photo" loading="lazy"></div>`;
+      }).filter(Boolean).join('');
+
+      if (photoItems) {
+        photosHtml = `
+          <div class="modal-section">
+            <h3>Photos</h3>
+            <div class="photo-gallery">${photoItems}</div>
+          </div>
+        `;
+      }
+    }
+
+    // Build reviews HTML
+    let reviewsHtml = '';
+    if (topReviews.length > 0) {
+      const reviewItems = topReviews.map((review) => {
+        const stars = '\u2605'.repeat(Math.floor(review.rating)) + '\u2606'.repeat(5 - Math.floor(review.rating));
+        const sentimentBadge = review.sentiment.label === 'very positive'
+          ? '<span class="sentiment-badge sentiment-great">Top Pick</span>'
+          : '<span class="sentiment-badge sentiment-good">Good</span>';
+        const timeAgo = review.relative_time_description || '';
+        return `
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-author">
+                ${review.profile_photo_url ? `<img src="${review.profile_photo_url}" alt="" class="review-avatar">` : '<div class="review-avatar-placeholder"></div>'}
+                <div>
+                  <strong>${escapeHtml(review.author_name || 'Anonymous')}</strong>
+                  <span class="review-time">${escapeHtml(timeAgo)}</span>
+                </div>
+              </div>
+              <div class="review-meta">
+                <span class="stars">${stars}</span>
+                ${sentimentBadge}
+              </div>
+            </div>
+            <p class="review-text">${escapeHtml(review.text)}</p>
+          </div>
+        `;
+      }).join('');
+
+      reviewsHtml = `
+        <div class="modal-section">
+          <h3>Top Reviews for Website</h3>
+          <p class="section-subtitle">Ranked by sentiment analysis — best testimonials first</p>
+          <div class="reviews-list">${reviewItems}</div>
+        </div>
+      `;
+    } else {
+      reviewsHtml = `
+        <div class="modal-section">
+          <h3>Reviews</h3>
+          <p class="section-subtitle" style="color:var(--text-dim)">No reviews available for this business.</p>
+        </div>
+      `;
+    }
+
+    // Build hours HTML
+    let hoursHtml = '';
+    if (place.hours && place.hours.length > 0) {
+      const hourItems = place.hours.map((h) => `<li>${escapeHtml(h)}</li>`).join('');
+      hoursHtml = `
+        <div class="modal-section">
+          <h3>Business Hours</h3>
+          <ul class="hours-list">${hourItems}</ul>
+        </div>
+      `;
+    }
+
+    // Star rating display
+    const fullStars = Math.floor(place.rating);
+    const hasHalf = place.rating - fullStars >= 0.5;
+    let starsHtml = '';
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) starsHtml += '\u2605';
+      else if (i === fullStars && hasHalf) starsHtml += '\u2606';
+      else starsHtml += '\u2606';
+    }
+
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h2>${escapeHtml(place.name)}</h2>
+            <p class="modal-address">${escapeHtml(place.address)}</p>
+            <div class="modal-meta">
+              <span class="stars">${starsHtml}</span>
+              <span>${place.rating > 0 ? place.rating.toFixed(1) : 'N/A'}</span>
+              <span class="meta-sep">|</span>
+              <span>${place.reviewCount > 0 ? place.reviewCount.toLocaleString() + ' reviews' : 'No reviews'}</span>
+              ${place.phone ? `<span class="meta-sep">|</span><span>${escapeHtml(place.phone)}</span>` : ''}
+            </div>
+          </div>
+          <button class="modal-close" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          ${photosHtml}
+          ${reviewsHtml}
+          ${hoursHtml}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="modal-copy-reviews">Copy Top Reviews</button>
+          <button class="btn btn-primary" id="modal-close-btn-footer">Close</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Event listeners
+    const closeModal = () => modal.remove();
+    modal.querySelector('#modal-close-btn').addEventListener('click', closeModal);
+    modal.querySelector('#modal-close-btn-footer').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', function escHandler(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', escHandler);
+      }
+    });
+
+    // Copy reviews button
+    modal.querySelector('#modal-copy-reviews').addEventListener('click', () => {
+      if (topReviews.length === 0) return;
+      const text = topReviews.map((r) =>
+        `"${r.text}"\n— ${r.author_name || 'Anonymous'}, ${'\u2605'.repeat(r.rating)} (${r.rating}/5)`
+      ).join('\n\n');
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = modal.querySelector('#modal-copy-reviews');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy Top Reviews'; }, 2000);
+      });
+    });
   }
 
   // ── Start ──
