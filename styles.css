@@ -448,6 +448,11 @@ select.input {
   width: 120px;
 }
 
+.col-create {
+  width: 100px;
+  text-align: center !important;
+}
+
 .col-maps {
   width: 60px;
   text-align: center !important;
@@ -548,6 +553,29 @@ select.input {
 
 .btn-view:hover {
   background: var(--primary);
+  color: #fff;
+}
+
+/* === Create Site Button === */
+.btn-create-site {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-create-site:hover {
+  background: var(--success);
   color: #fff;
 }
 
