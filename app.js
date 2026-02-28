@@ -18,7 +18,7 @@
       saveKey: 'Save Key',
       helpStep1: 'Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>',
       helpStep2: 'Create a new project (or select existing)',
-      helpStep3: 'Enable the <strong>Places API</strong> and <strong>Maps JavaScript API</strong>',
+      helpStep3: 'Enable the <strong>Places API (New)</strong> and <strong>Maps JavaScript API</strong>',
       helpStep4: 'Go to <strong>Credentials</strong> and create an API key',
       helpStep5: 'For security, restrict the key to your domain and the Places/Maps APIs',
       helpStep6: 'Paste your key above and click Save',
@@ -148,7 +148,7 @@
       enterValidKey: 'Please enter a valid API key.',
       keySaved: 'Key saved. Loading Google Maps...',
       mapsLoaded: 'Google Maps loaded successfully.',
-      mapsLoadFailed: 'Failed to load Google Maps. Check your API key and ensure Places API is enabled.',
+      mapsLoadFailed: 'Failed to load Google Maps. Check your API key and ensure Places API (New) is enabled.',
       // Footer
       footer: 'Powered by Google Places API. Results may not be 100% accurate — always verify before outreach.',
       // Radius labels
@@ -198,7 +198,7 @@
       saveKey: 'Guardar Clave',
       helpStep1: 'Ve a <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>',
       helpStep2: 'Crea un proyecto nuevo (o selecciona uno existente)',
-      helpStep3: 'Habilita la <strong>Places API</strong> y la <strong>Maps JavaScript API</strong>',
+      helpStep3: 'Habilita la <strong>Places API (New)</strong> y la <strong>Maps JavaScript API</strong>',
       helpStep4: 'Ve a <strong>Credenciales</strong> y crea una clave API',
       helpStep5: 'Por seguridad, restringe la clave a tu dominio y las APIs de Places/Maps',
       helpStep6: 'Pega tu clave arriba y haz clic en Guardar',
@@ -328,7 +328,7 @@
       enterValidKey: 'Por favor ingresa una clave API válida.',
       keySaved: 'Clave guardada. Cargando Google Maps...',
       mapsLoaded: 'Google Maps cargado exitosamente.',
-      mapsLoadFailed: 'Error al cargar Google Maps. Verifica tu clave API y asegúrate de que la Places API esté habilitada.',
+      mapsLoadFailed: 'Error al cargar Google Maps. Verifica tu clave API y asegúrate de que la Places API (New) esté habilitada.',
       // Footer
       footer: 'Impulsado por Google Places API. Los resultados pueden no ser 100% precisos — siempre verifica antes de contactar.',
       // Radius labels
@@ -424,8 +424,6 @@
 
   // ── State ──
   let apiKey = localStorage.getItem('google_places_api_key') || '';
-  let map = null;
-  let placesService = null;
   let geocoder = null;
   let allResults = [];
   let filteredResults = [];
@@ -540,16 +538,6 @@
   }
 
   function initServices() {
-    // Create a hidden map div (required by PlacesService)
-    let mapDiv = document.getElementById('hidden-map');
-    if (!mapDiv) {
-      mapDiv = document.createElement('div');
-      mapDiv.id = 'hidden-map';
-      mapDiv.style.display = 'none';
-      document.body.appendChild(mapDiv);
-    }
-    map = new google.maps.Map(mapDiv, { center: { lat: 0, lng: 0 }, zoom: 2 });
-    placesService = new google.maps.places.PlacesService(map);
     geocoder = new google.maps.Geocoder();
   }
 
@@ -604,17 +592,26 @@
         return;
       }
 
+      // Step 3: Quick filter — searchNearby already returns websiteURI
+      const noWebsitePlaces = places.filter((p) => !p.websiteURI);
+
       updateProgress(30, t('foundBusinesses', places.length));
 
-      // Step 3: Get details for each place (to check for website)
-      const detailedPlaces = await getPlaceDetails(places, 30, 95);
+      if (noWebsitePlaces.length === 0) {
+        updateProgress(100, t('searchComplete'));
+        progressStats.textContent = t('progressStatsText', places.length, 0);
+        allResults = [];
+        showResults();
+        resetSearchButton();
+        return;
+      }
 
-      // Step 4: Filter to only those without websites
-      const noWebsite = detailedPlaces.filter((p) => !p.website);
-      allResults = noWebsite;
+      // Step 4: Get full details (photos, reviews, hours) for no-website places only
+      const detailedPlaces = await getPlaceDetails(noWebsitePlaces, 30, 95);
+      allResults = detailedPlaces;
 
       updateProgress(100, t('searchComplete'));
-      progressStats.textContent = t('progressStatsText', places.length, noWebsite.length);
+      progressStats.textContent = t('progressStatsText', places.length, allResults.length);
 
       // Show results
       showResults();
@@ -693,146 +690,101 @@
     );
   }
 
-  // ── Places Search ──
-  function searchPlaces(latLng, type, radius, maxCount) {
-    return withTimeout(
-      new Promise((resolve) => {
-        const allPlaces = [];
+  // ── Places Search (New API) ──
+  async function searchPlaces(latLng, type, radius, maxCount) {
+    const request = {
+      fields: ['displayName', 'formattedAddress', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'types', 'id'],
+      locationRestriction: {
+        center: latLng,
+        radius: radius,
+      },
+      includedPrimaryTypes: [type],
+      maxResultCount: Math.min(maxCount, 20),
+    };
 
-        const request = {
-          location: latLng,
-          radius: radius,
-          type: type,
-        };
-
-        function handleResults(results, status, pagination) {
-          if (status === google.maps.places.PlacesServiceStatus.OK) {
-            allPlaces.push(...results);
-
-            // Google returns up to 20 results per page, up to 3 pages (60 total)
-            if (pagination && pagination.hasNextPage && allPlaces.length < maxCount) {
-              updateProgress(20, t('foundSoFar', allPlaces.length));
-              // Google requires a short delay before requesting next page
-              setTimeout(() => {
-                pagination.nextPage();
-              }, 2000);
-            } else {
-              resolve(allPlaces.slice(0, maxCount));
-            }
-          } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            resolve([]);
-          } else {
-            console.warn('Places search status:', status);
-            resolve(allPlaces);
-          }
-        }
-
-        placesService.nearbySearch(request, handleResults);
-      }),
-      30000,
-      'Places search'
-    );
+    try {
+      const { places } = await google.maps.places.Place.searchNearby(request);
+      return places || [];
+    } catch (err) {
+      console.warn('Nearby search error:', err);
+      if (err.message && err.message.includes('not enabled')) {
+        throw new Error('The Places API (New) is not enabled for your project. Please enable it in Google Cloud Console under APIs & Services > Library.');
+      }
+      return [];
+    }
   }
 
-  // ── Place Details ──
+  // ── Place Details (New API) ──
   function getPlaceDetails(places, progressStart, progressEnd) {
     return withTimeout(
-      new Promise((resolve) => {
+      (async () => {
         const detailed = [];
-        let completed = 0;
         const total = places.length;
 
-        // Process in batches to respect rate limits
-        const batchSize = 5;
-        let batchIndex = 0;
+        for (let i = 0; i < total; i++) {
+          const place = places[i];
+          try {
+            await place.fetchFields({
+              fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'googleMapsURI', 'types', 'reviews', 'photos', 'regularOpeningHours'],
+            });
 
-        function processBatch() {
-          const start = batchIndex * batchSize;
-          const end = Math.min(start + batchSize, total);
-          const batch = places.slice(start, end);
+            // Normalize reviews to plain objects for spread compatibility
+            const normalizedReviews = (place.reviews || []).map((r) => ({
+              text: r.text || '',
+              rating: r.rating || 0,
+              relativePublishTimeDescription: r.relativePublishTimeDescription || '',
+              authorAttribution: r.authorAttribution ? {
+                displayName: r.authorAttribution.displayName || '',
+                photoURI: r.authorAttribution.photoURI || '',
+              } : null,
+            }));
 
-          if (batch.length === 0) {
-            resolve(detailed);
-            return;
+            detailed.push({
+              name: place.displayName || '',
+              address: place.formattedAddress || '',
+              phone: place.nationalPhoneNumber || '',
+              website: place.websiteURI || '',
+              rating: place.rating || 0,
+              reviewCount: place.userRatingCount || 0,
+              status: place.businessStatus || 'UNKNOWN',
+              mapsUrl: place.googleMapsURI || '',
+              types: place.types || [],
+              placeId: place.id || '',
+              reviewData: normalizedReviews,
+              photos: place.photos || [],
+              hours: place.regularOpeningHours ? place.regularOpeningHours.weekdayDescriptions || [] : [],
+            });
+          } catch (err) {
+            console.warn('Failed to get details for place:', place.displayName, err);
+            // Fall back to basic info from searchNearby
+            detailed.push({
+              name: place.displayName || '',
+              address: place.formattedAddress || '',
+              phone: '',
+              website: place.websiteURI || '',
+              rating: place.rating || 0,
+              reviewCount: place.userRatingCount || 0,
+              status: place.businessStatus || 'UNKNOWN',
+              mapsUrl: '',
+              types: place.types || [],
+              placeId: place.id || '',
+              reviewData: [],
+              photos: [],
+              hours: [],
+            });
           }
 
-          let batchCompleted = 0;
+          const pct = progressStart + (((i + 1) / total) * (progressEnd - progressStart));
+          updateProgress(pct, t('checkingBusiness', i + 1, total));
 
-          // Per-batch timeout: if a batch takes too long, skip remaining and move on
-          const batchTimeout = setTimeout(() => {
-            console.warn(`Batch ${batchIndex} timed out, moving on with ${detailed.length} results so far`);
-            completed += (batch.length - batchCompleted);
-            batchIndex++;
-            if (batchIndex * batchSize < total) {
-              processBatch();
-            } else {
-              resolve(detailed);
-            }
-          }, 10000);
-
-          batch.forEach((place) => {
-            const request = {
-              placeId: place.place_id,
-              fields: ['name', 'formatted_address', 'formatted_phone_number', 'website', 'rating', 'user_ratings_total', 'business_status', 'url', 'types', 'reviews', 'photos', 'opening_hours'],
-            };
-
-            placesService.getDetails(request, (result, status) => {
-              if (status === google.maps.places.PlacesServiceStatus.OK) {
-                detailed.push({
-                  name: result.name || '',
-                  address: result.formatted_address || '',
-                  phone: result.formatted_phone_number || '',
-                  website: result.website || '',
-                  rating: result.rating || 0,
-                  reviewCount: result.user_ratings_total || 0,
-                  status: result.business_status || 'UNKNOWN',
-                  mapsUrl: result.url || '',
-                  types: result.types || [],
-                  placeId: place.place_id,
-                  reviewData: result.reviews || [],
-                  photos: result.photos || [],
-                  hours: result.opening_hours ? result.opening_hours.weekday_text || [] : [],
-                });
-              } else if (status === google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT) {
-                // If rate limited, still add with basic info
-                detailed.push({
-                  name: place.name || '',
-                  address: place.vicinity || '',
-                  phone: '',
-                  website: '', // Unknown — treat as no website
-                  rating: place.rating || 0,
-                  reviewCount: place.user_ratings_total || 0,
-                  status: place.business_status || 'UNKNOWN',
-                  mapsUrl: '',
-                  types: place.types || [],
-                  placeId: place.place_id,
-                  reviewData: [],
-                  photos: place.photos || [],
-                  hours: [],
-                });
-              }
-
-              completed++;
-              batchCompleted++;
-              const pct = progressStart + ((completed / total) * (progressEnd - progressStart));
-              updateProgress(pct, t('checkingBusiness', completed, total));
-
-              if (batchCompleted === batch.length) {
-                clearTimeout(batchTimeout);
-                batchIndex++;
-                if (batchIndex * batchSize < total) {
-                  // Small delay between batches to avoid rate limiting
-                  setTimeout(processBatch, 300);
-                } else {
-                  resolve(detailed);
-                }
-              }
-            });
-          });
+          // Small delay between requests to avoid rate limiting
+          if (i < total - 1) {
+            await new Promise(r => setTimeout(r, 200));
+          }
         }
 
-        processBatch();
-      }),
+        return detailed;
+      })(),
       120000,
       'Place details lookup'
     );
@@ -1077,8 +1029,8 @@
 
   // ── Photo URLs ──
   function getPhotoUrl(photo, maxWidth) {
-    if (!photo || !photo.getUrl) return null;
-    return photo.getUrl({ maxWidth: maxWidth || 600 });
+    if (!photo || !photo.getURI) return null;
+    return photo.getURI({ maxWidth: maxWidth || 600 });
   }
 
   // ── Detail Modal ──
@@ -1121,14 +1073,16 @@
         const sentimentBadge = review.sentiment.label === 'very positive'
           ? `<span class="sentiment-badge sentiment-great">${t('topPick')}</span>`
           : `<span class="sentiment-badge sentiment-good">${t('good')}</span>`;
-        const timeAgo = review.relative_time_description || '';
+        const timeAgo = review.relativePublishTimeDescription || '';
+        const authorName = review.authorAttribution ? review.authorAttribution.displayName || 'Anonymous' : 'Anonymous';
+        const authorPhoto = review.authorAttribution ? review.authorAttribution.photoURI : null;
         return `
           <div class="review-card">
             <div class="review-header">
               <div class="review-author">
-                ${review.profile_photo_url ? `<img src="${review.profile_photo_url}" alt="" class="review-avatar">` : '<div class="review-avatar-placeholder"></div>'}
+                ${authorPhoto ? `<img src="${authorPhoto}" alt="" class="review-avatar">` : '<div class="review-avatar-placeholder"></div>'}
                 <div>
-                  <strong>${escapeHtml(review.author_name || 'Anonymous')}</strong>
+                  <strong>${escapeHtml(authorName)}</strong>
                   <span class="review-time">${escapeHtml(timeAgo)}</span>
                 </div>
               </div>
@@ -1228,7 +1182,7 @@
     modal.querySelector('#modal-copy-reviews').addEventListener('click', () => {
       if (topReviews.length === 0) return;
       const text = topReviews.map((r) =>
-        `"${r.text}"\n— ${r.author_name || 'Anonymous'}, ${'\u2605'.repeat(r.rating)} (${r.rating}/5)`
+        `"${r.text}"\n— ${r.authorAttribution ? r.authorAttribution.displayName || 'Anonymous' : 'Anonymous'}, ${'\u2605'.repeat(r.rating)} (${r.rating}/5)`
       ).join('\n\n');
       navigator.clipboard.writeText(text).then(() => {
         const btn = modal.querySelector('#modal-copy-reviews');
@@ -1273,7 +1227,7 @@
           <div class="testimonial">
             <div class="testimonial-stars">${rStars}</div>
             <p class="testimonial-text">"${esc(r.text)}"</p>
-            <p class="testimonial-author">— ${esc(r.author_name || 'Anonymous')}</p>
+            <p class="testimonial-author">— ${esc(r.authorAttribution ? r.authorAttribution.displayName || 'Anonymous' : 'Anonymous')}</p>
           </div>`;
       }).join('');
     }
