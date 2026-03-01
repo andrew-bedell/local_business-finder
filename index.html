@@ -177,6 +177,7 @@
           </div>
           <div class="results-actions">
             <button class="btn btn-secondary" id="btn-export-csv" data-i18n="exportCsv">Export CSV</button>
+            <button class="btn btn-save-db" id="btn-save-all" data-i18n="saveAllBtn">Save All to DB</button>
             <button class="btn btn-secondary" id="btn-clear" data-i18n="clearBtn">Clear</button>
           </div>
         </div>
@@ -205,6 +206,7 @@
                 <th class="col-details" data-i18n="thDetails">Details</th>
                 <th class="col-create" data-i18n="thCreateSite">Create Site</th>
                 <th class="col-maps">Maps</th>
+                <th class="col-save" data-i18n="thSave">Save</th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
@@ -223,6 +225,7 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
 </html>
