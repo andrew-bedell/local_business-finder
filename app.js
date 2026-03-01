@@ -171,6 +171,11 @@
       saveAllSuccess: 'All businesses saved to database!',
       saveError: 'Error saving. Check console for details.',
       savedCount: '{0} of {1} saved to database',
+      dbNotAvailable: 'Database connection not available. The Supabase library may not have loaded.',
+      noResultsToSave: 'No results to save. Run a search first.',
+      saveAllSuccessToast: 'Successfully saved {0} of {1} businesses to database!',
+      saveRowSuccess: '"{0}" saved to database.',
+      saveRowError: 'Failed to save "{0}". Check console for details.',
     },
     es: {
       // Header
@@ -336,6 +341,11 @@
       saveAllSuccess: '¡Todos los negocios guardados en la base de datos!',
       saveError: 'Error al guardar. Revisa la consola para más detalles.',
       savedCount: '{0} de {1} guardados en la base de datos',
+      dbNotAvailable: 'Conexión a la base de datos no disponible. La librería Supabase puede no haberse cargado.',
+      noResultsToSave: 'No hay resultados para guardar. Ejecuta una búsqueda primero.',
+      saveAllSuccessToast: '¡{0} de {1} negocios guardados en la base de datos!',
+      saveRowSuccess: '"{0}" guardado en la base de datos.',
+      saveRowError: 'Error al guardar "{0}". Revisa la consola para más detalles.',
     },
   };
 
@@ -392,11 +402,25 @@
     }
   }
 
+  // ── Toast Notifications ──
+  function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 4000);
+  }
+
   // ── Supabase ──
   const SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
   const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
   const savedPlaceIds = new Set();
+
+  if (!supabaseClient) {
+    console.warn('Supabase client not initialized. window.supabase =', window.supabase);
+  }
 
   async function loadSavedIds() {
     if (!supabaseClient) return;
@@ -446,7 +470,14 @@
   }
 
   async function saveAllBusinesses() {
-    if (!supabaseClient || filteredResults.length === 0) return;
+    if (!supabaseClient) {
+      showToast(t('dbNotAvailable'), 'error');
+      return;
+    }
+    if (filteredResults.length === 0) {
+      showToast(t('noResultsToSave'), 'warning');
+      return;
+    }
 
     const btn = document.getElementById('btn-save-all');
     btn.disabled = true;
@@ -465,6 +496,12 @@
     btn.textContent = t('savedCount', savedCount, filteredResults.length);
     btn.disabled = false;
     setTimeout(() => { btn.textContent = t('saveAllBtn'); }, 3000);
+
+    if (savedCount > 0) {
+      showToast(t('saveAllSuccessToast', savedCount, filteredResults.length), 'success');
+    } else {
+      showToast(t('saveError'), 'error');
+    }
 
     // Re-render to update individual save buttons
     renderTable();
@@ -898,14 +935,20 @@
       const saveRowBtn = tr.querySelector('.btn-save-row');
       if (saveRowBtn) {
         saveRowBtn.addEventListener('click', async function () {
+          if (!supabaseClient) {
+            showToast(t('dbNotAvailable'), 'error');
+            return;
+          }
           this.disabled = true;
           this.textContent = t('savingBtn');
           const ok = await saveBusiness(place);
           if (ok) {
             this.outerHTML = `<span class="badge badge-saved">${t('savedBtn')}</span>`;
+            showToast(t('saveRowSuccess', place.name), 'success');
           } else {
             this.textContent = t('saveError');
             this.disabled = false;
+            showToast(t('saveRowError', place.name), 'error');
           }
         });
       }
