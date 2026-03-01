@@ -588,10 +588,7 @@
         const data = await res.json();
         if (data.googleApiKey) {
           apiKey = data.googleApiKey;
-          apiKeyInput.value = '••••••••••••••••••••';
-          apiKeyInput.disabled = true;
-          btnSaveKey.style.display = 'none';
-          showApiStatus(t('apiKeyAutoLoaded'), 'success');
+          document.getElementById('api-setup').style.display = 'none';
           loadGoogleMaps(apiKey);
           return;
         }
