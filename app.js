@@ -592,23 +592,13 @@
         return;
       }
 
-      // Step 3: Quick filter — searchNearby already returns websiteURI
-      const noWebsitePlaces = places.filter((p) => !p.websiteURI);
+      // Step 3: Map to internal format and filter — searchNearby returns all fields
+      const mapped = places.map(mapPlaceToResult);
+      const noWebsite = mapped.filter((p) => !p.website);
 
-      updateProgress(30, t('foundBusinesses', places.length));
+      updateProgress(90, t('foundBusinesses', places.length));
 
-      if (noWebsitePlaces.length === 0) {
-        updateProgress(100, t('searchComplete'));
-        progressStats.textContent = t('progressStatsText', places.length, 0);
-        allResults = [];
-        showResults();
-        resetSearchButton();
-        return;
-      }
-
-      // Step 4: Get full details (photos, reviews, hours) for no-website places only
-      const detailedPlaces = await getPlaceDetails(noWebsitePlaces, 30, 95);
-      allResults = detailedPlaces;
+      allResults = noWebsite;
 
       updateProgress(100, t('searchComplete'));
       progressStats.textContent = t('progressStatsText', places.length, allResults.length);
@@ -693,7 +683,7 @@
   // ── Places Search (New API) ──
   async function searchPlaces(latLng, type, radius, maxCount) {
     const request = {
-      fields: ['displayName', 'formattedAddress', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'types', 'id'],
+      fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'googleMapsURI', 'types', 'id', 'reviews', 'photos', 'regularOpeningHours'],
       locationRestriction: {
         center: latLng,
         radius: radius,
@@ -714,80 +704,34 @@
     }
   }
 
-  // ── Place Details (New API) ──
-  function getPlaceDetails(places, progressStart, progressEnd) {
-    return withTimeout(
-      (async () => {
-        const detailed = [];
-        const total = places.length;
+  // ── Map Place objects to internal format ──
+  function mapPlaceToResult(place) {
+    // Normalize reviews to plain objects for spread compatibility
+    const normalizedReviews = (place.reviews || []).map((r) => ({
+      text: r.text || '',
+      rating: r.rating || 0,
+      relativePublishTimeDescription: r.relativePublishTimeDescription || '',
+      authorAttribution: r.authorAttribution ? {
+        displayName: r.authorAttribution.displayName || '',
+        photoURI: r.authorAttribution.photoURI || '',
+      } : null,
+    }));
 
-        for (let i = 0; i < total; i++) {
-          const place = places[i];
-          try {
-            await place.fetchFields({
-              fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'googleMapsURI', 'types', 'reviews', 'photos', 'regularOpeningHours'],
-            });
-
-            // Normalize reviews to plain objects for spread compatibility
-            const normalizedReviews = (place.reviews || []).map((r) => ({
-              text: r.text || '',
-              rating: r.rating || 0,
-              relativePublishTimeDescription: r.relativePublishTimeDescription || '',
-              authorAttribution: r.authorAttribution ? {
-                displayName: r.authorAttribution.displayName || '',
-                photoURI: r.authorAttribution.photoURI || '',
-              } : null,
-            }));
-
-            detailed.push({
-              name: place.displayName || '',
-              address: place.formattedAddress || '',
-              phone: place.nationalPhoneNumber || '',
-              website: place.websiteURI || '',
-              rating: place.rating || 0,
-              reviewCount: place.userRatingCount || 0,
-              status: place.businessStatus || 'UNKNOWN',
-              mapsUrl: place.googleMapsURI || '',
-              types: place.types || [],
-              placeId: place.id || '',
-              reviewData: normalizedReviews,
-              photos: place.photos || [],
-              hours: place.regularOpeningHours ? place.regularOpeningHours.weekdayDescriptions || [] : [],
-            });
-          } catch (err) {
-            console.warn('Failed to get details for place:', place.displayName, err);
-            // Fall back to basic info from searchNearby
-            detailed.push({
-              name: place.displayName || '',
-              address: place.formattedAddress || '',
-              phone: '',
-              website: place.websiteURI || '',
-              rating: place.rating || 0,
-              reviewCount: place.userRatingCount || 0,
-              status: place.businessStatus || 'UNKNOWN',
-              mapsUrl: '',
-              types: place.types || [],
-              placeId: place.id || '',
-              reviewData: [],
-              photos: [],
-              hours: [],
-            });
-          }
-
-          const pct = progressStart + (((i + 1) / total) * (progressEnd - progressStart));
-          updateProgress(pct, t('checkingBusiness', i + 1, total));
-
-          // Small delay between requests to avoid rate limiting
-          if (i < total - 1) {
-            await new Promise(r => setTimeout(r, 200));
-          }
-        }
-
-        return detailed;
-      })(),
-      120000,
-      'Place details lookup'
-    );
+    return {
+      name: place.displayName || '',
+      address: place.formattedAddress || '',
+      phone: place.nationalPhoneNumber || '',
+      website: place.websiteURI || '',
+      rating: place.rating || 0,
+      reviewCount: place.userRatingCount || 0,
+      status: place.businessStatus || 'UNKNOWN',
+      mapsUrl: place.googleMapsURI || '',
+      types: place.types || [],
+      placeId: place.id || '',
+      reviewData: normalizedReviews,
+      photos: place.photos || [],
+      hours: place.regularOpeningHours ? place.regularOpeningHours.weekdayDescriptions || [] : [],
+    };
   }
 
   // ── Progress ──
