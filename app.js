@@ -116,7 +116,6 @@
       thReviews: 'Reviews',
       thStatus: 'Status',
       thDetails: 'Details',
-      thCreateSite: 'Create Site',
       noResults1: 'All businesses found in this area already have websites.',
       noResults2: 'Try expanding the search radius or changing the business type.',
       noWebsitesFound: 'No businesses without websites found.',
@@ -129,7 +128,6 @@
       noWebsite: 'No Website',
       viewBtn: 'View',
       noData: 'No data',
-      createSiteBtn: 'Create Site',
       // Modal
       photos: 'Photos',
       topReviewsTitle: 'Top Reviews for Website',
@@ -173,28 +171,6 @@
       saveAllSuccess: 'All businesses saved to database!',
       saveError: 'Error saving. Check console for details.',
       savedCount: '{0} of {1} saved to database',
-      // Generated website
-      genGetInTouch: 'Get in Touch',
-      genWelcome: 'Welcome',
-      genWelcomeSub: 'Your trusted local business serving the community',
-      genCallUs: 'Call Us',
-      genVisitUs: 'Visit Us',
-      genHighlyRated: 'Highly Rated',
-      genStarsFrom: '{0} stars from {1} reviews',
-      genDirections: 'Directions',
-      genOpenMaps: 'Open in Google Maps',
-      genCustomersSay: 'What Our Customers Say',
-      genRealReviews: 'Real reviews from real customers',
-      genGallery: 'Gallery',
-      genGallerySub: 'Take a look around',
-      genBusinessHours: 'Business Hours',
-      genHoursSub: 'Come see us during our operating hours',
-      genContactUs: 'Contact Us',
-      genContactSub: "We'd love to hear from you",
-      genAllRights: 'All rights reserved.',
-      genAbout: 'About',
-      genContact: 'Contact',
-      genHours: 'Hours',
     },
     es: {
       // Header
@@ -305,7 +281,6 @@
       thReviews: 'Reseñas',
       thStatus: 'Estado',
       thDetails: 'Detalles',
-      thCreateSite: 'Crear Sitio',
       noResults1: 'Todos los negocios encontrados en esta área ya tienen sitio web.',
       noResults2: 'Intenta expandir el radio de búsqueda o cambiar el tipo de negocio.',
       noWebsitesFound: 'No se encontraron negocios sin sitio web.',
@@ -318,7 +293,6 @@
       noWebsite: 'Sin Sitio Web',
       viewBtn: 'Ver',
       noData: 'Sin datos',
-      createSiteBtn: 'Crear Sitio',
       // Modal
       photos: 'Fotos',
       topReviewsTitle: 'Mejores Reseñas para el Sitio Web',
@@ -362,28 +336,6 @@
       saveAllSuccess: '¡Todos los negocios guardados en la base de datos!',
       saveError: 'Error al guardar. Revisa la consola para más detalles.',
       savedCount: '{0} de {1} guardados en la base de datos',
-      // Generated website
-      genGetInTouch: 'Contáctanos',
-      genWelcome: 'Bienvenidos',
-      genWelcomeSub: 'Tu negocio local de confianza al servicio de la comunidad',
-      genCallUs: 'Llámanos',
-      genVisitUs: 'Visítanos',
-      genHighlyRated: 'Altamente Calificado',
-      genStarsFrom: '{0} estrellas de {1} reseñas',
-      genDirections: 'Cómo Llegar',
-      genOpenMaps: 'Abrir en Google Maps',
-      genCustomersSay: 'Lo Que Dicen Nuestros Clientes',
-      genRealReviews: 'Reseñas reales de clientes reales',
-      genGallery: 'Galería',
-      genGallerySub: 'Echa un vistazo',
-      genBusinessHours: 'Horario de Atención',
-      genHoursSub: 'Visítanos durante nuestro horario de atención',
-      genContactUs: 'Contáctanos',
-      genContactSub: 'Nos encantaría saber de ti',
-      genAllRights: 'Todos los derechos reservados.',
-      genAbout: 'Acerca de',
-      genContact: 'Contacto',
-      genHours: 'Horario',
     },
   };
 
@@ -932,7 +884,6 @@
         <td class="td-center">${place.reviewCount > 0 ? place.reviewCount.toLocaleString() : '0'}</td>
         <td><span class="badge badge-no-site">${t('noWebsite')}</span></td>
         <td class="td-center">${viewBtnHtml}</td>
-        <td class="td-center"><button class="btn btn-create-site" data-idx="${idx}">${t('createSiteBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
       `;
@@ -941,12 +892,6 @@
       const viewBtn = tr.querySelector('.btn-view');
       if (viewBtn) {
         viewBtn.addEventListener('click', () => openDetailModal(place));
-      }
-
-      // Attach click handler for Create Site button
-      const createSiteBtn = tr.querySelector('.btn-create-site');
-      if (createSiteBtn) {
-        createSiteBtn.addEventListener('click', () => generateWebsite(place));
       }
 
       // Attach click handler for Save button
@@ -1256,241 +1201,6 @@
         setTimeout(() => { btn.textContent = t('copyTopReviews'); }, 2000);
       });
     });
-  }
-
-  // ── Website Generator ──
-  function generateWebsite(place) {
-    const topReviews = getTopReviews(place.reviewData, 3);
-    const photos = (place.photos || []).slice(0, 6);
-    const photoUrls = photos.map((p) => getPhotoUrl(p, 800)).filter(Boolean);
-    const heroPhoto = photoUrls.length > 0 ? photoUrls[0] : '';
-    const galleryPhotos = photoUrls.slice(1);
-
-    // Star HTML for the generated site
-    const fullStars = Math.floor(place.rating);
-    let starStr = '';
-    for (let i = 0; i < 5; i++) {
-      starStr += i < fullStars ? '\u2605' : '\u2606';
-    }
-
-    // Build hours rows
-    let hoursRows = '';
-    if (place.hours && place.hours.length > 0) {
-      hoursRows = place.hours.map((h) => {
-        const parts = h.split(': ');
-        const day = parts[0] || h;
-        const time = parts.slice(1).join(': ') || '';
-        return `<tr><td>${esc(day)}</td><td>${esc(time)}</td></tr>`;
-      }).join('');
-    }
-
-    // Build testimonials
-    let testimonialsHtml = '';
-    if (topReviews.length > 0) {
-      testimonialsHtml = topReviews.map((r) => {
-        const rStars = '\u2605'.repeat(Math.floor(r.rating)) + '\u2606'.repeat(5 - Math.floor(r.rating));
-        return `
-          <div class="testimonial">
-            <div class="testimonial-stars">${rStars}</div>
-            <p class="testimonial-text">"${esc(r.text)}"</p>
-            <p class="testimonial-author">— ${esc(r.authorAttribution ? r.authorAttribution.displayName || 'Anonymous' : 'Anonymous')}</p>
-          </div>`;
-      }).join('');
-    }
-
-    // Build gallery
-    let galleryHtml = '';
-    if (galleryPhotos.length > 0) {
-      galleryHtml = galleryPhotos.map((url) =>
-        `<div class="gallery-item"><img src="${url}" alt="${esc(place.name)} photo" loading="lazy"></div>`
-      ).join('');
-    }
-
-    // Determine accent color from business type
-    const typeColors = {
-      restaurant: '#e74c3c', cafe: '#8B4513', bakery: '#d4a373',
-      bar: '#6c3483', hair_care: '#2980b9', beauty_salon: '#e91e63',
-      spa: '#16a085', gym: '#e67e22', dentist: '#3498db',
-      doctor: '#2ecc71', car_repair: '#34495e', default: '#2563eb'
-    };
-    const businessTypeVal = businessType.value || 'default';
-    const accent = typeColors[businessTypeVal] || typeColors.default;
-
-    const mapsQuery = encodeURIComponent(place.name + ' ' + place.address);
-    const langAttr = currentLang;
-
-    const html = `<!DOCTYPE html>
-<html lang="${langAttr}">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${esc(place.name)}</title>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--accent:${accent};--accent-light:${accent}22;--text:#1a1a2e;--text-light:#555;--bg:#fff;--section-bg:#f8f9fa;--radius:10px}
-html{scroll-behavior:smooth}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--text);line-height:1.6}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
-
-/* Nav */
-.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-bottom:1px solid #eee;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
-.nav-brand{font-size:20px;font-weight:800;color:var(--accent)}
-.nav-links{display:flex;gap:24px;list-style:none}
-.nav-links a{color:var(--text);font-weight:500;font-size:14px;transition:color .2s}
-.nav-links a:hover{color:var(--accent);text-decoration:none}
-
-/* Hero */
-.hero{position:relative;min-height:480px;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;overflow:hidden}
-.hero-bg{position:absolute;inset:0;background:${heroPhoto ? `url('${heroPhoto}') center/cover no-repeat` : `linear-gradient(135deg, var(--accent), ${accent}cc)`};filter:brightness(0.45)}
-.hero-content{position:relative;z-index:1;padding:40px 24px;max-width:700px}
-.hero h1{font-size:48px;font-weight:800;margin-bottom:12px;text-shadow:0 2px 8px rgba(0,0,0,.3)}
-.hero p{font-size:18px;opacity:0.9;margin-bottom:24px}
-.hero-rating{font-size:22px;letter-spacing:2px;margin-bottom:24px;color:#ffd700}
-.hero-rating span{color:rgba(255,255,255,0.8);font-size:15px;margin-left:8px}
-.hero-btn{display:inline-block;padding:14px 36px;background:var(--accent);color:#fff;border-radius:50px;font-weight:700;font-size:16px;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 15px rgba(0,0,0,.2)}
-.hero-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3);text-decoration:none}
-
-/* Sections */
-section{padding:64px 24px}
-.section-title{text-align:center;font-size:28px;font-weight:800;margin-bottom:8px}
-.section-subtitle{text-align:center;color:var(--text-light);margin-bottom:40px;font-size:16px}
-.alt-bg{background:var(--section-bg)}
-
-/* Info Cards */
-.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;max-width:900px;margin:0 auto}
-.info-card{background:#fff;border:1px solid #eee;border-radius:var(--radius);padding:28px;text-align:center;transition:transform .2s,box-shadow .2s}
-.info-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
-.info-icon{font-size:32px;margin-bottom:12px}
-.info-card h3{font-size:16px;font-weight:700;margin-bottom:6px}
-.info-card p{color:var(--text-light);font-size:14px}
-
-/* Testimonials */
-.testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:960px;margin:0 auto}
-.testimonial{background:#fff;border:1px solid #eee;border-radius:var(--radius);padding:24px;position:relative}
-.testimonial-stars{color:#ffd700;font-size:16px;margin-bottom:10px;letter-spacing:2px}
-.testimonial-text{font-size:14px;color:var(--text-light);line-height:1.7;margin-bottom:12px;font-style:italic}
-.testimonial-author{font-size:13px;font-weight:600;color:var(--accent)}
-
-/* Gallery */
-.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;max-width:960px;margin:0 auto}
-.gallery-item{border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3;border:1px solid #eee}
-.gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
-.gallery-item:hover img{transform:scale(1.05)}
-
-/* Hours */
-.hours-table{max-width:500px;margin:0 auto;border-collapse:collapse;width:100%}
-.hours-table td{padding:10px 16px;border-bottom:1px solid #eee;font-size:14px}
-.hours-table tr:last-child td{border-bottom:none}
-.hours-table td:first-child{font-weight:600;color:var(--text)}
-.hours-table td:last-child{color:var(--text-light);text-align:right}
-
-/* Contact / Footer */
-.contact-section{background:var(--accent);color:#fff;text-align:center}
-.contact-section .section-title{color:#fff}
-.contact-section .section-subtitle{color:rgba(255,255,255,0.8)}
-.contact-info{display:flex;flex-wrap:wrap;justify-content:center;gap:32px;margin-top:24px}
-.contact-item{font-size:16px}
-.contact-item a{color:#fff;font-weight:600}
-.footer{text-align:center;padding:24px;background:#1a1a2e;color:rgba(255,255,255,.5);font-size:12px}
-
-@media(max-width:768px){
-  .hero h1{font-size:32px}
-  .hero{min-height:380px}
-  .nav-links{display:none}
-  section{padding:48px 16px}
-}
-</style>
-</head>
-<body>
-
-<nav class="nav">
-  <div class="nav-brand">${esc(place.name)}</div>
-  <ul class="nav-links">
-    <li><a href="#about">${t('genAbout')}</a></li>
-    ${testimonialsHtml ? `<li><a href="#reviews">${t('genCustomersSay').split(' ').slice(0, 1).join('')}</a></li>` : ''}
-    ${galleryHtml ? `<li><a href="#gallery">${t('genGallery')}</a></li>` : ''}
-    ${hoursRows ? `<li><a href="#hours">${t('genHours')}</a></li>` : ''}
-    <li><a href="#contact">${t('genContact')}</a></li>
-  </ul>
-</nav>
-
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-content">
-    <h1>${esc(place.name)}</h1>
-    <p>${esc(place.address)}</p>
-    ${place.rating > 0 ? `<div class="hero-rating">${starStr}<span>${place.rating.toFixed(1)} / 5 &middot; ${place.reviewCount.toLocaleString()} ${t('reviews')}</span></div>` : ''}
-    <a class="hero-btn" href="#contact">${t('genGetInTouch')}</a>
-  </div>
-</section>
-
-<section id="about">
-  <h2 class="section-title">${t('genWelcome')}</h2>
-  <p class="section-subtitle">${t('genWelcomeSub')}</p>
-  <div class="info-grid">
-    ${place.phone ? `<div class="info-card"><div class="info-icon">&#128222;</div><h3>${t('genCallUs')}</h3><p>${esc(place.phone)}</p></div>` : ''}
-    <div class="info-card"><div class="info-icon">&#128205;</div><h3>${t('genVisitUs')}</h3><p>${esc(place.address)}</p></div>
-    ${place.rating > 0 ? `<div class="info-card"><div class="info-icon">&#11088;</div><h3>${t('genHighlyRated')}</h3><p>${t('genStarsFrom', place.rating.toFixed(1), place.reviewCount.toLocaleString())}</p></div>` : ''}
-    <div class="info-card"><div class="info-icon">&#128640;</div><h3>${t('genDirections')}</h3><p><a href="https://www.google.com/maps/search/?api=1&query=${mapsQuery}" target="_blank">${t('genOpenMaps')}</a></p></div>
-  </div>
-</section>
-
-${testimonialsHtml ? `
-<section id="reviews" class="alt-bg">
-  <h2 class="section-title">${t('genCustomersSay')}</h2>
-  <p class="section-subtitle">${t('genRealReviews')}</p>
-  <div class="testimonials-grid">${testimonialsHtml}</div>
-</section>` : ''}
-
-${galleryHtml ? `
-<section id="gallery">
-  <h2 class="section-title">${t('genGallery')}</h2>
-  <p class="section-subtitle">${t('genGallerySub')}</p>
-  <div class="gallery-grid">${galleryHtml}</div>
-</section>` : ''}
-
-${hoursRows ? `
-<section id="hours" class="alt-bg">
-  <h2 class="section-title">${t('genBusinessHours')}</h2>
-  <p class="section-subtitle">${t('genHoursSub')}</p>
-  <table class="hours-table">${hoursRows}</table>
-</section>` : ''}
-
-<section id="contact" class="contact-section">
-  <h2 class="section-title">${t('genContactUs')}</h2>
-  <p class="section-subtitle">${t('genContactSub')}</p>
-  <div class="contact-info">
-    ${place.phone ? `<div class="contact-item">&#128222; <a href="tel:${esc(place.phone.replace(/[^+\d]/g, ''))}">${esc(place.phone)}</a></div>` : ''}
-    <div class="contact-item">&#128205; <a href="https://www.google.com/maps/search/?api=1&query=${mapsQuery}" target="_blank">${esc(place.address)}</a></div>
-  </div>
-</section>
-
-<footer class="footer">
-  &copy; ${new Date().getFullYear()} ${esc(place.name)}. ${t('genAllRights')}
-</footer>
-
-</body>
-</html>`;
-
-    // Open in new tab
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-
-    // Also offer download
-    setTimeout(() => {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${place.name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-').toLowerCase()}-website.html`;
-      a.click();
-    }, 500);
-  }
-
-  // HTML escape helper for generated website content
-  function esc(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   // ── Start ──
