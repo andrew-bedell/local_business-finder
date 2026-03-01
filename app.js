@@ -164,6 +164,15 @@
       radius15km: '15 km',
       radius30km: '30 km',
       radius50km: '50 km',
+      // Save to DB
+      saveAllBtn: 'Save All to DB',
+      thSave: 'Save',
+      saveBtn: 'Save',
+      savedBtn: 'Saved',
+      savingBtn: 'Saving...',
+      saveAllSuccess: 'All businesses saved to database!',
+      saveError: 'Error saving. Check console for details.',
+      savedCount: '{0} of {1} saved to database',
       // Generated website
       genGetInTouch: 'Get in Touch',
       genWelcome: 'Welcome',
@@ -344,6 +353,15 @@
       radius15km: '15 km',
       radius30km: '30 km',
       radius50km: '50 km',
+      // Save to DB
+      saveAllBtn: 'Guardar Todo en BD',
+      thSave: 'Guardar',
+      saveBtn: 'Guardar',
+      savedBtn: 'Guardado',
+      savingBtn: 'Guardando...',
+      saveAllSuccess: '¡Todos los negocios guardados en la base de datos!',
+      saveError: 'Error al guardar. Revisa la consola para más detalles.',
+      savedCount: '{0} de {1} guardados en la base de datos',
       // Generated website
       genGetInTouch: 'Contáctanos',
       genWelcome: 'Bienvenidos',
@@ -422,6 +440,84 @@
     }
   }
 
+  // ── Supabase ──
+  const SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
+  const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  const savedPlaceIds = new Set();
+
+  async function loadSavedIds() {
+    if (!supabaseClient) return;
+    try {
+      const { data } = await supabaseClient.from('businesses').select('place_id');
+      if (data) data.forEach((row) => savedPlaceIds.add(row.place_id));
+    } catch (e) {
+      console.warn('Could not load saved IDs:', e);
+    }
+  }
+
+  async function saveBusiness(place) {
+    if (!supabaseClient) return false;
+    const location = locationInput.value.trim();
+    const type = businessType.value;
+    const row = {
+      place_id: place.placeId,
+      name: place.name,
+      address: place.address,
+      phone: place.phone,
+      rating: place.rating || null,
+      review_count: place.reviewCount || 0,
+      business_status: place.status,
+      maps_url: place.mapsUrl,
+      types: place.types || [],
+      reviews: (place.reviewData || []).map((r) => ({
+        text: r.text,
+        rating: r.rating,
+        author: r.authorAttribution ? r.authorAttribution.displayName : '',
+        time: r.relativePublishTimeDescription,
+      })),
+      hours: place.hours || [],
+      search_location: location,
+      search_type: type,
+    };
+
+    const { error } = await supabaseClient
+      .from('businesses')
+      .upsert(row, { onConflict: 'place_id' });
+
+    if (error) {
+      console.error('Save error:', error);
+      return false;
+    }
+    savedPlaceIds.add(place.placeId);
+    return true;
+  }
+
+  async function saveAllBusinesses() {
+    if (!supabaseClient || filteredResults.length === 0) return;
+
+    const btn = document.getElementById('btn-save-all');
+    btn.disabled = true;
+    btn.textContent = t('savingBtn');
+
+    let savedCount = 0;
+    for (const place of filteredResults) {
+      if (savedPlaceIds.has(place.placeId)) {
+        savedCount++;
+        continue;
+      }
+      const ok = await saveBusiness(place);
+      if (ok) savedCount++;
+    }
+
+    btn.textContent = t('savedCount', savedCount, filteredResults.length);
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = t('saveAllBtn'); }, 3000);
+
+    // Re-render to update individual save buttons
+    renderTable();
+  }
+
   // ── State ──
   let apiKey = localStorage.getItem('google_places_api_key') || '';
   let geocoder = null;
@@ -475,7 +571,11 @@
     sortSelect.addEventListener('change', applyFilterAndSort);
     btnExportCsv.addEventListener('click', exportCsv);
     btnClear.addEventListener('click', clearResults);
+    document.getElementById('btn-save-all').addEventListener('click', saveAllBusinesses);
     countrySelect.addEventListener('change', onCountryChange);
+
+    // Load previously saved business IDs from Supabase
+    loadSavedIds();
 
     // Language switcher
     document.querySelectorAll('.lang-btn').forEach((btn) => {
@@ -815,6 +915,11 @@
         ? `<button class="btn btn-view" data-idx="${idx}">${t('viewBtn')}</button>`
         : `<span style="color:var(--text-dim);font-size:12px">${t('noData')}</span>`;
 
+      const isSaved = savedPlaceIds.has(place.placeId);
+      const saveBtnHtml = isSaved
+        ? `<span class="badge badge-saved">${t('savedBtn')}</span>`
+        : `<button class="btn btn-save-row" data-idx="${idx}">${t('saveBtn')}</button>`;
+
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
         <td><strong>${escapeHtml(place.name)}</strong></td>
@@ -829,6 +934,7 @@
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center"><button class="btn btn-create-site" data-idx="${idx}">${t('createSiteBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
+        <td class="td-center">${saveBtnHtml}</td>
       `;
 
       // Attach click handler for View button
@@ -841,6 +947,22 @@
       const createSiteBtn = tr.querySelector('.btn-create-site');
       if (createSiteBtn) {
         createSiteBtn.addEventListener('click', () => generateWebsite(place));
+      }
+
+      // Attach click handler for Save button
+      const saveRowBtn = tr.querySelector('.btn-save-row');
+      if (saveRowBtn) {
+        saveRowBtn.addEventListener('click', async function () {
+          this.disabled = true;
+          this.textContent = t('savingBtn');
+          const ok = await saveBusiness(place);
+          if (ok) {
+            this.outerHTML = `<span class="badge badge-saved">${t('savedBtn')}</span>`;
+          } else {
+            this.textContent = t('saveError');
+            this.disabled = false;
+          }
+        });
       }
 
       resultsBody.appendChild(tr);

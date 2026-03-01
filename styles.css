@@ -619,6 +619,54 @@ select.input {
   color: #fff;
 }
 
+/* === Save to DB Button === */
+.btn-save-db {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+.btn-save-db:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-save-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  background: var(--primary-bg);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-save-row:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-save-row:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.badge-saved {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.col-save {
+  width: 80px;
+  text-align: center !important;
+}
+
 /* === Modal === */
 .modal-overlay {
   position: fixed;
