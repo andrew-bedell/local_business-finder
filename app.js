@@ -147,6 +147,8 @@
       keySaved: 'Key saved. Loading Google Maps...',
       mapsLoaded: 'Google Maps loaded successfully.',
       mapsLoadFailed: 'Failed to load Google Maps. Check your API key and ensure Places API (New) is enabled.',
+      apiKeyAutoLoaded: 'API key loaded from server. Connecting to Google Maps...',
+      apiKeyAutoFailed: 'Could not load API key from server. Enter your key manually below.',
       // Footer
       footer: 'Powered by Google Places API. Results may not be 100% accurate — always verify before outreach.',
       // Radius labels
@@ -317,6 +319,8 @@
       keySaved: 'Clave guardada. Cargando Google Maps...',
       mapsLoaded: 'Google Maps cargado exitosamente.',
       mapsLoadFailed: 'Error al cargar Google Maps. Verifica tu clave API y asegúrate de que la Places API (New) esté habilitada.',
+      apiKeyAutoLoaded: 'Clave API cargada del servidor. Conectando a Google Maps...',
+      apiKeyAutoFailed: 'No se pudo cargar la clave API del servidor. Ingresa tu clave manualmente.',
       // Footer
       footer: 'Impulsado por Google Places API. Los resultados pueden no ser 100% precisos — siempre verifica antes de contactar.',
       // Radius labels
@@ -543,11 +547,6 @@
 
   // ── Initialize ──
   function init() {
-    if (apiKey) {
-      apiKeyInput.value = '••••••••••••••••••••';
-      loadGoogleMaps(apiKey);
-    }
-
     btnSaveKey.addEventListener('click', saveApiKey);
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') saveApiKey();
@@ -577,6 +576,35 @@
 
     applyLanguage();
     updateSearchButton();
+
+    // Try to load API key from server, fall back to localStorage
+    fetchApiKeyFromServer();
+  }
+
+  async function fetchApiKeyFromServer() {
+    try {
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.googleApiKey) {
+          apiKey = data.googleApiKey;
+          apiKeyInput.value = '••••••••••••••••••••';
+          apiKeyInput.disabled = true;
+          btnSaveKey.style.display = 'none';
+          showApiStatus(t('apiKeyAutoLoaded'), 'success');
+          loadGoogleMaps(apiKey);
+          return;
+        }
+      }
+    } catch (_) {
+      // Server not available (e.g. local dev) — fall back silently
+    }
+
+    // Fall back to localStorage key or manual input
+    if (apiKey) {
+      apiKeyInput.value = '••••••••••••••••••••';
+      loadGoogleMaps(apiKey);
+    }
   }
 
   // ── API Key Management ──
