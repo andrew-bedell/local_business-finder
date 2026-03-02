@@ -21,3 +21,11 @@ The `saveBusiness()` function saves fields that don't exist in the database sche
 
 ## Impact
 Businesses may fail to save to the database entirely, while the UI shows a success toast.
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Changed `address` to `address_full` in the save row to match the schema column name
+- Removed the `reviews` field from the business row entirely
+- Reviews are now saved to the `business_reviews` table with proper foreign key (`business_id`), using the ID returned from the business upsert via `.select('id')`
+- Each review is saved with `source: 'google'`, `author_name`, `author_photo_url`, `rating` (clamped 1-5), `text`, and `published_at`
+- **Files changed:** `app.js` (`saveBusiness()` function)

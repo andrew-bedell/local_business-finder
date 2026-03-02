@@ -18,3 +18,10 @@ Latitude and longitude should be captured from either the geocoding result or th
 - Location-based queries on saved businesses are impossible
 - Map features in the Generate phase will not work
 - Prevents distance calculations between businesses
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Added `'location'` to the `searchPlaces()` fields array so the API returns place coordinates
+- Updated `mapPlaceToResult()` to extract `latitude` and `longitude` from `place.location` (handles both LatLng objects with `.lat()/.lng()` methods and plain objects with `.lat/.lng` properties)
+- Added `latitude` and `longitude` to the save row in `saveBusiness()`
+- **Files changed:** `app.js` (`searchPlaces()`, `mapPlaceToResult()`, `saveBusiness()`)

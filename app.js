@@ -178,6 +178,9 @@
       saveAllSuccessToast: 'Successfully saved {0} of {1} businesses to database!',
       saveRowSuccess: '"{0}" saved to database.',
       saveRowError: 'Failed to save "{0}". Check console for details.',
+      // Error messages
+      searchError: 'Search failed. Please check your API key and network connection, then try again.',
+      timeoutError: '{0} timed out after {1}s. Check your API key and network connection.',
     },
     es: {
       // Header
@@ -350,6 +353,9 @@
       saveAllSuccessToast: '¡{0} de {1} negocios guardados en la base de datos!',
       saveRowSuccess: '"{0}" guardado en la base de datos.',
       saveRowError: 'Error al guardar "{0}". Revisa la consola para más detalles.',
+      // Error messages
+      searchError: 'La búsqueda falló. Verifica tu clave API y conexión a internet, e intenta de nuevo.',
+      timeoutError: '{0} agotó el tiempo de espera después de {1}s. Verifica tu clave API y conexión a internet.',
     },
   };
 
@@ -417,13 +423,20 @@
   }
 
   // ── Supabase ──
-  const SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
-  const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  // Fallback credentials used when server config is unavailable (local dev)
+  const SUPABASE_URL_FALLBACK = 'https://xagfwyknlutmmtfufbfi.supabase.co';
+  const SUPABASE_KEY_FALLBACK = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
+  let supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL_FALLBACK, SUPABASE_KEY_FALLBACK) : null;
   const savedPlaceIds = new Set();
 
   if (!supabaseClient) {
     console.warn('Supabase client not initialized. window.supabase =', window.supabase);
+  }
+
+  function initSupabaseFromConfig(url, key) {
+    if (window.supabase && url && key) {
+      supabaseClient = window.supabase.createClient(url, key);
+    }
   }
 
   async function loadSavedIds() {
@@ -436,41 +449,83 @@
     }
   }
 
+  // Valid business_status values per database CHECK constraint
+  const VALID_BUSINESS_STATUSES = ['OPERATIONAL', 'CLOSED_TEMPORARILY', 'CLOSED_PERMANENTLY', 'UNKNOWN'];
+
   async function saveBusiness(place) {
     if (!supabaseClient) return false;
-    const location = locationInput.value.trim();
-    const type = businessType.value;
-    const row = {
-      place_id: place.placeId,
-      name: place.name,
-      address: place.address,
-      phone: place.phone,
-      rating: place.rating || null,
-      review_count: place.reviewCount || 0,
-      business_status: place.status,
-      maps_url: place.mapsUrl,
-      types: place.types || [],
-      reviews: (place.reviewData || []).map((r) => ({
-        text: r.text,
-        rating: r.rating,
-        author: r.authorAttribution ? r.authorAttribution.displayName : '',
-        time: r.relativePublishTimeDescription,
-      })),
-      hours: place.hours || [],
-      search_location: location,
-      search_type: type,
-    };
+    try {
+      const location = locationInput.value.trim();
+      const type = businessType.value;
 
-    const { error } = await supabaseClient
-      .from('businesses')
-      .upsert(row, { onConflict: 'place_id' });
+      // Validate business_status against CHECK constraint
+      const status = VALID_BUSINESS_STATUSES.includes(place.status) ? place.status : 'UNKNOWN';
 
-    if (error) {
-      console.error('Save error:', error);
+      const row = {
+        place_id: place.placeId,
+        name: place.name,
+        address_full: place.address,
+        phone: place.phone,
+        website: place.website || '',
+        rating: place.rating || null,
+        review_count: place.reviewCount || 0,
+        business_status: status,
+        maps_url: place.mapsUrl,
+        types: place.types || [],
+        latitude: place.latitude || null,
+        longitude: place.longitude || null,
+        hours: place.hours || [],
+        search_location: location,
+        search_type: type,
+      };
+
+      // Upsert business and get back the id for saving reviews
+      const { data, error } = await supabaseClient
+        .from('businesses')
+        .upsert(row, { onConflict: 'place_id' })
+        .select('id');
+
+      if (error) {
+        console.error('Save error:', error);
+        return false;
+      }
+
+      // Save reviews to business_reviews table
+      const businessId = data && data[0] && data[0].id;
+      if (businessId && place.reviewData && place.reviewData.length > 0) {
+        const reviewRows = place.reviewData.map((r) => {
+          const authorName = r.authorAttribution?.displayName || null;
+          const reviewText = r.text || '';
+          const sentiment = analyzeSentiment(r);
+          return {
+            business_id: businessId,
+            source: 'google',
+            author_name: authorName,
+            author_photo_url: r.authorAttribution?.photoURI || null,
+            rating: Math.max(1, Math.min(5, Math.round(r.rating || 3))),
+            text: reviewText,
+            published_at: r.relativePublishTimeDescription || '',
+            sentiment_score: Math.round(sentiment.score * 10000) / 10000,
+            sentiment_label: sentimentLabelToDb(sentiment.label),
+            review_hash: reviewHash('google', authorName, reviewText),
+          };
+        });
+
+        const { error: reviewError } = await supabaseClient
+          .from('business_reviews')
+          .upsert(reviewRows, { onConflict: 'business_id,review_hash' });
+
+        if (reviewError) {
+          console.warn('Review save error (non-fatal):', reviewError);
+        }
+      }
+
+      savedPlaceIds.add(place.placeId);
+      return true;
+    } catch (err) {
+      console.error('Save error (exception):', err);
       return false;
     }
-    savedPlaceIds.add(place.placeId);
-    return true;
   }
 
   async function saveAllBusinesses() {
@@ -562,9 +617,6 @@
     document.getElementById('btn-save-all').addEventListener('click', saveAllBusinesses);
     countrySelect.addEventListener('change', onCountryChange);
 
-    // Load previously saved business IDs from Supabase
-    loadSavedIds();
-
     // Language switcher
     document.querySelectorAll('.lang-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -586,15 +638,25 @@
       const res = await fetch('/api/config');
       if (res.ok) {
         const data = await res.json();
+        // Re-initialize Supabase client with server-provided credentials
+        if (data.supabaseUrl && data.supabaseKey) {
+          initSupabaseFromConfig(data.supabaseUrl, data.supabaseKey);
+        }
+        // Load saved IDs after final Supabase client is determined
+        loadSavedIds();
         if (data.googleApiKey) {
           apiKey = data.googleApiKey;
           document.getElementById('api-setup').style.display = 'none';
           loadGoogleMaps(apiKey);
           return;
         }
+      } else {
+        // Server returned non-OK — use fallback Supabase client
+        loadSavedIds();
       }
     } catch (_) {
-      // Server not available (e.g. local dev) — fall back silently
+      // Server not available (e.g. local dev) — use fallback Supabase client
+      loadSavedIds();
     }
 
     // Fall back to localStorage key or manual input
@@ -721,7 +783,7 @@
       showResults();
     } catch (err) {
       console.error('Search error:', err);
-      updateProgress(0, `Error: ${err.message || 'An unexpected error occurred.'}`);
+      updateProgress(0, t('searchError'));
     }
 
     resetSearchButton();
@@ -765,7 +827,7 @@
     return Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s. Check your API key and network connection.`)), ms)
+        setTimeout(() => reject(new Error(t('timeoutError', label, ms / 1000))), ms)
       ),
     ]);
   }
@@ -797,7 +859,7 @@
   // ── Places Search (New API) ──
   async function searchPlaces(latLng, type, radius, maxCount) {
     const request = {
-      fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'googleMapsURI', 'types', 'id', 'reviews', 'photos', 'regularOpeningHours'],
+      fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'googleMapsURI', 'types', 'id', 'reviews', 'photos', 'regularOpeningHours', 'location'],
       locationRestriction: {
         center: latLng,
         radius: radius,
@@ -831,6 +893,11 @@
       } : null,
     }));
 
+    // Extract latitude/longitude from place.location (LatLng object)
+    const loc = place.location;
+    const latitude = loc ? (typeof loc.lat === 'function' ? loc.lat() : loc.lat) : null;
+    const longitude = loc ? (typeof loc.lng === 'function' ? loc.lng() : loc.lng) : null;
+
     return {
       name: place.displayName || '',
       address: place.formattedAddress || '',
@@ -845,6 +912,8 @@
       reviewData: normalizedReviews,
       photos: place.photos || [],
       hours: place.regularOpeningHours ? place.regularOpeningHours.weekdayDescriptions || [] : [],
+      latitude: latitude,
+      longitude: longitude,
     };
   }
 
@@ -979,7 +1048,7 @@
   function exportCsv() {
     if (filteredResults.length === 0) return;
 
-    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Google Maps URL'];
+    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Google Maps URL'].map(csvEscape);
     const rows = filteredResults.map((p, i) => [
       i + 1,
       csvEscape(p.name),
@@ -1042,6 +1111,23 @@
       return '"' + str.replace(/"/g, '""') + '"';
     }
     return str;
+  }
+
+  // ── Review Hash ──
+  // Simple string hash for review deduplication (not cryptographic)
+  function reviewHash(source, authorName, text) {
+    const str = (source || '') + '|' + (authorName || '') + '|' + (text || '');
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+    }
+    return hash.toString(36);
+  }
+
+  // Map analyzeSentiment label to DB CHECK constraint format
+  function sentimentLabelToDb(label) {
+    const map = { 'very positive': 'very_positive', 'positive': 'positive', 'neutral': 'neutral', 'negative': 'negative' };
+    return map[label] || 'neutral';
   }
 
   // ── Sentiment Analysis ──

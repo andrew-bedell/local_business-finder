@@ -19,3 +19,10 @@ The `business_status` value from Google Places API is saved directly to the data
 ## Impact
 - Database save fails silently if Google introduces new status values
 - Relatively low probability but causes hard-to-diagnose failures
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Added `VALID_BUSINESS_STATUSES` constant array with the 4 allowed values
+- `saveBusiness()` now validates `place.status` against this list before saving
+- Unknown/unexpected values default to `'UNKNOWN'`
+- **Files changed:** `app.js` (`saveBusiness()`)

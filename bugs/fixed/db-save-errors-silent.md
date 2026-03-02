@@ -20,3 +20,10 @@ When a Supabase upsert fails, the error is only logged to `console.error`. The u
 1. Modify schema to cause a conflict (or trigger a field mismatch per the schema mismatch bug)
 2. Click "Save" on a business
 3. Observe success toast despite console error
+
+## Resolution
+**Fixed on 2026-03-02.**
+- The root cause was the schema mismatch bug (invalid column names caused upsert errors). With correct column names, the upsert succeeds or fails cleanly.
+- Added `try/catch` wrapper around the entire `saveBusiness()` function to catch unexpected exceptions (e.g., network errors)
+- The individual save button handler already properly shows error toast on `false` return; `saveAllBusinesses()` also shows error toast when `savedCount === 0`
+- **Files changed:** `app.js` (`saveBusiness()`)
