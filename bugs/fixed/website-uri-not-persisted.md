@@ -17,3 +17,9 @@ The `website` field (even if empty string) should be saved to distinguish betwee
 ## Impact
 - Cannot query the database for businesses without websites
 - Loses the core filtering information that the pipeline depends on
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Added `website: place.website || ''` to the save row in `saveBusiness()`
+- Empty string distinguishes "confirmed no website" from "not checked"
+- **Files changed:** `app.js` (`saveBusiness()`)

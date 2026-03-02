@@ -24,3 +24,9 @@ setTimeout(() => reject(new Error(
 ## Impact
 - Poor UX for Spanish-language users
 - Inconsistent language experience
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Replaced hardcoded timeout error string with `t('timeoutError', label, ms / 1000)`
+- Added `timeoutError` translation key to both EN and ES translations with `{0}` (label) and `{1}` (seconds) placeholders
+- **Files changed:** `app.js` (`withTimeout()`, EN/ES translations)

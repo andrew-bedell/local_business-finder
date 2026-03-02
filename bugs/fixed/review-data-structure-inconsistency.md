@@ -16,3 +16,10 @@ The review data structure differs between `mapPlaceToResult()` and `saveBusiness
 - Use a single, consistent review data structure throughout the application
 - Preserve all available data (including author photo URI)
 - Align with the `business_reviews` table schema for eventual proper persistence
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Eliminated the re-mapping in `saveBusiness()` — reviews are no longer flattened to a different format
+- Reviews are now saved directly to the `business_reviews` table using the normalized structure from `mapPlaceToResult()`, mapped to schema columns: `author_name`, `author_photo_url`, `rating`, `text`, `published_at`
+- All data from `mapPlaceToResult()` is preserved including `authorAttribution.photoURI`
+- **Files changed:** `app.js` (`saveBusiness()`)

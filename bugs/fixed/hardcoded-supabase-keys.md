@@ -23,3 +23,12 @@ const SUPABASE_KEY = 'sb_publishable_...';
 ## Impact
 - Security risk if RLS policies are misconfigured
 - Credential rotation requires code changes
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Extended `api/config.js` to serve `SUPABASE_URL` and `SUPABASE_ANON_KEY` from environment variables alongside the Google API key
+- Added `initSupabaseFromConfig(url, key)` function in `app.js` to re-initialize the Supabase client with server-provided credentials
+- `fetchApiKeyFromServer()` now checks for Supabase credentials in the response and re-initializes the client if present
+- Hardcoded values remain as fallbacks for local development when the server endpoint is unavailable
+- Renamed hardcoded constants to `SUPABASE_URL_FALLBACK` and `SUPABASE_KEY_FALLBACK` to clarify their role
+- **Files changed:** `app.js` (Supabase init, `fetchApiKeyFromServer()`), `api/config.js`

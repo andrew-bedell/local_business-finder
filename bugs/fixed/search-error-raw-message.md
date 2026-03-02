@@ -31,3 +31,10 @@ When the main search flow catches an error, it displays the raw `err.message` di
 - Spanish-language users see English error messages
 - Technical API error strings exposed to non-technical users
 - Inconsistent with error handling rules documented in CLAUDE.md
+
+## Resolution
+**Fixed on 2026-03-02.**
+- Replaced `updateProgress(0, \`Error: \${err.message}\`)` with `updateProgress(0, t('searchError'))`
+- Added `searchError` translation key to both EN and ES translations
+- Raw error details are still logged to `console.error` for debugging
+- **Files changed:** `app.js` (`startSearch()` catch block, EN/ES translations)
