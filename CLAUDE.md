@@ -32,27 +32,33 @@ database/schema.sql  — Supabase database schema (source of truth)
 
 ## Code Structure (app.js)
 
-The entire app lives inside a single IIFE `(function() { 'use strict'; ... })()`. Code is organized into labeled sections:
+The entire app lives inside a single IIFE `(function() { 'use strict'; ... })()`. Code is organized into labeled sections marked by `// ── Section Name ──` comments. Search for `// ──` to navigate between sections.
 
-| Section | Lines (approx) | Purpose |
+| Section Marker | Key Functions | Purpose |
 |---|---|---|
-| i18n | 1–400 | `translations` object (EN/ES), `t()` helper, `applyLanguage()` |
-| Toast Notifications | 405–413 | `showToast(message, type)` |
-| Supabase | 415–508 | Client init, `loadSavedIds()`, `saveBusiness()`, `saveAllBusinesses()` |
-| State & DOM refs | 510–542 | App state variables, cached `$()` selectors |
-| Initialize | 544–580 | `init()` — event binding, language setup |
-| API Key Management | 582–627 | Save key to localStorage, load Google Maps script |
-| Search Flow | 644–703 | `startSearch()` — geocode → searchNearby → map → filter → render |
-| Country/Radius | 712–736 | Country selection, km/mile label switching |
-| Geocoding | 748–770 | `geocodeLocation()` with timeout wrapper |
-| Places Search | 772–794 | `searchPlaces()` using `Place.searchNearby()` |
-| Data Mapping | 796–824 | `mapPlaceToResult()` — normalize API response to internal format |
-| Results Display | 832–958 | `showResults()`, `applyFilterAndSort()`, `renderTable()` |
-| CSV Export | 960–990 | `exportCsv()` |
-| Utilities | 1002–1015 | `escapeHtml()`, `csvEscape()` |
-| Sentiment Analysis | 1017–1082 | Keyword-based scoring, `getTopReviews()` |
-| Photo URLs | 1084–1088 | `getPhotoUrl()` |
-| Detail Modal | 1090–1247 | `openDetailModal()` — photos, reviews, hours, copy-to-clipboard |
+| `// ── i18n ──` | `translations`, `t()`, `applyLanguage()` | Translation objects (EN/ES) and language switching |
+| `// ── Toast Notifications ──` | `showToast(message, type)` | User feedback notifications |
+| `// ── Supabase ──` | `loadSavedIds()`, `saveBusiness()`, `saveAllBusinesses()` | Database client init and persistence |
+| `// ── State ──` | — | App state: `apiKey`, `allResults`, `filteredResults`, `isSearching`, `mapsLoaded` |
+| `// ── DOM refs ──` | `$()` shorthand | Cached DOM element references |
+| `// ── Initialize ──` | `init()`, `fetchApiKeyFromServer()` | Event binding, language setup, server key fetch |
+| `// ── API Key Management ──` | `saveApiKey()`, `showApiStatus()` | Save key to localStorage, validate input |
+| `// ── Google Maps Loading ──` | `loadGoogleMaps()`, `initServices()` | Dynamic script injection, geocoder initialization |
+| `// ── Search Button State ──` | `updateSearchButton()` | Enable/disable search based on required inputs |
+| `// ── Main Search Flow ──` | `startSearch()`, `resetSearchButton()` | Geocode → searchNearby → map → filter → render |
+| `// ── Country Selection ──` | `onCountryChange()`, `updateRadiusLabels()` | Country-aware placeholders and km/mile switching |
+| `// ── Timeout helper ──` | `withTimeout(promise, ms, label)` | Race promise against timeout for network calls |
+| `// ── Geocoding ──` | `geocodeLocation()` | Address to coordinates via Google Geocoder |
+| `// ── Places Search ──` | `searchPlaces()` | `Place.searchNearby()` with field selection |
+| `// ── Map Place objects ──` | `mapPlaceToResult()` | Normalize Google API response to internal format |
+| `// ── Progress ──` | `updateProgress()` | Update progress bar and status text |
+| `// ── Display Results ──` | `showResults()`, `applyFilterAndSort()`, `renderTable()` | Filter, sort, and render results table |
+| `// ── Export CSV ──` | `exportCsv()` | Download filtered results as CSV |
+| `// ── Clear Results ──` | `clearResults()` | Reset results state and hide UI sections |
+| `// ── Utility ──` | `escapeHtml()`, `renderStars()`, `csvEscape()` | HTML sanitization, star display, CSV formatting |
+| `// ── Sentiment Analysis ──` | `analyzeSentiment()`, `getTopReviews()` | Keyword-based scoring with rating weight |
+| `// ── Photo URLs ──` | `getPhotoUrl()` | Extract photo URI from Google Places photo objects |
+| `// ── Detail Modal ──` | `openDetailModal()` | Photos, reviews, hours, copy-to-clipboard modal |
 
 ## Design System
 
@@ -253,11 +259,9 @@ Reusable UI patterns defined in `styles.css`. New features must use these existi
 - **No classes or modules.** Plain functions and closures.
 
 ### CSS
-- **Design tokens via CSS custom properties** on `:root` — colors, radii, shadows, max-width.
-- **Dark theme by default** (`--bg: #0f1117`). Color palette: indigo primary (`#6366f1`), green success, amber warning, red danger.
+- **All tokens, colors, typography, spacing, and components are defined in the [Design System](#design-system) and [Component Reference](#component-reference) sections above.** Refer to those sections for specific values.
 - **BEM-lite naming:** `.card`, `.card-header`, `.btn-primary`, `.badge-no-site`. No strict BEM — flat class names for simple elements.
-- **Responsive:** Mobile-first breakpoints at `768px` and `480px` using `@media (max-width: ...)`.
-- **Font:** Inter via Google Fonts, 14px base size.
+- **New components** must reuse existing classes from the Component Reference before creating new ones.
 
 ### HTML
 - **Single `index.html`** with semantic sections: `<header>`, `<main>`, `<footer>`.
@@ -432,16 +436,18 @@ Tracks each website generation attempt and its status.
 
 ## Key Patterns to Follow
 
-1. **No build tooling.** Keep it as plain HTML/CSS/JS served statically.
+Quick-reference checklist. Details are in the dedicated sections above.
+
+1. **No build tooling.** Plain HTML/CSS/JS served statically.
 2. **All new strings must be i18n'd** — add to both `en` and `es` translation objects.
 3. **Sanitize all dynamic content** with `escapeHtml()` before injecting into the DOM.
 4. **Keep everything in the IIFE.** Don't leak globals.
-5. **Use CSS custom properties** for any new colors, spacing, or design tokens.
-6. **Prefer `async/await`** over raw promises. Wrap network calls with `withTimeout()`.
-7. **Responsive design:** Test at 768px and 480px breakpoints. Use flexbox, avoid fixed widths.
-8. **No new CDN dependencies** without discussion. The app should remain lightweight.
-9. **localStorage** for user preferences (API key, language). Supabase for persistent business data.
-10. **Toast notifications** via `showToast(message, 'success' | 'error' | 'warning')` for user feedback.
+5. **Prefer `async/await`** over raw promises. Wrap network calls with `withTimeout()`.
+6. **No new CDN dependencies** without discussion. The app should remain lightweight.
+7. **Use existing design tokens and components** — see [Design System](#design-system) and [Component Reference](#component-reference).
+8. **Follow error handling patterns** — see [Error Handling Patterns](#error-handling-patterns).
+9. **Store preferences in localStorage, business data in Supabase** — see [localStorage Keys](#localstorage-keys).
+10. **Track features and bugs** in the documentation folders — see [Lifecycle Rules](#lifecycle-rules).
 
 ## Documentation Folders & Lifecycle Rules
 
