@@ -16,11 +16,16 @@ A lead-to-website pipeline that finds local businesses **without websites**, gat
 **Stack:** Vanilla HTML/CSS/JS — no build tools, no frameworks, no bundler.
 
 ```
-index.html           — Single-page HTML shell (semantic sections, data-i18n attributes)
-app.js               — All application logic in one IIFE
-styles.css           — Dark-theme design system using CSS custom properties
-api/config.js        — Vercel serverless function (API key proxy)
-database/schema.sql  — Supabase database schema (source of truth)
+index.html               — Single-page HTML shell (semantic sections, data-i18n attributes)
+app.js                   — All application logic in one IIFE
+styles.css               — Dark-theme design system using CSS custom properties
+api/config.js            — Vercel serverless function (API key proxy)
+database/schema.sql      — Supabase database schema (source of truth)
+data-architecture/       — System-level data architecture documentation
+  overview.md            — Principles, technology stack, system diagram
+  data-flow.md           — Pipeline data flow (Find → Gather → Curate → Generate)
+  external-services.md   — All external APIs, auth methods, rate limits
+  storage-strategy.md    — Where data lives and why (localStorage, memory, Supabase, Vercel)
 ```
 
 **External dependencies (CDN only):**
@@ -448,19 +453,36 @@ Quick-reference checklist. Details are in the dedicated sections above.
 8. **Follow error handling patterns** — see [Error Handling Patterns](#error-handling-patterns).
 9. **Store preferences in localStorage, business data in Supabase** — see [localStorage Keys](#localstorage-keys).
 10. **Track features and bugs** in the documentation folders — see [Lifecycle Rules](#lifecycle-rules).
+11. **Update `data-architecture/`** when changing storage decisions, adding external services, or modifying the pipeline — see [Data Architecture Folder](#data-architecture-folder).
 
 ## Documentation Folders & Lifecycle Rules
 
-Project tracking is organized into three folders with strict lifecycle rules for how files move between them.
+Project tracking and architecture documentation is organized into dedicated folders.
 
 ### Folder Structure
 
 ```
+data-architecture/ — System-level data architecture (not code, not schema — strategic decisions)
 features/          — Completed, shipped features (one .md file per feature)
 planned/           — Features designed but not yet built (one .md file per feature)
 bugs/              — Active bugs that need fixing (one .md file per bug)
   └─ fixed/        — Bugs that have been resolved (moved here after fix)
 ```
+
+### Data Architecture Folder
+
+The `data-architecture/` folder documents how data flows through the entire system, what technologies are used, where data lives, and the principles governing data management. It is the strategic counterpart to `database/schema.sql` (which defines table structure).
+
+| File | Content |
+|---|---|
+| `overview.md` | Guiding principles, technology stack, system diagram, data locations summary |
+| `data-flow.md` | Step-by-step data flow through each pipeline phase, what gets persisted where |
+| `external-services.md` | Catalog of all external services (current and planned) with auth, rate limits, integration approach |
+| `storage-strategy.md` | Storage tiers (localStorage, browser memory, Supabase PostgreSQL, Supabase Storage, Vercel), file naming, data lifecycle |
+
+**Rules:**
+- Update these docs when adding new external services, changing storage decisions, or modifying the pipeline.
+- `data-architecture/` is about *system-level decisions*. Table/column details belong in `database/schema.sql`.
 
 ### Lifecycle Rules
 
