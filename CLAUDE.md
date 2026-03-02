@@ -257,6 +257,63 @@ Tracks each website generation attempt and its status.
 9. **localStorage** for user preferences (API key, language). Supabase for persistent business data.
 10. **Toast notifications** via `showToast(message, 'success' | 'error' | 'warning')` for user feedback.
 
+## Documentation Folders & Lifecycle Rules
+
+Project tracking is organized into three folders with strict lifecycle rules for how files move between them.
+
+### Folder Structure
+
+```
+features/          — Completed, shipped features (one .md file per feature)
+planned/           — Features designed but not yet built (one .md file per feature)
+bugs/              — Active bugs that need fixing (one .md file per bug)
+  └─ fixed/        — Bugs that have been resolved (moved here after fix)
+```
+
+### Lifecycle Rules
+
+1. **Planned feature completed → move to `features/`**
+   - When a feature from `planned/` is fully implemented, move its `.md` file to `features/`
+   - Update the file content to reflect what was actually built (remove "Status: Not Started", add key files, actual behavior, etc.)
+   - Delete the file from `planned/` — do not leave a copy behind
+
+2. **New bug discovered → create in `bugs/`**
+   - Create a new `.md` file in `bugs/` with: severity, affected file(s), description, steps to reproduce, expected behavior, and impact
+   - Use kebab-case filenames (e.g., `save-business-schema-mismatch.md`)
+
+3. **Bug fixed → move to `bugs/fixed/`**
+   - When a bug is resolved, move its `.md` file from `bugs/` to `bugs/fixed/`
+   - Add a `## Resolution` section to the file documenting what was changed and when
+   - Delete the file from `bugs/` — do not leave a copy behind
+
+### File Naming
+
+- Use `kebab-case` for all filenames (e.g., `google-places-search.md`, `lat-lng-not-saved.md`)
+- Names should be short but descriptive of the feature or bug
+
+### File Templates
+
+**Feature file (`features/` or `planned/`):**
+```
+# Feature Name
+## Summary — one-line description
+## Details — how it works
+## Key Files — affected source files
+## Dependencies — what it depends on
+```
+
+**Bug file (`bugs/` or `bugs/fixed/`):**
+```
+# Bug: Short Description
+**Severity:** Critical | High | Medium | Low
+**File:** affected file(s)
+## Description — what's wrong
+## Steps to Reproduce
+## Expected Behavior
+## Impact
+## Resolution — (added when moved to fixed/)
+```
+
 ## Testing
 
 No automated test suite. Test manually by:
