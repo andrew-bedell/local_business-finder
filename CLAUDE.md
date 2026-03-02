@@ -54,6 +54,192 @@ The entire app lives inside a single IIFE `(function() { 'use strict'; ... })()`
 | Photo URLs | 1084–1088 | `getPhotoUrl()` |
 | Detail Modal | 1090–1247 | `openDetailModal()` — photos, reviews, hours, copy-to-clipboard |
 
+## Design System
+
+All design tokens live in `styles.css` as CSS custom properties on `:root`. New UI must use these tokens — never hardcode colors, radii, or shadows.
+
+### Color Palette
+
+| Token | Value | Usage |
+|---|---|---|
+| `--bg` | `#0f1117` | Page background |
+| `--bg-card` | `#1a1d27` | Card/panel backgrounds |
+| `--bg-input` | `#252833` | Input fields, table headers, inset surfaces |
+| `--bg-hover` | `#2a2d3a` | Hover states on rows, interactive surfaces |
+| `--border` | `#2e3140` | Default borders (cards, inputs, table cells) |
+| `--border-focus` | `#6366f1` | Focused input border (matches primary) |
+| `--text` | `#e8eaf0` | Primary text |
+| `--text-muted` | `#8b8fa3` | Secondary text (labels, descriptions, metadata) |
+| `--text-dim` | `#5c6078` | Tertiary text (timestamps, separators, disabled) |
+| `--primary` | `#6366f1` | Indigo — buttons, links, active states |
+| `--primary-hover` | `#818cf8` | Lighter indigo — button hover |
+| `--primary-bg` | `rgba(99, 102, 241, 0.12)` | Indigo tint — ghost buttons, highlights |
+| `--success` | `#22c55e` | Green — success toasts, "has website" badges |
+| `--success-bg` | `rgba(34, 197, 94, 0.12)` | Green tint — success badge backgrounds |
+| `--warning` | `#f59e0b` | Amber — warning toasts, star ratings, "no website" badges |
+| `--warning-bg` | `rgba(245, 158, 11, 0.12)` | Amber tint — warning badge backgrounds |
+| `--danger` | `#ef4444` | Red — error toasts, destructive actions |
+| `--danger-bg` | `rgba(239, 68, 68, 0.12)` | Red tint — error badge backgrounds |
+
+**Rules:**
+- Dark theme only — there is no light theme toggle.
+- Semantic colors (`success`, `warning`, `danger`) map to specific meanings. Do not repurpose them.
+- Tint variants (`*-bg`) are always `rgba(color, 0.12)` of their parent — maintain this pattern for new colors.
+
+### Typography
+
+| Element | Font Size | Weight | Color |
+|---|---|---|---|
+| Page base | `14px` | 400 | `--text` |
+| Logo / page title | `24px` (desktop), `20px` (mobile) | 800 | `--text` |
+| Card headings (`h2`) | `16px` | 700 | `--text` |
+| Modal heading (`h2`) | `20px` | 700 | `--text` |
+| Modal section heading (`h3`) | `15px` | 700 | `--text` |
+| Form labels | `13px` | 600 | `--text-muted` |
+| Table headers (`th`) | `12px` uppercase | 600 | `--text-muted` |
+| Table body | `13px` | 400 | `--text` |
+| Badges | `12px` | 600 | Varies by badge type |
+| Small text (timestamps, captions) | `11px`–`12px` | 400 | `--text-dim` |
+| Buttons | `14px` (standard), `15px` (search), `13px` (text buttons), `12px` (row buttons) | 600 | Varies |
+
+**Font stack:** `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`
+**Line height:** `1.5` (base), `1.6` (review text)
+**Letter spacing:** `-0.5px` on logo, `0.5px` on table headers
+
+### Spacing
+
+No formal spacing scale — use values consistent with existing patterns:
+
+| Context | Value |
+|---|---|
+| Page padding | `24px` horizontal (`20px` on mobile) |
+| Card padding | `24px` (`16px` on mobile) |
+| Card gap (between cards) | `20px` |
+| Form field gap | `14px` |
+| Form label to input gap | `6px` |
+| Button padding | `10px 20px` (standard), `14px` (full-width search), `5px 14px` (row buttons) |
+| Table cell padding | `10px 14px` (`8px 10px` on mobile) |
+| Modal body/header padding | `24px` (`16px` on mobile) |
+| Toast padding | `12px 20px` |
+| Badge padding | `4px 10px` (standard), `2px 8px` (sentiment) |
+
+### Borders & Radii
+
+| Token | Value | Usage |
+|---|---|---|
+| `--radius` | `8px` | Buttons, inputs, cards, table wrappers, toasts |
+| `--radius-lg` | `12px` | Cards, modal content |
+| Badge radius | `20px` | Status badges (pill shape) |
+| Sentiment badge radius | `12px` | Smaller pill badges |
+| Scrollbar thumb radius | `4px` | Custom scrollbar |
+| Border style | `1px solid var(--border)` | All component borders |
+
+### Shadows
+
+| Token | Value | Usage |
+|---|---|---|
+| `--shadow` | `0 2px 8px rgba(0, 0, 0, 0.3)` | Toast notifications |
+| Modal overlay | `rgba(0, 0, 0, 0.7)` + `blur(4px)` | Modal backdrop |
+
+### Animations & Transitions
+
+| Name | Duration | Easing | Usage |
+|---|---|---|---|
+| Property transitions | `0.15s` | default | Background, color, border, opacity on hover/focus |
+| Image hover scale | `0.2s` | default | Photo gallery `scale(1.05)` |
+| `fadeIn` | `0.2s` | ease | Modal overlay appearance |
+| `slideUp` | `0.25s` | ease | Modal content entrance (20px → 0) |
+| `spin` | `0.6s` | linear infinite | Loading spinner rotation |
+| `toastIn` | `0.3s` | ease | Toast slide in from right (40px) |
+| `toastOut` | `0.3s` | ease | Toast fade out (starts at 3.7s) |
+| Button active | `0.1s` | default | `scale(0.97)` press effect |
+
+### Responsive Breakpoints
+
+| Breakpoint | Target |
+|---|---|
+| `@media (max-width: 768px)` | Tablet — stacks form rows, reduces padding |
+| `@media (max-width: 480px)` | Phone — full-width buttons, compact modal, smaller photo grid |
+
+### Layout
+
+- **Max width:** `--max-width: 1100px` — applied to `.header-inner` and `.main`
+- **Layout model:** Flexbox throughout. No CSS Grid except photo gallery (`grid-template-columns: repeat(auto-fill, minmax(170px, 1fr))`)
+- **Content flow:** Single column, vertically stacked cards
+
+## Component Reference
+
+Reusable UI patterns defined in `styles.css`. New features must use these existing components — do not create parallel patterns.
+
+### Buttons
+
+| Class | Usage | Style |
+|---|---|---|
+| `.btn` | Base class (required on all buttons) | Flex center, 600 weight, `scale(0.97)` on active, `opacity: 0.5` when disabled |
+| `.btn-primary` | Primary actions (Save Key, Search) | Solid `--primary` background, white text |
+| `.btn-secondary` | Secondary actions (Export, Clear) | `--bg-input` background, bordered |
+| `.btn-text` | Inline/tertiary actions (Setup Guide) | Transparent, `--primary` text, small padding |
+| `.btn-search` | Full-width search button | Extends `.btn-primary`, 100% width, larger text |
+| `.btn-view` | Table row "View" button | Ghost indigo, fills solid on hover |
+| `.btn-save-row` | Table row "Save" button | Ghost indigo, fills solid on hover |
+| `.btn-save-db` | Bulk "Save All to DB" | Ghost indigo, fills solid on hover |
+
+### Cards
+
+| Class | Usage |
+|---|---|
+| `.card` | Container — `--bg-card` background, `--radius-lg` corners, `24px` padding |
+| `.card-header` | Flex row with `h2` and action button, `16px` bottom margin |
+
+### Badges
+
+| Class | Usage |
+|---|---|
+| `.badge` | Base — pill shape, 12px bold text |
+| `.badge-no-site` | Amber — business has no website |
+| `.badge-has-site` | Green — business has a website |
+| `.badge-saved` | Green — business saved to DB |
+| `.sentiment-badge` | Base for sentiment indicators |
+| `.sentiment-great` | Green — high sentiment score |
+| `.sentiment-good` | Indigo — moderate sentiment score |
+
+### Inputs
+
+| Class | Usage |
+|---|---|
+| `.input` | All text inputs and selects — `--bg-input` background, focus ring with `--primary-bg` glow |
+| `select.input` | Adds custom chevron SVG, removes native appearance |
+| `.input-sort` | Constrained-width select for sort dropdowns (`max-width: 180px`) |
+
+### Modal
+
+| Class | Usage |
+|---|---|
+| `.modal-overlay` | Fixed fullscreen backdrop with blur |
+| `.modal-content` | Centered dialog — `800px` max-width, `85vh` max-height, flex column |
+| `.modal-header` | Title area with close button, bottom border |
+| `.modal-body` | Scrollable content area |
+| `.modal-footer` | Action buttons, top border |
+| `.modal-close` | `×` button — 28px, muted color |
+
+### Table
+
+| Class | Usage |
+|---|---|
+| `.results-table-wrapper` | Overflow-x scroll container with border |
+| `.results-table` | Full-width, collapsed borders, 13px text |
+| `.col-*` | Column width constraints (`.col-num`, `.col-name`, `.col-address`, etc.) |
+
+### Toast Notifications
+
+| Class | Usage |
+|---|---|
+| `.toast-container` | Fixed top-right container, z-index 2000 |
+| `.toast` | Base — 14px, white text, shadow, auto-dismiss animation |
+| `.toast-success` | Green background |
+| `.toast-error` | Red background |
+| `.toast-warning` | Amber background, dark text |
+
 ## Coding Conventions
 
 ### JavaScript
@@ -313,6 +499,60 @@ bugs/              — Active bugs that need fixing (one .md file per bug)
 ## Impact
 ## Resolution — (added when moved to fixed/)
 ```
+
+## Error Handling Patterns
+
+| Scenario | Action |
+|---|---|
+| **User-facing failure** (search fails, save fails, export fails) | `showToast(t('errorKey'), 'error')` — always use an i18n key |
+| **User-facing warning** (no results, missing data) | `showToast(t('warningKey'), 'warning')` |
+| **User-facing success** (save complete, export done) | `showToast(t('successKey'), 'success')` |
+| **Internal/debug errors** | `console.error('Context:', error)` — include a descriptive context string |
+| **Non-critical warnings** (Supabase not initialized, optional feature unavailable) | `console.warn('Context:', details)` |
+| **Network timeouts** | Handled by `withTimeout(promise, ms, label)` — rejects with descriptive error after timeout |
+
+**Rules:**
+- Never show raw error messages to the user. Always use `t()` for user-facing text.
+- Always `catch` async operations. Log to console for debugging, toast for the user.
+- Do not silently swallow errors — at minimum `console.warn` so issues are discoverable.
+
+## localStorage Keys
+
+All user preferences are stored in `localStorage`. Supabase handles persistent data.
+
+| Key | Type | Purpose |
+|---|---|---|
+| `app_lang` | `'en'` \| `'es'` | Selected UI language (default: `'en'`) |
+| `google_places_api_key` | `string` | User's Google Places API key |
+
+**Rules:**
+- Keep localStorage for user preferences only — never store business data here.
+- Always provide a default/fallback when reading (`|| 'en'`, `|| ''`).
+- New keys must be documented in this table.
+
+## Deployment & Environment
+
+### Local Development
+Serve statically — no build step required:
+```
+npx serve .          # or any static file server
+open index.html      # or open directly in browser
+```
+
+### Vercel Deployment
+The `api/` directory contains serverless functions deployed automatically by Vercel.
+
+**Environment variables (set in Vercel dashboard):**
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `GOOGLE_PLACES_API_KEY` | Yes | Google Places API key served by `api/config.js` proxy |
+
+### Supabase Setup
+1. Create a Supabase project
+2. Run `database/schema.sql` against the Supabase SQL editor
+3. Configure Row Level Security (RLS) policies as needed
+4. Update `SUPABASE_URL` and `SUPABASE_KEY` in `app.js` (see `bugs/hardcoded-supabase-keys.md` — this should eventually move to env vars)
 
 ## Testing
 
