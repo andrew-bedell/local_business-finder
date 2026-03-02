@@ -2,16 +2,25 @@
 
 ## Project Overview
 
-A client-side web application that finds local businesses **without websites** using the Google Places API (New). Users search by location, country, and business type, then view results with reviews, photos, and sentiment analysis. Results can be exported to CSV or saved to a Supabase database.
+A lead-to-website pipeline that finds local businesses **without websites**, gathers comprehensive data about them from multiple sources, and generates ready-to-publish websites using the collected information.
+
+**Pipeline:** Find → Gather → Curate → Generate
+
+1. **Find** — Search for businesses without websites via Google Places API
+2. **Gather** — Enrich each business with photos, reviews, social profiles, menus, and contact info from Google, Facebook, Instagram, Yelp, and other sources
+3. **Curate** — Use sentiment analysis to select the best reviews; organize photos by type; extract menu data from images
+4. **Generate** — One-click website generation populated with contact info, services, curated reviews, photos, and menus. AI-generated images (via NanoBanana) fill visual gaps.
 
 ## Architecture
 
 **Stack:** Vanilla HTML/CSS/JS — no build tools, no frameworks, no bundler.
 
 ```
-index.html   — Single-page HTML shell (semantic sections, data-i18n attributes)
-app.js       — All application logic in one IIFE (1,250 lines)
-styles.css   — Dark-theme design system using CSS custom properties
+index.html           — Single-page HTML shell (semantic sections, data-i18n attributes)
+app.js               — All application logic in one IIFE
+styles.css           — Dark-theme design system using CSS custom properties
+api/config.js        — Vercel serverless function (API key proxy)
+database/schema.sql  — Supabase database schema (source of truth)
 ```
 
 **External dependencies (CDN only):**
@@ -71,12 +80,136 @@ The entire app lives inside a single IIFE `(function() { 'use strict'; ... })()`
 
 ## Data Flow
 
+### Current: Search & Filter
 ```
 User Input → geocodeLocation() → searchPlaces() → mapPlaceToResult()
   → filter (no website) → applyFilterAndSort() → renderTable()
 ```
 
-### Internal Business Object Shape
+### Target: Full Pipeline
+```
+FIND        User Input → Google Places Search → Filter (no website)
+                ↓
+GATHER      Google Places details (photos, reviews, hours, menu photos)
+            → Social media discovery (Facebook, Instagram, WhatsApp)
+            → Third-party platforms (Yelp, TripAdvisor, OpenTable)
+                ↓
+CURATE      Sentiment analysis → select top reviews for website
+            Menu photo → OCR/AI extraction → structured menu data
+            Photo categorization (exterior, interior, food, team, logo)
+                ↓
+GENERATE    Select template by business category
+            → Populate: contact, services, reviews, photos, menu
+            → AI-generated images (NanoBanana) for gaps
+            → Publish website
+```
+
+## Data Architecture
+
+The database schema lives in `database/schema.sql` (executable source of truth). Below is the high-level overview.
+
+### Tables Overview
+
+| Table | Purpose |
+|---|---|
+| `businesses` | Core business record — identity, location, contact, ratings, operational details |
+| `business_social_profiles` | Links to Facebook, Instagram, WhatsApp, Yelp, TripAdvisor, OpenTable, etc. |
+| `business_photos` | Photos from all sources (Google, social media, AI-generated) with type classification |
+| `business_reviews` | Reviews from all sources with sentiment scores and curation flags |
+| `business_menus` | Structured menu items extracted from photos or online sources |
+| `generated_websites` | Website generation records — template, status, selected content |
+
+### Entity Relationships
+
+```
+businesses (1) ──→ (many) business_social_profiles
+businesses (1) ──→ (many) business_photos
+businesses (1) ──→ (many) business_reviews
+businesses (1) ──→ (many) business_menus
+businesses (1) ──→ (many) generated_websites
+business_photos (1) ──→ (many) business_menus  (source photo for extraction)
+```
+
+### businesses
+
+The central record for each discovered business. Expanded from the original flat schema to support the full pipeline.
+
+| Column Group | Fields |
+|---|---|
+| **Identity** | `name`, `description`, `category`, `subcategory` |
+| **Location** | `address_full`, `address_street`, `address_city`, `address_state`, `address_zip`, `address_country`, `latitude`, `longitude`, `service_area` |
+| **Contact** | `phone`, `whatsapp`, `email`, `website` (empty for our targets) |
+| **Google** | `place_id` (unique key), `maps_url`, `types[]`, `rating`, `review_count`, `price_level`, `business_status`, `hours` |
+| **Details** | `payment_methods[]`, `languages_spoken[]`, `accessibility_info`, `parking_info`, `year_established`, `owner_name` |
+| **Tracking** | `search_location`, `search_type`, `data_completeness_score`, `first_discovered_at`, `last_updated_at` |
+
+### business_social_profiles
+
+One row per platform per business. Platforms include: `facebook`, `instagram`, `whatsapp`, `twitter`, `tiktok`, `linkedin`, `youtube`, `yelp`, `tripadvisor`, `opentable`, `resy`, `doordash`, `ubereats`, `grubhub`.
+
+### business_photos
+
+Photos from any source, classified by type for website generation.
+
+| Field | Purpose |
+|---|---|
+| `source` | `google`, `facebook`, `instagram`, `ai_generated` |
+| `photo_type` | `exterior`, `interior`, `menu`, `product`, `food`, `team`, `logo`, `ai_generated` |
+| `url` | Original source URL |
+| `storage_path` | Path in Supabase Storage (for persisted copies) |
+| `is_primary` | Featured image for the business |
+
+### business_reviews
+
+Reviews from all platforms, scored and curated for website use.
+
+| Field | Purpose |
+|---|---|
+| `source` | `google`, `facebook`, `yelp`, `tripadvisor` |
+| `sentiment_score` | Decimal score from sentiment analysis |
+| `sentiment_label` | `very_positive`, `positive`, `neutral`, `negative` |
+| `is_curated` | Flagged as selected for use on generated website |
+
+### business_menus
+
+Structured menu data extracted from photos or online sources (primarily for restaurants).
+
+| Field | Purpose |
+|---|---|
+| `source_photo_id` | FK to the photo this was extracted from (if applicable) |
+| `menu_category` | e.g., Appetizers, Entrees, Drinks, Desserts |
+| `item_name` | Menu item name |
+| `item_description` | Description text |
+| `price` | Price as decimal |
+| `currency` | USD, MXN, COP, etc. |
+
+### generated_websites
+
+Tracks each website generation attempt and its status.
+
+| Field | Purpose |
+|---|---|
+| `template_name` | Template used (by business category) |
+| `primary_color`, `secondary_color` | Brand colors (extracted or chosen) |
+| `status` | `draft`, `published`, `archived` |
+| `published_url` | Live URL once deployed |
+| `config` | JSON blob with generation settings and selected content IDs |
+
+### Naming Conventions
+
+| Element | Convention | Example |
+|---|---|---|
+| Table names | `snake_case`, plural | `business_reviews` |
+| Column names | `snake_case` | `review_count` |
+| Primary keys | `id` (UUID) | `id UUID DEFAULT gen_random_uuid()` |
+| Foreign keys | `{singular_table}_id` | `business_id` |
+| Timestamps | `*_at` suffix | `created_at`, `first_discovered_at` |
+| Booleans | `is_` prefix | `is_curated`, `is_primary` |
+| Arrays | plural column name | `types`, `payment_methods` |
+| JSON blobs | descriptive singular/plural | `hours`, `config` |
+| Enums | stored as `TEXT` with CHECK constraints | `status TEXT CHECK (status IN (...))` |
+
+### Internal Business Object Shape (In-Memory)
 ```js
 {
   name: string,           // place.displayName
@@ -100,24 +233,7 @@ User Input → geocodeLocation() → searchPlaces() → mapPlaceToResult()
 }
 ```
 
-### Supabase `businesses` Table Schema
-```js
-{
-  place_id: string,       // primary key, unique
-  name: string,
-  address: string,
-  phone: string,
-  rating: number | null,
-  review_count: number,
-  business_status: string,
-  maps_url: string,
-  types: string[],
-  reviews: object[],      // serialized review objects
-  hours: string[],
-  search_location: string,
-  search_type: string
-}
-```
+> **Note:** The in-memory object will expand as the gather/enrich pipeline is built. The database schema is the forward-looking design; the in-memory shape reflects what currently exists in `app.js`.
 
 ## i18n System
 
