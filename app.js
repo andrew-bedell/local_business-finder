@@ -147,6 +147,8 @@
       keySaved: 'Key saved. Loading Google Maps...',
       mapsLoaded: 'Google Maps loaded successfully.',
       mapsLoadFailed: 'Failed to load Google Maps. Check your API key and ensure Places API (New) is enabled.',
+      apiKeyAutoLoaded: 'API key loaded from server. Connecting to Google Maps...',
+      apiKeyAutoFailed: 'Could not load API key from server. Enter your key manually below.',
       // Footer
       footer: 'Powered by Google Places API. Results may not be 100% accurate — always verify before outreach.',
       // Radius labels
@@ -317,6 +319,8 @@
       keySaved: 'Clave guardada. Cargando Google Maps...',
       mapsLoaded: 'Google Maps cargado exitosamente.',
       mapsLoadFailed: 'Error al cargar Google Maps. Verifica tu clave API y asegúrate de que la Places API (New) esté habilitada.',
+      apiKeyAutoLoaded: 'Clave API cargada del servidor. Conectando a Google Maps...',
+      apiKeyAutoFailed: 'No se pudo cargar la clave API del servidor. Ingresa tu clave manualmente.',
       // Footer
       footer: 'Impulsado por Google Places API. Los resultados pueden no ser 100% precisos — siempre verifica antes de contactar.',
       // Radius labels
@@ -543,11 +547,6 @@
 
   // ── Initialize ──
   function init() {
-    if (apiKey) {
-      apiKeyInput.value = '••••••••••••••••••••';
-      loadGoogleMaps(apiKey);
-    }
-
     btnSaveKey.addEventListener('click', saveApiKey);
     apiKeyInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') saveApiKey();
@@ -577,6 +576,32 @@
 
     applyLanguage();
     updateSearchButton();
+
+    // Try to load API key from server, fall back to localStorage
+    fetchApiKeyFromServer();
+  }
+
+  async function fetchApiKeyFromServer() {
+    try {
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.googleApiKey) {
+          apiKey = data.googleApiKey;
+          document.getElementById('api-setup').style.display = 'none';
+          loadGoogleMaps(apiKey);
+          return;
+        }
+      }
+    } catch (_) {
+      // Server not available (e.g. local dev) — fall back silently
+    }
+
+    // Fall back to localStorage key or manual input
+    if (apiKey) {
+      apiKeyInput.value = '••••••••••••••••••••';
+      loadGoogleMaps(apiKey);
+    }
   }
 
   // ── API Key Management ──
@@ -886,14 +911,7 @@
         place.status === 'CLOSED_PERMANENTLY' ? 'danger' : 'warning';
 
       // Star rating
-      const fullStars = Math.floor(place.rating);
-      const hasHalf = place.rating - fullStars >= 0.5;
-      let starsHtml = '';
-      for (let i = 0; i < 5; i++) {
-        if (i < fullStars) starsHtml += '\u2605';
-        else if (i === fullStars && hasHalf) starsHtml += '\u2606';
-        else starsHtml += '\u2606';
-      }
+      const starsHtml = renderStars(place.rating);
 
       const mapsLink = place.mapsUrl
         ? `<a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
@@ -1004,6 +1022,18 @@
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  function renderStars(rating) {
+    const full = Math.floor(rating);
+    const hasHalf = rating - full >= 0.5;
+    let html = '';
+    for (let i = 0; i < 5; i++) {
+      if (i < full) html += '\u2605';
+      else if (i === full && hasHalf) html += '<span class="star-half">\u2605</span>';
+      else html += '\u2606';
+    }
+    return html;
   }
 
   function csvEscape(str) {
@@ -1134,7 +1164,7 @@
           <div class="review-card">
             <div class="review-header">
               <div class="review-author">
-                ${authorPhoto ? `<img src="${authorPhoto}" alt="" class="review-avatar">` : '<div class="review-avatar-placeholder"></div>'}
+                ${authorPhoto ? `<img src="${escapeHtml(authorPhoto)}" alt="" class="review-avatar">` : '<div class="review-avatar-placeholder"></div>'}
                 <div>
                   <strong>${escapeHtml(authorName)}</strong>
                   <span class="review-time">${escapeHtml(timeAgo)}</span>
@@ -1179,14 +1209,7 @@
     }
 
     // Star rating display
-    const fullStars = Math.floor(place.rating);
-    const hasHalf = place.rating - fullStars >= 0.5;
-    let starsHtml = '';
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) starsHtml += '\u2605';
-      else if (i === fullStars && hasHalf) starsHtml += '\u2606';
-      else starsHtml += '\u2606';
-    }
+    const starsHtml = renderStars(place.rating);
 
     modal.innerHTML = `
       <div class="modal-content">
@@ -1219,18 +1242,19 @@
     document.body.appendChild(modal);
 
     // Event listeners
-    const closeModal = () => modal.remove();
+    function escHandler(e) {
+      if (e.key === 'Escape') closeModal();
+    }
+    const closeModal = () => {
+      document.removeEventListener('keydown', escHandler);
+      modal.remove();
+    };
     modal.querySelector('#modal-close-btn').addEventListener('click', closeModal);
     modal.querySelector('#modal-close-btn-footer').addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
-    document.addEventListener('keydown', function escHandler(e) {
-      if (e.key === 'Escape') {
-        closeModal();
-        document.removeEventListener('keydown', escHandler);
-      }
-    });
+    document.addEventListener('keydown', escHandler);
 
     // Copy reviews button
     modal.querySelector('#modal-copy-reviews').addEventListener('click', () => {

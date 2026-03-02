@@ -504,6 +504,12 @@ select.input {
   letter-spacing: 1px;
 }
 
+.star-half {
+  display: inline-block;
+  overflow: hidden;
+  width: 0.5em;
+}
+
 .rating-num {
   display: block;
   font-size: 12px;
