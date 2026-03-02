@@ -59,6 +59,60 @@ Every external service the system integrates with — current and planned. Inclu
 | **Cost model** | Free tier (Hobby). Pro $20/month |
 | **Integration** | Fetch from client to `/api/config` endpoint |
 
+### Supabase Auth
+
+| Field | Value |
+|---|---|
+| **Purpose** | Customer authentication for the Admin Portal |
+| **Pipeline phase** | Sell (user creation), Manage (session management) |
+| **Auth** | Built into Supabase JS SDK — no separate library needed |
+| **Client library** | Supabase JS SDK v2 (`supabase.auth.signInWithPassword()`, `supabase.auth.signUp()`, etc.) |
+| **Key methods** | `signInWithPassword()`, `signUp()`, `signOut()`, `updateUser()`, `resetPasswordForEmail()`, `auth.uid()` (in RLS policies) |
+| **Data sourced** | N/A — this is our auth layer, not a data source |
+| **Data produced** | Auth user records (email, hashed password, session tokens) |
+| **Writes to** | Supabase Auth `auth.users` (managed by Supabase), `customer_users` (our linking table) |
+| **Rate limits** | Supabase free tier: 50,000 monthly active users |
+| **Cost model** | Included in Supabase plan |
+| **Integration** | Direct — client-side JavaScript via Supabase SDK |
+
+---
+
+## Planned: Payment Processing
+
+### Stripe
+
+| Field | Value |
+|---|---|
+| **Purpose** | Subscription billing for website hosting — monthly recurring charges |
+| **Pipeline phase** | Sell (checkout + subscription creation), Manage (lifecycle events) |
+| **Auth** | Secret key (server-side in Vercel Functions), publishable key (client-side for Checkout redirect) |
+| **Client library** | Stripe.js (client-side, for Checkout redirect) + `stripe` npm package (server-side in Vercel Functions) |
+| **Key methods** | `stripe.checkout.sessions.create()`, `stripe.billingPortal.sessions.create()`, webhook event handling |
+| **Data sourced** | Subscription status, billing period dates, invoice history (read via API for Admin Portal) |
+| **Data produced** | Stripe Customer ID, Subscription ID (stored as references in our DB) |
+| **Writes to** | `customers` (stripe_customer_id), `subscriptions` (stripe_subscription_id, status, periods) |
+| **Rate limits** | 100 read requests/sec, 25 write requests/sec (standard) |
+| **Cost model** | 2.9% + $0.30 per transaction (US). No monthly fee. |
+| **Integration** | Server-side via Vercel Functions (secret key never in client code) |
+
+**Vercel Functions for Stripe:**
+
+| Function | Purpose | Trigger |
+|---|---|---|
+| `api/stripe/create-checkout-session.js` | Create Stripe Checkout Session | Client request (Convert to Customer flow) |
+| `api/stripe/webhook.js` | Handle Stripe webhook events | Stripe server-to-server callback |
+| `api/stripe/customer-portal.js` | Create Stripe Customer Portal session | Client request (Admin Portal billing management) |
+
+**Webhook events handled:**
+
+| Event | Action |
+|---|---|
+| `checkout.session.completed` | Create customer + subscription records, create Supabase Auth user, set pipeline_status to 'customer' |
+| `invoice.payment_succeeded` | Update subscription period dates |
+| `invoice.payment_failed` | Update subscription status to 'past_due' |
+| `customer.subscription.deleted` | Set subscription status to 'cancelled', set pipeline_status to 'churned', suspend site |
+| `customer.subscription.updated` | Sync subscription status and cancel_at_period_end flag |
+
 ---
 
 ## Planned: Social Media Platforms
@@ -230,5 +284,11 @@ Which pipeline phases depend on which services:
 | **Gather** | Supabase, Supabase Storage | Facebook, Instagram, Yelp, TripAdvisor, Twitter, TikTok, LinkedIn, YouTube, WhatsApp, OpenTable, Resy, DoorDash, Uber Eats, Grubhub |
 | **Curate** | Supabase | OCR service (menus) |
 | **Generate** | Supabase, Supabase Storage, Vercel (hosting) | NanoBanana (gap filling) |
+| **Sell** | Stripe, Supabase, Supabase Auth, Vercel Functions | — |
+| **Manage** | Supabase, Vercel (re-publish) | Stripe (site suspension on payment failure) |
+| **Analyze** | Supabase, Vercel Functions (tracking endpoint), Vercel Cron (daily rollups) | — |
 
-**Note:** Gather-phase services are all optional — the pipeline degrades gracefully. A business can proceed to Curate/Generate with only Google data if no social/review platform integrations are available.
+**Notes:**
+- Gather-phase services are all optional — the pipeline degrades gracefully. A business can proceed to Curate/Generate with only Google data if no social/review platform integrations are available.
+- Sell phase has a hard dependency on Stripe — there is no alternative payment processor.
+- Analyze phase requires Vercel Cron for daily summary rollups. Without it, the dashboard can still query raw `analytics_events`, but performance will degrade with volume.

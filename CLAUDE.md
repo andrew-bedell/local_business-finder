@@ -2,35 +2,53 @@
 
 ## Project Overview
 
-A lead-to-website pipeline that finds local businesses **without websites**, gathers comprehensive data about them from multiple sources, and generates ready-to-publish websites using the collected information.
+A lead-to-website SaaS pipeline that finds local businesses **without websites**, gathers comprehensive data about them, generates ready-to-publish websites, sells hosting subscriptions, and provides ongoing website management with analytics.
 
-**Pipeline:** Find → Gather → Curate → Generate
+**Pipeline:** Find → Gather → Curate → Generate → Sell → Manage → Analyze
 
 1. **Find** — Search for businesses without websites via Google Places API
 2. **Gather** — Enrich each business with photos, reviews, social profiles, menus, and contact info from Google, Facebook, Instagram, Yelp, and other sources
 3. **Curate** — Use sentiment analysis to select the best reviews; organize photos by type; extract menu data from images
-4. **Generate** — One-click website generation populated with contact info, services, curated reviews, photos, and menus. AI-generated images (via NanoBanana) fill visual gaps.
+4. **Generate** — One-click website generation populated with contact info, services, curated reviews, photos, and menus. AI-generated images (via NanoBanana) fill visual gaps
+5. **Sell** — Convert prospects to paying customers with Stripe subscription billing (monthly recurring)
+6. **Manage** — Handle website edit requests from business owners; re-publish updated sites; manage site lifecycle (active/suspended/archived)
+7. **Analyze** — First-party analytics tracking on published websites; customer-facing dashboard with visitor, action, and traffic insights
 
 ## Architecture
 
 **Stack:** Vanilla HTML/CSS/JS — no build tools, no frameworks, no bundler.
 
 ```
-index.html               — Single-page HTML shell (semantic sections, data-i18n attributes)
-app.js                   — All application logic in one IIFE
+index.html               — Operator app: single-page HTML shell (semantic sections, data-i18n attributes)
+app.js                   — Operator app logic in one IIFE
 styles.css               — Dark-theme design system using CSS custom properties
+admin.html               — Customer admin portal (planned — separate authenticated page)
+admin.js                 — Customer portal logic (planned — separate IIFE)
+admin.css                — Customer portal styles (planned — extends design tokens from styles.css)
 api/config.js            — Vercel serverless function (API key proxy)
+api/stripe/              — Stripe serverless functions (planned)
+  create-checkout-session.js — Create Stripe Checkout session for prospect conversion
+  webhook.js             — Handle Stripe webhook events (payment, cancellation)
+  customer-portal.js     — Create Stripe Customer Portal session
+api/analytics/           — Analytics serverless functions (planned)
+  track.js               — Receive tracking events from published websites
+  summarize.js           — Daily cron job to roll up analytics into summaries
 database/schema.sql      — Supabase database schema (source of truth)
 data-architecture/       — System-level data architecture documentation
   overview.md            — Principles, technology stack, system diagram
-  data-flow.md           — Pipeline data flow (Find → Gather → Curate → Generate)
+  data-flow.md           — Pipeline data flow (Find → Gather → Curate → Generate → Sell → Manage → Analyze)
   external-services.md   — All external APIs, auth methods, rate limits
-  storage-strategy.md    — Where data lives and why (localStorage, memory, Supabase, Vercel)
+  storage-strategy.md    — Where data lives and why (localStorage, memory, Supabase, Stripe, Vercel)
 ```
+
+**Two audiences, two entry points:**
+- **Operator** uses `index.html` — search, save, enrich, generate, sell, manage
+- **Customer** (business owner) uses `admin.html` — contact info, billing, edit requests, analytics
 
 **External dependencies (CDN only):**
 - Google Maps JavaScript API + Places API (New) — loaded dynamically after user provides API key
-- Supabase JS SDK v2 — loaded via `<script>` tag in index.html
+- Supabase JS SDK v2 — loaded via `<script>` tag in index.html and admin.html (includes Auth)
+- Stripe.js — loaded in index.html for Checkout redirect (planned)
 - Google Fonts (Inter)
 
 **No package.json, no node_modules, no build step.** Open `index.html` directly or serve with any static file server.
@@ -297,6 +315,18 @@ GENERATE    Select template by business category
             → Populate: contact, services, reviews, photos, menu
             → AI-generated images (NanoBanana) for gaps
             → Publish website
+                ↓
+SELL        Pipeline: prospect → contacted → interested → customer
+            → Stripe Checkout for subscription billing (monthly)
+            → Create customer account (Supabase Auth)
+                ↓
+MANAGE      Customer submits edit requests via Admin Portal
+            → Operator reviews, applies edits, re-publishes
+            → Site lifecycle: active / suspended / archived
+                ↓
+ANALYZE     Tracking script on published websites → analytics events
+            → Daily rollups via Vercel Cron
+            → Customer dashboard: visitors, actions, traffic sources
 ```
 
 ## Data Architecture
@@ -305,14 +335,20 @@ The database schema lives in `database/schema.sql` (executable source of truth).
 
 ### Tables Overview
 
-| Table | Purpose |
-|---|---|
-| `businesses` | Core business record — identity, location, contact, ratings, operational details |
-| `business_social_profiles` | Links to Facebook, Instagram, WhatsApp, Yelp, TripAdvisor, OpenTable, etc. |
-| `business_photos` | Photos from all sources (Google, social media, AI-generated) with type classification |
-| `business_reviews` | Reviews from all sources with sentiment scores and curation flags |
-| `business_menus` | Structured menu items extracted from photos or online sources |
-| `generated_websites` | Website generation records — template, status, selected content |
+| Table | Purpose | Phase |
+|---|---|---|
+| `businesses` | Core business record — identity, location, contact, ratings, pipeline status | Find, Gather, Sell |
+| `business_social_profiles` | Links to Facebook, Instagram, WhatsApp, Yelp, TripAdvisor, OpenTable, etc. | Gather |
+| `business_photos` | Photos from all sources (Google, social media, AI-generated) with type classification | Gather, Curate, Generate |
+| `business_reviews` | Reviews from all sources with sentiment scores and curation flags | Gather, Curate |
+| `business_menus` | Structured menu items extracted from photos or online sources | Curate |
+| `generated_websites` | Website generation records — template, site status, version, selected content | Generate, Manage |
+| `customers` | Business-to-customer relationship, Stripe references, billing details | Sell |
+| `subscriptions` | Stripe subscription status, billing periods, cancellation state | Sell, Manage |
+| `customer_users` | Links Supabase Auth users to customer records (RLS enforcement) | Sell |
+| `edit_requests` | Customer-submitted website change requests with status lifecycle | Manage |
+| `analytics_events` | Raw website visitor tracking events (page views, clicks, form submissions) | Analyze |
+| `analytics_summaries` | Daily pre-aggregated metrics per business for fast dashboard queries | Analyze |
 
 ### Entity Relationships
 
@@ -322,7 +358,16 @@ businesses (1) ──→ (many) business_photos
 businesses (1) ──→ (many) business_reviews
 businesses (1) ──→ (many) business_menus
 businesses (1) ──→ (many) generated_websites
-business_photos (1) ──→ (many) business_menus  (source photo for extraction)
+businesses (1) ──→ (many) customers
+businesses (1) ──→ (many) edit_requests
+businesses (1) ──→ (many) analytics_events
+businesses (1) ──→ (many) analytics_summaries
+business_photos (1) ──→ (many) business_menus     (source photo for extraction)
+customers (1) ──→ (many) subscriptions
+customers (1) ──→ (many) customer_users            (links to Supabase Auth)
+customers (1) ──→ (many) edit_requests
+generated_websites (1) ──→ (many) edit_requests    (which site the request is for)
+generated_websites (1) ──→ (many) analytics_events (which site generated the event)
 ```
 
 ### businesses
@@ -336,6 +381,7 @@ The central record for each discovered business. Expanded from the original flat
 | **Contact** | `phone`, `whatsapp`, `email`, `website` (empty for our targets) |
 | **Google** | `place_id` (unique key), `maps_url`, `types[]`, `rating`, `review_count`, `price_level`, `business_status`, `hours` |
 | **Details** | `payment_methods[]`, `languages_spoken[]`, `accessibility_info`, `parking_info`, `year_established`, `owner_name` |
+| **Pipeline** | `pipeline_status` (prospect/contacted/interested/customer/churned), `pipeline_status_changed_at` |
 | **Tracking** | `search_location`, `search_type`, `data_completeness_score`, `first_discovered_at`, `last_updated_at` |
 
 ### business_social_profiles
@@ -386,9 +432,92 @@ Tracks each website generation attempt and its status.
 |---|---|
 | `template_name` | Template used (by business category) |
 | `primary_color`, `secondary_color` | Brand colors (extracted or chosen) |
-| `status` | `draft`, `published`, `archived` |
+| `status` | `draft`, `published`, `archived` (generation status) |
+| `site_status` | `active`, `suspended`, `archived` (hosting lifecycle) |
 | `published_url` | Live URL once deployed |
 | `config` | JSON blob with generation settings and selected content IDs |
+| `version` | Integer counter incremented on each re-publish |
+| `last_edited_at` | Timestamp of most recent content edit |
+
+### customers
+
+Business-to-customer relationship created when a prospect converts to a paying customer.
+
+| Field | Purpose |
+|---|---|
+| `business_id` | FK to businesses — which business this customer owns |
+| `stripe_customer_id` | Stripe Customer ID (unique reference) |
+| `email` | Customer's email (used for auth and billing) |
+| `contact_name` | Name of the business owner/contact |
+| `monthly_price` | Subscription price as decimal |
+| `currency` | `USD`, `MXN`, `COP`, etc. |
+| `notes` | Operator notes about the customer |
+
+### subscriptions
+
+Stripe subscription records, synced via webhooks.
+
+| Field | Purpose |
+|---|---|
+| `customer_id` | FK to customers |
+| `stripe_subscription_id` | Stripe Subscription ID (unique reference) |
+| `stripe_price_id` | Stripe Price ID |
+| `status` | `active`, `past_due`, `cancelled`, `incomplete`, `trialing` |
+| `current_period_start`, `current_period_end` | Current billing period dates |
+| `cancel_at_period_end` | Whether subscription will cancel at period end |
+| `cancelled_at` | Timestamp when cancellation was requested |
+
+### customer_users
+
+Links Supabase Auth users to customer records for RLS enforcement.
+
+| Field | Purpose |
+|---|---|
+| `auth_user_id` | Supabase Auth user UUID (unique) |
+| `customer_id` | FK to customers |
+| `role` | `owner` or `manager` |
+
+### edit_requests
+
+Customer-submitted website change requests with status lifecycle.
+
+| Field | Purpose |
+|---|---|
+| `business_id` | FK to businesses |
+| `customer_id` | FK to customers |
+| `website_id` | FK to generated_websites (nullable) |
+| `request_type` | `content_update`, `photo_update`, `contact_update`, `hours_update`, `menu_update`, `design_change`, `other` |
+| `description` | Free-text description of the requested change |
+| `status` | `submitted`, `in_review`, `in_progress`, `completed`, `rejected` |
+| `priority` | `low`, `normal`, `high`, `urgent` |
+| `rejection_reason` | Operator's reason if rejected |
+
+### analytics_events
+
+Raw website visitor tracking events from the embedded first-party tracking script.
+
+| Field | Purpose |
+|---|---|
+| `business_id` | FK to businesses |
+| `website_id` | FK to generated_websites (nullable) |
+| `event_type` | `page_view`, `click_phone`, `click_email`, `click_directions`, `click_social`, `form_submit` |
+| `page_url` | URL of the page where the event occurred |
+| `referrer` | Referring domain (domain only, not full URL) |
+| `device_type` | `desktop`, `mobile`, `tablet` |
+| `metadata` | JSONB — event-specific data |
+
+### analytics_summaries
+
+Daily pre-aggregated metrics per business for fast dashboard queries.
+
+| Field | Purpose |
+|---|---|
+| `business_id` | FK to businesses |
+| `date` | Date of the summary (unique per business + date) |
+| `page_views`, `unique_visitors` | Traffic counts |
+| `phone_clicks`, `email_clicks`, `direction_clicks`, `social_clicks`, `form_submissions` | Action counts |
+| `top_referrers` | JSONB — referrer domains with visit counts |
+| `device_breakdown` | JSONB — device type percentages |
 
 ### Naming Conventions
 
@@ -575,12 +704,25 @@ The `api/` directory contains serverless functions deployed automatically by Ver
 | Variable | Required | Purpose |
 |---|---|---|
 | `GOOGLE_PLACES_API_KEY` | Yes | Google Places API key served by `api/config.js` proxy |
+| `STRIPE_SECRET_KEY` | For Sell phase | Stripe API secret key (server-side only, never in client code) |
+| `STRIPE_PUBLISHABLE_KEY` | For Sell phase | Stripe publishable key (served to client for Checkout redirect) |
+| `STRIPE_WEBHOOK_SECRET` | For Sell phase | Stripe webhook signing secret for verifying webhook payloads |
+| `SUPABASE_SERVICE_ROLE_KEY` | For webhooks | Supabase service role key for server-side writes (bypasses RLS) |
 
 ### Supabase Setup
 1. Create a Supabase project
 2. Run `database/schema.sql` against the Supabase SQL editor
-3. Configure Row Level Security (RLS) policies as needed
-4. Update `SUPABASE_URL` and `SUPABASE_KEY` in `app.js` (see `bugs/hardcoded-supabase-keys.md` — this should eventually move to env vars)
+3. Configure Row Level Security (RLS) policies — open policies for operator, scoped policies for customer-facing tables
+4. Enable Supabase Auth with email provider (for Customer Admin Portal)
+5. Update `SUPABASE_URL` and `SUPABASE_KEY` in `app.js` (see `bugs/hardcoded-supabase-keys.md` — this should eventually move to env vars)
+
+### Stripe Setup (for Sell phase)
+1. Create a Stripe account
+2. Create a Product + Price in Stripe dashboard (recurring monthly)
+3. Set up webhook endpoint pointing to `https://your-domain/api/stripe/webhook`
+4. Configure webhook events: `checkout.session.completed`, `invoice.payment_succeeded`, `invoice.payment_failed`, `customer.subscription.deleted`, `customer.subscription.updated`
+5. Enable Stripe Customer Portal in Stripe dashboard settings
+6. Set environment variables in Vercel dashboard
 
 ## Testing
 

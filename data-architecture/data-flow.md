@@ -1,18 +1,30 @@
 # Data Flow
 
-How data moves through the Find → Gather → Curate → Generate pipeline, what triggers each phase, and what gets persisted where.
+How data moves through the full pipeline, what triggers each phase, and what gets persisted where.
 
 ## Pipeline Overview
 
 ```
-FIND ──→ GATHER ──→ CURATE ──→ GENERATE
- │          │          │           │
- │          │          │           ▼
- │          │          │     Vercel (published site)
- │          │          │
- ▼          ▼          ▼
- └──────────┴──────────┴──→ Supabase PostgreSQL + Storage
+FIND ──→ GATHER ──→ CURATE ──→ GENERATE ──→ SELL ──→ MANAGE ──→ ANALYZE
+ │          │          │           │           │         │          │
+ │          │          │           ▼           ▼         │          │
+ │          │          │     Vercel (site)   Stripe     │          │
+ │          │          │                                │          │
+ ▼          ▼          ▼                                ▼          ▼
+ └──────────┴──────────┴────────────────────────────────┴──────────┴──→ Supabase
 ```
+
+**Phase summary:**
+
+| Phase | Purpose | Operator/Customer |
+|---|---|---|
+| Find | Discover businesses without websites | Operator |
+| Gather | Enrich with photos, reviews, social profiles | Operator |
+| Curate | Score, classify, and select best content | Operator |
+| Generate | Build and publish the website | Operator |
+| Sell | Convert prospect to paying customer via Stripe | Operator |
+| Manage | Handle edit requests, re-publish, site lifecycle | Both |
+| Analyze | Track website performance, surface insights | Customer |
 
 Each phase reads from the previous phase's output and writes enriched data back to Supabase. The browser holds working data in memory during a session; persistence happens on explicit user action (save) or automatically during Gather/Curate processing.
 
@@ -215,6 +227,170 @@ Curated business data (from Supabase)
 | Supabase `business_photos` | AI-generated images (source: 'ai_generated', photo_type: 'ai_generated') |
 | Supabase Storage | AI-generated image files |
 | Vercel | Published static website files |
+
+---
+
+## Phase 5: Sell (Not Yet Implemented)
+
+**Trigger:** Operator clicks "Convert to Customer" on a prospect in the Saved Entries view.
+
+**Input:** A saved business with a generated website, ready to be sold.
+
+**Data flow:**
+
+```
+Operator selects prospect business
+       │
+       ├──→ Pipeline Status Progression (manual)
+       │       → prospect → contacted → interested (manual status updates)
+       │       → Update businesses.pipeline_status
+       │
+       ├──→ Convert to Customer (operator action)
+       │       → Operator enters: customer email, contact name, monthly price
+       │       → Client calls api/stripe/create-checkout-session.js
+       │
+       ├──→ Vercel Function: create-checkout-session.js
+       │       → Creates Stripe Customer (stripe_customer_id)
+       │       → Creates Stripe Checkout Session with monthly price
+       │       → Returns Checkout Session URL
+       │
+       ├──→ Stripe Checkout (hosted by Stripe)
+       │       → Business owner enters payment info on Stripe's page
+       │       → Payment processed by Stripe
+       │
+       └──→ Stripe Webhook → api/stripe/webhook.js
+               → Event: checkout.session.completed
+               → Creates customers row (stripe_customer_id, email, price)
+               → Creates subscriptions row (stripe_subscription_id, status: 'active')
+               → Creates Supabase Auth user (email + temporary password)
+               → Creates customer_users row (links auth user to customer)
+               → Updates businesses.pipeline_status = 'customer'
+```
+
+**What gets persisted (Sell phase):**
+
+| Destination | Data |
+|---|---|
+| Supabase `businesses` | pipeline_status ('customer'), pipeline_status_changed_at |
+| Supabase `customers` | stripe_customer_id, email, contact_name, phone, monthly_price, currency |
+| Supabase `subscriptions` | stripe_subscription_id, stripe_price_id, status, period dates |
+| Supabase `customer_users` | auth_user_id (from Supabase Auth), customer_id, role |
+| Supabase Auth | New user account (email + password) for the business owner |
+| Stripe | Customer record, Subscription record, Payment Method (Stripe owns this data) |
+
+**Ongoing webhook events (subscription lifecycle):**
+
+| Stripe Event | Action |
+|---|---|
+| `invoice.payment_succeeded` | Update subscription period dates |
+| `invoice.payment_failed` | Set subscription status to `past_due` |
+| `customer.subscription.deleted` | Set subscription status to `cancelled`, set pipeline_status to `churned` |
+| `customer.subscription.updated` | Sync subscription status and cancel_at_period_end flag |
+
+---
+
+## Phase 6: Manage (Not Yet Implemented)
+
+**Trigger:** Customer submits edit request via Admin Portal, or operator manages site lifecycle.
+
+**Input:** An active customer with a published website.
+
+**Data flow:**
+
+```
+CUSTOMER SIDE (admin.html):
+       │
+       ├──→ Submit Edit Request
+       │       → Customer fills form: type, description, priority
+       │       → Write to: edit_requests (status: 'submitted')
+       │
+       ├──→ Update Contact Info
+       │       → Customer edits phone, email, address, hours
+       │       → Update: businesses (within RLS scope)
+       │       → Optionally auto-creates edit_request (type: 'contact_update')
+       │
+       └──→ Cancel Subscription
+               → Sets cancel_at_period_end = true on Stripe subscription
+               → Subscription remains active until period end
+               → Stripe webhook fires at period end → status = 'cancelled'
+
+OPERATOR SIDE (index.html):
+       │
+       ├──→ Review Edit Requests
+       │       → View queue of submitted/in_review/in_progress requests
+       │       → Update edit_requests.status as work progresses
+       │
+       ├──→ Apply Edits
+       │       → Update business data, photos, reviews, menus in Supabase
+       │       → Re-run Generate phase (or partial re-generation)
+       │       → Re-publish to Vercel
+       │       → Update generated_websites (version++, last_edited_at)
+       │       → Mark edit_request as completed
+       │
+       └──→ Site Lifecycle Management
+               → Subscription cancelled → site_status = 'suspended'
+               → Subscription reactivated → site_status = 'active'
+               → Business deleted → site_status = 'archived'
+```
+
+**What gets persisted (Manage phase):**
+
+| Destination | Data |
+|---|---|
+| Supabase `edit_requests` | Request type, description, priority, status lifecycle, timestamps |
+| Supabase `generated_websites` | site_status, version, last_edited_at |
+| Supabase `businesses` | Contact info updates from customer self-service |
+| Vercel | Re-published website files |
+
+---
+
+## Phase 7: Analyze (Not Yet Implemented)
+
+**Trigger:** Continuous (tracking script fires on every published website visit) + customer views dashboard.
+
+**Input:** Published website with embedded tracking script, customer viewing Admin Portal analytics section.
+
+**Data flow:**
+
+```
+PUBLISHED WEBSITE (visitor interaction):
+       │
+       └──→ Tracking Script (embedded in generated website)
+               → Fires on: page_view, click_phone, click_email,
+               │  click_directions, click_social, form_submit
+               → POST to: api/analytics/track.js
+               → Write to: analytics_events
+
+VERCEL CRON (daily):
+       │
+       └──→ api/analytics/summarize.js
+               → Aggregate yesterday's analytics_events per business
+               → Calculate: page_views, unique_visitors, phone_clicks,
+               │  email_clicks, direction_clicks, social_clicks, form_submissions
+               → Compute: top_referrers (JSONB), device_breakdown (JSONB)
+               → Write to: analytics_summaries (upsert on business_id + date)
+
+CUSTOMER ADMIN PORTAL (admin.html):
+       │
+       └──→ Analytics Dashboard
+               → Read from: analytics_summaries (fast, pre-aggregated)
+               → Display: visitor trends, action metrics, traffic sources, device breakdown
+               → Date range selector: 7d / 30d / 90d / custom
+               → Period-over-period comparison (% change from previous period)
+```
+
+**What gets persisted (Analyze phase):**
+
+| Destination | Data |
+|---|---|
+| Supabase `analytics_events` | Raw events: event_type, page_url, referrer, device_type, metadata, timestamp |
+| Supabase `analytics_summaries` | Daily rollups: page_views, unique_visitors, clicks by type, top_referrers, device_breakdown |
+
+**Privacy:**
+- No cookies, no PII, no IP addresses stored
+- Device type from User-Agent category (not raw UA string)
+- Referrer stored as domain only
+- First-party tracking only — no third-party analytics services
 
 ---
 
