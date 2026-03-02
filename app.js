@@ -704,7 +704,7 @@
     };
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=_gmapsCallback`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&libraries=places&callback=_gmapsCallback`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {
