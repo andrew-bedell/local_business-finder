@@ -10,9 +10,9 @@
 ```javascript
 function init() {
   // ...
-  loadSavedIds();           // Line 613 — runs immediately with fallback credentials
+  loadSavedIds();           // runs immediately with fallback credentials
   // ...
-  fetchApiKeyFromServer();  // Line 622 — async, may re-init Supabase and call loadSavedIds() again
+  fetchApiKeyFromServer();  // async, may re-init Supabase and call loadSavedIds() again
 }
 ```
 
@@ -35,3 +35,6 @@ Only call `loadSavedIds()` once, after the final Supabase client has been determ
 ## Impact
 - Minor in practice: if both point to the same Supabase project, no visible issue
 - If credentials differ, the savedPlaceIds Set may have incorrect entries, causing "Save" buttons to show "Saved" for businesses not actually saved in the active database
+
+## Resolution
+Removed the `loadSavedIds()` call from `init()`. Moved it into `fetchApiKeyFromServer()` so it runs exactly once after the final Supabase client is determined — in the success path (after potential re-init with server credentials), in the non-OK response path, and in the catch path (server unavailable). This ensures `savedPlaceIds` is always loaded from the correct Supabase instance.

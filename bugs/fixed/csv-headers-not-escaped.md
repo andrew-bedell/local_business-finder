@@ -21,3 +21,6 @@ const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), 
 
 ## Impact
 Low — current translations are safe. Risk increases as more languages are added.
+
+## Resolution
+Added `.map(csvEscape)` to the headers array in `exportCsv()`, applying the same escaping that is already used for data values.

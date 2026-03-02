@@ -33,3 +33,6 @@ Either:
 
 ## Impact
 All review saves silently fail. Reviews are never persisted to the database despite the business record saving successfully.
+
+## Resolution
+Added a `review_hash` column to `business_reviews` with a `UNIQUE (business_id, review_hash)` constraint in `schema.sql`. The hash is a client-computed fingerprint of `source + author_name + text` using a simple string hash function (`reviewHash()` in app.js). Updated `saveBusiness()` to compute and include `review_hash` in review rows and changed `onConflict` to `'business_id,review_hash'`. This avoids index size issues with long review text and handles NULL author names cleanly.

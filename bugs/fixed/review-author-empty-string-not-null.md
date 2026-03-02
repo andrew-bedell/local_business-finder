@@ -23,3 +23,6 @@ author_photo_url: r.authorAttribution?.photoURI || null,
 - Minor data quality issue
 - Queries filtering `WHERE author_name IS NULL` won't find anonymous reviews
 - Could cause issues with the review upsert unique constraint (if added) since empty strings and NULLs behave differently in UNIQUE constraints
+
+## Resolution
+Changed the review mapping in `saveBusiness()` to use optional chaining with `|| null` fallback: `r.authorAttribution?.displayName || null` and `r.authorAttribution?.photoURI || null`. Missing or empty author data now stores `null` in the database.

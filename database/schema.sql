@@ -205,7 +205,14 @@ CREATE TABLE IF NOT EXISTS business_reviews (
   -- Curation
   is_curated              BOOLEAN DEFAULT FALSE, -- selected for use on generated website
 
-  created_at              TIMESTAMPTZ DEFAULT NOW()
+  -- Deduplication: client-computed hash of (source + author_name + text)
+  -- Used for upsert conflict detection, avoids index size issues with long text
+  review_hash             TEXT,
+
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+
+  -- Unique constraint for upsert: one review per hash per business
+  UNIQUE (business_id, review_hash)
 );
 
 CREATE INDEX IF NOT EXISTS idx_reviews_business ON business_reviews (business_id);

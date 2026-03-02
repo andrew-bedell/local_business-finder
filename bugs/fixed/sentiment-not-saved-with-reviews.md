@@ -27,17 +27,12 @@ The schema defines both columns:
 
 The `analyzeSentiment()` function already returns `{ score, label }` and could be called during save.
 
-## Expected Behavior
-Run `analyzeSentiment()` on each review during save and include the results:
-```javascript
-const sentiment = analyzeSentiment(r);
-// sentiment_score: sentiment.score,
-// sentiment_label: mapToDbLabel(sentiment.label),  // 'very positive' → 'very_positive'
-```
-
 Note: the `analyzeSentiment()` function returns labels like `'very positive'` (with space) but the schema CHECK constraint expects `'very_positive'` (with underscore). This mapping must also be handled.
 
 ## Impact
 - Sentiment data is computed but never persisted — wasted computation on every modal open
 - The Curate pipeline phase depends on persisted sentiment scores for review selection
 - `is_curated` flag can never be meaningfully set without saved sentiment data
+
+## Resolution
+Updated `saveBusiness()` to call `analyzeSentiment()` on each review during the save flow and include `sentiment_score` and `sentiment_label` in the review rows. Added a `sentimentLabelToDb()` helper function that maps the space-separated labels from `analyzeSentiment()` (e.g., `'very positive'`) to the underscore format expected by the schema CHECK constraint (e.g., `'very_positive'`). Scores are rounded to 4 decimal places to match the `DECIMAL(5,4)` column.
