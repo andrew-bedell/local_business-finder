@@ -181,6 +181,39 @@
       // Error messages
       searchError: 'Search failed. Please check your API key and network connection, then try again.',
       timeoutError: '{0} timed out after {1}s. Check your API key and network connection.',
+      // Social Media Discovery
+      socialProfiles: 'Social Profiles',
+      socialProfilesSubtitle: 'Discover and link social media profiles for this business',
+      addProfile: 'Add Profile',
+      saveProfile: 'Save',
+      removeProfile: 'Remove',
+      platformLabel: 'Platform',
+      profileUrlLabel: 'Profile URL',
+      searchPlatforms: 'Find on Platforms',
+      searchPlatformsSubtitle: 'Click to search for this business on each platform',
+      saveToDatabaseFirst: 'Save this business to the database to manage social profiles.',
+      saveToDatabaseBtn: 'Save to Database',
+      noProfilesYet: 'No social profiles linked yet. Use the search links below to find this business on social media.',
+      profileSaved: 'Social profile saved.',
+      profileRemoved: 'Social profile removed.',
+      profileSaveError: 'Failed to save social profile.',
+      profileRemoveError: 'Failed to remove social profile.',
+      profileUrlRequired: 'Please enter a profile URL.',
+      selectPlatform: 'Select platform...',
+      platformFacebook: 'Facebook',
+      platformInstagram: 'Instagram',
+      platformWhatsapp: 'WhatsApp',
+      platformTwitter: 'Twitter / X',
+      platformTiktok: 'TikTok',
+      platformLinkedin: 'LinkedIn',
+      platformYoutube: 'YouTube',
+      platformYelp: 'Yelp',
+      platformTripadvisor: 'TripAdvisor',
+      platformOpentable: 'OpenTable',
+      platformResy: 'Resy',
+      platformDoordash: 'DoorDash',
+      platformUbereats: 'Uber Eats',
+      platformGrubhub: 'Grubhub',
     },
     es: {
       // Header
@@ -356,6 +389,39 @@
       // Error messages
       searchError: 'La búsqueda falló. Verifica tu clave API y conexión a internet, e intenta de nuevo.',
       timeoutError: '{0} agotó el tiempo de espera después de {1}s. Verifica tu clave API y conexión a internet.',
+      // Social Media Discovery
+      socialProfiles: 'Perfiles Sociales',
+      socialProfilesSubtitle: 'Descubre y vincula perfiles de redes sociales para este negocio',
+      addProfile: 'Agregar Perfil',
+      saveProfile: 'Guardar',
+      removeProfile: 'Eliminar',
+      platformLabel: 'Plataforma',
+      profileUrlLabel: 'URL del Perfil',
+      searchPlatforms: 'Buscar en Plataformas',
+      searchPlatformsSubtitle: 'Haz clic para buscar este negocio en cada plataforma',
+      saveToDatabaseFirst: 'Guarda este negocio en la base de datos para gestionar perfiles sociales.',
+      saveToDatabaseBtn: 'Guardar en Base de Datos',
+      noProfilesYet: 'No hay perfiles sociales vinculados aún. Usa los enlaces de búsqueda abajo para encontrar este negocio en redes sociales.',
+      profileSaved: 'Perfil social guardado.',
+      profileRemoved: 'Perfil social eliminado.',
+      profileSaveError: 'Error al guardar perfil social.',
+      profileRemoveError: 'Error al eliminar perfil social.',
+      profileUrlRequired: 'Por favor ingresa una URL de perfil.',
+      selectPlatform: 'Seleccionar plataforma...',
+      platformFacebook: 'Facebook',
+      platformInstagram: 'Instagram',
+      platformWhatsapp: 'WhatsApp',
+      platformTwitter: 'Twitter / X',
+      platformTiktok: 'TikTok',
+      platformLinkedin: 'LinkedIn',
+      platformYoutube: 'YouTube',
+      platformYelp: 'Yelp',
+      platformTripadvisor: 'TripAdvisor',
+      platformOpentable: 'OpenTable',
+      platformResy: 'Resy',
+      platformDoordash: 'DoorDash',
+      platformUbereats: 'Uber Eats',
+      platformGrubhub: 'Grubhub',
     },
   };
 
@@ -1203,8 +1269,150 @@
     return photo.getURI({ maxWidth: maxWidth || 600 });
   }
 
+  // ── Social Media Discovery ──
+  const SOCIAL_PLATFORMS = [
+    { id: 'facebook', nameKey: 'platformFacebook', icon: '\uD83D\uDCD8', domain: 'facebook.com' },
+    { id: 'instagram', nameKey: 'platformInstagram', icon: '\uD83D\uDCF7', domain: 'instagram.com' },
+    { id: 'whatsapp', nameKey: 'platformWhatsapp', icon: '\uD83D\uDCAC', domain: 'wa.me' },
+    { id: 'twitter', nameKey: 'platformTwitter', icon: '\uD83D\uDCAD', domain: 'x.com' },
+    { id: 'tiktok', nameKey: 'platformTiktok', icon: '\uD83C\uDFB5', domain: 'tiktok.com' },
+    { id: 'linkedin', nameKey: 'platformLinkedin', icon: '\uD83D\uDCBC', domain: 'linkedin.com' },
+    { id: 'youtube', nameKey: 'platformYoutube', icon: '\u25B6\uFE0F', domain: 'youtube.com' },
+    { id: 'yelp', nameKey: 'platformYelp', icon: '\u2B50', domain: 'yelp.com' },
+    { id: 'tripadvisor', nameKey: 'platformTripadvisor', icon: '\uD83E\uDDED', domain: 'tripadvisor.com' },
+    { id: 'opentable', nameKey: 'platformOpentable', icon: '\uD83C\uDF7D\uFE0F', domain: 'opentable.com' },
+    { id: 'resy', nameKey: 'platformResy', icon: '\uD83D\uDCCB', domain: 'resy.com' },
+    { id: 'doordash', nameKey: 'platformDoordash', icon: '\uD83D\uDE97', domain: 'doordash.com' },
+    { id: 'ubereats', nameKey: 'platformUbereats', icon: '\uD83C\uDF54', domain: 'ubereats.com' },
+    { id: 'grubhub', nameKey: 'platformGrubhub', icon: '\uD83C\uDF71', domain: 'grubhub.com' },
+  ];
+
+  function buildSearchUrl(platform, businessName, businessAddress) {
+    const q = encodeURIComponent(businessName + ' ' + businessAddress);
+    const name = encodeURIComponent(businessName);
+    // Extract city from address (first part before first comma, or full address)
+    const city = businessAddress.split(',')[0].trim();
+    const loc = encodeURIComponent(city);
+
+    switch (platform) {
+      case 'facebook': return 'https://www.facebook.com/search/pages/?q=' + q;
+      case 'instagram': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' instagram');
+      case 'whatsapp': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' whatsapp');
+      case 'twitter': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' site:x.com OR site:twitter.com');
+      case 'tiktok': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' site:tiktok.com');
+      case 'linkedin': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' site:linkedin.com');
+      case 'youtube': return 'https://www.youtube.com/results?search_query=' + name;
+      case 'yelp': return 'https://www.yelp.com/search?find_desc=' + name + '&find_loc=' + loc;
+      case 'tripadvisor': return 'https://www.tripadvisor.com/Search?q=' + q;
+      case 'opentable': return 'https://www.opentable.com/s?term=' + name + '&queryUnderstandingType=location&locationString=' + loc;
+      case 'resy': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' site:resy.com');
+      case 'doordash': return 'https://www.doordash.com/search/store/' + name;
+      case 'ubereats': return 'https://www.google.com/search?q=' + encodeURIComponent(businessName + ' ' + city + ' site:ubereats.com');
+      case 'grubhub': return 'https://www.grubhub.com/search?queryText=' + name;
+      default: return 'https://www.google.com/search?q=' + q;
+    }
+  }
+
+  function extractHandleFromUrl(platform, url) {
+    if (!url) return '';
+    try {
+      const parsed = new URL(url);
+      const path = parsed.pathname.replace(/\/$/, '');
+      const segments = path.split('/').filter(Boolean);
+      switch (platform) {
+        case 'facebook':
+        case 'instagram':
+        case 'twitter':
+        case 'tiktok':
+        case 'linkedin':
+        case 'youtube':
+          // Last meaningful segment is typically the handle
+          return segments.length > 0 ? segments[segments.length - 1].replace(/^@/, '') : '';
+        default:
+          return '';
+      }
+    } catch (_) {
+      return '';
+    }
+  }
+
+  // ── Social Profile Supabase Operations ──
+  async function getBusinessId(placeId) {
+    if (!supabaseClient) return null;
+    try {
+      const { data } = await supabaseClient
+        .from('businesses')
+        .select('id')
+        .eq('place_id', placeId)
+        .single();
+      return data ? data.id : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function loadSocialProfiles(businessId) {
+    if (!supabaseClient || !businessId) return [];
+    try {
+      const { data, error } = await supabaseClient
+        .from('business_social_profiles')
+        .select('*')
+        .eq('business_id', businessId)
+        .order('platform');
+      if (error) {
+        console.warn('Load social profiles error:', error);
+        return [];
+      }
+      return data || [];
+    } catch (e) {
+      console.warn('Load social profiles exception:', e);
+      return [];
+    }
+  }
+
+  async function saveSocialProfile(businessId, platform, url) {
+    if (!supabaseClient || !businessId) return false;
+    try {
+      const handle = extractHandleFromUrl(platform, url);
+      const { error } = await supabaseClient
+        .from('business_social_profiles')
+        .upsert({
+          business_id: businessId,
+          platform: platform,
+          url: url,
+          handle: handle || null,
+        }, { onConflict: 'business_id,platform' });
+      if (error) {
+        console.error('Save social profile error:', error);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('Save social profile exception:', e);
+      return false;
+    }
+  }
+
+  async function deleteSocialProfile(profileId) {
+    if (!supabaseClient || !profileId) return false;
+    try {
+      const { error } = await supabaseClient
+        .from('business_social_profiles')
+        .delete()
+        .eq('id', profileId);
+      if (error) {
+        console.error('Delete social profile error:', error);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('Delete social profile exception:', e);
+      return false;
+    }
+  }
+
   // ── Detail Modal ──
-  function openDetailModal(place) {
+  async function openDetailModal(place) {
     // Remove existing modal if any
     const existing = document.getElementById('detail-modal');
     if (existing) existing.remove();
@@ -1317,6 +1525,13 @@
           ${photosHtml}
           ${reviewsHtml}
           ${hoursHtml}
+          <div class="modal-section" id="social-profiles-section">
+            <h3>${t('socialProfiles')}</h3>
+            <p class="section-subtitle">${t('socialProfilesSubtitle')}</p>
+            <div id="social-profiles-content">
+              <div class="social-profiles-loading"><span class="spinner"></span></div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="modal-copy-reviews">${t('copyTopReviews')}</button>
@@ -1354,6 +1569,185 @@
         setTimeout(() => { btn.textContent = t('copyTopReviews'); }, 2000);
       });
     });
+
+    // Load social profiles asynchronously
+    initSocialProfilesSection(modal, place);
+  }
+
+  // ── Social Profiles Section Logic ──
+  async function initSocialProfilesSection(modal, place) {
+    const container = modal.querySelector('#social-profiles-content');
+    if (!container) return;
+
+    const isSaved = savedPlaceIds.has(place.placeId);
+
+    if (!isSaved) {
+      // Business not saved — show prompt to save first
+      container.innerHTML = `
+        <p class="social-save-prompt">${t('saveToDatabaseFirst')}</p>
+        <button class="btn btn-primary" id="social-save-db-btn">${t('saveToDatabaseBtn')}</button>
+        ${buildSearchLinksHtml(place, [])}
+      `;
+      const saveBtn = container.querySelector('#social-save-db-btn');
+      saveBtn.addEventListener('click', async () => {
+        if (!supabaseClient) {
+          showToast(t('dbNotAvailable'), 'error');
+          return;
+        }
+        saveBtn.disabled = true;
+        saveBtn.textContent = t('savingBtn');
+        const ok = await saveBusiness(place);
+        if (ok) {
+          showToast(t('saveRowSuccess', place.name), 'success');
+          // Re-render the social profiles section now that business is saved
+          initSocialProfilesSection(modal, place);
+        } else {
+          saveBtn.textContent = t('saveToDatabaseBtn');
+          saveBtn.disabled = false;
+          showToast(t('saveRowError', place.name), 'error');
+        }
+      });
+      attachSearchLinkHandlers(container);
+      return;
+    }
+
+    // Business is saved — load existing profiles
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) {
+      container.innerHTML = `<p class="social-save-prompt">${t('saveToDatabaseFirst')}</p>`;
+      return;
+    }
+
+    const profiles = await loadSocialProfiles(businessId);
+    renderSocialProfiles(container, place, businessId, profiles);
+  }
+
+  function renderSocialProfiles(container, place, businessId, profiles) {
+    const linkedPlatforms = profiles.map((p) => p.platform);
+    const unlinkedPlatforms = SOCIAL_PLATFORMS.filter((p) => !linkedPlatforms.includes(p.id));
+
+    // Linked profiles list
+    let linkedHtml = '';
+    if (profiles.length > 0) {
+      const items = profiles.map((profile) => {
+        const platConfig = SOCIAL_PLATFORMS.find((p) => p.id === profile.platform);
+        const icon = platConfig ? platConfig.icon : '\uD83C\uDF10';
+        const name = platConfig ? t(platConfig.nameKey) : profile.platform;
+        return `
+          <div class="social-profile-item" data-profile-id="${escapeHtml(profile.id)}">
+            <span class="social-profile-icon">${icon}</span>
+            <div class="social-profile-info">
+              <strong>${escapeHtml(name)}</strong>
+              <a href="${escapeHtml(profile.url)}" target="_blank" rel="noopener" class="social-profile-url">${escapeHtml(profile.url)}</a>
+              ${profile.handle ? `<span class="social-profile-handle">@${escapeHtml(profile.handle)}</span>` : ''}
+            </div>
+            <button class="btn btn-social-remove" data-profile-id="${escapeHtml(profile.id)}" title="${t('removeProfile')}">&times;</button>
+          </div>
+        `;
+      }).join('');
+      linkedHtml = `<div class="social-profiles-list">${items}</div>`;
+    } else {
+      linkedHtml = `<p class="social-no-profiles">${t('noProfilesYet')}</p>`;
+    }
+
+    // Add profile form
+    const platformOptions = unlinkedPlatforms.map((p) =>
+      `<option value="${p.id}">${t(p.nameKey)}</option>`
+    ).join('');
+
+    const addFormHtml = unlinkedPlatforms.length > 0 ? `
+      <div class="social-add-form" id="social-add-form">
+        <div class="social-add-row">
+          <select class="input social-add-select" id="social-platform-select">
+            <option value="">${t('selectPlatform')}</option>
+            ${platformOptions}
+          </select>
+          <input type="url" class="input social-add-input" id="social-url-input" placeholder="${t('profileUrlLabel')}">
+          <button class="btn btn-primary social-add-btn" id="social-add-btn">${t('saveProfile')}</button>
+        </div>
+      </div>
+    ` : '';
+
+    // Search links
+    const searchLinksHtml = buildSearchLinksHtml(place, linkedPlatforms);
+
+    container.innerHTML = linkedHtml + addFormHtml + searchLinksHtml;
+
+    // Attach delete handlers
+    container.querySelectorAll('.btn-social-remove').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const profileId = btn.getAttribute('data-profile-id');
+        btn.disabled = true;
+        const ok = await deleteSocialProfile(profileId);
+        if (ok) {
+          showToast(t('profileRemoved'), 'success');
+          const updated = await loadSocialProfiles(businessId);
+          renderSocialProfiles(container, place, businessId, updated);
+        } else {
+          btn.disabled = false;
+          showToast(t('profileRemoveError'), 'error');
+        }
+      });
+    });
+
+    // Attach add handler
+    const addBtn = container.querySelector('#social-add-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', async () => {
+        const platformSelect = container.querySelector('#social-platform-select');
+        const urlInput = container.querySelector('#social-url-input');
+        const platform = platformSelect.value;
+        const url = urlInput.value.trim();
+
+        if (!platform) return;
+        if (!url) {
+          showToast(t('profileUrlRequired'), 'warning');
+          return;
+        }
+
+        addBtn.disabled = true;
+        addBtn.textContent = t('savingBtn');
+        const ok = await saveSocialProfile(businessId, platform, url);
+        if (ok) {
+          showToast(t('profileSaved'), 'success');
+          const updated = await loadSocialProfiles(businessId);
+          renderSocialProfiles(container, place, businessId, updated);
+        } else {
+          addBtn.disabled = false;
+          addBtn.textContent = t('saveProfile');
+          showToast(t('profileSaveError'), 'error');
+        }
+      });
+    }
+
+    attachSearchLinkHandlers(container);
+  }
+
+  function buildSearchLinksHtml(place, linkedPlatforms) {
+    const unlinked = SOCIAL_PLATFORMS.filter((p) => !linkedPlatforms.includes(p.id));
+    if (unlinked.length === 0) return '';
+
+    const links = unlinked.map((p) => {
+      const searchUrl = buildSearchUrl(p.id, place.name, place.address);
+      return `
+        <a href="${escapeHtml(searchUrl)}" target="_blank" rel="noopener" class="social-search-link" data-platform="${p.id}">
+          <span class="social-search-icon">${p.icon}</span>
+          <span>${t(p.nameKey)}</span>
+        </a>
+      `;
+    }).join('');
+
+    return `
+      <div class="social-search-section">
+        <h4>${t('searchPlatforms')}</h4>
+        <p class="section-subtitle">${t('searchPlatformsSubtitle')}</p>
+        <div class="social-search-grid">${links}</div>
+      </div>
+    `;
+  }
+
+  function attachSearchLinkHandlers(container) {
+    // No extra handlers needed — links use target="_blank" natively
   }
 
   // ── Start ──
