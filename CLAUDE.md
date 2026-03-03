@@ -1,5 +1,11 @@
 # CLAUDE.md — Local Business Finder
 
+## Local Development Path
+
+**Local repo path:** `/Users/andrewbedell/local_business-finder`
+
+Always use this path when referencing the project directory for git operations, terminal navigation, or PR/merge workflows.
+
 ## Project Overview
 
 A lead-to-website SaaS pipeline that finds local businesses **without websites**, gathers comprehensive data about them, generates ready-to-publish websites, sells hosting subscriptions, and provides ongoing website management with analytics.
