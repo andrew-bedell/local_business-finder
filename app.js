@@ -181,6 +181,11 @@
       // Error messages
       searchError: 'Search failed. Please check your API key and network connection, then try again.',
       timeoutError: '{0} timed out after {1}s. Check your API key and network connection.',
+      // Social Media Auto-Discovery
+      socialDiscovering: 'Finding social profiles...',
+      socialYelpRating: '{0} stars on Yelp',
+      socialViewOn: 'View on {0}',
+      thSocial: 'Social',
       // Social Media Discovery
       socialProfiles: 'Social Profiles',
       socialProfilesSubtitle: 'Discover and link social media profiles for this business',
@@ -389,6 +394,11 @@
       // Error messages
       searchError: 'La búsqueda falló. Verifica tu clave API y conexión a internet, e intenta de nuevo.',
       timeoutError: '{0} agotó el tiempo de espera después de {1}s. Verifica tu clave API y conexión a internet.',
+      // Social Media Auto-Discovery
+      socialDiscovering: 'Buscando perfiles sociales...',
+      socialYelpRating: '{0} estrellas en Yelp',
+      socialViewOn: 'Ver en {0}',
+      thSocial: 'Social',
       // Social Media Discovery
       socialProfiles: 'Perfiles Sociales',
       socialProfilesSubtitle: 'Descubre y vincula perfiles de redes sociales para este negocio',
@@ -584,6 +594,11 @@
         if (reviewError) {
           console.warn('Review save error (non-fatal):', reviewError);
         }
+      }
+
+      // Save discovered social profiles if available
+      if (businessId && place.socialProfiles && place.socialProfiles.length > 0) {
+        await saveDiscoveredProfiles(businessId, place.socialProfiles);
       }
 
       savedPlaceIds.add(place.placeId);
@@ -842,11 +857,19 @@
 
       allResults = noWebsite;
 
-      updateProgress(100, t('searchComplete'));
+      updateProgress(95, t('searchComplete'));
       progressStats.textContent = t('progressStatsText', places.length, allResults.length);
 
-      // Show results
+      // Show results immediately, then enrich with social data in background
       showResults();
+
+      // Enrich with social profiles (non-blocking — UI updates as data arrives)
+      enrichWithSocialProfiles(allResults).then(() => {
+        updateProgress(100, t('searchComplete'));
+        renderTable();
+      }).catch((err) => {
+        console.warn('Social enrichment error:', err);
+      });
     } catch (err) {
       console.error('Search error:', err);
       updateProgress(0, t('searchError'));
@@ -1062,6 +1085,8 @@
         ? `<span class="badge badge-saved">${t('savedBtn')}</span>`
         : `<button class="btn btn-save-row" data-idx="${idx}">${t('saveBtn')}</button>`;
 
+      const socialHtml = buildSocialIconsHtml(place.socialProfiles);
+
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
         <td><strong>${escapeHtml(place.name)}</strong></td>
@@ -1073,6 +1098,7 @@
         </td>
         <td class="td-center">${place.reviewCount > 0 ? place.reviewCount.toLocaleString() : '0'}</td>
         <td><span class="badge badge-no-site">${t('noWebsite')}</span></td>
+        <td class="td-center social-icons-cell">${socialHtml}</td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
@@ -1114,17 +1140,24 @@
   function exportCsv() {
     if (filteredResults.length === 0) return;
 
-    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Google Maps URL'].map(csvEscape);
-    const rows = filteredResults.map((p, i) => [
-      i + 1,
-      csvEscape(p.name),
-      csvEscape(p.address),
-      csvEscape(p.phone),
-      p.rating || '',
-      p.reviewCount || '',
-      p.status || '',
-      p.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.address)}`,
-    ]);
+    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Yelp', 'Facebook', 'Instagram', 'Google Maps URL'].map(csvEscape);
+    const rows = filteredResults.map((p, i) => {
+      const socialUrls = {};
+      (p.socialProfiles || []).forEach((sp) => { socialUrls[sp.platform] = sp.url; });
+      return [
+        i + 1,
+        csvEscape(p.name),
+        csvEscape(p.address),
+        csvEscape(p.phone),
+        p.rating || '',
+        p.reviewCount || '',
+        p.status || '',
+        csvEscape(socialUrls.yelp || ''),
+        csvEscape(socialUrls.facebook || ''),
+        csvEscape(socialUrls.instagram || ''),
+        p.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.address)}`,
+      ];
+    });
 
     let csv = headers.join(',') + '\n';
     rows.forEach((row) => {
@@ -1334,6 +1367,125 @@
     } catch (_) {
       return '';
     }
+  }
+
+  // ── Social Auto-Discovery (Yelp API) ──
+  // Platform icon SVGs (inline for zero-dependency rendering)
+  const SOCIAL_ICONS = {
+    yelp: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12.271 6.997c-.263 3.6-.681 5.632-1.554 5.632-.192 0-.417-.085-.661-.254L6.59 9.834c-.748-.516-.88-1.2-.355-1.838.526-.637 2.009-1.782 3.236-2.502.765-.449 1.395-.49 1.823-.118.284.247.248.788-.023 1.621zm-2.225 8.592c.206-.134.482-.2.807-.2.855 0 1.618.525 1.699.612l3.01 3.345c.542.638.453 1.338-.243 1.883a10.146 10.146 0 0 1-3.643 1.619c-.86.212-1.447-.026-1.67-.593l-1.255-3.91c-.268-.833.154-1.487 1.295-2.756zm5.96-2.461l3.773-1.367c.825-.278 1.431-.067 1.63.563a10.15 10.15 0 0 1-.104 3.99c-.228.847-.766 1.196-1.488.96l-3.828-1.186c-.9-.279-1.217-.864-1.042-1.628.138-.612.55-1.12 1.059-1.332zm-.34-2.138l-3.808-1.27c-.868-.291-1.16-.882-.96-1.638.16-.606.587-1.1 1.1-1.296l3.754-1.445c.823-.295 1.435-.095 1.647.536a10.151 10.151 0 0 1 .022 3.994c-.213.852-.762 1.213-1.495.986l-.26-.087v.22zm-5.49 3.858c.867.113 1.308.614 1.308 1.414 0 .175-.018.362-.052.558l-.722 3.981c-.16.814-.69 1.155-1.476.925a10.063 10.063 0 0 1-3.3-2.088c-.615-.614-.692-1.262-.21-1.793l2.808-2.825c.31-.31.547-.343 1.644-.172z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
+  };
+
+  const SOCIAL_COLORS = {
+    yelp: '#d32323',
+    facebook: '#1877f2',
+    instagram: '#e4405f',
+  };
+
+  // Discover social profiles for a business via serverless proxy
+  async function discoverSocialProfiles(place) {
+    const profiles = [];
+
+    // Yelp — via serverless proxy
+    try {
+      const yelpProfile = await discoverYelp(place);
+      if (yelpProfile) profiles.push(yelpProfile);
+    } catch (err) {
+      console.warn('Yelp discovery failed:', err);
+    }
+
+    // Facebook — stub for future Meta Graph API integration
+    // Requires Meta app approval. When approved, add discoverFacebook() here.
+
+    return profiles;
+  }
+
+  // Yelp Business Match via serverless proxy
+  async function discoverYelp(place) {
+    try {
+      const params = new URLSearchParams({
+        name: place.name,
+        address: place.address,
+        phone: place.phone || '',
+      });
+      if (place.latitude && place.longitude) {
+        params.set('latitude', place.latitude);
+        params.set('longitude', place.longitude);
+      }
+
+      const res = await withTimeout(
+        fetch('/api/social/discover?' + params.toString()),
+        10000,
+        'Yelp lookup'
+      );
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (data.yelp) {
+        return {
+          platform: 'yelp',
+          url: data.yelp.url,
+          handle: data.yelp.alias || null,
+          rating: data.yelp.rating || null,
+          reviewCount: data.yelp.review_count || null,
+        };
+      }
+      return null;
+    } catch (err) {
+      console.warn('Yelp API error:', err);
+      return null;
+    }
+  }
+
+  // Enrich all search results with social profiles (called after search completes)
+  async function enrichWithSocialProfiles(results) {
+    const batchSize = 5;
+    for (let i = 0; i < results.length; i += batchSize) {
+      const batch = results.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        if (!place.socialProfiles) {
+          place.socialProfiles = await discoverSocialProfiles(place);
+        }
+      }));
+    }
+  }
+
+  // Save discovered social profiles to Supabase (bulk)
+  async function saveDiscoveredProfiles(businessId, profiles) {
+    if (!supabaseClient || !businessId || !profiles || profiles.length === 0) return;
+
+    const rows = profiles.map((p) => ({
+      business_id: businessId,
+      platform: p.platform,
+      url: p.url || null,
+      handle: p.handle || null,
+    }));
+
+    const { error } = await supabaseClient
+      .from('business_social_profiles')
+      .upsert(rows, { onConflict: 'business_id,platform' });
+
+    if (error) {
+      console.warn('Social profile save error (non-fatal):', error);
+    }
+  }
+
+  // Build social icons HTML for table rows (compact)
+  function buildSocialIconsHtml(profiles) {
+    if (!profiles || profiles.length === 0) {
+      return '<span style="color:var(--text-dim);font-size:11px">\u2014</span>';
+    }
+
+    return profiles.map((p) => {
+      const icon = SOCIAL_ICONS[p.platform] || '';
+      const color = SOCIAL_COLORS[p.platform] || 'var(--text-muted)';
+      const title = p.platform === 'yelp' && p.rating
+        ? t('socialYelpRating', p.rating)
+        : t('socialViewOn', p.platform.charAt(0).toUpperCase() + p.platform.slice(1));
+      return `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" class="social-icon-link" title="${escapeHtml(title)}" style="color:${color}">${icon}</a>`;
+    }).join('');
   }
 
   // ── Social Profile Supabase Operations ──

@@ -899,6 +899,36 @@ select.input {
   border-bottom: none;
 }
 
+/* === Social Column (Table) === */
+.col-social {
+  width: 70px;
+  text-align: center !important;
+}
+
+.social-icons-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.social-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  transition: background 0.15s, opacity 0.15s;
+  opacity: 0.8;
+}
+
+.social-icon-link:hover {
+  opacity: 1;
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+
 /* === Social Profiles === */
 .social-profiles-loading {
   display: flex;

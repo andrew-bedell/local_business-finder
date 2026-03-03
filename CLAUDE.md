@@ -713,6 +713,8 @@ The `api/` directory contains serverless functions deployed automatically by Ver
 | `STRIPE_SECRET_KEY` | For Sell phase | Stripe API secret key (server-side only, never in client code) |
 | `STRIPE_PUBLISHABLE_KEY` | For Sell phase | Stripe publishable key (served to client for Checkout redirect) |
 | `STRIPE_WEBHOOK_SECRET` | For Sell phase | Stripe webhook signing secret for verifying webhook payloads |
+| `YELP_API_KEY` | For Gather phase | Yelp Fusion API key for social media discovery (`api/social/discover.js`) |
+| `FACEBOOK_ACCESS_TOKEN` | For Gather phase (future) | Meta Graph API token for Facebook/Instagram discovery |
 | `SUPABASE_SERVICE_ROLE_KEY` | For webhooks | Supabase service role key for server-side writes (bypasses RLS) |
 
 ### Supabase Setup

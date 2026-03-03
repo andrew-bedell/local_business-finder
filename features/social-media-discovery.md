@@ -3,10 +3,21 @@
 **Phase:** Gather
 
 ## Summary
-Discover and link social media profiles for each business across 14 supported platforms via the detail modal.
+Discover and link social media profiles for each business across 14 supported platforms — both automatic (Yelp API) and manual (detail modal).
 
 ## Details
-The detail modal for each business now includes a **Social Profiles** section that allows the operator to:
+Two complementary approaches work together:
+
+### Automatic Discovery (Yelp API)
+After a search completes, results are enriched with social media profiles in the background via a Vercel serverless proxy (`api/social/discover.js`):
+- **Yelp Fusion API** — phone number match (most precise) then name/location fuzzy match
+- **Facebook/Instagram** — stubs ready for when Meta app approval is granted
+- Social icons appear in a new **Social** column in the results table
+- Discovered profiles are saved to Supabase when the business is saved
+- Yelp, Facebook, and Instagram URLs are included in CSV export
+
+### Manual Management (Detail Modal)
+The detail modal for each business includes a **Social Profiles** section that allows the operator to:
 
 1. **View linked profiles** — See all saved social profiles with platform icons, URLs, and extracted handles
 2. **Add new profiles** — Select a platform from a dropdown and paste the profile URL; handles are auto-extracted from the URL
@@ -26,11 +37,15 @@ Facebook, Instagram, WhatsApp, Twitter/X, TikTok, LinkedIn, YouTube, Yelp, TripA
 Full English and Spanish translations for all social profile UI strings.
 
 ## Key Files
-- `app.js` — Social discovery logic: platform config (`SOCIAL_PLATFORMS`), search URL builder (`buildSearchUrl`), handle extraction (`extractHandleFromUrl`), Supabase operations (`getBusinessId`, `loadSocialProfiles`, `saveSocialProfile`, `deleteSocialProfile`), modal rendering (`initSocialProfilesSection`, `renderSocialProfiles`, `buildSearchLinksHtml`)
-- `styles.css` — Social profile styles: `.social-profile-item`, `.social-add-form`, `.social-search-grid`, `.social-search-link`, responsive breakpoints
+- `app.js` — Auto-discovery (`discoverYelp`, `enrichWithSocialProfiles`, `buildSocialIconsHtml`), manual management (`initSocialProfilesSection`, `renderSocialProfiles`, `buildSearchLinksHtml`), platform config (`SOCIAL_PLATFORMS`, `SOCIAL_ICONS`, `SOCIAL_COLORS`)
+- `api/social/discover.js` — Vercel serverless function proxying Yelp Fusion API (phone match + name/location search)
+- `styles.css` — Social icon styles (`.social-icon-link`, `.col-social`), modal profile styles (`.social-profile-item`, `.social-add-form`, `.social-search-grid`)
+- `index.html` — Social column header in results table
 - `database/schema.sql` — `business_social_profiles` table (pre-existing)
 
 ## Dependencies
+- Yelp Fusion API key (`YELP_API_KEY` environment variable in Vercel)
+- Facebook Graph API access token (future — `FACEBOOK_ACCESS_TOKEN`)
 - Supabase JS SDK (already loaded)
 - `business_social_profiles` table in Supabase database
-- Business must be saved to `businesses` table before adding profiles
+- Business must be saved to `businesses` table before manually adding profiles
