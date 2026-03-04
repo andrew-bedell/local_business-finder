@@ -36,16 +36,17 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- Facebook Graph API (future) ---
-  // const fbAccessToken = process.env.FACEBOOK_ACCESS_TOKEN;
-  // if (fbAccessToken) {
-  //   try {
-  //     const fbResult = await searchFacebook(fbAccessToken, name, address, phone, latitude, longitude);
-  //     if (fbResult) result.facebook = fbResult;
-  //   } catch (err) {
-  //     console.error('Facebook API error:', err.message);
-  //   }
-  // }
+  // --- Facebook & Instagram discovery via web search ---
+  try {
+    const [fbResult, igResult] = await Promise.all([
+      searchSocialWeb('facebook', name, address),
+      searchSocialWeb('instagram', name, address),
+    ]);
+    if (fbResult) result.facebook = fbResult;
+    if (igResult) result.instagram = igResult;
+  } catch (err) {
+    console.error('Social web search error:', err.message);
+  }
 
   res.setHeader('Cache-Control', 'private, max-age=3600');
   return res.status(200).json(result);
@@ -109,6 +110,54 @@ async function searchYelp(apiKey, name, address, phone, latitude, longitude) {
     rating: match.rating,
     review_count: match.review_count,
   };
+}
+
+// Search for a business's Facebook or Instagram page via DuckDuckGo HTML search
+async function searchSocialWeb(platform, name, address) {
+  const site = platform === 'facebook' ? 'facebook.com' : 'instagram.com';
+  const city = address ? address.split(',').slice(-2, -1)[0]?.trim() || '' : '';
+  const query = `${name} ${city} site:${site}`;
+
+  try {
+    const ddgUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+    const response = await fetch(ddgUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; BusinessFinder/1.0)',
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const html = await response.text();
+
+    // Extract URLs from DuckDuckGo result links
+    const urlPattern = platform === 'facebook'
+      ? /https?:\/\/(?:www\.)?facebook\.com\/[a-zA-Z0-9._-]+/g
+      : /https?:\/\/(?:www\.)?instagram\.com\/[a-zA-Z0-9._-]+/g;
+
+    const matches = html.match(urlPattern);
+    if (!matches || matches.length === 0) return null;
+
+    // Filter out generic pages (login, help, etc.)
+    const excluded = ['login', 'help', 'about', 'privacy', 'terms', 'policies', 'pages', 'groups', 'events', 'marketplace', 'watch', 'gaming', 'fundraisers', 'explore', 'accounts', 'directory', 'reel', 'stories', 'p/'];
+    const validUrl = matches.find(url => {
+      const path = new URL(url).pathname.replace(/^\//, '').replace(/\/$/, '').toLowerCase();
+      return path.length > 0 && !excluded.some(ex => path === ex || path.startsWith(ex + '/'));
+    });
+
+    if (!validUrl) return null;
+
+    // Extract handle from URL
+    const handle = new URL(validUrl).pathname.replace(/^\//, '').replace(/\/$/, '');
+
+    return {
+      url: validUrl,
+      handle: handle,
+    };
+  } catch (err) {
+    console.warn(`${platform} web search failed:`, err.message);
+    return null;
+  }
 }
 
 // Yelp Phone Search — returns match if phone number is found

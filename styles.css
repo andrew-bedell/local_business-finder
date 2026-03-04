@@ -899,34 +899,46 @@ select.input {
   border-bottom: none;
 }
 
-/* === Social Column (Table) === */
-.col-social {
-  width: 70px;
+/* === Social Columns (Table) === */
+.col-facebook,
+.col-instagram {
+  width: 110px;
   text-align: center !important;
 }
 
-.social-icons-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.social-icon-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  transition: background 0.15s, opacity 0.15s;
-  opacity: 0.8;
-}
-
-.social-icon-link:hover {
-  opacity: 1;
-  background: var(--bg-hover);
+.social-profile-link {
+  font-size: 12px;
+  font-weight: 600;
   text-decoration: none;
+  padding: 2px 8px;
+  border-radius: 12px;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 100px;
+}
+
+.social-profile-link:hover {
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+.social-facebook {
+  color: #1877f2;
+  background: rgba(24, 119, 242, 0.12);
+}
+
+.social-instagram {
+  color: #e4405f;
+  background: rgba(228, 64, 95, 0.12);
+}
+
+.social-not-found {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-style: italic;
 }
 
 /* === Social Profiles === */

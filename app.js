@@ -185,7 +185,9 @@
       socialDiscovering: 'Finding social profiles...',
       socialYelpRating: '{0} stars on Yelp',
       socialViewOn: 'View on {0}',
-      thSocial: 'Social',
+      thFacebook: 'Facebook',
+      thInstagram: 'Instagram',
+      socialNotFound: 'Not Found',
       // Social Media Discovery
       socialProfiles: 'Social Profiles',
       socialProfilesSubtitle: 'Discover and link social media profiles for this business',
@@ -398,7 +400,9 @@
       socialDiscovering: 'Buscando perfiles sociales...',
       socialYelpRating: '{0} estrellas en Yelp',
       socialViewOn: 'Ver en {0}',
-      thSocial: 'Social',
+      thFacebook: 'Facebook',
+      thInstagram: 'Instagram',
+      socialNotFound: 'No Encontrado',
       // Social Media Discovery
       socialProfiles: 'Perfiles Sociales',
       socialProfilesSubtitle: 'Descubre y vincula perfiles de redes sociales para este negocio',
@@ -1085,7 +1089,14 @@
         ? `<span class="badge badge-saved">${t('savedBtn')}</span>`
         : `<button class="btn btn-save-row" data-idx="${idx}">${t('saveBtn')}</button>`;
 
-      const socialHtml = buildSocialIconsHtml(place.socialProfiles);
+      const fbProfile = (place.socialProfiles || []).find(p => p.platform === 'facebook');
+      const igProfile = (place.socialProfiles || []).find(p => p.platform === 'instagram');
+      const fbHtml = fbProfile
+        ? `<a href="${escapeHtml(fbProfile.url)}" target="_blank" rel="noopener" class="social-profile-link social-facebook">${escapeHtml(fbProfile.handle || 'Facebook')}</a>`
+        : `<span class="social-not-found">${t('socialNotFound')}</span>`;
+      const igHtml = igProfile
+        ? `<a href="${escapeHtml(igProfile.url)}" target="_blank" rel="noopener" class="social-profile-link social-instagram">${escapeHtml(igProfile.handle || 'Instagram')}</a>`
+        : `<span class="social-not-found">${t('socialNotFound')}</span>`;
 
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
@@ -1098,7 +1109,8 @@
         </td>
         <td class="td-center">${place.reviewCount > 0 ? place.reviewCount.toLocaleString() : '0'}</td>
         <td><span class="badge badge-no-site">${t('noWebsite')}</span></td>
-        <td class="td-center social-icons-cell">${socialHtml}</td>
+        <td class="td-center">${fbHtml}</td>
+        <td class="td-center">${igHtml}</td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
@@ -1387,22 +1399,7 @@
   async function discoverSocialProfiles(place) {
     const profiles = [];
 
-    // Yelp — via serverless proxy
-    try {
-      const yelpProfile = await discoverYelp(place);
-      if (yelpProfile) profiles.push(yelpProfile);
-    } catch (err) {
-      console.warn('Yelp discovery failed:', err);
-    }
-
-    // Facebook — stub for future Meta Graph API integration
-    // Requires Meta app approval. When approved, add discoverFacebook() here.
-
-    return profiles;
-  }
-
-  // Yelp Business Match via serverless proxy
-  async function discoverYelp(place) {
+    // Discover all platforms via the serverless proxy (Yelp, Facebook, Instagram)
     try {
       const params = new URLSearchParams({
         name: place.name,
@@ -1416,27 +1413,41 @@
 
       const res = await withTimeout(
         fetch('/api/social/discover?' + params.toString()),
-        10000,
-        'Yelp lookup'
+        15000,
+        'Social discovery'
       );
 
-      if (!res.ok) return null;
-
-      const data = await res.json();
-      if (data.yelp) {
-        return {
-          platform: 'yelp',
-          url: data.yelp.url,
-          handle: data.yelp.alias || null,
-          rating: data.yelp.rating || null,
-          reviewCount: data.yelp.review_count || null,
-        };
+      if (res.ok) {
+        const data = await res.json();
+        if (data.yelp) {
+          profiles.push({
+            platform: 'yelp',
+            url: data.yelp.url,
+            handle: data.yelp.alias || null,
+            rating: data.yelp.rating || null,
+            reviewCount: data.yelp.review_count || null,
+          });
+        }
+        if (data.facebook) {
+          profiles.push({
+            platform: 'facebook',
+            url: data.facebook.url,
+            handle: data.facebook.handle || null,
+          });
+        }
+        if (data.instagram) {
+          profiles.push({
+            platform: 'instagram',
+            url: data.instagram.url,
+            handle: data.instagram.handle || null,
+          });
+        }
       }
-      return null;
     } catch (err) {
-      console.warn('Yelp API error:', err);
-      return null;
+      console.warn('Social discovery failed:', err);
     }
+
+    return profiles;
   }
 
   // Enrich all search results with social profiles (called after search completes)
