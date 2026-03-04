@@ -221,6 +221,31 @@
       platformDoordash: 'DoorDash',
       platformUbereats: 'Uber Eats',
       platformGrubhub: 'Grubhub',
+      // SearchAPI.io integration
+      searchingViaSearchApi: 'Searching via SearchAPI.io...',
+      searchApiFallback: 'SearchAPI.io unavailable, using Google Places...',
+      autoSaving: 'Auto-saving businesses...',
+      autoSaveComplete: 'Auto-saved {0} businesses to database',
+      enriching: 'Enriching business data...',
+      enrichComplete: 'Enrichment complete',
+      // Modal enrichment sections
+      businessDescription: 'About This Business',
+      businessFeatures: 'Features & Services',
+      serviceOptionsTitle: 'Service Options',
+      highlightsTitle: 'Highlights',
+      businessAmenities: 'Amenities',
+      accessibilityTitle: 'Accessibility',
+      reviewBreakdown: 'Rating Breakdown',
+      facebookProfile: 'Facebook',
+      instagramProfile: 'Instagram',
+      followers: '{0} followers',
+      posts: 'Posts',
+      noDescription: 'No description available.',
+      // Search pagination
+      searchingPage: 'Searching page {0} of {1}...',
+      // Google review enrichment
+      fetchingReviews: 'Fetching reviews via Google...',
+      fetchingReviewsProgress: 'Fetching reviews... {0} of {1}',
     },
     es: {
       // Header
@@ -436,6 +461,31 @@
       platformDoordash: 'DoorDash',
       platformUbereats: 'Uber Eats',
       platformGrubhub: 'Grubhub',
+      // SearchAPI.io integration
+      searchingViaSearchApi: 'Buscando via SearchAPI.io...',
+      searchApiFallback: 'SearchAPI.io no disponible, usando Google Places...',
+      autoSaving: 'Guardando negocios automáticamente...',
+      autoSaveComplete: '{0} negocios guardados automáticamente en la base de datos',
+      enriching: 'Enriqueciendo datos del negocio...',
+      enrichComplete: 'Enriquecimiento completo',
+      // Modal enrichment sections
+      businessDescription: 'Acerca de Este Negocio',
+      businessFeatures: 'Características y Servicios',
+      serviceOptionsTitle: 'Opciones de Servicio',
+      highlightsTitle: 'Destacados',
+      businessAmenities: 'Comodidades',
+      accessibilityTitle: 'Accesibilidad',
+      reviewBreakdown: 'Desglose de Calificaciones',
+      facebookProfile: 'Facebook',
+      instagramProfile: 'Instagram',
+      followers: '{0} seguidores',
+      posts: 'Publicaciones',
+      noDescription: 'No hay descripción disponible.',
+      // Search pagination
+      searchingPage: 'Buscando página {0} de {1}...',
+      // Google review enrichment
+      fetchingReviews: 'Obteniendo reseñas de Google...',
+      fetchingReviewsProgress: 'Obteniendo reseñas... {0} de {1}',
     },
   };
 
@@ -557,6 +607,13 @@
         hours: place.hours || [],
         search_location: location,
         search_type: type,
+        description: place.description || null,
+        thumbnail: place.thumbnail || null,
+        price_level: place.priceLevel ? parseInt(place.priceLevel) || null : null,
+        service_options: place.serviceOptions || [],
+        amenities: place.amenities || [],
+        highlights: place.highlights || [],
+        accessibility_info: (place.accessibility || []).join(', ') || null,
       };
 
       // Upsert business and get back the id for saving reviews
@@ -845,34 +902,59 @@
 
       updateProgress(10, t('locationFound', coords.formattedAddress));
 
-      // Step 2: Search for businesses nearby
-      const places = await searchPlaces(coords.latLng, type, radius, maxCount);
-      if (places.length === 0) {
+      // Step 2: Try SearchAPI.io first, fall back to Google Places JS API
+      let mapped = [];
+      let usedSearchApi = false;
+
+      // Extract lat/lng from Google Maps LatLng object
+      const lat = typeof coords.latLng.lat === 'function' ? coords.latLng.lat() : coords.latLng.lat;
+      const lng = typeof coords.latLng.lng === 'function' ? coords.latLng.lng() : coords.latLng.lng;
+
+      try {
+        updateProgress(15, t('searchingViaSearchApi'));
+        const searchApiResults = await searchViaSearchApi(type, lat, lng, radius, maxCount);
+        if (searchApiResults && searchApiResults.length > 0) {
+          mapped = searchApiResults;
+          usedSearchApi = true;
+        }
+      } catch (searchApiErr) {
+        console.warn('SearchAPI.io search failed, falling back to Google Places:', searchApiErr);
+        updateProgress(20, t('searchApiFallback'));
+      }
+
+      if (!usedSearchApi) {
+        // Fallback: use Google Places JS API
+        const places = await searchPlaces(coords.latLng, type, radius, maxCount);
+        if (places.length === 0) {
+          updateProgress(100, t('noBusinessesFound'));
+          resetSearchButton();
+          return;
+        }
+        mapped = places.map(mapPlaceToResult);
+      }
+
+      if (mapped.length === 0) {
         updateProgress(100, t('noBusinessesFound'));
         resetSearchButton();
         return;
       }
 
-      // Step 3: Map to internal format and filter — searchNearby returns all fields
-      const mapped = places.map(mapPlaceToResult);
-      const noWebsite = mapped.filter((p) => !p.website);
+      // Step 3: Filter — keep businesses without websites or with FB/IG as their website
+      const noWebsite = mapped.filter((p) => shouldShowBusiness(p));
 
-      updateProgress(90, t('foundBusinesses', places.length));
+      updateProgress(90, t('foundBusinesses', mapped.length));
 
       allResults = noWebsite;
 
       updateProgress(95, t('searchComplete'));
-      progressStats.textContent = t('progressStatsText', places.length, allResults.length);
+      progressStats.textContent = t('progressStatsText', mapped.length, allResults.length);
 
-      // Show results immediately, then enrich with social data in background
+      // Show results immediately, then enrich in background
       showResults();
 
-      // Enrich with social profiles (non-blocking — UI updates as data arrives)
-      enrichWithSocialProfiles(allResults).then(() => {
-        updateProgress(100, t('searchComplete'));
-        renderTable();
-      }).catch((err) => {
-        console.warn('Social enrichment error:', err);
+      // Background enrichment pipeline (non-blocking)
+      runEnrichmentPipeline(allResults).catch((err) => {
+        console.warn('Enrichment pipeline error:', err);
       });
     } catch (err) {
       console.error('Search error:', err);
@@ -1079,7 +1161,7 @@
         ? `<a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
         : `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
 
-      const hasContent = (place.reviewData && place.reviewData.length > 0) || (place.photos && place.photos.length > 0);
+      const hasContent = (place.reviewData && place.reviewData.length > 0) || (place.photos && place.photos.length > 0) || place.description || (place.serviceOptions && place.serviceOptions.length > 0) || (place.amenities && place.amenities.length > 0) || (place.highlights && place.highlights.length > 0);
       const viewBtnHtml = hasContent
         ? `<button class="btn btn-view" data-idx="${idx}">${t('viewBtn')}</button>`
         : `<span style="color:var(--text-dim);font-size:12px">${t('noData')}</span>`;
@@ -1310,8 +1392,297 @@
 
   // ── Photo URLs ──
   function getPhotoUrl(photo, maxWidth) {
-    if (!photo || !photo.getURI) return null;
-    return photo.getURI({ maxWidth: maxWidth || 600 });
+    // Support both Google Places photo objects (with getURI) and SearchAPI URL objects
+    if (!photo) return null;
+    if (photo.getURI) return photo.getURI({ maxWidth: maxWidth || 600 });
+    if (photo.url) return photo.url;
+    if (typeof photo === 'string') return photo;
+    return null;
+  }
+
+  // ── SearchAPI.io Search ──
+  // Search via SearchAPI.io Google Maps endpoint (server-side proxy)
+  async function searchViaSearchApi(type, lat, lng, radius, maxCount) {
+    const allResults = [];
+    const pagesNeeded = Math.ceil((maxCount || 20) / 20);
+
+    for (let page = 1; page <= pagesNeeded; page++) {
+      const params = new URLSearchParams({
+        type: type,
+        lat: lat,
+        lng: lng,
+        radius: radius,
+      });
+      if (page > 1) params.set('page', page);
+
+      const res = await withTimeout(
+        fetch('/api/search/maps?' + params.toString()),
+        20000,
+        'SearchAPI.io search'
+      );
+
+      if (res.status === 503) {
+        throw new Error('SearchAPI key not configured');
+      }
+
+      if (!res.ok) {
+        throw new Error('SearchAPI.io search failed: ' + res.status);
+      }
+
+      const data = await res.json();
+      const results = data.results || [];
+      allResults.push(...results);
+
+      if (page > 1) {
+        updateProgress(15 + Math.round((page / pagesNeeded) * 10), t('searchingPage', page, pagesNeeded));
+      }
+
+      // Stop if no more results or we have enough
+      if (results.length === 0 || !data.hasMore || allResults.length >= maxCount) break;
+    }
+
+    return allResults.slice(0, maxCount);
+  }
+
+  // Determine if a business should be shown (no website or using social media as website)
+  function shouldShowBusiness(place) {
+    if (!place.website) return true;
+    const w = place.website.toLowerCase();
+    if (w.includes('facebook.com')) return true;
+    if (w.includes('instagram.com')) return true;
+    return false;
+  }
+
+  // ── Google Places Review Enrichment ──
+  // Fetch reviews via Google Places JS API for businesses that lack review data
+  async function enrichWithGoogleReviews(results) {
+    const needsReviews = results.filter(p => p.placeId && (!p.reviewData || p.reviewData.length === 0));
+    if (needsReviews.length === 0) return;
+
+    updateProgress(92, t('fetchingReviews'));
+    const batchSize = 3;
+    let fetched = 0;
+
+    for (let i = 0; i < needsReviews.length; i += batchSize) {
+      const batch = needsReviews.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        try {
+          const placeObj = new google.maps.places.Place({ id: place.placeId });
+          await placeObj.fetchFields({ fields: ['reviews'] });
+
+          if (placeObj.reviews && placeObj.reviews.length > 0) {
+            place.reviewData = placeObj.reviews.map((r) => ({
+              text: r.text || '',
+              rating: r.rating || 0,
+              relativePublishTimeDescription: r.relativePublishTimeDescription || '',
+              authorAttribution: r.authorAttribution ? {
+                displayName: r.authorAttribution.displayName || '',
+                photoURI: r.authorAttribution.photoURI || '',
+              } : null,
+            }));
+
+            // Save reviews to DB if business is already saved
+            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+              saveReviewsForBusiness(place).catch(err =>
+                console.warn('Failed to save reviews for', place.name, err)
+              );
+            }
+          }
+          fetched++;
+          updateProgress(92 + Math.round((fetched / needsReviews.length) * 3), t('fetchingReviewsProgress', fetched, needsReviews.length));
+        } catch (err) {
+          console.warn('Google review fetch failed for', place.name, err);
+        }
+      }));
+    }
+  }
+
+  // Save reviews to business_reviews table for a place (used after Google review enrichment)
+  async function saveReviewsForBusiness(place) {
+    if (!supabaseClient || !place.placeId || !place.reviewData || place.reviewData.length === 0) return;
+
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) return;
+
+    const reviewRows = place.reviewData.map((r) => {
+      const authorName = r.authorAttribution?.displayName || null;
+      const reviewText = r.text || '';
+      const sentiment = analyzeSentiment(r);
+      return {
+        business_id: businessId,
+        source: 'google',
+        author_name: authorName,
+        author_photo_url: r.authorAttribution?.photoURI || null,
+        rating: Math.max(1, Math.min(5, Math.round(r.rating || 3))),
+        text: reviewText,
+        published_at: r.relativePublishTimeDescription || '',
+        sentiment_score: Math.round(sentiment.score * 10000) / 10000,
+        sentiment_label: sentimentLabelToDb(sentiment.label),
+        review_hash: reviewHash('google', authorName, reviewText),
+      };
+    });
+
+    const { error } = await supabaseClient
+      .from('business_reviews')
+      .upsert(reviewRows, { onConflict: 'business_id,review_hash' });
+
+    if (error) {
+      console.warn('Review save error (non-fatal):', error);
+    }
+  }
+
+  // ── Enrichment Pipeline ──
+  // Runs after search results are displayed. Non-blocking background enrichment.
+  async function runEnrichmentPipeline(results) {
+    // Phase 1: Social discovery (existing Yelp + DuckDuckGo)
+    enrichWithSocialProfiles(results).then(() => {
+      renderTable();
+    }).catch((err) => {
+      console.warn('Social enrichment error:', err);
+    });
+
+    // Phase 2: Auto-save qualifying businesses to Supabase
+    if (supabaseClient) {
+      const toSave = results.filter((p) => !savedPlaceIds.has(p.placeId));
+      if (toSave.length > 0) {
+        updateProgress(96, t('autoSaving'));
+        let savedCount = 0;
+        for (const place of toSave) {
+          const ok = await saveBusiness(place);
+          if (ok) savedCount++;
+        }
+        if (savedCount > 0) {
+          showToast(t('autoSaveComplete', savedCount), 'success');
+          renderTable();
+        }
+      }
+    }
+
+    // Phase 3: Fetch reviews via Google Places JS API (for SearchAPI results that lack reviews)
+    if (mapsLoaded) {
+      await enrichWithGoogleReviews(results);
+      renderTable();
+    }
+
+    // Phase 4: Enrich with SearchAPI.io place details (description, amenities)
+    await enrichWithPlaceDetails(results);
+
+    // Phase 5: Enrich with Facebook/Instagram data (after social discovery has run)
+    await enrichWithSocialData(results);
+
+    updateProgress(100, t('searchComplete'));
+    renderTable();
+  }
+
+  // Enrich businesses with SearchAPI.io place details
+  async function enrichWithPlaceDetails(results) {
+    const batchSize = 3;
+    for (let i = 0; i < results.length; i += batchSize) {
+      const batch = results.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        // Skip if already has enriched data or no placeId
+        if (place.enrichedData || !place.placeId) return;
+        // Skip if SearchAPI already provided description (from search results)
+        if (place.description && place.serviceOptions && place.serviceOptions.length > 0) return;
+        try {
+          const params = new URLSearchParams({ place_id: place.placeId });
+          if (place.dataId) params.set('data_id', place.dataId);
+          const res = await withTimeout(
+            fetch('/api/enrich/place?' + params.toString()),
+            15000,
+            'Place enrichment'
+          );
+          if (res.ok) {
+            const data = await res.json();
+            place.enrichedData = data;
+            // Merge enriched data into place object (don't overwrite existing)
+            if (!place.description && data.description) place.description = data.description;
+            if ((!place.serviceOptions || place.serviceOptions.length === 0) && data.serviceOptions) {
+              place.serviceOptions = data.serviceOptions;
+            }
+            if ((!place.amenities || place.amenities.length === 0) && data.amenities) {
+              place.amenities = data.amenities;
+            }
+            if ((!place.highlights || place.highlights.length === 0) && data.highlights) {
+              place.highlights = data.highlights;
+            }
+            if (data.reviewsHistogram) place.reviewsHistogram = data.reviewsHistogram;
+            if (data.popularTimes) place.popularTimes = data.popularTimes;
+
+            // Update Supabase with enriched data
+            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+              updateBusinessEnrichedData(place).catch(err =>
+                console.warn('Failed to update enriched data in DB:', err)
+              );
+            }
+          }
+        } catch (err) {
+          console.warn('Place enrichment failed for', place.name, err);
+        }
+      }));
+    }
+  }
+
+  // Enrich businesses that have discovered Facebook/Instagram profiles
+  async function enrichWithSocialData(results) {
+    const batchSize = 3;
+    for (let i = 0; i < results.length; i += batchSize) {
+      const batch = results.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        const profiles = place.socialProfiles || [];
+        // Facebook enrichment
+        const fb = profiles.find(p => p.platform === 'facebook');
+        if (fb && fb.handle && !place.facebookData) {
+          try {
+            const res = await withTimeout(
+              fetch('/api/enrich/facebook?username=' + encodeURIComponent(fb.handle)),
+              15000,
+              'Facebook enrichment'
+            );
+            if (res.ok) {
+              place.facebookData = await res.json();
+            }
+          } catch (err) {
+            console.warn('Facebook enrichment failed for', place.name, err);
+          }
+        }
+        // Instagram enrichment
+        const ig = profiles.find(p => p.platform === 'instagram');
+        if (ig && ig.handle && !place.instagramData) {
+          try {
+            const res = await withTimeout(
+              fetch('/api/enrich/instagram?username=' + encodeURIComponent(ig.handle)),
+              15000,
+              'Instagram enrichment'
+            );
+            if (res.ok) {
+              place.instagramData = await res.json();
+            }
+          } catch (err) {
+            console.warn('Instagram enrichment failed for', place.name, err);
+          }
+        }
+      }));
+    }
+  }
+
+  // Update Supabase business record with enriched data
+  async function updateBusinessEnrichedData(place) {
+    if (!supabaseClient || !place.placeId) return;
+    const updates = {};
+    if (place.description) updates.description = place.description;
+    if (place.thumbnail) updates.thumbnail = place.thumbnail;
+    if (place.priceLevel) updates.price_level = parseInt(place.priceLevel) || null;
+    if (place.serviceOptions && place.serviceOptions.length > 0) updates.service_options = place.serviceOptions;
+    if (place.amenities && place.amenities.length > 0) updates.amenities = place.amenities;
+    if (place.highlights && place.highlights.length > 0) updates.highlights = place.highlights;
+    if (place.accessibility && place.accessibility.length > 0) updates.accessibility_info = place.accessibility.join(', ');
+    if (Object.keys(updates).length === 0) return;
+
+    await supabaseClient
+      .from('businesses')
+      .update(updates)
+      .eq('place_id', place.placeId);
   }
 
   // ── Social Media Discovery ──
@@ -1668,6 +2039,151 @@
     // Star rating display
     const starsHtml = renderStars(place.rating);
 
+    // Build description HTML
+    let descriptionHtml = '';
+    if (place.description) {
+      descriptionHtml = `
+        <div class="modal-section">
+          <h3>${t('businessDescription')}</h3>
+          <p class="business-description-text">${escapeHtml(place.description)}</p>
+        </div>
+      `;
+    }
+
+    // Build price level HTML
+    let priceHtml = '';
+    if (place.priceLevel || place.priceDescription) {
+      const priceDisplay = place.priceDescription || place.priceLevel || '';
+      priceHtml = `<span class="meta-sep">|</span><span>${escapeHtml(String(priceDisplay))}</span>`;
+    }
+
+    // Build service options HTML
+    let serviceOptionsHtml = '';
+    if (place.serviceOptions && place.serviceOptions.length > 0) {
+      const tags = place.serviceOptions.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
+      serviceOptionsHtml = `
+        <div class="modal-section">
+          <h3>${t('serviceOptionsTitle')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build highlights HTML
+    let highlightsHtml = '';
+    if (place.highlights && place.highlights.length > 0) {
+      const tags = place.highlights.map(f => `<span class="feature-tag feature-tag-highlight">${escapeHtml(f)}</span>`).join('');
+      highlightsHtml = `
+        <div class="modal-section">
+          <h3>${t('highlightsTitle')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build amenities HTML
+    let amenitiesHtml = '';
+    if (place.amenities && place.amenities.length > 0) {
+      const tags = place.amenities.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
+      amenitiesHtml = `
+        <div class="modal-section">
+          <h3>${t('businessAmenities')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build accessibility HTML
+    let accessibilityHtml = '';
+    if (place.accessibility && place.accessibility.length > 0) {
+      const tags = place.accessibility.map(f => `<span class="feature-tag feature-tag-accessibility">${escapeHtml(f)}</span>`).join('');
+      accessibilityHtml = `
+        <div class="modal-section">
+          <h3>${t('accessibilityTitle')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build review histogram HTML
+    let histogramHtml = '';
+    if (place.reviewsHistogram) {
+      const h = place.reviewsHistogram;
+      const total = (h['1'] || 0) + (h['2'] || 0) + (h['3'] || 0) + (h['4'] || 0) + (h['5'] || 0);
+      if (total > 0) {
+        const rows = [5, 4, 3, 2, 1].map(star => {
+          const count = h[star] || 0;
+          const pct = Math.round((count / total) * 100);
+          return `
+            <div class="histogram-row">
+              <span class="histogram-star">${star}</span>
+              <div class="histogram-bar-track">
+                <div class="histogram-bar-fill" style="width:${pct}%"></div>
+              </div>
+              <span class="histogram-count">${count.toLocaleString()}</span>
+            </div>
+          `;
+        }).join('');
+        histogramHtml = `
+          <div class="modal-section">
+            <h3>${t('reviewBreakdown')}</h3>
+            <div class="review-histogram">${rows}</div>
+          </div>
+        `;
+      }
+    }
+
+    // Build Facebook profile HTML
+    let facebookHtml = '';
+    if (place.facebookData) {
+      const fb = place.facebookData;
+      const fbPhotos = [];
+      if (fb.coverPhoto) fbPhotos.push(`<img src="${escapeHtml(fb.coverPhoto)}" alt="Cover photo" class="social-cover-photo">`);
+      facebookHtml = `
+        <div class="modal-section">
+          <h3>${t('facebookProfile')}</h3>
+          <div class="social-profile-card">
+            <div class="social-profile-card-header">
+              ${fb.profilePhoto ? `<img src="${escapeHtml(fb.profilePhoto)}" alt="" class="social-profile-avatar">` : ''}
+              <div>
+                <strong>${escapeHtml(fb.name || place.name)}</strong>
+                ${fb.category && fb.category.length > 0 ? `<span class="social-profile-category">${escapeHtml(Array.isArray(fb.category) ? fb.category.join(', ') : fb.category)}</span>` : ''}
+                ${fb.followers ? `<span class="social-profile-followers">${t('followers', fb.followers.toLocaleString())}</span>` : ''}
+              </div>
+            </div>
+            ${fbPhotos.join('')}
+            ${fb.ratingsText ? `<p class="social-profile-rating">${escapeHtml(fb.ratingsText)}</p>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Build Instagram profile HTML
+    let instagramHtml = '';
+    if (place.instagramData) {
+      const ig = place.instagramData;
+      const igPostsGrid = (ig.posts || []).slice(0, 6).map(post =>
+        post.thumbnail ? `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener" class="ig-post-item"><img src="${escapeHtml(post.thumbnail)}" alt="${escapeHtml(post.caption || '').substring(0, 50)}" loading="lazy"></a>` : ''
+      ).filter(Boolean).join('');
+
+      instagramHtml = `
+        <div class="modal-section">
+          <h3>${t('instagramProfile')}</h3>
+          <div class="social-profile-card">
+            <div class="social-profile-card-header">
+              ${ig.avatar ? `<img src="${escapeHtml(ig.avatar)}" alt="" class="social-profile-avatar">` : ''}
+              <div>
+                <strong>@${escapeHtml(ig.username || '')}</strong>
+                ${ig.followerCount ? `<span class="social-profile-followers">${t('followers', ig.followerCount.toLocaleString())}</span>` : ''}
+              </div>
+            </div>
+            ${ig.bio ? `<p class="social-profile-bio">${escapeHtml(ig.bio)}</p>` : ''}
+            ${igPostsGrid ? `<div class="ig-posts-grid">${igPostsGrid}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
     modal.innerHTML = `
       <div class="modal-content">
         <div class="modal-header">
@@ -1679,15 +2195,24 @@
               <span>${place.rating > 0 ? place.rating.toFixed(1) : 'N/A'}</span>
               <span class="meta-sep">|</span>
               <span>${place.reviewCount > 0 ? place.reviewCount.toLocaleString() + ' ' + t('reviews') : t('noReviews')}</span>
+              ${priceHtml}
               ${place.phone ? `<span class="meta-sep">|</span><span>${escapeHtml(place.phone)}</span>` : ''}
             </div>
           </div>
           <button class="modal-close" id="modal-close-btn">&times;</button>
         </div>
         <div class="modal-body">
+          ${descriptionHtml}
           ${photosHtml}
+          ${serviceOptionsHtml}
+          ${highlightsHtml}
+          ${amenitiesHtml}
+          ${accessibilityHtml}
+          ${histogramHtml}
           ${reviewsHtml}
           ${hoursHtml}
+          ${facebookHtml}
+          ${instagramHtml}
           <div class="modal-section" id="social-profiles-section">
             <h3>${t('socialProfiles')}</h3>
             <p class="section-subtitle">${t('socialProfilesSubtitle')}</p>
