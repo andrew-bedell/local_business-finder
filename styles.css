@@ -1292,6 +1292,18 @@ select.input {
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
+.feature-tag-highlight {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.feature-tag-accessibility {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
 /* Review histogram */
 .review-histogram {
   display: flex;

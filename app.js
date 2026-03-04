@@ -231,13 +231,21 @@
       // Modal enrichment sections
       businessDescription: 'About This Business',
       businessFeatures: 'Features & Services',
+      serviceOptionsTitle: 'Service Options',
+      highlightsTitle: 'Highlights',
       businessAmenities: 'Amenities',
+      accessibilityTitle: 'Accessibility',
       reviewBreakdown: 'Rating Breakdown',
       facebookProfile: 'Facebook',
       instagramProfile: 'Instagram',
       followers: '{0} followers',
       posts: 'Posts',
       noDescription: 'No description available.',
+      // Search pagination
+      searchingPage: 'Searching page {0} of {1}...',
+      // Google review enrichment
+      fetchingReviews: 'Fetching reviews via Google...',
+      fetchingReviewsProgress: 'Fetching reviews... {0} of {1}',
     },
     es: {
       // Header
@@ -463,13 +471,21 @@
       // Modal enrichment sections
       businessDescription: 'Acerca de Este Negocio',
       businessFeatures: 'Características y Servicios',
+      serviceOptionsTitle: 'Opciones de Servicio',
+      highlightsTitle: 'Destacados',
       businessAmenities: 'Comodidades',
+      accessibilityTitle: 'Accesibilidad',
       reviewBreakdown: 'Desglose de Calificaciones',
       facebookProfile: 'Facebook',
       instagramProfile: 'Instagram',
       followers: '{0} seguidores',
       posts: 'Publicaciones',
       noDescription: 'No hay descripción disponible.',
+      // Search pagination
+      searchingPage: 'Buscando página {0} de {1}...',
+      // Google review enrichment
+      fetchingReviews: 'Obteniendo reseñas de Google...',
+      fetchingReviewsProgress: 'Obteniendo reseñas... {0} de {1}',
     },
   };
 
@@ -592,6 +608,12 @@
         search_location: location,
         search_type: type,
         description: place.description || null,
+        thumbnail: place.thumbnail || null,
+        price_level: place.priceLevel ? parseInt(place.priceLevel) || null : null,
+        service_options: place.serviceOptions || [],
+        amenities: place.amenities || [],
+        highlights: place.highlights || [],
+        accessibility_info: (place.accessibility || []).join(', ') || null,
       };
 
       // Upsert business and get back the id for saving reviews
@@ -890,7 +912,7 @@
 
       try {
         updateProgress(15, t('searchingViaSearchApi'));
-        const searchApiResults = await searchViaSearchApi(type, lat, lng, radius);
+        const searchApiResults = await searchViaSearchApi(type, lat, lng, radius, maxCount);
         if (searchApiResults && searchApiResults.length > 0) {
           mapped = searchApiResults;
           usedSearchApi = true;
@@ -1139,7 +1161,7 @@
         ? `<a href="${escapeHtml(place.mapsUrl)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
         : `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
 
-      const hasContent = (place.reviewData && place.reviewData.length > 0) || (place.photos && place.photos.length > 0);
+      const hasContent = (place.reviewData && place.reviewData.length > 0) || (place.photos && place.photos.length > 0) || place.description || (place.serviceOptions && place.serviceOptions.length > 0) || (place.amenities && place.amenities.length > 0) || (place.highlights && place.highlights.length > 0);
       const viewBtnHtml = hasContent
         ? `<button class="btn btn-view" data-idx="${idx}">${t('viewBtn')}</button>`
         : `<span style="color:var(--text-dim);font-size:12px">${t('noData')}</span>`;
@@ -1380,31 +1402,46 @@
 
   // ── SearchAPI.io Search ──
   // Search via SearchAPI.io Google Maps endpoint (server-side proxy)
-  async function searchViaSearchApi(type, lat, lng, radius) {
-    const params = new URLSearchParams({
-      type: type,
-      lat: lat,
-      lng: lng,
-      radius: radius,
-    });
+  async function searchViaSearchApi(type, lat, lng, radius, maxCount) {
+    const allResults = [];
+    const pagesNeeded = Math.ceil((maxCount || 20) / 20);
 
-    const res = await withTimeout(
-      fetch('/api/search/maps?' + params.toString()),
-      20000,
-      'SearchAPI.io search'
-    );
+    for (let page = 1; page <= pagesNeeded; page++) {
+      const params = new URLSearchParams({
+        type: type,
+        lat: lat,
+        lng: lng,
+        radius: radius,
+      });
+      if (page > 1) params.set('page', page);
 
-    if (res.status === 503) {
-      // SearchAPI key not configured — signal fallback
-      throw new Error('SearchAPI key not configured');
+      const res = await withTimeout(
+        fetch('/api/search/maps?' + params.toString()),
+        20000,
+        'SearchAPI.io search'
+      );
+
+      if (res.status === 503) {
+        throw new Error('SearchAPI key not configured');
+      }
+
+      if (!res.ok) {
+        throw new Error('SearchAPI.io search failed: ' + res.status);
+      }
+
+      const data = await res.json();
+      const results = data.results || [];
+      allResults.push(...results);
+
+      if (page > 1) {
+        updateProgress(15 + Math.round((page / pagesNeeded) * 10), t('searchingPage', page, pagesNeeded));
+      }
+
+      // Stop if no more results or we have enough
+      if (results.length === 0 || !data.hasMore || allResults.length >= maxCount) break;
     }
 
-    if (!res.ok) {
-      throw new Error('SearchAPI.io search failed: ' + res.status);
-    }
-
-    const data = await res.json();
-    return data.results || [];
+    return allResults.slice(0, maxCount);
   }
 
   // Determine if a business should be shown (no website or using social media as website)
@@ -1414,6 +1451,84 @@
     if (w.includes('facebook.com')) return true;
     if (w.includes('instagram.com')) return true;
     return false;
+  }
+
+  // ── Google Places Review Enrichment ──
+  // Fetch reviews via Google Places JS API for businesses that lack review data
+  async function enrichWithGoogleReviews(results) {
+    const needsReviews = results.filter(p => p.placeId && (!p.reviewData || p.reviewData.length === 0));
+    if (needsReviews.length === 0) return;
+
+    updateProgress(92, t('fetchingReviews'));
+    const batchSize = 3;
+    let fetched = 0;
+
+    for (let i = 0; i < needsReviews.length; i += batchSize) {
+      const batch = needsReviews.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        try {
+          const placeObj = new google.maps.places.Place({ id: place.placeId });
+          await placeObj.fetchFields({ fields: ['reviews'] });
+
+          if (placeObj.reviews && placeObj.reviews.length > 0) {
+            place.reviewData = placeObj.reviews.map((r) => ({
+              text: r.text || '',
+              rating: r.rating || 0,
+              relativePublishTimeDescription: r.relativePublishTimeDescription || '',
+              authorAttribution: r.authorAttribution ? {
+                displayName: r.authorAttribution.displayName || '',
+                photoURI: r.authorAttribution.photoURI || '',
+              } : null,
+            }));
+
+            // Save reviews to DB if business is already saved
+            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+              saveReviewsForBusiness(place).catch(err =>
+                console.warn('Failed to save reviews for', place.name, err)
+              );
+            }
+          }
+          fetched++;
+          updateProgress(92 + Math.round((fetched / needsReviews.length) * 3), t('fetchingReviewsProgress', fetched, needsReviews.length));
+        } catch (err) {
+          console.warn('Google review fetch failed for', place.name, err);
+        }
+      }));
+    }
+  }
+
+  // Save reviews to business_reviews table for a place (used after Google review enrichment)
+  async function saveReviewsForBusiness(place) {
+    if (!supabaseClient || !place.placeId || !place.reviewData || place.reviewData.length === 0) return;
+
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) return;
+
+    const reviewRows = place.reviewData.map((r) => {
+      const authorName = r.authorAttribution?.displayName || null;
+      const reviewText = r.text || '';
+      const sentiment = analyzeSentiment(r);
+      return {
+        business_id: businessId,
+        source: 'google',
+        author_name: authorName,
+        author_photo_url: r.authorAttribution?.photoURI || null,
+        rating: Math.max(1, Math.min(5, Math.round(r.rating || 3))),
+        text: reviewText,
+        published_at: r.relativePublishTimeDescription || '',
+        sentiment_score: Math.round(sentiment.score * 10000) / 10000,
+        sentiment_label: sentimentLabelToDb(sentiment.label),
+        review_hash: reviewHash('google', authorName, reviewText),
+      };
+    });
+
+    const { error } = await supabaseClient
+      .from('business_reviews')
+      .upsert(reviewRows, { onConflict: 'business_id,review_hash' });
+
+    if (error) {
+      console.warn('Review save error (non-fatal):', error);
+    }
   }
 
   // ── Enrichment Pipeline ──
@@ -1443,10 +1558,16 @@
       }
     }
 
-    // Phase 3: Enrich with SearchAPI.io place details (description, amenities)
+    // Phase 3: Fetch reviews via Google Places JS API (for SearchAPI results that lack reviews)
+    if (mapsLoaded) {
+      await enrichWithGoogleReviews(results);
+      renderTable();
+    }
+
+    // Phase 4: Enrich with SearchAPI.io place details (description, amenities)
     await enrichWithPlaceDetails(results);
 
-    // Phase 4: Enrich with Facebook/Instagram data (after social discovery has run)
+    // Phase 5: Enrich with Facebook/Instagram data (after social discovery has run)
     await enrichWithSocialData(results);
 
     updateProgress(100, t('searchComplete'));
@@ -1550,6 +1671,12 @@
     if (!supabaseClient || !place.placeId) return;
     const updates = {};
     if (place.description) updates.description = place.description;
+    if (place.thumbnail) updates.thumbnail = place.thumbnail;
+    if (place.priceLevel) updates.price_level = parseInt(place.priceLevel) || null;
+    if (place.serviceOptions && place.serviceOptions.length > 0) updates.service_options = place.serviceOptions;
+    if (place.amenities && place.amenities.length > 0) updates.amenities = place.amenities;
+    if (place.highlights && place.highlights.length > 0) updates.highlights = place.highlights;
+    if (place.accessibility && place.accessibility.length > 0) updates.accessibility_info = place.accessibility.join(', ');
     if (Object.keys(updates).length === 0) return;
 
     await supabaseClient
@@ -1923,18 +2050,56 @@
       `;
     }
 
-    // Build features & amenities HTML
-    let featuresHtml = '';
-    const allFeatures = [
-      ...(place.serviceOptions || []),
-      ...(place.highlights || []),
-      ...(place.amenities || []),
-    ];
-    if (allFeatures.length > 0) {
-      const tags = allFeatures.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
-      featuresHtml = `
+    // Build price level HTML
+    let priceHtml = '';
+    if (place.priceLevel || place.priceDescription) {
+      const priceDisplay = place.priceDescription || place.priceLevel || '';
+      priceHtml = `<span class="meta-sep">|</span><span>${escapeHtml(String(priceDisplay))}</span>`;
+    }
+
+    // Build service options HTML
+    let serviceOptionsHtml = '';
+    if (place.serviceOptions && place.serviceOptions.length > 0) {
+      const tags = place.serviceOptions.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
+      serviceOptionsHtml = `
         <div class="modal-section">
-          <h3>${t('businessFeatures')}</h3>
+          <h3>${t('serviceOptionsTitle')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build highlights HTML
+    let highlightsHtml = '';
+    if (place.highlights && place.highlights.length > 0) {
+      const tags = place.highlights.map(f => `<span class="feature-tag feature-tag-highlight">${escapeHtml(f)}</span>`).join('');
+      highlightsHtml = `
+        <div class="modal-section">
+          <h3>${t('highlightsTitle')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build amenities HTML
+    let amenitiesHtml = '';
+    if (place.amenities && place.amenities.length > 0) {
+      const tags = place.amenities.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
+      amenitiesHtml = `
+        <div class="modal-section">
+          <h3>${t('businessAmenities')}</h3>
+          <div class="features-grid">${tags}</div>
+        </div>
+      `;
+    }
+
+    // Build accessibility HTML
+    let accessibilityHtml = '';
+    if (place.accessibility && place.accessibility.length > 0) {
+      const tags = place.accessibility.map(f => `<span class="feature-tag feature-tag-accessibility">${escapeHtml(f)}</span>`).join('');
+      accessibilityHtml = `
+        <div class="modal-section">
+          <h3>${t('accessibilityTitle')}</h3>
           <div class="features-grid">${tags}</div>
         </div>
       `;
@@ -2030,6 +2195,7 @@
               <span>${place.rating > 0 ? place.rating.toFixed(1) : 'N/A'}</span>
               <span class="meta-sep">|</span>
               <span>${place.reviewCount > 0 ? place.reviewCount.toLocaleString() + ' ' + t('reviews') : t('noReviews')}</span>
+              ${priceHtml}
               ${place.phone ? `<span class="meta-sep">|</span><span>${escapeHtml(place.phone)}</span>` : ''}
             </div>
           </div>
@@ -2038,7 +2204,10 @@
         <div class="modal-body">
           ${descriptionHtml}
           ${photosHtml}
-          ${featuresHtml}
+          ${serviceOptionsHtml}
+          ${highlightsHtml}
+          ${amenitiesHtml}
+          ${accessibilityHtml}
           ${histogramHtml}
           ${reviewsHtml}
           ${hoursHtml}

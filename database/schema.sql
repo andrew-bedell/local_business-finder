@@ -54,6 +54,10 @@ CREATE TABLE IF NOT EXISTS businesses (
   hours                   JSONB,               -- weekday descriptions array
 
   -- Business details (gathered from multiple sources)
+  thumbnail               TEXT,                -- thumbnail image URL from search results
+  service_options         TEXT[],              -- e.g., Dine-in, Takeout, Delivery
+  amenities               TEXT[],              -- e.g., Wi-Fi, Parking, Outdoor seating
+  highlights              TEXT[],              -- e.g., Great cocktails, Cozy atmosphere
   payment_methods         TEXT[],
   languages_spoken        TEXT[],
   accessibility_info      TEXT,
