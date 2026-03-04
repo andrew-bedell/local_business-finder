@@ -181,6 +181,8 @@
       // Error messages
       searchError: 'Search failed. Please check your API key and network connection, then try again.',
       timeoutError: '{0} timed out after {1}s. Check your API key and network connection.',
+      mapsAuthFailed: 'Google Maps API key is not authorized. Check that your API key allows this domain and that Maps JavaScript API is enabled in Google Cloud Console.',
+      geocodeRequestDenied: 'Geocoding request denied. Verify your API key is valid, billing is enabled, and the Geocoding API is active in Google Cloud Console.',
       // Social Media Auto-Discovery
       socialDiscovering: 'Finding social profiles...',
       socialYelpRating: '{0} stars on Yelp',
@@ -421,6 +423,8 @@
       // Error messages
       searchError: 'La búsqueda falló. Verifica tu clave API y conexión a internet, e intenta de nuevo.',
       timeoutError: '{0} agotó el tiempo de espera después de {1}s. Verifica tu clave API y conexión a internet.',
+      mapsAuthFailed: 'La clave de Google Maps API no está autorizada. Verifica que tu clave permita este dominio y que la Maps JavaScript API esté habilitada en Google Cloud Console.',
+      geocodeRequestDenied: 'Solicitud de geocodificación denegada. Verifica que tu clave API sea válida, la facturación esté habilitada y la Geocoding API esté activa en Google Cloud Console.',
       // Social Media Auto-Discovery
       socialDiscovering: 'Buscando perfiles sociales...',
       socialYelpRating: '{0} estrellas en Yelp',
@@ -828,21 +832,37 @@
   }
 
   // ── Google Maps Loading ──
+  let mapsAuthError = false;
+
   function loadGoogleMaps(key) {
-    if (mapsLoaded) {
+    if (mapsLoaded && !mapsAuthError) {
       initServices();
       return;
     }
+
+    mapsAuthError = false;
 
     // Remove any existing script
     const existing = document.querySelector('script[src*="maps.googleapis"]');
     if (existing) existing.remove();
 
-    window._gmapsCallback = function () {
-      mapsLoaded = true;
-      initServices();
-      showApiStatus(t('mapsLoaded'), 'success');
+    // Google Maps calls this global when API key auth fails (ApiTargetBlockedMapError, etc.)
+    window.gm_authFailure = function () {
+      mapsAuthError = true;
+      mapsLoaded = false;
+      showApiStatus(t('mapsAuthFailed'), 'error');
+      showToast(t('mapsAuthFailed'), 'error');
       updateSearchButton();
+      console.error('Google Maps auth failure: API key is not authorized for this domain or the required APIs are not enabled.');
+    };
+
+    window._gmapsCallback = function () {
+      if (!mapsAuthError) {
+        mapsLoaded = true;
+        initServices();
+        showApiStatus(t('mapsLoaded'), 'success');
+        updateSearchButton();
+      }
     };
 
     const script = document.createElement('script');
@@ -958,7 +978,9 @@
       });
     } catch (err) {
       console.error('Search error:', err);
-      updateProgress(0, t('searchError'));
+      const errorMsg = err.message || t('searchError');
+      updateProgress(0, errorMsg);
+      showToast(errorMsg, 'error');
     }
 
     resetSearchButton();
@@ -1011,7 +1033,7 @@
   function geocodeLocation(address) {
     const country = countrySelect.value;
     return withTimeout(
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         geocoder.geocode(
           { address, componentRestrictions: { country } },
           (results, status) => {
@@ -1020,6 +1042,9 @@
                 latLng: results[0].geometry.location,
                 formattedAddress: results[0].formatted_address,
               });
+            } else if (status === 'REQUEST_DENIED') {
+              console.error('Geocoding REQUEST_DENIED:', status);
+              reject(new Error(t('geocodeRequestDenied')));
             } else {
               resolve(null);
             }
