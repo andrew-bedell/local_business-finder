@@ -1,5 +1,11 @@
 # CLAUDE.md — Local Business Finder
 
+## Local Development Path
+
+**Local repo path:** `/Users/andrewbedell/local_business-finder`
+
+Always use this path when referencing the project directory for git operations, terminal navigation, or PR/merge workflows.
+
 ## Project Overview
 
 A lead-to-website SaaS pipeline that finds local businesses **without websites**, gathers comprehensive data about them, generates ready-to-publish websites, sells hosting subscriptions, and provides ongoing website management with analytics.
@@ -707,6 +713,8 @@ The `api/` directory contains serverless functions deployed automatically by Ver
 | `STRIPE_SECRET_KEY` | For Sell phase | Stripe API secret key (server-side only, never in client code) |
 | `STRIPE_PUBLISHABLE_KEY` | For Sell phase | Stripe publishable key (served to client for Checkout redirect) |
 | `STRIPE_WEBHOOK_SECRET` | For Sell phase | Stripe webhook signing secret for verifying webhook payloads |
+| `YELP_API_KEY` | For Gather phase | Yelp Fusion API key for social media discovery (`api/social/discover.js`) |
+| `FACEBOOK_ACCESS_TOKEN` | For Gather phase (future) | Meta Graph API token for Facebook/Instagram discovery |
 | `SUPABASE_SERVICE_ROLE_KEY` | For webhooks | Supabase service role key for server-side writes (bypasses RLS) |
 
 ### Supabase Setup
