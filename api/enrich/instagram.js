@@ -57,7 +57,15 @@ export default async function handler(req, res) {
       likes: post.likes || 0,
       comments: post.comments || 0,
       thumbnail: post.thumbnail || '',
-      timestamp: post.timestamp || '',
+      imageUrl: post.link || post.thumbnail || '',
+      width: post.width || null,
+      height: post.height || null,
+      timestamp: post.iso_date || post.timestamp || '',
+      carouselItems: (post.carousel_items || []).map(item => ({
+        imageUrl: item.link || item.thumbnail || '',
+        width: item.width || null,
+        height: item.height || null,
+      })).filter(item => item.imageUrl),
     }));
 
     const result = {
@@ -71,6 +79,10 @@ export default async function handler(req, res) {
       followingCount: profile.following || 0,
       postCount: profile.posts_count || 0,
       externalUrl: profile.external_url || '',
+      bioLinks: (profile.bio_links || []).map(link => ({
+        title: link.title || '',
+        url: link.url || '',
+      })).filter(link => link.url),
       posts: posts,
     };
 
