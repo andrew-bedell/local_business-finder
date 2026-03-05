@@ -714,7 +714,6 @@
 
   // ── State ──
   let apiKey = localStorage.getItem('google_places_api_key') || '';
-  let geocoder = null;
   let allResults = [];
   let filteredResults = [];
   let isSearching = false;
@@ -790,12 +789,14 @@
         }
         // Load saved IDs after final Supabase client is determined
         loadSavedIds();
+        // Hide API setup — search works via SearchAPI.io without a Google key
+        document.getElementById('api-setup').style.display = 'none';
+        // Optionally load Google Maps for review enrichment
         if (data.googleApiKey) {
           apiKey = data.googleApiKey;
-          document.getElementById('api-setup').style.display = 'none';
           loadGoogleMaps(apiKey);
-          return;
         }
+        return;
       } else {
         // Server returned non-OK — use fallback Supabase client
         loadSavedIds();
@@ -805,7 +806,7 @@
       loadSavedIds();
     }
 
-    // Fall back to localStorage key or manual input
+    // Fall back to localStorage key or manual input (local dev without server)
     if (apiKey) {
       apiKeyInput.value = '••••••••••••••••••••';
       loadGoogleMaps(apiKey);
@@ -836,7 +837,6 @@
 
   function loadGoogleMaps(key) {
     if (mapsLoaded && !mapsAuthError) {
-      initServices();
       return;
     }
 
@@ -859,7 +859,6 @@
     window._gmapsCallback = function () {
       if (!mapsAuthError) {
         mapsLoaded = true;
-        initServices();
         showApiStatus(t('mapsLoaded'), 'success');
         updateSearchButton();
       }
@@ -875,9 +874,6 @@
     document.head.appendChild(script);
   }
 
-  function initServices() {
-    geocoder = new google.maps.Geocoder();
-  }
 
   // ── Search Button State ──
   function updateSearchButton() {
@@ -1027,67 +1023,6 @@
     return {
       latLng: { lat: data.lat, lng: data.lng },
       formattedAddress: data.formattedAddress,
-    };
-  }
-
-  // ── Places Search (New API) ──
-  async function searchPlaces(latLng, type, radius, maxCount) {
-    const request = {
-      fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'businessStatus', 'googleMapsURI', 'types', 'id', 'reviews', 'photos', 'regularOpeningHours', 'location'],
-      locationRestriction: {
-        center: latLng,
-        radius: radius,
-      },
-      includedPrimaryTypes: [type],
-      maxResultCount: Math.min(maxCount, 20),
-    };
-
-    try {
-      const { places } = await google.maps.places.Place.searchNearby(request);
-      return places || [];
-    } catch (err) {
-      console.warn('Nearby search error:', err);
-      if (err.message && err.message.includes('not enabled')) {
-        throw new Error('The Places API (New) is not enabled for your project. Please enable it in Google Cloud Console under APIs & Services > Library.');
-      }
-      return [];
-    }
-  }
-
-  // ── Map Place objects to internal format ──
-  function mapPlaceToResult(place) {
-    // Normalize reviews to plain objects for spread compatibility
-    const normalizedReviews = (place.reviews || []).map((r) => ({
-      text: r.text || '',
-      rating: r.rating || 0,
-      relativePublishTimeDescription: r.relativePublishTimeDescription || '',
-      authorAttribution: r.authorAttribution ? {
-        displayName: r.authorAttribution.displayName || '',
-        photoURI: r.authorAttribution.photoURI || '',
-      } : null,
-    }));
-
-    // Extract latitude/longitude from place.location (LatLng object)
-    const loc = place.location;
-    const latitude = loc ? (typeof loc.lat === 'function' ? loc.lat() : loc.lat) : null;
-    const longitude = loc ? (typeof loc.lng === 'function' ? loc.lng() : loc.lng) : null;
-
-    return {
-      name: place.displayName || '',
-      address: place.formattedAddress || '',
-      phone: place.nationalPhoneNumber || '',
-      website: place.websiteURI || '',
-      rating: place.rating || 0,
-      reviewCount: place.userRatingCount || 0,
-      status: place.businessStatus || 'UNKNOWN',
-      mapsUrl: place.googleMapsURI || '',
-      types: place.types || [],
-      placeId: place.id || '',
-      reviewData: normalizedReviews,
-      photos: place.photos || [],
-      hours: place.regularOpeningHours ? place.regularOpeningHours.weekdayDescriptions || [] : [],
-      latitude: latitude,
-      longitude: longitude,
     };
   }
 
