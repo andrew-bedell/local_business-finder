@@ -248,6 +248,11 @@
       // Google review enrichment
       fetchingReviews: 'Fetching reviews via Google...',
       fetchingReviewsProgress: 'Fetching reviews... {0} of {1}',
+      // SearchAPI review + photo enrichment
+      fetchingAdditionalReviews: 'Fetching additional reviews...',
+      fetchingAdditionalReviewsProgress: 'Fetching additional reviews... {0} of {1}',
+      fetchingPhotos: 'Fetching photos...',
+      fetchingPhotosProgress: 'Fetching photos... {0} of {1}',
     },
     es: {
       // Header
@@ -490,6 +495,11 @@
       // Google review enrichment
       fetchingReviews: 'Obteniendo reseñas de Google...',
       fetchingReviewsProgress: 'Obteniendo reseñas... {0} de {1}',
+      // SearchAPI review + photo enrichment
+      fetchingAdditionalReviews: 'Obteniendo reseñas adicionales...',
+      fetchingAdditionalReviewsProgress: 'Obteniendo reseñas adicionales... {0} de {1}',
+      fetchingPhotos: 'Obteniendo fotos...',
+      fetchingPhotosProgress: 'Obteniendo fotos... {0} de {1}',
     },
   };
 
@@ -664,6 +674,30 @@
       // Save discovered social profiles if available
       if (businessId && place.socialProfiles && place.socialProfiles.length > 0) {
         await saveDiscoveredProfiles(businessId, place.socialProfiles);
+      }
+
+      // Save photos to business_photos table
+      if (businessId && place.photos && place.photos.length > 0) {
+        const photoRows = place.photos
+          .filter(p => p.url)
+          .map((p, index) => ({
+            business_id: businessId,
+            source: 'google',
+            photo_type: p.photoType || null,
+            url: p.url,
+            caption: p.caption || null,
+            is_primary: index === 0,
+          }));
+
+        if (photoRows.length > 0) {
+          const { error: photoError } = await supabaseClient
+            .from('business_photos')
+            .insert(photoRows);
+
+          if (photoError) {
+            console.warn('Photo save error (non-fatal):', photoError);
+          }
+        }
       }
 
       savedPlaceIds.add(place.placeId);
@@ -1465,6 +1499,47 @@
     }
   }
 
+  // Save photos to business_photos table for a place
+  async function savePhotosForBusiness(place) {
+    if (!supabaseClient || !place.placeId || !place.photos || place.photos.length === 0) return;
+
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) return;
+
+    const photoRows = place.photos
+      .filter(p => p.url)
+      .map((p, index) => ({
+        business_id: businessId,
+        source: 'google',
+        photo_type: p.photoType || null,
+        url: p.url,
+        caption: p.caption || null,
+        is_primary: index === 0,
+      }));
+
+    if (photoRows.length === 0) return;
+
+    // Delete existing google photos for this business then insert fresh
+    // (no unique constraint on business_id + url, so upsert isn't possible)
+    const { error: deleteError } = await supabaseClient
+      .from('business_photos')
+      .delete()
+      .eq('business_id', businessId)
+      .eq('source', 'google');
+
+    if (deleteError) {
+      console.warn('Photo delete error (non-fatal):', deleteError);
+    }
+
+    const { error: insertError } = await supabaseClient
+      .from('business_photos')
+      .insert(photoRows);
+
+    if (insertError) {
+      console.warn('Photo save error (non-fatal):', insertError);
+    }
+  }
+
   // ── Enrichment Pipeline ──
   // Runs after search results are displayed. Non-blocking background enrichment.
   async function runEnrichmentPipeline(results) {
@@ -1498,10 +1573,19 @@
       renderTable();
     }
 
-    // Phase 4: Enrich with SearchAPI.io place details (description, amenities)
+    // Phase 4: Enrich with SearchAPI.io place details (description, amenities, inline reviews)
     await enrichWithPlaceDetails(results);
+    renderTable();
 
-    // Phase 5: Enrich with Facebook/Instagram data (after social discovery has run)
+    // Phase 5: Fetch additional reviews for businesses still lacking them
+    await enrichWithSearchAPIReviews(results);
+    renderTable();
+
+    // Phase 6: Fetch additional photos for businesses with few/no photos
+    await enrichWithSearchAPIPhotos(results);
+    renderTable();
+
+    // Phase 7: Enrich with Facebook/Instagram data (after social discovery has run)
     await enrichWithSocialData(results);
 
     updateProgress(100, t('searchComplete'));
@@ -1542,6 +1626,31 @@
             }
             if (data.reviewsHistogram) place.reviewsHistogram = data.reviewsHistogram;
             if (data.popularTimes) place.popularTimes = data.popularTimes;
+
+            // Consume reviews from the place response (previously discarded)
+            if (data.reviews && data.reviews.length > 0 && (!place.reviewData || place.reviewData.length === 0)) {
+              place.reviewData = data.reviews.map(r => ({
+                text: r.text,
+                rating: r.rating,
+                relativePublishTimeDescription: r.date || r.isoDate || '',
+                authorAttribution: {
+                  displayName: r.authorName,
+                  photoURI: r.authorPhoto,
+                },
+              }));
+
+              // Persist reviews if business is already saved
+              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+                saveReviewsForBusiness(place).catch(err =>
+                  console.warn('Failed to save place detail reviews:', err)
+                );
+              }
+            }
+
+            // Store web reviews (external sources like TripAdvisor)
+            if (data.webReviews && data.webReviews.length > 0) {
+              place.webReviews = data.webReviews;
+            }
 
             // Update Supabase with enriched data
             if (supabaseClient && savedPlaceIds.has(place.placeId)) {
@@ -1595,6 +1704,104 @@
           } catch (err) {
             console.warn('Instagram enrichment failed for', place.name, err);
           }
+        }
+      }));
+    }
+  }
+
+  // Fetch additional reviews via SearchAPI.io dedicated reviews engine
+  // Only called for businesses that still lack reviews after Google Places JS + place details
+  async function enrichWithSearchAPIReviews(results) {
+    const needsReviews = results.filter(p => p.dataId && (!p.reviewData || p.reviewData.length === 0));
+    if (needsReviews.length === 0) return;
+
+    updateProgress(96, t('fetchingAdditionalReviews'));
+    const batchSize = 3;
+    let fetched = 0;
+
+    for (let i = 0; i < needsReviews.length; i += batchSize) {
+      const batch = needsReviews.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        try {
+          const params = new URLSearchParams({ data_id: place.dataId });
+          if (place.placeId) params.set('place_id', place.placeId);
+          const res = await withTimeout(
+            fetch('/api/enrich/reviews?' + params.toString()),
+            15000,
+            'Review enrichment'
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.reviews && data.reviews.length > 0) {
+              place.reviewData = data.reviews.map(r => ({
+                text: r.text,
+                rating: r.rating,
+                relativePublishTimeDescription: r.date || r.isoDate || '',
+                authorAttribution: {
+                  displayName: r.authorName,
+                  photoURI: r.authorPhoto,
+                },
+              }));
+
+              // Persist if saved
+              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+                saveReviewsForBusiness(place).catch(err =>
+                  console.warn('Failed to save SearchAPI reviews:', err)
+                );
+              }
+            }
+          }
+          fetched++;
+          updateProgress(96 + Math.round((fetched / needsReviews.length) * 1), t('fetchingAdditionalReviewsProgress', fetched, needsReviews.length));
+        } catch (err) {
+          console.warn('SearchAPI review enrichment failed for', place.name, err);
+        }
+      }));
+    }
+  }
+
+  // Fetch additional photos via SearchAPI.io dedicated photos engine
+  // Only called for businesses that have few or no photos
+  async function enrichWithSearchAPIPhotos(results) {
+    const needsPhotos = results.filter(p => p.dataId && (!p.photos || p.photos.length <= 1));
+    if (needsPhotos.length === 0) return;
+
+    updateProgress(97, t('fetchingPhotos'));
+    const batchSize = 3;
+    let fetched = 0;
+
+    for (let i = 0; i < needsPhotos.length; i += batchSize) {
+      const batch = needsPhotos.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (place) => {
+        try {
+          const res = await withTimeout(
+            fetch('/api/enrich/photos?data_id=' + encodeURIComponent(place.dataId)),
+            15000,
+            'Photo enrichment'
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.photos && data.photos.length > 0) {
+              // Merge, avoiding duplicates by URL
+              const existingUrls = new Set((place.photos || []).map(p => p.url));
+              const newPhotos = data.photos
+                .filter(p => p.url && !existingUrls.has(p.url))
+                .map(p => ({ url: p.url, thumbnail: p.thumbnail, photoType: null }));
+              place.photos = (place.photos || []).concat(newPhotos);
+              place.photoCategories = data.categories;
+
+              // Persist if saved
+              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+                savePhotosForBusiness(place).catch(err =>
+                  console.warn('Failed to save SearchAPI photos:', err)
+                );
+              }
+            }
+          }
+          fetched++;
+          updateProgress(97 + Math.round((fetched / needsPhotos.length) * 1), t('fetchingPhotosProgress', fetched, needsPhotos.length));
+        } catch (err) {
+          console.warn('SearchAPI photo enrichment failed for', place.name, err);
         }
       }));
     }

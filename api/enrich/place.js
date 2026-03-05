@@ -59,6 +59,17 @@ export default async function handler(req, res) {
     // Parse Q&A
     const questionsAndAnswers = place.questions_and_answers || null;
 
+    // Extract reviews from the response (these were previously discarded)
+    const reviews = normalizeReviews(data.review_results || place.reviews || []);
+
+    // Extract web reviews (external sources like TripAdvisor aggregated by Google)
+    const webReviews = (data.web_reviews || []).map(wr => ({
+      source: (wr.source || '').toLowerCase(),
+      rating: wr.rating || null,
+      reviewCount: wr.reviews || 0,
+      url: wr.link || '',
+    }));
+
     const result = {
       description: place.description || '',
       serviceOptions: extensions.serviceOptions,
@@ -68,6 +79,8 @@ export default async function handler(req, res) {
       reviewsHistogram: reviewsHistogram,
       popularTimes: popularTimes,
       questionsAndAnswers: questionsAndAnswers,
+      reviews: reviews,
+      webReviews: webReviews,
       // Additional fields not available from Google Places JS API
       priceLevel: place.price || '',
       priceDescription: place.price_description || '',
@@ -125,4 +138,18 @@ function parsePopularTimes(popularTimes) {
   }
 
   return result;
+}
+
+function normalizeReviews(reviews) {
+  if (!Array.isArray(reviews)) return [];
+  return reviews.map(r => ({
+    authorName: r.user ? r.user.name || '' : '',
+    authorPhoto: r.user ? r.user.thumbnail || '' : '',
+    rating: r.rating || 0,
+    text: r.snippet || r.text || '',
+    date: r.date || '',
+    isoDate: r.iso_date || r.extracted_date || '',
+    isLocalGuide: r.user ? r.user.is_local_guide || false : false,
+    source: 'google',
+  }));
 }
