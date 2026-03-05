@@ -1,6 +1,6 @@
 // Vercel serverless function: Social media profile discovery
-// Proxies requests to Yelp Fusion API (and future platforms)
-// to keep API keys server-side.
+// Discovers Yelp via Yelp Fusion API, Facebook/Instagram via SearchAPI.io Google search.
+// All API keys stay server-side.
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,16 +36,21 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- Facebook & Instagram discovery via web search ---
-  try {
-    const [fbResult, igResult] = await Promise.all([
-      searchSocialWeb('facebook', name, address),
-      searchSocialWeb('instagram', name, address),
-    ]);
-    if (fbResult) result.facebook = fbResult;
-    if (igResult) result.instagram = igResult;
-  } catch (err) {
-    console.error('Social web search error:', err.message);
+  // --- Facebook & Instagram discovery via SearchAPI.io Google search ---
+  const searchApiKey = process.env.SEARCHAPI_KEY;
+  if (searchApiKey) {
+    try {
+      const [fbResult, igResult] = await Promise.all([
+        searchSocialWeb('facebook', name, address, searchApiKey),
+        searchSocialWeb('instagram', name, address, searchApiKey),
+      ]);
+      if (fbResult) result.facebook = fbResult;
+      if (igResult) result.instagram = igResult;
+    } catch (err) {
+      console.error('Social web search error:', err.message);
+    }
+  } else {
+    console.warn('SEARCHAPI_KEY not set — skipping Facebook/Instagram discovery');
   }
 
   res.setHeader('Cache-Control', 'private, max-age=3600');
@@ -112,50 +117,64 @@ async function searchYelp(apiKey, name, address, phone, latitude, longitude) {
   };
 }
 
-// Search for a business's Facebook or Instagram page via DuckDuckGo HTML search
-async function searchSocialWeb(platform, name, address) {
+// Search for a business's Facebook or Instagram page via SearchAPI.io Google search
+async function searchSocialWeb(platform, name, address, searchApiKey) {
+  if (!searchApiKey) return null;
+
   const site = platform === 'facebook' ? 'facebook.com' : 'instagram.com';
   const city = address ? address.split(',').slice(-2, -1)[0]?.trim() || '' : '';
   const query = `${name} ${city} site:${site}`;
 
   try {
-    const ddgUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
-    const response = await fetch(ddgUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; BusinessFinder/1.0)',
-      },
+    const params = new URLSearchParams({
+      engine: 'google',
+      q: query,
+      api_key: searchApiKey,
+      num: '3',
     });
 
-    if (!response.ok) return null;
+    const response = await fetch(
+      'https://www.searchapi.io/api/v1/search?' + params.toString()
+    );
 
-    const html = await response.text();
+    if (!response.ok) {
+      console.error(`SearchAPI Google error (${platform}):`, response.status);
+      return null;
+    }
 
-    // Extract URLs from DuckDuckGo result links
+    const data = await response.json();
+    const organicResults = data.organic_results || [];
+
+    // Extract matching URLs from organic results
     const urlPattern = platform === 'facebook'
-      ? /https?:\/\/(?:www\.)?facebook\.com\/[a-zA-Z0-9._-]+/g
-      : /https?:\/\/(?:www\.)?instagram\.com\/[a-zA-Z0-9._-]+/g;
-
-    const matches = html.match(urlPattern);
-    if (!matches || matches.length === 0) return null;
+      ? /https?:\/\/(?:www\.)?facebook\.com\/[a-zA-Z0-9._-]+/
+      : /https?:\/\/(?:www\.)?instagram\.com\/[a-zA-Z0-9._-]+/;
 
     // Filter out generic pages (login, help, etc.)
-    const excluded = ['login', 'help', 'about', 'privacy', 'terms', 'policies', 'pages', 'groups', 'events', 'marketplace', 'watch', 'gaming', 'fundraisers', 'explore', 'accounts', 'directory', 'reel', 'stories', 'p/'];
-    const validUrl = matches.find(url => {
-      const path = new URL(url).pathname.replace(/^\//, '').replace(/\/$/, '').toLowerCase();
-      return path.length > 0 && !excluded.some(ex => path === ex || path.startsWith(ex + '/'));
-    });
+    const excluded = ['login', 'help', 'about', 'privacy', 'terms', 'policies', 'pages', 'groups', 'events', 'marketplace', 'watch', 'gaming', 'fundraisers', 'explore', 'accounts', 'directory', 'reel', 'stories', 'p'];
 
-    if (!validUrl) return null;
+    for (const result of organicResults) {
+      const link = result.link || '';
+      const match = link.match(urlPattern);
+      if (!match) continue;
 
-    // Extract handle from URL
-    const handle = new URL(validUrl).pathname.replace(/^\//, '').replace(/\/$/, '');
+      const matchedUrl = match[0];
+      const path = new URL(matchedUrl).pathname.replace(/^\//, '').replace(/\/$/, '').toLowerCase();
+      if (path.length === 0) continue;
+      if (excluded.some(ex => path === ex || path.startsWith(ex + '/'))) continue;
 
-    return {
-      url: validUrl,
-      handle: handle,
-    };
+      // Extract handle from URL
+      const handle = new URL(matchedUrl).pathname.replace(/^\//, '').replace(/\/$/, '');
+
+      return {
+        url: matchedUrl,
+        handle: handle,
+      };
+    }
+
+    return null;
   } catch (err) {
-    console.warn(`${platform} web search failed:`, err.message);
+    console.warn(`${platform} SearchAPI discovery failed:`, err.message);
     return null;
   }
 }
