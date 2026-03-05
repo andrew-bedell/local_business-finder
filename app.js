@@ -883,8 +883,7 @@
   function updateSearchButton() {
     const hasLocation = locationInput.value.trim().length > 0;
     const hasType = businessType.value !== '';
-    const hasApi = mapsLoaded;
-    btnSearch.disabled = !(hasLocation && hasType && hasApi);
+    btnSearch.disabled = !(hasLocation && hasType);
   }
 
   locationInput.addEventListener('input', updateSearchButton);
@@ -922,38 +921,14 @@
 
       updateProgress(10, t('locationFound', coords.formattedAddress));
 
-      // Step 2: Try SearchAPI.io first, fall back to Google Places JS API
-      let mapped = [];
-      let usedSearchApi = false;
+      // Step 2: Search via SearchAPI.io
+      const lat = coords.latLng.lat;
+      const lng = coords.latLng.lng;
 
-      // Extract lat/lng from Google Maps LatLng object
-      const lat = typeof coords.latLng.lat === 'function' ? coords.latLng.lat() : coords.latLng.lat;
-      const lng = typeof coords.latLng.lng === 'function' ? coords.latLng.lng() : coords.latLng.lng;
+      updateProgress(15, t('searchingViaSearchApi'));
+      const mapped = await searchViaSearchApi(type, lat, lng, radius, maxCount);
 
-      try {
-        updateProgress(15, t('searchingViaSearchApi'));
-        const searchApiResults = await searchViaSearchApi(type, lat, lng, radius, maxCount);
-        if (searchApiResults && searchApiResults.length > 0) {
-          mapped = searchApiResults;
-          usedSearchApi = true;
-        }
-      } catch (searchApiErr) {
-        console.warn('SearchAPI.io search failed, falling back to Google Places:', searchApiErr);
-        updateProgress(20, t('searchApiFallback'));
-      }
-
-      if (!usedSearchApi) {
-        // Fallback: use Google Places JS API
-        const places = await searchPlaces(coords.latLng, type, radius, maxCount);
-        if (places.length === 0) {
-          updateProgress(100, t('noBusinessesFound'));
-          resetSearchButton();
-          return;
-        }
-        mapped = places.map(mapPlaceToResult);
-      }
-
-      if (mapped.length === 0) {
+      if (!mapped || mapped.length === 0) {
         updateProgress(100, t('noBusinessesFound'));
         resetSearchButton();
         return;
@@ -1030,30 +1005,29 @@
   }
 
   // ── Geocoding ──
-  function geocodeLocation(address) {
+  async function geocodeLocation(address) {
     const country = countrySelect.value;
-    return withTimeout(
-      new Promise((resolve, reject) => {
-        geocoder.geocode(
-          { address, componentRestrictions: { country } },
-          (results, status) => {
-            if (status === 'OK' && results.length > 0) {
-              resolve({
-                latLng: results[0].geometry.location,
-                formattedAddress: results[0].formatted_address,
-              });
-            } else if (status === 'REQUEST_DENIED') {
-              console.error('Geocoding REQUEST_DENIED:', status);
-              reject(new Error(t('geocodeRequestDenied')));
-            } else {
-              resolve(null);
-            }
-          }
-        );
-      }),
+    const params = new URLSearchParams({ address });
+    if (country) params.set('country', country);
+
+    const res = await withTimeout(
+      fetch('/api/geocode?' + params.toString()),
       15000,
       'Geocoding'
     );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || t('geocodeRequestDenied'));
+    }
+
+    const data = await res.json();
+    if (!data.found) return null;
+
+    return {
+      latLng: { lat: data.lat, lng: data.lng },
+      formattedAddress: data.formattedAddress,
+    };
   }
 
   // ── Places Search (New API) ──
