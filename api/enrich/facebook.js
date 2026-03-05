@@ -65,6 +65,20 @@ export default async function handler(req, res) {
       link: data.link || '',
     };
 
+    // Extract reviews if available
+    const rawReviews = data.reviews || [];
+    result.reviews = rawReviews.map(r => ({
+      authorName: r.user ? r.user.name || '' : '',
+      authorPhoto: r.user ? r.user.thumbnail || '' : '',
+      text: r.description || r.text || r.snippet || '',
+      rating: r.rating || null,
+      date: r.date || '',
+      isoDate: r.iso_date || '',
+      reactionsCount: r.reactions_count || 0,
+      commentsCount: r.comments_count || 0,
+      link: r.link || '',
+    })).filter(r => r.text);
+
     res.setHeader('Cache-Control', 'private, max-age=86400');
     return res.status(200).json(result);
   } catch (err) {

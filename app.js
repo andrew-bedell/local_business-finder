@@ -242,6 +242,15 @@
       instagramProfile: 'Instagram',
       followers: '{0} followers',
       posts: 'Posts',
+      anonymous: 'Anonymous',
+      fbReactions: 'reactions',
+      fbReviewsTitle: 'Facebook Reviews ({0})',
+      viewOnFacebook: 'View on Facebook',
+      priceRange: 'Price range',
+      igPosts: 'posts',
+      igFollowers: 'followers',
+      igFollowing: 'following',
+      igVerified: 'Verified account',
       noDescription: 'No description available.',
       // Search pagination
       searchingPage: 'Searching page {0} of {1}...',
@@ -489,6 +498,15 @@
       instagramProfile: 'Instagram',
       followers: '{0} seguidores',
       posts: 'Publicaciones',
+      anonymous: 'Anónimo',
+      fbReactions: 'reacciones',
+      fbReviewsTitle: 'Reseñas de Facebook ({0})',
+      viewOnFacebook: 'Ver en Facebook',
+      priceRange: 'Rango de precios',
+      igPosts: 'publicaciones',
+      igFollowers: 'seguidores',
+      igFollowing: 'siguiendo',
+      igVerified: 'Cuenta verificada',
       noDescription: 'No hay descripción disponible.',
       // Search pagination
       searchingPage: 'Buscando página {0} de {1}...',
@@ -1540,6 +1558,150 @@
     }
   }
 
+  // Save Facebook data (photos + reviews) to Supabase
+  async function saveFacebookData(place) {
+    if (!supabaseClient || !place.placeId || !place.facebookData) return;
+
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) return;
+
+    const fb = place.facebookData;
+
+    // Save Facebook photos (profile + cover)
+    const photoRows = [];
+    if (fb.profilePhoto) {
+      photoRows.push({
+        business_id: businessId,
+        source: 'facebook',
+        photo_type: 'logo',
+        url: fb.profilePhoto,
+        caption: fb.name ? fb.name + ' - Facebook profile photo' : 'Facebook profile photo',
+        is_primary: false,
+      });
+    }
+    if (fb.coverPhoto) {
+      photoRows.push({
+        business_id: businessId,
+        source: 'facebook',
+        photo_type: 'exterior',
+        url: fb.coverPhoto,
+        caption: fb.name ? fb.name + ' - Facebook cover photo' : 'Facebook cover photo',
+        is_primary: false,
+      });
+    }
+
+    if (photoRows.length > 0) {
+      // Delete existing facebook photos then insert fresh
+      await supabaseClient
+        .from('business_photos')
+        .delete()
+        .eq('business_id', businessId)
+        .eq('source', 'facebook');
+
+      const { error } = await supabaseClient
+        .from('business_photos')
+        .insert(photoRows);
+
+      if (error) console.warn('Facebook photo save error (non-fatal):', error);
+    }
+
+    // Save Facebook reviews
+    const fbReviews = fb.reviews || [];
+    if (fbReviews.length > 0) {
+      const reviewRows = fbReviews.map((r) => {
+        const sentiment = analyzeSentiment({ text: r.text, rating: r.rating || 4 });
+        return {
+          business_id: businessId,
+          source: 'facebook',
+          author_name: r.authorName || null,
+          author_photo_url: r.authorPhoto || null,
+          rating: r.rating ? Math.max(1, Math.min(5, Math.round(r.rating))) : null,
+          text: r.text,
+          published_at: r.date || r.isoDate || '',
+          sentiment_score: Math.round(sentiment.score * 10000) / 10000,
+          sentiment_label: sentimentLabelToDb(sentiment.label),
+          review_hash: reviewHash('facebook', r.authorName, r.text),
+        };
+      });
+
+      const { error } = await supabaseClient
+        .from('business_reviews')
+        .upsert(reviewRows, { onConflict: 'business_id,review_hash' });
+
+      if (error) console.warn('Facebook review save error (non-fatal):', error);
+    }
+  }
+
+  // Save Instagram data (photos from posts) to Supabase
+  async function saveInstagramData(place) {
+    if (!supabaseClient || !place.placeId || !place.instagramData) return;
+
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) return;
+
+    const ig = place.instagramData;
+    const photoRows = [];
+
+    // Save avatar as logo
+    if (ig.avatar) {
+      photoRows.push({
+        business_id: businessId,
+        source: 'instagram',
+        photo_type: 'logo',
+        url: ig.avatar,
+        caption: ig.username ? '@' + ig.username + ' - Instagram avatar' : 'Instagram avatar',
+        is_primary: false,
+      });
+    }
+
+    // Save post images (use full-res imageUrl when available, fall back to thumbnail)
+    const posts = ig.posts || [];
+    posts.forEach((post) => {
+      const url = post.imageUrl || post.thumbnail;
+      if (!url) return;
+      photoRows.push({
+        business_id: businessId,
+        source: 'instagram',
+        photo_type: null,
+        url: url,
+        caption: (post.caption || '').substring(0, 500),
+        is_primary: false,
+        width: post.width || null,
+        height: post.height || null,
+      });
+
+      // Also save carousel items as separate photos
+      (post.carouselItems || []).forEach((item) => {
+        if (!item.imageUrl) return;
+        photoRows.push({
+          business_id: businessId,
+          source: 'instagram',
+          photo_type: null,
+          url: item.imageUrl,
+          caption: (post.caption || '').substring(0, 500),
+          is_primary: false,
+          width: item.width || null,
+          height: item.height || null,
+        });
+      });
+    });
+
+    if (photoRows.length > 0) {
+      // Delete existing instagram photos then insert fresh
+      await supabaseClient
+        .from('business_photos')
+        .delete()
+        .eq('business_id', businessId)
+        .eq('source', 'instagram');
+
+      const { error } = await supabaseClient
+        .from('business_photos')
+        .insert(photoRows);
+
+      if (error) console.warn('Instagram photo save error (non-fatal):', error);
+    }
+  }
+
   // ── Enrichment Pipeline ──
   // Runs after search results are displayed. Non-blocking background enrichment.
   async function runEnrichmentPipeline(results) {
@@ -1684,6 +1846,12 @@
             );
             if (res.ok) {
               place.facebookData = await res.json();
+              // Persist Facebook data to Supabase
+              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+                saveFacebookData(place).catch(err =>
+                  console.warn('Failed to save Facebook data:', err)
+                );
+              }
             }
           } catch (err) {
             console.warn('Facebook enrichment failed for', place.name, err);
@@ -1700,6 +1868,12 @@
             );
             if (res.ok) {
               place.instagramData = await res.json();
+              // Persist Instagram data to Supabase
+              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+                saveInstagramData(place).catch(err =>
+                  console.warn('Failed to save Instagram data:', err)
+                );
+              }
             }
           } catch (err) {
             console.warn('Instagram enrichment failed for', place.name, err);
@@ -2280,6 +2454,36 @@
       const fb = place.facebookData;
       const fbPhotos = [];
       if (fb.coverPhoto) fbPhotos.push(`<img src="${escapeHtml(fb.coverPhoto)}" alt="Cover photo" class="social-cover-photo">`);
+
+      // Build Facebook reviews HTML
+      const fbReviews = (fb.reviews || []).slice(0, 5);
+      let fbReviewsHtml = '';
+      if (fbReviews.length > 0) {
+        const fbReviewItems = fbReviews.map(r => `
+          <div class="review-item">
+            <div class="review-header">
+              ${r.authorPhoto ? `<img src="${escapeHtml(r.authorPhoto)}" alt="" class="review-author-photo">` : ''}
+              <div>
+                <strong class="review-author">${escapeHtml(r.authorName || t('anonymous'))}</strong>
+                ${r.date ? `<span class="review-date">${escapeHtml(r.date)}</span>` : ''}
+              </div>
+              ${r.rating ? `<span class="stars">${renderStars(r.rating)}</span>` : ''}
+            </div>
+            <p class="review-text">${escapeHtml(r.text)}</p>
+            ${r.reactionsCount ? `<span class="fb-reactions">${r.reactionsCount} ${t('fbReactions')}</span>` : ''}
+          </div>
+        `).join('');
+        fbReviewsHtml = `
+          <div class="fb-reviews">
+            <h4>${t('fbReviewsTitle', fbReviews.length)}</h4>
+            ${fbReviewItems}
+          </div>
+        `;
+      }
+
+      // Facebook link
+      const fbLinkHtml = fb.link ? `<a href="${escapeHtml(fb.link)}" target="_blank" rel="noopener" class="social-profile-link">${t('viewOnFacebook')}</a>` : '';
+
       facebookHtml = `
         <div class="modal-section">
           <h3>${t('facebookProfile')}</h3>
@@ -2294,6 +2498,11 @@
             </div>
             ${fbPhotos.join('')}
             ${fb.ratingsText ? `<p class="social-profile-rating">${escapeHtml(fb.ratingsText)}</p>` : ''}
+            ${fb.address ? `<p class="social-profile-address">${escapeHtml(fb.address)}</p>` : ''}
+            ${fb.phone ? `<p class="social-profile-phone">${escapeHtml(fb.phone)}</p>` : ''}
+            ${fb.priceRange ? `<p class="social-profile-price">${t('priceRange')}: ${escapeHtml(fb.priceRange)}</p>` : ''}
+            ${fbLinkHtml}
+            ${fbReviewsHtml}
           </div>
         </div>
       `;
@@ -2303,9 +2512,31 @@
     let instagramHtml = '';
     if (place.instagramData) {
       const ig = place.instagramData;
-      const igPostsGrid = (ig.posts || []).slice(0, 6).map(post =>
-        post.thumbnail ? `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener" class="ig-post-item"><img src="${escapeHtml(post.thumbnail)}" alt="${escapeHtml(post.caption || '').substring(0, 50)}" loading="lazy"></a>` : ''
-      ).filter(Boolean).join('');
+      // Use full-res imageUrl when available, fall back to thumbnail
+      const igPostsGrid = (ig.posts || []).slice(0, 9).map(post => {
+        const imgSrc = post.imageUrl || post.thumbnail;
+        if (!imgSrc) return '';
+        return `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener" class="ig-post-item" title="${escapeHtml((post.caption || '').substring(0, 100))}"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml((post.caption || '').substring(0, 50))}" loading="lazy">${post.likes ? `<span class="ig-post-likes">${post.likes.toLocaleString()}</span>` : ''}</a>`;
+      }).filter(Boolean).join('');
+
+      // Build bio links HTML
+      const bioLinks = ig.bioLinks || [];
+      let bioLinksHtml = '';
+      if (bioLinks.length > 0) {
+        bioLinksHtml = `<div class="ig-bio-links">${bioLinks.map(link =>
+          `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener" class="ig-bio-link">${escapeHtml(link.title || link.url)}</a>`
+        ).join('')}</div>`;
+      }
+
+      // Stats row
+      const statsItems = [];
+      if (ig.postCount) statsItems.push(`<span class="ig-stat"><strong>${ig.postCount.toLocaleString()}</strong> ${t('igPosts')}</span>`);
+      if (ig.followerCount) statsItems.push(`<span class="ig-stat"><strong>${ig.followerCount.toLocaleString()}</strong> ${t('igFollowers')}</span>`);
+      if (ig.followingCount) statsItems.push(`<span class="ig-stat"><strong>${ig.followingCount.toLocaleString()}</strong> ${t('igFollowing')}</span>`);
+      const statsHtml = statsItems.length > 0 ? `<div class="ig-stats">${statsItems.join('')}</div>` : '';
+
+      // External URL
+      const extUrlHtml = ig.externalUrl ? `<a href="${escapeHtml(ig.externalUrl)}" target="_blank" rel="noopener" class="social-profile-link">${escapeHtml(ig.externalUrl)}</a>` : '';
 
       instagramHtml = `
         <div class="modal-section">
@@ -2315,10 +2546,14 @@
               ${ig.avatar ? `<img src="${escapeHtml(ig.avatar)}" alt="" class="social-profile-avatar">` : ''}
               <div>
                 <strong>@${escapeHtml(ig.username || '')}</strong>
-                ${ig.followerCount ? `<span class="social-profile-followers">${t('followers', ig.followerCount.toLocaleString())}</span>` : ''}
+                ${ig.isVerified ? `<span class="ig-verified" title="${t('igVerified')}">&#10003;</span>` : ''}
+                ${ig.name ? `<span class="social-profile-name">${escapeHtml(ig.name)}</span>` : ''}
               </div>
             </div>
+            ${statsHtml}
             ${ig.bio ? `<p class="social-profile-bio">${escapeHtml(ig.bio)}</p>` : ''}
+            ${extUrlHtml}
+            ${bioLinksHtml}
             ${igPostsGrid ? `<div class="ig-posts-grid">${igPostsGrid}</div>` : ''}
           </div>
         </div>
