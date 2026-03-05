@@ -187,9 +187,8 @@
       socialDiscovering: 'Finding social profiles...',
       socialYelpRating: '{0} stars on Yelp',
       socialViewOn: 'View on {0}',
-      thFacebook: 'Facebook',
-      thInstagram: 'Instagram',
-      socialNotFound: 'Not Found',
+      thSocial: 'Social',
+      socialEnrichmentComplete: 'Found social profiles for {0} of {1} businesses',
       // Social Media Discovery
       socialProfiles: 'Social Profiles',
       socialProfilesSubtitle: 'Discover and link social media profiles for this business',
@@ -443,9 +442,8 @@
       socialDiscovering: 'Buscando perfiles sociales...',
       socialYelpRating: '{0} estrellas en Yelp',
       socialViewOn: 'Ver en {0}',
-      thFacebook: 'Facebook',
-      thInstagram: 'Instagram',
-      socialNotFound: 'No Encontrado',
+      thSocial: 'Social',
+      socialEnrichmentComplete: 'Se encontraron perfiles sociales para {0} de {1} negocios',
       // Social Media Discovery
       socialProfiles: 'Perfiles Sociales',
       socialProfilesSubtitle: 'Descubre y vincula perfiles de redes sociales para este negocio',
@@ -1157,14 +1155,7 @@
         ? `<span class="badge badge-saved">${t('savedBtn')}</span>`
         : `<button class="btn btn-save-row" data-idx="${idx}">${t('saveBtn')}</button>`;
 
-      const fbProfile = (place.socialProfiles || []).find(p => p.platform === 'facebook');
-      const igProfile = (place.socialProfiles || []).find(p => p.platform === 'instagram');
-      const fbHtml = fbProfile
-        ? `<a href="${escapeHtml(fbProfile.url)}" target="_blank" rel="noopener" class="social-profile-link social-facebook">${escapeHtml(fbProfile.handle || 'Facebook')}</a>`
-        : `<span class="social-not-found">${t('socialNotFound')}</span>`;
-      const igHtml = igProfile
-        ? `<a href="${escapeHtml(igProfile.url)}" target="_blank" rel="noopener" class="social-profile-link social-instagram">${escapeHtml(igProfile.handle || 'Instagram')}</a>`
-        : `<span class="social-not-found">${t('socialNotFound')}</span>`;
+      const socialCellHtml = buildSocialCellHtml(place.socialProfiles);
 
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
@@ -1177,8 +1168,7 @@
         </td>
         <td class="td-center">${place.reviewCount > 0 ? place.reviewCount.toLocaleString() : '0'}</td>
         <td><span class="badge badge-no-site">${t('noWebsite')}</span></td>
-        <td class="td-center">${fbHtml}</td>
-        <td class="td-center">${igHtml}</td>
+        <td class="td-center" data-social-place="${escapeHtml(place.placeId)}">${socialCellHtml}</td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
@@ -1220,10 +1210,14 @@
   function exportCsv() {
     if (filteredResults.length === 0) return;
 
-    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Yelp', 'Facebook', 'Instagram', 'Google Maps URL'].map(csvEscape);
+    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Yelp', 'Facebook', 'Instagram', 'Other Social', 'Google Maps URL'].map(csvEscape);
     const rows = filteredResults.map((p, i) => {
       const socialUrls = {};
       (p.socialProfiles || []).forEach((sp) => { socialUrls[sp.platform] = sp.url; });
+      const otherProfiles = (p.socialProfiles || [])
+        .filter((sp) => !['yelp', 'facebook', 'instagram'].includes(sp.platform))
+        .map((sp) => sp.url)
+        .join('; ');
       return [
         i + 1,
         csvEscape(p.name),
@@ -1235,6 +1229,7 @@
         csvEscape(socialUrls.yelp || ''),
         csvEscape(socialUrls.facebook || ''),
         csvEscape(socialUrls.instagram || ''),
+        csvEscape(otherProfiles),
         p.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + p.address)}`,
       ];
     });
@@ -2081,11 +2076,12 @@
     instagram: '#e4405f',
   };
 
-  // Discover social profiles for a business via serverless proxy
+  // Discover social profiles for a business via serverless proxies
   async function discoverSocialProfiles(place) {
     const profiles = [];
+    const foundPlatforms = new Set();
 
-    // Discover all platforms via the serverless proxy (Yelp, Facebook, Instagram)
+    // Source 1: Existing social discover proxy (Yelp, Facebook, Instagram)
     try {
       const params = new URLSearchParams({
         name: place.name,
@@ -2113,6 +2109,7 @@
             rating: data.yelp.rating || null,
             reviewCount: data.yelp.review_count || null,
           });
+          foundPlatforms.add('yelp');
         }
         if (data.facebook) {
           profiles.push({
@@ -2120,6 +2117,7 @@
             url: data.facebook.url,
             handle: data.facebook.handle || null,
           });
+          foundPlatforms.add('facebook');
         }
         if (data.instagram) {
           profiles.push({
@@ -2127,10 +2125,24 @@
             url: data.instagram.url,
             handle: data.instagram.handle || null,
           });
+          foundPlatforms.add('instagram');
         }
       }
     } catch (err) {
       console.warn('Social discovery failed:', err);
+    }
+
+    // Source 2: SerpApi Knowledge Graph (discovers Twitter, LinkedIn, TikTok, YouTube, etc.)
+    try {
+      const serpProfiles = await lookupSerpApiProfiles(place.name, place.address);
+      for (const sp of serpProfiles) {
+        if (!foundPlatforms.has(sp.platform)) {
+          profiles.push(sp);
+          foundPlatforms.add(sp.platform);
+        }
+      }
+    } catch (err) {
+      console.warn('SerpApi discovery failed:', err);
     }
 
     return profiles;
@@ -2138,14 +2150,26 @@
 
   // Enrich all search results with social profiles (called after search completes)
   async function enrichWithSocialProfiles(results) {
+    let foundCount = 0;
     const batchSize = 5;
     for (let i = 0; i < results.length; i += batchSize) {
       const batch = results.slice(i, i + batchSize);
+      // Show loading spinners for this batch
+      batch.forEach((place) => {
+        if (!place.socialProfiles) {
+          updateSocialCell(place.placeId, 'loading', null);
+        }
+      });
       await Promise.all(batch.map(async (place) => {
         if (!place.socialProfiles) {
           place.socialProfiles = await discoverSocialProfiles(place);
+          updateSocialCell(place.placeId, 'done', place.socialProfiles);
         }
+        if (place.socialProfiles && place.socialProfiles.length > 0) foundCount++;
       }));
+    }
+    if (results.length > 0) {
+      showToast(t('socialEnrichmentComplete', foundCount, results.length), 'success');
     }
   }
 
@@ -2183,6 +2207,85 @@
         : t('socialViewOn', p.platform.charAt(0).toUpperCase() + p.platform.slice(1));
       return `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" class="social-icon-link" title="${escapeHtml(title)}" style="color:${color}">${icon}</a>`;
     }).join('');
+  }
+
+  // Build unified social cell HTML for table rows (with icons)
+  function buildSocialCellHtml(profiles) {
+    if (!profiles || profiles.length === 0) {
+      return '<span class="social-cell-none">--</span>';
+    }
+    const maxShow = 4;
+    const shown = profiles.slice(0, maxShow);
+    const icons = shown.map((p) => {
+      const icon = SOCIAL_ICONS[p.platform] || '';
+      const color = SOCIAL_COLORS[p.platform] || 'var(--text-muted)';
+      const title = p.platform.charAt(0).toUpperCase() + p.platform.slice(1);
+      if (!icon) {
+        const platConfig = SOCIAL_PLATFORMS.find((s) => s.id === p.platform);
+        const emoji = platConfig ? platConfig.icon : '\uD83C\uDF10';
+        return `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" class="social-cell-icon" title="${escapeHtml(title)}">${emoji}</a>`;
+      }
+      return `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener" class="social-cell-icon" title="${escapeHtml(title)}" style="color:${color}">${icon}</a>`;
+    }).join('');
+    const extra = profiles.length > maxShow ? `<span class="social-cell-more">+${profiles.length - maxShow}</span>` : '';
+    return `<span class="social-cell">${icons}${extra}</span>`;
+  }
+
+  // Live-update a single social cell in the table during enrichment
+  function updateSocialCell(placeId, state, profiles) {
+    const cell = document.querySelector(`[data-social-place="${placeId}"]`);
+    if (!cell) return;
+    if (state === 'loading') {
+      cell.innerHTML = '<span class="spinner-sm"></span>';
+    } else {
+      cell.innerHTML = buildSocialCellHtml(profiles);
+    }
+  }
+
+  // ── SerpApi Knowledge Graph Lookup ──
+  const SERPAPI_PLATFORM_MAP = {
+    'Facebook':    'facebook',
+    'Instagram':   'instagram',
+    'Twitter':     'twitter',
+    'X (Twitter)': 'twitter',
+    'YouTube':     'youtube',
+    'LinkedIn':    'linkedin',
+    'TikTok':      'tiktok',
+    'Yelp':        'yelp',
+    'TripAdvisor': 'tripadvisor',
+    'Pinterest':   'pinterest',
+  };
+
+  function mapSerpApiProfile(profile) {
+    const name = profile.name || '';
+    const url = profile.link || '';
+    const platform = SERPAPI_PLATFORM_MAP[name];
+    if (!platform || !url) return null;
+    return {
+      platform: platform,
+      url: url,
+      handle: extractHandleFromUrl(platform, url),
+    };
+  }
+
+  async function lookupSerpApiProfiles(businessName, address) {
+    const city = address.split(',')[0].trim();
+    const q = businessName + ' ' + city;
+    try {
+      const resp = await withTimeout(
+        fetch('/api/serpapi/lookup?q=' + encodeURIComponent(q)),
+        10000,
+        'SerpApi'
+      );
+      if (!resp.ok) return [];
+      const data = await resp.json();
+      return (data.profiles || [])
+        .map(mapSerpApiProfile)
+        .filter(Boolean);
+    } catch (err) {
+      console.warn('SerpApi lookup failed for', businessName, err);
+      return [];
+    }
   }
 
   // ── Social Profile Supabase Operations ──
