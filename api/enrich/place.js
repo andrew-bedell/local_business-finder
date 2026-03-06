@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'SearchAPI key not configured' });
   }
 
-  const { place_id, data_id } = req.query;
+  const { place_id, data_id, hl } = req.query;
 
   if (!place_id && !data_id) {
     return res.status(400).json({ error: 'Missing required parameter: place_id or data_id' });
@@ -33,6 +33,7 @@ export default async function handler(req, res) {
 
     if (place_id) params.set('place_id', place_id);
     if (data_id) params.set('data_id', data_id);
+    if (hl) params.set('hl', hl);
 
     const response = await fetch(
       'https://www.searchapi.io/api/v1/search?' + params.toString()

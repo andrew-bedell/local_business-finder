@@ -769,6 +769,12 @@
   let isSearching = false;
   let mapsLoaded = false;
 
+  function getSearchLanguage() {
+    const country = countrySelect.value;
+    const langMap = { us: 'en', mx: 'es', co: 'es' };
+    return langMap[country] || 'en';
+  }
+
   // ── DOM refs ──
   const $ = (sel) => document.querySelector(sel);
   const apiKeyInput = $('#api-key-input');
@@ -915,7 +921,7 @@
     };
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&libraries=places&callback=_gmapsCallback`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&libraries=places&language=${getSearchLanguage()}&callback=_gmapsCallback`;
     script.async = true;
     script.defer = true;
     script.onerror = () => {
@@ -1393,6 +1399,7 @@
         lat: lat,
         lng: lng,
         radius: radius,
+        hl: getSearchLanguage(),
       });
       if (page > 1) params.set('page', page);
 
@@ -1762,6 +1769,7 @@
         try {
           const params = new URLSearchParams({ place_id: place.placeId });
           if (place.dataId) params.set('data_id', place.dataId);
+          params.set('hl', getSearchLanguage());
           const res = await withTimeout(
             fetch('/api/enrich/place?' + params.toString()),
             15000,
@@ -1894,6 +1902,7 @@
         try {
           const params = new URLSearchParams({ data_id: place.dataId });
           if (place.placeId) params.set('place_id', place.placeId);
+          params.set('hl', getSearchLanguage());
           const res = await withTimeout(
             fetch('/api/enrich/reviews?' + params.toString()),
             15000,
