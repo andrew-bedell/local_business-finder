@@ -85,6 +85,7 @@ Examine the PHOTO INVENTORY section in the business data. For each website secti
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 6144,
+        stream: true,
         system: systemPrompt,
         messages: [
           {
@@ -105,11 +106,48 @@ Examine the PHOTO INVENTORY section in the business data. For each website secti
       return res.status(502).json({ error: 'Claude API request failed' });
     }
 
-    const data = await response.json();
-    const rawText = data.content && data.content[0] ? data.content[0].text : '';
+    // Read the SSE stream server-side and collect the full response
+    let fullText = '';
+    let usage = null;
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Process complete SSE lines from the buffer
+      const lines = buffer.split('\n');
+      // Keep the last potentially incomplete line in the buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const event = JSON.parse(data);
+
+          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+            fullText += event.delta.text;
+          } else if (event.type === 'message_delta' && event.usage) {
+            usage = event.usage;
+          } else if (event.type === 'message_start' && event.message?.usage) {
+            usage = { ...event.message.usage, ...(usage || {}) };
+          }
+        } catch {
+          // Skip malformed SSE events
+        }
+      }
+    }
 
     // Strip markdown code fences if present
-    let jsonText = rawText.trim();
+    let jsonText = fullText.trim();
     if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
@@ -119,13 +157,13 @@ Examine the PHOTO INVENTORY section in the business data. For each website secti
       report = JSON.parse(jsonText);
     } catch (parseErr) {
       console.warn('JSON parse failed, returning raw text:', parseErr.message);
-      report = { rawText: rawText, parseError: true };
+      report = { rawText: fullText, parseError: true };
     }
 
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).json({
       report,
-      usage: data.usage || null,
+      usage: usage || null,
     });
   } catch (err) {
     console.error('Research report error:', err);
