@@ -11,6 +11,7 @@
       // Header
       logo: 'Local Business Finder',
       tagline: 'Find businesses without websites near any location',
+      navAdmin: 'Admin',
       // API section
       apiKeyTitle: 'Google Places API Key',
       setupGuide: 'Setup Guide',
@@ -310,6 +311,7 @@
       // Header
       logo: 'Buscador de Negocios Locales',
       tagline: 'Encuentra negocios sin sitio web cerca de cualquier ubicación',
+      navAdmin: 'Admin',
       // API section
       apiKeyTitle: 'Clave API de Google Places',
       setupGuide: 'Guía de Configuración',
@@ -1720,6 +1722,17 @@
 
       if (error) console.warn('Facebook review save error (non-fatal):', error);
     }
+
+    // Update social profile with follower count
+    if (fb.followers) {
+      await supabaseClient
+        .from('business_social_profiles')
+        .update({
+          follower_count: fb.followers || null,
+        })
+        .eq('business_id', businessId)
+        .eq('platform', 'facebook');
+    }
   }
 
   // Save Instagram data (photos from posts) to Supabase
@@ -1789,6 +1802,18 @@
         .insert(photoRows);
 
       if (error) console.warn('Instagram photo save error (non-fatal):', error);
+    }
+
+    // Update social profile with follower/post counts
+    if (ig.followerCount || ig.postCount) {
+      await supabaseClient
+        .from('business_social_profiles')
+        .update({
+          follower_count: ig.followerCount || null,
+          post_count: ig.postCount || null,
+        })
+        .eq('business_id', businessId)
+        .eq('platform', 'instagram');
     }
   }
 

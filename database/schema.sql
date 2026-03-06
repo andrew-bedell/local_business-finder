@@ -113,6 +113,8 @@ CREATE TABLE IF NOT EXISTS business_social_profiles (
                             )),
   url                     TEXT,                -- full URL to the profile/page
   handle                  TEXT,                -- @handle or username (if applicable)
+  follower_count          INTEGER,             -- number of followers on this platform
+  post_count              INTEGER,             -- number of posts on this platform
 
   discovered_at           TIMESTAMPTZ DEFAULT NOW(),
   created_at              TIMESTAMPTZ DEFAULT NOW(),
