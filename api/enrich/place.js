@@ -147,7 +147,7 @@ function normalizeReviews(reviews) {
     authorName: r.user ? r.user.name || '' : '',
     authorPhoto: r.user ? r.user.thumbnail || '' : '',
     rating: r.rating || 0,
-    text: r.snippet || r.text || '',
+    text: r.original_snippet || r.snippet || r.text || '',
     date: r.date || '',
     isoDate: r.iso_date || r.extracted_date || '',
     isLocalGuide: r.user ? r.user.is_local_guide || false : false,

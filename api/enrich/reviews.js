@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       authorName: r.user ? r.user.name || '' : '',
       authorPhoto: r.user ? r.user.thumbnail || '' : '',
       rating: r.rating || 0,
-      text: r.snippet || r.text || '',
+      text: r.original_snippet || r.snippet || r.text || '',
       date: r.date || '',
       isoDate: r.iso_date || r.extracted_date || '',
       images: (r.images || []).map(img => img.image || img),
