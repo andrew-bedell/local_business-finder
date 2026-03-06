@@ -3318,7 +3318,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ businessData, name: place.name, language }),
         }),
-        60000,
+        120000,
         'Research report'
       );
 
@@ -3327,14 +3327,56 @@
         throw new Error(errData.error || 'Request failed');
       }
 
-      const data = await res.json();
-      place.researchReport = data.report;
+      // Read the SSE stream from the server and assemble text deltas
+      let fullText = '';
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const eventData = line.slice(6).trim();
+          if (eventData === '[DONE]') continue;
+          try {
+            const event = JSON.parse(eventData);
+            if (event.type === 'content_block_delta' && event.delta && event.delta.type === 'text_delta') {
+              fullText += event.delta.text;
+            }
+          } catch (e) {
+            // Skip malformed SSE events
+          }
+        }
+      }
+
+      // Parse the assembled JSON
+      let jsonText = fullText.trim();
+      if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+      }
+
+      let report;
+      try {
+        report = JSON.parse(jsonText);
+      } catch (parseErr) {
+        console.warn('Report JSON parse failed:', parseErr.message);
+        report = { rawText: fullText, parseError: true };
+      }
+
+      place.researchReport = report;
 
       // Check modal still exists
       if (!document.getElementById('detail-modal')) return;
 
       btn.style.display = 'none';
-      renderResearchReport(modal, data.report);
+      renderResearchReport(modal, report);
 
       // Show website generation section now that report exists
       const websiteSection = modal.querySelector('#website-generation-section');
