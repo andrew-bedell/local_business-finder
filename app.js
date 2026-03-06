@@ -280,6 +280,20 @@
       reportPriorityHigh: 'High',
       reportPriorityMedium: 'Medium',
       reportPriorityLow: 'Low',
+      reportPhotoAssetPlan: 'Photo & Asset Plan',
+      reportPhotoExisting: 'Use Existing',
+      reportPhotoGenerate: 'AI Generate',
+      reportPhotoSource: 'Photo ID',
+      reportPhotoPrompt: 'AI Prompt',
+      // Website Generation
+      generateWebsite: 'Generate Website',
+      generatingWebsite: 'Generating...',
+      websiteGenTitle: 'Website Generation',
+      websiteGenerating: 'Generating a complete website using AI. This may take up to 60 seconds...',
+      websiteError: 'Failed to generate website. Please try again.',
+      websiteDownload: 'Download HTML',
+      websiteOpenNewTab: 'Open in New Tab',
+      websiteSaved: 'Website saved to database',
       noDescription: 'No description available.',
       // Search pagination
       searchingPage: 'Searching page {0} of {1}...',
@@ -565,6 +579,20 @@
       reportPriorityHigh: 'Alta',
       reportPriorityMedium: 'Media',
       reportPriorityLow: 'Baja',
+      reportPhotoAssetPlan: 'Plan de Fotos y Recursos',
+      reportPhotoExisting: 'Usar Existente',
+      reportPhotoGenerate: 'Generar con IA',
+      reportPhotoSource: 'ID de Foto',
+      reportPhotoPrompt: 'Prompt IA',
+      // Website Generation
+      generateWebsite: 'Generar Sitio Web',
+      generatingWebsite: 'Generando...',
+      websiteGenTitle: 'Generación de Sitio Web',
+      websiteGenerating: 'Generando un sitio web completo con IA. Esto puede tardar hasta 60 segundos...',
+      websiteError: 'Error al generar el sitio web. Por favor intente de nuevo.',
+      websiteDownload: 'Descargar HTML',
+      websiteOpenNewTab: 'Abrir en Nueva Pestaña',
+      websiteSaved: 'Sitio web guardado en la base de datos',
       noDescription: 'No hay descripción disponible.',
       // Search pagination
       searchingPage: 'Buscando página {0} de {1}...',
@@ -2774,6 +2802,11 @@
             <button class="btn btn-primary" id="generate-report-btn">${t('generateReport')}</button>
             <div id="research-report-container"></div>
           </div>
+          <div class="modal-section" id="website-generation-section" style="display:none">
+            <h3>${t('websiteGenTitle')}</h3>
+            <button class="btn btn-primary" id="generate-website-btn">${t('generateWebsite')}</button>
+            <div id="website-generation-container"></div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="modal-copy-reviews">${t('copyTopReviews')}</button>
@@ -2825,8 +2858,21 @@
       if (place.researchReport) {
         reportBtn.style.display = 'none';
         renderResearchReport(modal, place.researchReport);
+        // Show website generation section since report exists
+        const websiteSection = modal.querySelector('#website-generation-section');
+        if (websiteSection) websiteSection.style.display = '';
       }
       reportBtn.addEventListener('click', () => generateResearchReport(modal, place, reportBtn));
+    }
+
+    // Website generation button
+    const websiteBtn = modal.querySelector('#generate-website-btn');
+    if (websiteBtn) {
+      if (place.generatedWebsiteHtml) {
+        websiteBtn.style.display = 'none';
+        renderWebsitePreview(modal, place.generatedWebsiteHtml, place);
+      }
+      websiteBtn.addEventListener('click', () => generateWebsite(modal, place, websiteBtn));
     }
   }
 
@@ -3039,6 +3085,61 @@
   }
 
   // ── Deep Research Report ──
+  function buildPhotoInventoryMap(place) {
+    const inventory = [];
+
+    // Google photos
+    if (place.photos && place.photos.length > 0) {
+      place.photos.forEach((photo, i) => {
+        const url = getPhotoUrl(photo, 800);
+        if (url) {
+          inventory.push({
+            id: `google_photo_${i}`,
+            source: 'google',
+            type: photo.photoType || 'unclassified',
+            caption: null,
+            url: url,
+          });
+        }
+      });
+    }
+
+    // Facebook photos
+    if (place.facebookData) {
+      const fb = place.facebookData;
+      if (fb.profilePhoto) {
+        inventory.push({ id: 'fb_profile', source: 'facebook', type: 'logo', caption: fb.name || null, url: fb.profilePhoto });
+      }
+      if (fb.coverPhoto) {
+        inventory.push({ id: 'fb_cover', source: 'facebook', type: 'exterior', caption: null, url: fb.coverPhoto });
+      }
+    }
+
+    // Instagram photos
+    if (place.instagramData) {
+      const ig = place.instagramData;
+      if (ig.avatar) {
+        inventory.push({ id: 'ig_avatar', source: 'instagram', type: 'logo', caption: null, url: ig.avatar });
+      }
+      if (ig.posts && ig.posts.length > 0) {
+        ig.posts.forEach((post, i) => {
+          const imgUrl = post.imageUrl || post.thumbnail;
+          if (imgUrl) {
+            inventory.push({
+              id: `ig_post_${i}`,
+              source: 'instagram',
+              type: 'unclassified',
+              caption: post.caption ? post.caption.substring(0, 150) : null,
+              url: imgUrl,
+            });
+          }
+        });
+      }
+    }
+
+    return inventory;
+  }
+
   function compileBusinessDataForPrompt(place) {
     const sections = [];
 
@@ -3143,17 +3244,16 @@
       }
     }
 
-    // Photo inventory
-    if (place.photos && place.photos.length > 0) {
-      const typeCounts = {};
-      place.photos.forEach(p => {
-        const type = p.photoType || 'unclassified';
-        typeCounts[type] = (typeCounts[type] || 0) + 1;
-      });
+    // Photo inventory (individual photos with IDs for asset planning)
+    const photoInventory = buildPhotoInventoryMap(place);
+    place._photoInventory = photoInventory;
+    if (photoInventory.length > 0) {
       sections.push('\n=== PHOTO INVENTORY ===');
-      sections.push(`Total Photos: ${place.photos.length}`);
-      Object.entries(typeCounts).forEach(([type, count]) => {
-        sections.push(`  ${type}: ${count}`);
+      sections.push(`Total Photos Available: ${photoInventory.length}`);
+      photoInventory.forEach(p => {
+        let line = `ID: ${p.id} | Source: ${p.source} | Type: ${p.type}`;
+        if (p.caption) line += ` | Caption: "${p.caption}"`;
+        sections.push(line);
       });
     }
 
@@ -3210,6 +3310,10 @@
 
       btn.style.display = 'none';
       renderResearchReport(modal, data.report);
+
+      // Show website generation section now that report exists
+      const websiteSection = modal.querySelector('#website-generation-section');
+      if (websiteSection) websiteSection.style.display = '';
     } catch (err) {
       console.error('Research report error:', err);
       showToast(t('reportError'), 'error');
@@ -3361,7 +3465,172 @@
       </div>`;
     }
 
+    // Photo Asset Plan
+    if (report.photoAssetPlan && report.photoAssetPlan.length > 0) {
+      const items = report.photoAssetPlan.map(p => {
+        const isExisting = p.recommendation === 'use_existing';
+        const badgeClass = isExisting ? 'badge-has-site' : 'badge-no-site';
+        const badgeText = isExisting ? t('reportPhotoExisting') : t('reportPhotoGenerate');
+
+        let detailHtml = '';
+        if (isExisting && p.existingPhotoId) {
+          detailHtml = `<p class="photo-plan-detail"><strong>${t('reportPhotoSource')}:</strong> ${escapeHtml(p.existingPhotoId)}</p>`;
+        } else if (p.aiPrompt) {
+          detailHtml = `<p class="photo-plan-detail"><strong>${t('reportPhotoPrompt')}:</strong> ${escapeHtml(p.aiPrompt)}</p>`;
+        }
+
+        return `<div class="report-section-item">
+          <div class="report-section-item-header">
+            <strong>${escapeHtml(p.section)} — ${escapeHtml(p.slot)}</strong>
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <p>${escapeHtml(p.rationale || '')}</p>
+          ${detailHtml}
+        </div>`;
+      }).join('');
+
+      html += `<div class="report-section">
+        <h4>${t('reportPhotoAssetPlan')}</h4>
+        ${items}
+      </div>`;
+    }
+
     container.innerHTML = html;
+  }
+
+  // ── Website Generation ──
+  async function generateWebsite(modal, place, btn) {
+    if (place.generatedWebsiteHtml) {
+      btn.style.display = 'none';
+      renderWebsitePreview(modal, place.generatedWebsiteHtml, place);
+      return;
+    }
+
+    const container = modal.querySelector('#website-generation-container');
+    if (!container) return;
+
+    btn.disabled = true;
+    btn.textContent = t('generatingWebsite');
+    container.innerHTML = `<div class="report-loading"><span class="spinner"></span><p>${t('websiteGenerating')}</p></div>`;
+
+    try {
+      const businessData = compileBusinessDataForPrompt(place);
+      const photoInventory = place._photoInventory || buildPhotoInventoryMap(place);
+      const language = getSearchLanguage();
+
+      const res = await withTimeout(
+        fetch('/api/ai/generate-website', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessData,
+            researchReport: place.researchReport,
+            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            name: place.name,
+            language,
+          }),
+        }),
+        90000,
+        'Website generation'
+      );
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Request failed');
+      }
+
+      const data = await res.json();
+      place.generatedWebsiteHtml = data.html;
+
+      // Check modal still exists
+      if (!document.getElementById('detail-modal')) return;
+
+      btn.style.display = 'none';
+      renderWebsitePreview(modal, data.html, place);
+
+      // Auto-save to Supabase if business is saved
+      saveGeneratedWebsite(place, data.html).catch(err =>
+        console.warn('Failed to save generated website:', err)
+      );
+    } catch (err) {
+      console.error('Website generation error:', err);
+      showToast(t('websiteError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('generateWebsite');
+      container.innerHTML = '';
+    }
+  }
+
+  function renderWebsitePreview(modal, html, place) {
+    const container = modal.querySelector('#website-generation-container');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="website-preview-wrapper">
+        <div class="website-preview-toolbar">
+          <button class="btn btn-secondary" id="website-download-btn">${t('websiteDownload')}</button>
+          <button class="btn btn-secondary" id="website-new-tab-btn">${t('websiteOpenNewTab')}</button>
+        </div>
+        <iframe id="website-preview-iframe" class="website-preview-iframe" sandbox="allow-same-origin"></iframe>
+      </div>
+    `;
+
+    // Write HTML into iframe
+    const iframe = container.querySelector('#website-preview-iframe');
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
+
+    // Download button
+    container.querySelector('#website-download-btn').addEventListener('click', () => {
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${place.name.replace(/[^a-zA-Z0-9]/g, '_')}_website.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Open in new tab
+    container.querySelector('#website-new-tab-btn').addEventListener('click', () => {
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    });
+  }
+
+  async function saveGeneratedWebsite(place, html) {
+    if (!supabaseClient) return;
+    if (!savedPlaceIds.has(place.placeId)) return;
+
+    const businessId = await getBusinessId(place.placeId);
+    if (!businessId) return;
+
+    try {
+      const { error } = await supabaseClient
+        .from('generated_websites')
+        .insert({
+          business_id: businessId,
+          template_name: 'ai_generated_single_page',
+          status: 'draft',
+          config: {
+            html: html,
+            researchReport: place.researchReport,
+            generatedAt: new Date().toISOString(),
+            photoInventory: (place._photoInventory || []).map(p => ({ id: p.id, url: p.url, type: p.type })),
+          },
+        });
+
+      if (error) {
+        console.warn('Website save error:', error);
+      } else {
+        showToast(t('websiteSaved'), 'success');
+      }
+    } catch (e) {
+      console.warn('Website save exception:', e);
+    }
   }
 
   // ── Social Profiles Section Logic ──
