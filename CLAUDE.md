@@ -716,6 +716,7 @@ The `api/` directory contains serverless functions deployed automatically by Ver
 | `YELP_API_KEY` | For Gather phase | Yelp Fusion API key for social media discovery (`api/social/discover.js`) |
 | `FACEBOOK_ACCESS_TOKEN` | For Gather phase (future) | Meta Graph API token for Facebook/Instagram discovery |
 | `SUPABASE_SERVICE_ROLE_KEY` | For webhooks | Supabase service role key for server-side writes (bypasses RLS) |
+| `ANTHROPIC_API_KEY` | For Curate phase | Anthropic API key for Claude research report generation (`api/ai/research-report.js`) |
 
 ### Supabase Setup
 1. Create a Supabase project

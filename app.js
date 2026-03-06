@@ -255,6 +255,31 @@
       enrichSocialSuccess: 'Social data loaded successfully',
       enrichSocialError: 'Failed to fetch social data',
       enrichSocialNone: 'No Facebook or Instagram profiles found to enrich',
+      // Deep Research Report
+      generateReport: 'Generate Research Report',
+      generatingReport: 'Generating report...',
+      reportGenerating: 'Analyzing business data and generating website content report. This may take up to 30 seconds...',
+      reportError: 'Failed to generate research report. Please try again.',
+      reportTitle: 'Website Content Report',
+      reportBusinessSummary: 'Business Summary',
+      reportSellingPoints: 'Key Selling Points',
+      reportReviewHighlights: 'Review Highlights',
+      reportReviewThemes: 'Recurring Themes',
+      reportQuotableReviews: 'Best Quotes for Website',
+      reportAreasToAvoid: 'Topics to Avoid',
+      reportSuggestedSections: 'Suggested Website Sections',
+      reportToneRec: 'Tone & Writing Style',
+      reportOverallTone: 'Overall Tone',
+      reportWritingStyle: 'Writing Style',
+      reportWordsToUse: 'Vocabulary to Use',
+      reportWordsToAvoid: 'Vocabulary to Avoid',
+      reportCompetitive: 'Competitive Positioning',
+      reportContentGaps: 'Content Gaps',
+      reportSocialInsights: 'Social Media Insights',
+      reportSeoKeywords: 'Local SEO Keywords',
+      reportPriorityHigh: 'High',
+      reportPriorityMedium: 'Medium',
+      reportPriorityLow: 'Low',
       noDescription: 'No description available.',
       // Search pagination
       searchingPage: 'Searching page {0} of {1}...',
@@ -515,6 +540,31 @@
       enrichSocialSuccess: 'Datos sociales cargados exitosamente',
       enrichSocialError: 'Error al obtener datos sociales',
       enrichSocialNone: 'No se encontraron perfiles de Facebook o Instagram para enriquecer',
+      // Deep Research Report
+      generateReport: 'Generar Informe de Investigación',
+      generatingReport: 'Generando informe...',
+      reportGenerating: 'Analizando datos del negocio y generando informe de contenido web. Esto puede tardar hasta 30 segundos...',
+      reportError: 'Error al generar el informe. Por favor intente de nuevo.',
+      reportTitle: 'Informe de Contenido Web',
+      reportBusinessSummary: 'Resumen del Negocio',
+      reportSellingPoints: 'Puntos de Venta Clave',
+      reportReviewHighlights: 'Destacados de Reseñas',
+      reportReviewThemes: 'Temas Recurrentes',
+      reportQuotableReviews: 'Mejores Citas para el Sitio Web',
+      reportAreasToAvoid: 'Temas a Evitar',
+      reportSuggestedSections: 'Secciones Sugeridas para el Sitio Web',
+      reportToneRec: 'Tono y Estilo de Escritura',
+      reportOverallTone: 'Tono General',
+      reportWritingStyle: 'Estilo de Escritura',
+      reportWordsToUse: 'Vocabulario a Usar',
+      reportWordsToAvoid: 'Vocabulario a Evitar',
+      reportCompetitive: 'Posicionamiento Competitivo',
+      reportContentGaps: 'Brechas de Contenido',
+      reportSocialInsights: 'Perspectivas de Redes Sociales',
+      reportSeoKeywords: 'Palabras Clave SEO Local',
+      reportPriorityHigh: 'Alta',
+      reportPriorityMedium: 'Media',
+      reportPriorityLow: 'Baja',
       noDescription: 'No hay descripción disponible.',
       // Search pagination
       searchingPage: 'Buscando página {0} de {1}...',
@@ -2719,6 +2769,11 @@
               <div class="social-profiles-loading"><span class="spinner"></span></div>
             </div>
           </div>
+          <div class="modal-section" id="research-report-section">
+            <h3>${t('reportTitle')}</h3>
+            <button class="btn btn-primary" id="generate-report-btn">${t('generateReport')}</button>
+            <div id="research-report-container"></div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="modal-copy-reviews">${t('copyTopReviews')}</button>
@@ -2762,6 +2817,17 @@
 
     // Show "Enrich Social Data" button if FB/IG handles exist but data isn't loaded
     initEnrichSocialButton(modal, place);
+
+    // Research report button
+    const reportBtn = modal.querySelector('#generate-report-btn');
+    if (reportBtn) {
+      // If report already cached, render it immediately and hide button
+      if (place.researchReport) {
+        reportBtn.style.display = 'none';
+        renderResearchReport(modal, place.researchReport);
+      }
+      reportBtn.addEventListener('click', () => generateResearchReport(modal, place, reportBtn));
+    }
   }
 
   // ── Enrich Social Data Button ──
@@ -2970,6 +3036,332 @@
         </div>
       </div>
     `;
+  }
+
+  // ── Deep Research Report ──
+  function compileBusinessDataForPrompt(place) {
+    const sections = [];
+
+    // Core identity
+    sections.push('=== BUSINESS IDENTITY ===');
+    sections.push(`Name: ${place.name}`);
+    sections.push(`Address: ${place.address}`);
+    if (place.phone) sections.push(`Phone: ${place.phone}`);
+    if (place.types && place.types.length > 0) sections.push(`Categories: ${place.types.join(', ')}`);
+    if (place.status) sections.push(`Status: ${place.status}`);
+    if (place.description) sections.push(`Description: ${place.description}`);
+
+    // Ratings
+    sections.push('\n=== RATINGS & REVIEWS OVERVIEW ===');
+    sections.push(`Google Rating: ${place.rating || 'N/A'} / 5`);
+    sections.push(`Total Reviews: ${place.reviewCount || 0}`);
+    if (place.priceLevel || place.priceDescription) {
+      sections.push(`Price Level: ${place.priceDescription || place.priceLevel}`);
+    }
+    if (place.reviewsHistogram) {
+      const h = place.reviewsHistogram;
+      sections.push(`Rating Breakdown: 5★=${h['5']||0}, 4★=${h['4']||0}, 3★=${h['3']||0}, 2★=${h['2']||0}, 1★=${h['1']||0}`);
+    }
+
+    // Google reviews (up to 15)
+    if (place.reviewData && place.reviewData.length > 0) {
+      sections.push('\n=== GOOGLE REVIEWS ===');
+      place.reviewData.slice(0, 15).forEach((r, i) => {
+        const author = r.authorAttribution ? r.authorAttribution.displayName || 'Anonymous' : 'Anonymous';
+        sections.push(`Review ${i + 1} (${r.rating}★ by ${author}): "${r.text}"`);
+      });
+    }
+
+    // Hours
+    if (place.hours && place.hours.length > 0) {
+      sections.push('\n=== BUSINESS HOURS ===');
+      place.hours.forEach(h => sections.push(h));
+    }
+
+    // Service options, highlights, amenities, accessibility
+    if (place.serviceOptions && place.serviceOptions.length > 0) {
+      sections.push(`\n=== SERVICE OPTIONS ===\n${place.serviceOptions.join(', ')}`);
+    }
+    if (place.highlights && place.highlights.length > 0) {
+      sections.push(`\n=== HIGHLIGHTS ===\n${place.highlights.join(', ')}`);
+    }
+    if (place.amenities && place.amenities.length > 0) {
+      sections.push(`\n=== AMENITIES ===\n${place.amenities.join(', ')}`);
+    }
+    if (place.accessibility && place.accessibility.length > 0) {
+      sections.push(`\n=== ACCESSIBILITY ===\n${place.accessibility.join(', ')}`);
+    }
+
+    // Social profiles
+    if (place.socialProfiles && place.socialProfiles.length > 0) {
+      sections.push('\n=== SOCIAL MEDIA PROFILES ===');
+      place.socialProfiles.forEach(sp => {
+        sections.push(`${sp.platform}: ${sp.url}${sp.handle ? ' (@' + sp.handle + ')' : ''}`);
+      });
+    }
+
+    // Facebook data
+    if (place.facebookData) {
+      const fb = place.facebookData;
+      sections.push('\n=== FACEBOOK DATA ===');
+      if (fb.name) sections.push(`Page Name: ${fb.name}`);
+      if (fb.category) sections.push(`Category: ${Array.isArray(fb.category) ? fb.category.join(', ') : fb.category}`);
+      if (fb.followers) sections.push(`Followers: ${fb.followers.toLocaleString()}`);
+      if (fb.rating) sections.push(`Facebook Rating: ${fb.rating}`);
+      if (fb.ratingsText) sections.push(`Rating Text: ${fb.ratingsText}`);
+      if (fb.priceRange) sections.push(`Price Range: ${fb.priceRange}`);
+      if (fb.address) sections.push(`Facebook Address: ${fb.address}`);
+      // Facebook reviews (up to 5)
+      if (fb.reviews && fb.reviews.length > 0) {
+        sections.push('Facebook Reviews:');
+        fb.reviews.slice(0, 5).forEach((r, i) => {
+          sections.push(`  FB Review ${i + 1} (${r.rating || 'N/A'}★ by ${r.authorName || 'Anonymous'}): "${r.text}"`);
+        });
+      }
+    }
+
+    // Instagram data
+    if (place.instagramData) {
+      const ig = place.instagramData;
+      sections.push('\n=== INSTAGRAM DATA ===');
+      if (ig.username) sections.push(`Username: @${ig.username}`);
+      if (ig.name) sections.push(`Display Name: ${ig.name}`);
+      if (ig.bio) sections.push(`Bio: ${ig.bio}`);
+      if (ig.followerCount) sections.push(`Followers: ${ig.followerCount.toLocaleString()}`);
+      if (ig.followingCount) sections.push(`Following: ${ig.followingCount.toLocaleString()}`);
+      if (ig.postCount) sections.push(`Total Posts: ${ig.postCount.toLocaleString()}`);
+      if (ig.isVerified) sections.push('Verified: Yes');
+      if (ig.externalUrl) sections.push(`Website in Bio: ${ig.externalUrl}`);
+      // Recent post captions (up to 10)
+      if (ig.posts && ig.posts.length > 0) {
+        sections.push('Recent Post Captions:');
+        ig.posts.slice(0, 10).forEach((post, i) => {
+          if (post.caption) {
+            sections.push(`  Post ${i + 1} (${post.likes || 0} likes): "${post.caption.substring(0, 300)}"`);
+          }
+        });
+      }
+    }
+
+    // Photo inventory
+    if (place.photos && place.photos.length > 0) {
+      const typeCounts = {};
+      place.photos.forEach(p => {
+        const type = p.photoType || 'unclassified';
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      });
+      sections.push('\n=== PHOTO INVENTORY ===');
+      sections.push(`Total Photos: ${place.photos.length}`);
+      Object.entries(typeCounts).forEach(([type, count]) => {
+        sections.push(`  ${type}: ${count}`);
+      });
+    }
+
+    // Web reviews (external platforms)
+    if (place.webReviews && place.webReviews.length > 0) {
+      sections.push('\n=== EXTERNAL PLATFORM RATINGS ===');
+      place.webReviews.forEach(wr => {
+        sections.push(`${wr.source}: ${wr.rating || 'N/A'} rating, ${wr.reviewCount || 0} reviews`);
+      });
+    }
+
+    return sections.join('\n');
+  }
+
+  async function generateResearchReport(modal, place, btn) {
+    // Check if already cached
+    if (place.researchReport) {
+      btn.style.display = 'none';
+      renderResearchReport(modal, place.researchReport);
+      return;
+    }
+
+    const container = modal.querySelector('#research-report-container');
+    if (!container) return;
+
+    btn.disabled = true;
+    btn.textContent = t('generatingReport');
+    container.innerHTML = `<div class="report-loading"><span class="spinner"></span><p>${t('reportGenerating')}</p></div>`;
+
+    try {
+      const businessData = compileBusinessDataForPrompt(place);
+      const language = getSearchLanguage();
+
+      const res = await withTimeout(
+        fetch('/api/ai/research-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessData, name: place.name, language }),
+        }),
+        60000,
+        'Research report'
+      );
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Request failed');
+      }
+
+      const data = await res.json();
+      place.researchReport = data.report;
+
+      // Check modal still exists
+      if (!document.getElementById('detail-modal')) return;
+
+      btn.style.display = 'none';
+      renderResearchReport(modal, data.report);
+    } catch (err) {
+      console.error('Research report error:', err);
+      showToast(t('reportError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('generateReport');
+      container.innerHTML = '';
+    }
+  }
+
+  function renderResearchReport(modal, report) {
+    const container = modal.querySelector('#research-report-container');
+    if (!container) return;
+
+    // Handle raw text fallback (JSON parse failed on server)
+    if (report.parseError && report.rawText) {
+      container.innerHTML = `<div class="report-raw-text"><p>${escapeHtml(report.rawText)}</p></div>`;
+      return;
+    }
+
+    let html = '';
+
+    // Business Summary
+    if (report.businessSummary) {
+      html += `<div class="report-section">
+        <h4>${t('reportBusinessSummary')}</h4>
+        <p>${escapeHtml(report.businessSummary)}</p>
+      </div>`;
+    }
+
+    // Key Selling Points
+    if (report.keySellingPoints && report.keySellingPoints.length > 0) {
+      const tags = report.keySellingPoints.map(p => `<span class="feature-tag">${escapeHtml(p)}</span>`).join('');
+      html += `<div class="report-section">
+        <h4>${t('reportSellingPoints')}</h4>
+        <div class="features-grid">${tags}</div>
+      </div>`;
+    }
+
+    // Review Highlights
+    if (report.reviewHighlights) {
+      const rh = report.reviewHighlights;
+      let rhHtml = '';
+
+      if (rh.themes && rh.themes.length > 0) {
+        const tags = rh.themes.map(th => `<span class="feature-tag">${escapeHtml(th)}</span>`).join('');
+        rhHtml += `<div class="report-subsection">
+          <h5>${t('reportReviewThemes')}</h5>
+          <div class="features-grid">${tags}</div>
+        </div>`;
+      }
+
+      if (rh.quotableReviews && rh.quotableReviews.length > 0) {
+        const quotes = rh.quotableReviews.map(q => `<blockquote class="report-blockquote">${escapeHtml(q)}</blockquote>`).join('');
+        rhHtml += `<div class="report-subsection">
+          <h5>${t('reportQuotableReviews')}</h5>
+          ${quotes}
+        </div>`;
+      }
+
+      if (rh.areasToAvoid && rh.areasToAvoid.length > 0) {
+        const tags = rh.areasToAvoid.map(a => `<span class="feature-tag report-warning-tag">${escapeHtml(a)}</span>`).join('');
+        rhHtml += `<div class="report-subsection">
+          <h5>${t('reportAreasToAvoid')}</h5>
+          <div class="features-grid">${tags}</div>
+        </div>`;
+      }
+
+      if (rhHtml) {
+        html += `<div class="report-section">
+          <h4>${t('reportReviewHighlights')}</h4>
+          ${rhHtml}
+        </div>`;
+      }
+    }
+
+    // Suggested Website Sections
+    if (report.suggestedSections && report.suggestedSections.length > 0) {
+      const items = report.suggestedSections.map(s => {
+        const priorityKey = 'reportPriority' + s.priority.charAt(0).toUpperCase() + s.priority.slice(1);
+        const priorityClass = s.priority === 'high' ? 'badge-priority-high' : s.priority === 'medium' ? 'badge-priority-medium' : 'badge-priority-low';
+        return `<div class="report-section-item">
+          <div class="report-section-item-header">
+            <strong>${escapeHtml(s.name)}</strong>
+            <span class="badge ${priorityClass}">${t(priorityKey)}</span>
+          </div>
+          <p>${escapeHtml(s.description)}</p>
+        </div>`;
+      }).join('');
+      html += `<div class="report-section">
+        <h4>${t('reportSuggestedSections')}</h4>
+        ${items}
+      </div>`;
+    }
+
+    // Tone Recommendations
+    if (report.toneRecommendations) {
+      const tone = report.toneRecommendations;
+      let toneHtml = '';
+      if (tone.overallTone) {
+        toneHtml += `<p><strong>${t('reportOverallTone')}:</strong> ${escapeHtml(tone.overallTone)}</p>`;
+      }
+      if (tone.writingStyle) {
+        toneHtml += `<p><strong>${t('reportWritingStyle')}:</strong> ${escapeHtml(tone.writingStyle)}</p>`;
+      }
+      if (tone.wordsToUse && tone.wordsToUse.length > 0) {
+        const tags = tone.wordsToUse.map(w => `<span class="feature-tag">${escapeHtml(w)}</span>`).join('');
+        toneHtml += `<div class="report-subsection"><h5>${t('reportWordsToUse')}</h5><div class="features-grid">${tags}</div></div>`;
+      }
+      if (tone.wordsToAvoid && tone.wordsToAvoid.length > 0) {
+        const tags = tone.wordsToAvoid.map(w => `<span class="feature-tag report-warning-tag">${escapeHtml(w)}</span>`).join('');
+        toneHtml += `<div class="report-subsection"><h5>${t('reportWordsToAvoid')}</h5><div class="features-grid">${tags}</div></div>`;
+      }
+      if (toneHtml) {
+        html += `<div class="report-section"><h4>${t('reportToneRec')}</h4>${toneHtml}</div>`;
+      }
+    }
+
+    // Competitive Positioning
+    if (report.competitivePositioning) {
+      html += `<div class="report-section">
+        <h4>${t('reportCompetitive')}</h4>
+        <p>${escapeHtml(report.competitivePositioning)}</p>
+      </div>`;
+    }
+
+    // Content Gaps
+    if (report.contentGaps && report.contentGaps.length > 0) {
+      const tags = report.contentGaps.map(g => `<span class="feature-tag report-warning-tag">${escapeHtml(g)}</span>`).join('');
+      html += `<div class="report-section">
+        <h4>${t('reportContentGaps')}</h4>
+        <div class="features-grid">${tags}</div>
+      </div>`;
+    }
+
+    // Social Media Insights
+    if (report.socialMediaInsights) {
+      html += `<div class="report-section">
+        <h4>${t('reportSocialInsights')}</h4>
+        <p>${escapeHtml(report.socialMediaInsights)}</p>
+      </div>`;
+    }
+
+    // Local SEO Keywords
+    if (report.localSeoKeywords && report.localSeoKeywords.length > 0) {
+      const tags = report.localSeoKeywords.map(k => `<span class="feature-tag feature-tag-highlight">${escapeHtml(k)}</span>`).join('');
+      html += `<div class="report-section">
+        <h4>${t('reportSeoKeywords')}</h4>
+        <div class="features-grid">${tags}</div>
+      </div>`;
+    }
+
+    container.innerHTML = html;
   }
 
   // ── Social Profiles Section Logic ──
