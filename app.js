@@ -250,6 +250,11 @@
       igFollowers: 'followers',
       igFollowing: 'following',
       igVerified: 'Verified account',
+      enrichSocialBtn: 'Enrich Social Data',
+      enrichingSocial: 'Fetching social data...',
+      enrichSocialSuccess: 'Social data loaded successfully',
+      enrichSocialError: 'Failed to fetch social data',
+      enrichSocialNone: 'No Facebook or Instagram profiles found to enrich',
       noDescription: 'No description available.',
       // Search pagination
       searchingPage: 'Searching page {0} of {1}...',
@@ -505,6 +510,11 @@
       igFollowers: 'seguidores',
       igFollowing: 'siguiendo',
       igVerified: 'Cuenta verificada',
+      enrichSocialBtn: 'Enriquecer Datos Sociales',
+      enrichingSocial: 'Obteniendo datos sociales...',
+      enrichSocialSuccess: 'Datos sociales cargados exitosamente',
+      enrichSocialError: 'Error al obtener datos sociales',
+      enrichSocialNone: 'No se encontraron perfiles de Facebook o Instagram para enriquecer',
       noDescription: 'No hay descripción disponible.',
       // Search pagination
       searchingPage: 'Buscando página {0} de {1}...',
@@ -2699,8 +2709,9 @@
           ${histogramHtml}
           ${reviewsHtml}
           ${hoursHtml}
-          ${facebookHtml}
-          ${instagramHtml}
+          <div id="social-enrich-container"></div>
+          <div id="facebook-data-container">${facebookHtml}</div>
+          <div id="instagram-data-container">${instagramHtml}</div>
           <div class="modal-section" id="social-profiles-section">
             <h3>${t('socialProfiles')}</h3>
             <p class="section-subtitle">${t('socialProfilesSubtitle')}</p>
@@ -2748,6 +2759,217 @@
 
     // Load social profiles asynchronously
     initSocialProfilesSection(modal, place);
+
+    // Show "Enrich Social Data" button if FB/IG handles exist but data isn't loaded
+    initEnrichSocialButton(modal, place);
+  }
+
+  // ── Enrich Social Data Button ──
+  function initEnrichSocialButton(modal, place) {
+    const container = modal.querySelector('#social-enrich-container');
+    if (!container) return;
+
+    updateEnrichButton(container, modal, place);
+  }
+
+  function updateEnrichButton(container, modal, place) {
+    const profiles = place.socialProfiles || [];
+    const fbProfile = profiles.find(p => p.platform === 'facebook' && p.handle);
+    const igProfile = profiles.find(p => p.platform === 'instagram' && p.handle);
+    const canEnrichFb = fbProfile && !place.facebookData;
+    const canEnrichIg = igProfile && !place.instagramData;
+
+    if (!canEnrichFb && !canEnrichIg) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const platformNames = [];
+    if (canEnrichFb) platformNames.push('Facebook');
+    if (canEnrichIg) platformNames.push('Instagram');
+
+    container.innerHTML = `
+      <div class="modal-section">
+        <button class="btn btn-primary" id="enrich-social-btn">
+          ${t('enrichSocialBtn')} (${platformNames.join(' + ')})
+        </button>
+      </div>
+    `;
+
+    const btn = container.querySelector('#enrich-social-btn');
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = t('enrichingSocial');
+
+      let success = false;
+
+      // Fetch Facebook data
+      if (canEnrichFb) {
+        try {
+          const res = await withTimeout(
+            fetch('/api/enrich/facebook?username=' + encodeURIComponent(fbProfile.handle)),
+            15000,
+            'Facebook enrichment'
+          );
+          if (res.ok) {
+            place.facebookData = await res.json();
+            success = true;
+            // Persist to Supabase
+            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+              saveFacebookData(place).catch(err =>
+                console.warn('Failed to save Facebook data:', err)
+              );
+            }
+          }
+        } catch (err) {
+          console.warn('Facebook enrichment failed for', place.name, err);
+        }
+      }
+
+      // Fetch Instagram data
+      if (canEnrichIg) {
+        try {
+          const res = await withTimeout(
+            fetch('/api/enrich/instagram?username=' + encodeURIComponent(igProfile.handle)),
+            15000,
+            'Instagram enrichment'
+          );
+          if (res.ok) {
+            place.instagramData = await res.json();
+            success = true;
+            // Persist to Supabase
+            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+              saveInstagramData(place).catch(err =>
+                console.warn('Failed to save Instagram data:', err)
+              );
+            }
+          }
+        } catch (err) {
+          console.warn('Instagram enrichment failed for', place.name, err);
+        }
+      }
+
+      if (success) {
+        showToast(t('enrichSocialSuccess'), 'success');
+        // Re-render the Facebook and Instagram sections in the modal
+        renderFacebookSection(modal, place);
+        renderInstagramSection(modal, place);
+        // Hide or update the enrich button
+        updateEnrichButton(container, modal, place);
+      } else {
+        showToast(t('enrichSocialError'), 'error');
+        btn.disabled = false;
+        btn.textContent = t('enrichSocialBtn') + ' (' + platformNames.join(' + ') + ')';
+      }
+    });
+  }
+
+  function renderFacebookSection(modal, place) {
+    const fbContainer = modal.querySelector('#facebook-data-container');
+    if (!fbContainer || !place.facebookData) return;
+
+    const fb = place.facebookData;
+    const fbPhotos = [];
+    if (fb.coverPhoto) fbPhotos.push(`<img src="${escapeHtml(fb.coverPhoto)}" alt="Cover photo" class="social-cover-photo">`);
+
+    const fbReviews = (fb.reviews || []).slice(0, 5);
+    let fbReviewsHtml = '';
+    if (fbReviews.length > 0) {
+      const fbReviewItems = fbReviews.map(r => `
+        <div class="review-item">
+          <div class="review-header">
+            ${r.authorPhoto ? `<img src="${escapeHtml(r.authorPhoto)}" alt="" class="review-author-photo">` : ''}
+            <div>
+              <strong class="review-author">${escapeHtml(r.authorName || t('anonymous'))}</strong>
+              ${r.date ? `<span class="review-date">${escapeHtml(r.date)}</span>` : ''}
+            </div>
+            ${r.rating ? `<span class="stars">${renderStars(r.rating)}</span>` : ''}
+          </div>
+          <p class="review-text">${escapeHtml(r.text)}</p>
+          ${r.reactionsCount ? `<span class="fb-reactions">${r.reactionsCount} ${t('fbReactions')}</span>` : ''}
+        </div>
+      `).join('');
+      fbReviewsHtml = `
+        <div class="fb-reviews">
+          <h4>${t('fbReviewsTitle', fbReviews.length)}</h4>
+          ${fbReviewItems}
+        </div>
+      `;
+    }
+
+    const fbLinkHtml = fb.link ? `<a href="${escapeHtml(fb.link)}" target="_blank" rel="noopener" class="social-profile-link">${t('viewOnFacebook')}</a>` : '';
+
+    fbContainer.innerHTML = `
+      <div class="modal-section">
+        <h3>${t('facebookProfile')}</h3>
+        <div class="social-profile-card">
+          <div class="social-profile-card-header">
+            ${fb.profilePhoto ? `<img src="${escapeHtml(fb.profilePhoto)}" alt="" class="social-profile-avatar">` : ''}
+            <div>
+              <strong>${escapeHtml(fb.name || place.name)}</strong>
+              ${fb.category && fb.category.length > 0 ? `<span class="social-profile-category">${escapeHtml(Array.isArray(fb.category) ? fb.category.join(', ') : fb.category)}</span>` : ''}
+              ${fb.followers ? `<span class="social-profile-followers">${t('followers', fb.followers.toLocaleString())}</span>` : ''}
+            </div>
+          </div>
+          ${fbPhotos.join('')}
+          ${fb.ratingsText ? `<p class="social-profile-rating">${escapeHtml(fb.ratingsText)}</p>` : ''}
+          ${fb.address ? `<p class="social-profile-address">${escapeHtml(fb.address)}</p>` : ''}
+          ${fb.phone ? `<p class="social-profile-phone">${escapeHtml(fb.phone)}</p>` : ''}
+          ${fb.priceRange ? `<p class="social-profile-price">${t('priceRange')}: ${escapeHtml(fb.priceRange)}</p>` : ''}
+          ${fbLinkHtml}
+          ${fbReviewsHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderInstagramSection(modal, place) {
+    const igContainer = modal.querySelector('#instagram-data-container');
+    if (!igContainer || !place.instagramData) return;
+
+    const ig = place.instagramData;
+    const igPostsGrid = (ig.posts || []).slice(0, 9).map(post => {
+      const imgSrc = post.imageUrl || post.thumbnail;
+      if (!imgSrc) return '';
+      return `<a href="${escapeHtml(post.permalink)}" target="_blank" rel="noopener" class="ig-post-item" title="${escapeHtml((post.caption || '').substring(0, 100))}"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml((post.caption || '').substring(0, 50))}" loading="lazy">${post.likes ? `<span class="ig-post-likes">${post.likes.toLocaleString()}</span>` : ''}</a>`;
+    }).filter(Boolean).join('');
+
+    const bioLinks = ig.bioLinks || [];
+    let bioLinksHtml = '';
+    if (bioLinks.length > 0) {
+      bioLinksHtml = `<div class="ig-bio-links">${bioLinks.map(link =>
+        `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener" class="ig-bio-link">${escapeHtml(link.title || link.url)}</a>`
+      ).join('')}</div>`;
+    }
+
+    const statsItems = [];
+    if (ig.postCount) statsItems.push(`<span class="ig-stat"><strong>${ig.postCount.toLocaleString()}</strong> ${t('igPosts')}</span>`);
+    if (ig.followerCount) statsItems.push(`<span class="ig-stat"><strong>${ig.followerCount.toLocaleString()}</strong> ${t('igFollowers')}</span>`);
+    if (ig.followingCount) statsItems.push(`<span class="ig-stat"><strong>${ig.followingCount.toLocaleString()}</strong> ${t('igFollowing')}</span>`);
+    const statsHtml = statsItems.length > 0 ? `<div class="ig-stats">${statsItems.join('')}</div>` : '';
+
+    const extUrlHtml = ig.externalUrl ? `<a href="${escapeHtml(ig.externalUrl)}" target="_blank" rel="noopener" class="social-profile-link">${escapeHtml(ig.externalUrl)}</a>` : '';
+
+    igContainer.innerHTML = `
+      <div class="modal-section">
+        <h3>${t('instagramProfile')}</h3>
+        <div class="social-profile-card">
+          <div class="social-profile-card-header">
+            ${ig.avatar ? `<img src="${escapeHtml(ig.avatar)}" alt="" class="social-profile-avatar">` : ''}
+            <div>
+              <strong>@${escapeHtml(ig.username || '')}</strong>
+              ${ig.isVerified ? `<span class="ig-verified" title="${t('igVerified')}">&#10003;</span>` : ''}
+              ${ig.name ? `<span class="social-profile-name">${escapeHtml(ig.name)}</span>` : ''}
+            </div>
+          </div>
+          ${statsHtml}
+          ${ig.bio ? `<p class="social-profile-bio">${escapeHtml(ig.bio)}</p>` : ''}
+          ${extUrlHtml}
+          ${bioLinksHtml}
+          ${igPostsGrid ? `<div class="ig-posts-grid">${igPostsGrid}</div>` : ''}
+        </div>
+      </div>
+    `;
   }
 
   // ── Social Profiles Section Logic ──
@@ -2795,6 +3017,27 @@
     }
 
     const profiles = await loadSocialProfiles(businessId);
+
+    // Merge DB profiles into place.socialProfiles so enrich button can detect handles
+    if (profiles.length > 0) {
+      if (!place.socialProfiles) place.socialProfiles = [];
+      for (const dbProfile of profiles) {
+        const existing = place.socialProfiles.find(sp => sp.platform === dbProfile.platform);
+        if (!existing) {
+          place.socialProfiles.push({
+            platform: dbProfile.platform,
+            url: dbProfile.url,
+            handle: dbProfile.handle || null,
+          });
+        } else if (!existing.handle && dbProfile.handle) {
+          existing.handle = dbProfile.handle;
+        }
+      }
+      // Re-check enrich button now that we have DB profiles
+      const enrichContainer = modal.querySelector('#social-enrich-container');
+      if (enrichContainer) updateEnrichButton(enrichContainer, modal, place);
+    }
+
     renderSocialProfiles(container, place, businessId, profiles);
   }
 
