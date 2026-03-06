@@ -1460,7 +1460,7 @@
 
           if (placeObj.reviews && placeObj.reviews.length > 0) {
             place.reviewData = placeObj.reviews.map((r) => ({
-              text: r.text || '',
+              text: r.originalText || r.text || '',
               rating: r.rating || 0,
               relativePublishTimeDescription: r.relativePublishTimeDescription || '',
               authorAttribution: r.authorAttribution ? {
