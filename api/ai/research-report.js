@@ -106,67 +106,28 @@ Examine the PHOTO INVENTORY section in the business data. For each website secti
       return res.status(502).json({ error: 'Claude API request failed' });
     }
 
-    // Read the SSE stream server-side and collect the full response
-    let fullText = '';
-    let usage = null;
+    // Forward the SSE stream to the client to keep the Vercel connection alive
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-
-      // Process complete SSE lines from the buffer
-      const lines = buffer.split('\n');
-      // Keep the last potentially incomplete line in the buffer
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-
-        try {
-          const event = JSON.parse(data);
-
-          if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
-            fullText += event.delta.text;
-          } else if (event.type === 'message_delta' && event.usage) {
-            usage = event.usage;
-          } else if (event.type === 'message_start' && event.message?.usage) {
-            usage = { ...event.message.usage, ...(usage || {}) };
-          }
-        } catch {
-          // Skip malformed SSE events
-        }
-      }
+      res.write(decoder.decode(value, { stream: true }));
     }
 
-    // Strip markdown code fences if present
-    let jsonText = fullText.trim();
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-    }
-
-    let report;
-    try {
-      report = JSON.parse(jsonText);
-    } catch (parseErr) {
-      console.warn('JSON parse failed, returning raw text:', parseErr.message);
-      report = { rawText: fullText, parseError: true };
-    }
-
-    res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).json({
-      report,
-      usage: usage || null,
-    });
+    res.end();
   } catch (err) {
     console.error('Research report error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    // If headers already sent (streaming started), just end the response
+    if (res.headersSent) {
+      res.end();
+    } else {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   }
 }
