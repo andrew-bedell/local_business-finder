@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f1117">
+  <title>Operator Admin — Local Business Finder</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-top">
+          <div>
+            <h1 class="logo" data-i18n="adminTitle">Operator Admin</h1>
+            <p class="tagline" data-i18n="adminTagline">Manage saved businesses, reports, and websites</p>
+          </div>
+          <div class="header-actions">
+            <a href="index.html" class="btn btn-text nav-link" data-i18n="navSearch">Search</a>
+            <div class="lang-switcher" id="lang-switcher">
+              <button class="lang-btn active" data-lang="en">EN</button>
+              <button class="lang-btn" data-lang="es">ES</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Stats Summary -->
+      <section class="admin-stats-bar" id="stats-bar">
+        <div class="admin-stat-card">
+          <span class="admin-stat-value" id="stat-total">—</span>
+          <span class="admin-stat-label" data-i18n="statTotal">Total Businesses</span>
+        </div>
+        <div class="admin-stat-card">
+          <span class="admin-stat-value" id="stat-reviews">—</span>
+          <span class="admin-stat-label" data-i18n="statWithReviews">With Reviews</span>
+        </div>
+        <div class="admin-stat-card">
+          <span class="admin-stat-value" id="stat-instagram">—</span>
+          <span class="admin-stat-label" data-i18n="statWithInstagram">With Instagram</span>
+        </div>
+        <div class="admin-stat-card">
+          <span class="admin-stat-value" id="stat-websites">—</span>
+          <span class="admin-stat-label" data-i18n="statWithWebsites">With Websites</span>
+        </div>
+      </section>
+
+      <!-- Filters -->
+      <section class="card" id="filter-section">
+        <div class="card-header">
+          <h2 data-i18n="filtersTitle">Filters</h2>
+          <button class="btn btn-text" id="btn-clear-filters" data-i18n="clearFilters">Clear Filters</button>
+        </div>
+        <div class="admin-filter-grid">
+          <div class="form-group">
+            <label for="filter-location" data-i18n="filterLocation">Location</label>
+            <input type="text" id="filter-location" class="input" data-i18n-placeholder="filterLocationPlaceholder" placeholder="City, state, or zip...">
+          </div>
+          <div class="form-group">
+            <label for="filter-country" data-i18n="filterCountry">Country</label>
+            <select id="filter-country" class="input">
+              <option value="" data-i18n="filterAll">All</option>
+              <option value="US">US</option>
+              <option value="MX">MX</option>
+              <option value="CO">CO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-type" data-i18n="filterType">Business Type</label>
+            <select id="filter-type" class="input">
+              <option value="" data-i18n="filterAll">All</option>
+              <optgroup label="Food & Drink">
+                <option value="restaurant">Restaurants</option>
+                <option value="cafe">Cafes</option>
+                <option value="bakery">Bakeries</option>
+                <option value="bar">Bars</option>
+              </optgroup>
+              <optgroup label="Beauty & Personal Care">
+                <option value="hair_care">Barbers & Hair Salons</option>
+                <option value="beauty_salon">Beauty Salons</option>
+                <option value="spa">Spas</option>
+                <option value="nail_salon">Nail Salons</option>
+              </optgroup>
+              <optgroup label="Health & Fitness">
+                <option value="gym">Gyms</option>
+                <option value="dentist">Dentists</option>
+                <option value="doctor">Doctors</option>
+                <option value="veterinary_care">Veterinary</option>
+              </optgroup>
+              <optgroup label="Home Services">
+                <option value="plumber">Plumbers</option>
+                <option value="electrician">Electricians</option>
+                <option value="locksmith">Locksmiths</option>
+                <option value="roofing_contractor">Roofing</option>
+              </optgroup>
+              <optgroup label="Automotive">
+                <option value="car_repair">Auto Repair</option>
+                <option value="car_wash">Car Washes</option>
+              </optgroup>
+              <optgroup label="Shopping">
+                <option value="clothing_store">Clothing</option>
+                <option value="florist">Florists</option>
+                <option value="pet_store">Pet Stores</option>
+              </optgroup>
+              <optgroup label="Professional">
+                <option value="lawyer">Lawyers</option>
+                <option value="accounting">Accountants</option>
+                <option value="real_estate_agency">Real Estate</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-rating" data-i18n="filterMinRating">Min Rating</label>
+            <select id="filter-rating" class="input">
+              <option value="" data-i18n="filterAny">Any</option>
+              <option value="3">3+</option>
+              <option value="3.5">3.5+</option>
+              <option value="4">4+</option>
+              <option value="4.5">4.5+</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-reviews" data-i18n="filterMinReviews">Min Reviews</label>
+            <input type="number" id="filter-reviews" class="input" min="0" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="filter-instagram" data-i18n="filterHasInstagram">Has Instagram</label>
+            <select id="filter-instagram" class="input">
+              <option value="" data-i18n="filterAny">Any</option>
+              <option value="yes" data-i18n="filterYes">Yes</option>
+              <option value="no" data-i18n="filterNo">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-ig-posts" data-i18n="filterMinPosts">Min IG Posts</label>
+            <input type="number" id="filter-ig-posts" class="input" min="0" placeholder="0" disabled>
+          </div>
+          <div class="form-group">
+            <label for="filter-facebook" data-i18n="filterHasFacebook">Has Facebook</label>
+            <select id="filter-facebook" class="input">
+              <option value="" data-i18n="filterAny">Any</option>
+              <option value="yes" data-i18n="filterYes">Yes</option>
+              <option value="no" data-i18n="filterNo">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-report" data-i18n="filterHasReport">Has Report</label>
+            <select id="filter-report" class="input">
+              <option value="" data-i18n="filterAny">Any</option>
+              <option value="yes" data-i18n="filterYes">Yes</option>
+              <option value="no" data-i18n="filterNo">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-website" data-i18n="filterHasWebsite">Has Website</label>
+            <select id="filter-website" class="input">
+              <option value="" data-i18n="filterAny">Any</option>
+              <option value="yes" data-i18n="filterYes">Yes</option>
+              <option value="no" data-i18n="filterNo">No</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-apply-filters" style="margin-top:14px" data-i18n="applyFilters">Apply Filters</button>
+      </section>
+
+      <!-- Results Table -->
+      <section class="card results-card" id="results-section">
+        <div class="results-header">
+          <div>
+            <h2 data-i18n="adminResultsTitle">Saved Businesses</h2>
+            <p class="results-summary" id="results-summary"></p>
+          </div>
+          <div class="admin-pagination" id="pagination-top">
+            <select id="page-size" class="input input-sort">
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+              <option value="100">100 per page</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="btn-prev" disabled data-i18n="prevPage">Prev</button>
+            <span class="admin-page-info" id="page-info">—</span>
+            <button class="btn btn-secondary btn-sm" id="btn-next" disabled data-i18n="nextPage">Next</button>
+          </div>
+        </div>
+
+        <div class="results-table-wrapper">
+          <table class="results-table" id="results-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-name" data-i18n="thName">Name</th>
+                <th class="col-address" data-i18n="thLocation">Location</th>
+                <th data-i18n="thType">Type</th>
+                <th class="col-rating" data-i18n="thRating">Rating</th>
+                <th class="col-reviews" data-i18n="thReviews">Reviews</th>
+                <th data-i18n="thInstagram">IG</th>
+                <th data-i18n="thFacebook">FB</th>
+                <th data-i18n="thReport">Report</th>
+                <th data-i18n="thWebsite">Website</th>
+                <th data-i18n="thActions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="results-body"></tbody>
+          </table>
+        </div>
+
+        <div class="no-results" id="no-results" style="display:none;">
+          <p data-i18n="adminNoResults">No businesses match your filters.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p data-i18n="adminFooter">Operator Admin — Local Business Finder</p>
+    </footer>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="operator-admin.js"></script>
+</body>
+</html>
