@@ -11,7 +11,8 @@
       // Header
       logo: 'Local Business Finder',
       tagline: 'Find businesses without websites near any location',
-      navAdmin: 'Admin',
+      navSearch: 'Search',
+      navSaved: 'Saved',
       // API section
       apiKeyTitle: 'Google Places API Key',
       setupGuide: 'Setup Guide',
@@ -311,7 +312,8 @@
       // Header
       logo: 'Buscador de Negocios Locales',
       tagline: 'Encuentra negocios sin sitio web cerca de cualquier ubicación',
-      navAdmin: 'Admin',
+      navSearch: 'Buscar',
+      navSaved: 'Guardados',
       // API section
       apiKeyTitle: 'Clave API de Google Places',
       setupGuide: 'Guía de Configuración',

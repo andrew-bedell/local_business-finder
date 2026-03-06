@@ -89,9 +89,34 @@ a:hover {
   gap: 12px;
   flex-shrink: 0;
 }
-.nav-link {
+/* === Header Nav Tabs === */
+.header-nav {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+}
+
+.nav-tab {
+  padding: 5px 16px;
+  border-radius: 6px;
   font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
   text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-tab:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-tab.active {
+  background: var(--primary);
+  color: #fff;
 }
 
 /* === Language Switcher === */

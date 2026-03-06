@@ -8,9 +8,10 @@
 
   const translations = {
     en: {
-      adminTitle: 'Operator Admin',
-      adminTagline: 'Manage saved businesses, reports, and websites',
+      adminTitle: 'Saved Businesses',
+      adminTagline: 'View and manage all businesses saved to the database',
       navSearch: 'Search',
+      navSaved: 'Saved',
       statTotal: 'Total Businesses',
       statWithReviews: 'With Reviews',
       statWithInstagram: 'With Instagram',
@@ -111,9 +112,10 @@
       timeoutError: '{0} timed out after {1}s.',
     },
     es: {
-      adminTitle: 'Admin del Operador',
-      adminTagline: 'Gestionar negocios guardados, informes y sitios web',
+      adminTitle: 'Negocios Guardados',
+      adminTagline: 'Ver y gestionar todos los negocios guardados en la base de datos',
       navSearch: 'Buscar',
+      navSaved: 'Guardados',
       statTotal: 'Total Negocios',
       statWithReviews: 'Con Reseñas',
       statWithInstagram: 'Con Instagram',
