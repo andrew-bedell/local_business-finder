@@ -54,8 +54,25 @@ Respond with ONLY valid JSON (no markdown fences, no extra text) matching this e
   "competitivePositioning": "1-2 paragraphs on how this business stands out in its market based on the data",
   "contentGaps": ["what data is missing that would strengthen the website — actionable items"],
   "socialMediaInsights": "what their social media presence reveals about their brand and audience (or null if no social data)",
-  "localSeoKeywords": ["8-12 suggested keywords for local SEO based on the business type, location, and services"]
-}`;
+  "localSeoKeywords": ["8-12 suggested keywords for local SEO based on the business type, location, and services"],
+  "photoAssetPlan": [
+    {
+      "section": "website section name (e.g., Hero, About, Menu, Gallery, Testimonials)",
+      "slot": "description of what image is needed for this slot",
+      "recommendation": "use_existing OR generate_ai",
+      "existingPhotoId": "the photo ID from the inventory (only when recommendation is use_existing)",
+      "aiPrompt": "a detailed image generation prompt describing exactly what image to create — include style, composition, lighting, colors, and subject (only when recommendation is generate_ai)",
+      "rationale": "why this photo was chosen or why AI generation is needed"
+    }
+  ]
+}
+
+IMPORTANT — Photo Asset Plan instructions:
+Examine the PHOTO INVENTORY section in the business data. For each website section that needs an image:
+1. If a suitable existing photo exists, set recommendation to "use_existing" and reference it by its ID (e.g., "google_photo_2", "fb_cover", "ig_post_5")
+2. If no suitable photo exists, set recommendation to "generate_ai" and write a detailed prompt for AI image generation — be specific about style, composition, lighting, mood, and subject matter
+3. Cover at minimum: hero/header image, about section image, and any section-specific images (menu photos for restaurants, service photos for service businesses, etc.)
+4. Use Instagram post captions to infer what's in unclassified photos`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -67,7 +84,7 @@ Respond with ONLY valid JSON (no markdown fences, no extra text) matching this e
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 4096,
+        max_tokens: 6144,
         system: systemPrompt,
         messages: [
           {
