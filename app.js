@@ -860,6 +860,26 @@
       }
 
       savedPlaceIds.add(place.placeId);
+
+      // Save Facebook enrichment data (photos, reviews, follower counts)
+      if (place.facebookData) {
+        await saveFacebookData(place).catch(err =>
+          console.warn('Failed to save Facebook data:', err)
+        );
+      }
+
+      // Save Instagram enrichment data (photos, follower/post counts)
+      if (place.instagramData) {
+        await saveInstagramData(place).catch(err =>
+          console.warn('Failed to save Instagram data:', err)
+        );
+      }
+
+      // Update enriched place details in DB
+      await updateBusinessEnrichedData(place).catch(err =>
+        console.warn('Failed to update enriched data:', err)
+      );
+
       return true;
     } catch (err) {
       console.error('Save error (exception):', err);
@@ -1650,13 +1670,6 @@
                 photoURI: r.authorAttribution.photoURI || '',
               } : null,
             }));
-
-            // Save reviews to DB if business is already saved
-            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-              saveReviewsForBusiness(place).catch(err =>
-                console.warn('Failed to save reviews for', place.name, err)
-              );
-            }
           }
           fetched++;
           updateProgress(92 + Math.round((fetched / needsReviews.length) * 3), t('fetchingReviewsProgress', fetched, needsReviews.length));
@@ -2120,25 +2133,11 @@
                   photoURI: r.authorPhoto,
                 },
               }));
-
-              // Persist reviews if business is already saved
-              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-                saveReviewsForBusiness(place).catch(err =>
-                  console.warn('Failed to save place detail reviews:', err)
-                );
-              }
             }
 
             // Store web reviews (external sources like TripAdvisor)
             if (data.webReviews && data.webReviews.length > 0) {
               place.webReviews = data.webReviews;
-            }
-
-            // Update Supabase with enriched data
-            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-              updateBusinessEnrichedData(place).catch(err =>
-                console.warn('Failed to update enriched data in DB:', err)
-              );
             }
           }
         } catch (err) {
@@ -2174,11 +2173,6 @@
           );
           if (res.ok) {
             place[dataKey] = await res.json();
-            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-              saveFn(place).catch(err =>
-                console.warn('Failed to save ' + platform + ' data:', err)
-              );
-            }
           }
         } catch (err) {
           console.warn(platform + ' enrichment failed for', place.name, err);
@@ -2221,13 +2215,6 @@
                   photoURI: r.authorPhoto,
                 },
               }));
-
-              // Persist if saved
-              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-                saveReviewsForBusiness(place).catch(err =>
-                  console.warn('Failed to save SearchAPI reviews:', err)
-                );
-              }
             }
           }
           fetched++;
@@ -2268,13 +2255,6 @@
                 .map(p => ({ url: p.url, thumbnail: p.thumbnail, photoType: null }));
               place.photos = (place.photos || []).concat(newPhotos);
               place.photoCategories = data.categories;
-
-              // Persist if saved
-              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-                savePhotosForBusiness(place).catch(err =>
-                  console.warn('Failed to save SearchAPI photos:', err)
-                );
-              }
             }
           }
           fetched++;
