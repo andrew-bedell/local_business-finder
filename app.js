@@ -46,6 +46,8 @@
       groupProfessional: 'Professional Services',
       groupOther: 'Other',
       // Business types
+      typeAll: 'All Types',
+      searchingType: 'Searching {0}...',
       typeRestaurant: 'Restaurants',
       typeCafe: 'Cafes & Coffee Shops',
       typeBakery: 'Bakeries',
@@ -347,6 +349,8 @@
       groupProfessional: 'Servicios Profesionales',
       groupOther: 'Otros',
       // Business types
+      typeAll: 'Todos los Tipos',
+      searchingType: 'Buscando {0}...',
       typeRestaurant: 'Restaurantes',
       typeCafe: 'Cafeterías',
       typeBakery: 'Panaderías',
@@ -728,7 +732,7 @@
         longitude: place.longitude || null,
         hours: place.hours || [],
         search_location: location,
-        search_type: type,
+        search_type: place.searchType || type,
         description: place.description || null,
         thumbnail: place.thumbnail || null,
         price_level: place.priceLevel ? parseInt(place.priceLevel) || null : null,
@@ -1069,10 +1073,39 @@
       const lat = coords.latLng.lat;
       const lng = coords.latLng.lng;
 
-      updateProgress(15, t('searchingViaSearchApi'));
-      const mapped = await searchViaSearchApi(type, lat, lng, radius, maxCount);
+      // Build list of types to search
+      const ALL_TYPES = [...businessType.querySelectorAll('option[value]')]
+        .map(o => o.value).filter(v => v && v !== '' && v !== 'all');
+      const typesToSearch = type === 'all' ? ALL_TYPES : [type];
+      const perTypeMax = type === 'all' ? 20 : maxCount;
 
-      if (!mapped || mapped.length === 0) {
+      let mapped = [];
+      const seenPlaceIds = new Set();
+
+      for (let i = 0; i < typesToSearch.length; i++) {
+        const currentType = typesToSearch[i];
+        if (type === 'all') {
+          const pct = 15 + Math.round((i / typesToSearch.length) * 70);
+          const typeLabel = businessType.querySelector(`option[value="${currentType}"]`);
+          const typeName = typeLabel ? typeLabel.textContent : currentType;
+          updateProgress(pct, t('searchingType', typeName));
+        } else {
+          updateProgress(15, t('searchingViaSearchApi'));
+        }
+
+        const results = await searchViaSearchApi(currentType, lat, lng, radius, perTypeMax);
+        if (results) {
+          for (const r of results) {
+            if (!seenPlaceIds.has(r.placeId)) {
+              seenPlaceIds.add(r.placeId);
+              r.searchType = currentType;
+              mapped.push(r);
+            }
+          }
+        }
+      }
+
+      if (mapped.length === 0) {
         updateProgress(100, t('noBusinessesFound'));
         resetSearchButton();
         return;
