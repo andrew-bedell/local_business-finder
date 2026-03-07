@@ -310,6 +310,28 @@
       fetchingAdditionalReviewsProgress: 'Fetching additional reviews... {0} of {1}',
       fetchingPhotos: 'Fetching photos...',
       fetchingPhotosProgress: 'Fetching photos... {0} of {1}',
+      // Enrichment modal
+      enrichmentModalTitle: 'Gathering Business Data',
+      enrichmentSocialProfiles: 'Discovering social profiles...',
+      enrichmentSocialProfilesDone: 'Social profiles discovered',
+      enrichmentGoogleReviews: 'Fetching Google reviews...',
+      enrichmentGoogleReviewsDone: 'Google reviews fetched',
+      enrichmentPlaceDetails: 'Gathering place details...',
+      enrichmentPlaceDetailsDone: 'Place details gathered',
+      enrichmentReviews: 'Fetching additional reviews...',
+      enrichmentReviewsDone: 'Additional reviews fetched',
+      enrichmentPhotos: 'Fetching photos...',
+      enrichmentPhotosDone: 'Photos fetched',
+      enrichmentFacebook: 'Gathering Facebook information...',
+      enrichmentFacebookDone: 'Facebook information gathered',
+      enrichmentInstagram: 'Gathering Instagram information...',
+      enrichmentInstagramDone: 'Instagram information gathered',
+      enrichmentKnowledgeGraph: 'Looking up Knowledge Graph profiles...',
+      enrichmentKnowledgeGraphDone: 'Knowledge Graph profiles found',
+      enrichmentSaving: 'Saving all data to database...',
+      enrichmentSavingDone: 'All data saved to database',
+      enrichmentComplete: 'Enrichment complete!',
+      enrichmentBizProgress: '{0} of {1} businesses',
     },
     es: {
       // Header
@@ -614,6 +636,28 @@
       fetchingAdditionalReviewsProgress: 'Obteniendo reseñas adicionales... {0} de {1}',
       fetchingPhotos: 'Obteniendo fotos...',
       fetchingPhotosProgress: 'Obteniendo fotos... {0} de {1}',
+      // Enrichment modal
+      enrichmentModalTitle: 'Recopilando Datos de Negocios',
+      enrichmentSocialProfiles: 'Descubriendo perfiles sociales...',
+      enrichmentSocialProfilesDone: 'Perfiles sociales descubiertos',
+      enrichmentGoogleReviews: 'Obteniendo reseñas de Google...',
+      enrichmentGoogleReviewsDone: 'Reseñas de Google obtenidas',
+      enrichmentPlaceDetails: 'Recopilando detalles del lugar...',
+      enrichmentPlaceDetailsDone: 'Detalles del lugar recopilados',
+      enrichmentReviews: 'Obteniendo reseñas adicionales...',
+      enrichmentReviewsDone: 'Reseñas adicionales obtenidas',
+      enrichmentPhotos: 'Obteniendo fotos...',
+      enrichmentPhotosDone: 'Fotos obtenidas',
+      enrichmentFacebook: 'Recopilando información de Facebook...',
+      enrichmentFacebookDone: 'Información de Facebook recopilada',
+      enrichmentInstagram: 'Recopilando información de Instagram...',
+      enrichmentInstagramDone: 'Información de Instagram recopilada',
+      enrichmentKnowledgeGraph: 'Buscando perfiles en Knowledge Graph...',
+      enrichmentKnowledgeGraphDone: 'Perfiles de Knowledge Graph encontrados',
+      enrichmentSaving: 'Guardando todos los datos en la base de datos...',
+      enrichmentSavingDone: 'Todos los datos guardados en la base de datos',
+      enrichmentComplete: '¡Enriquecimiento completado!',
+      enrichmentBizProgress: '{0} de {1} negocios',
     },
   };
 
@@ -1865,56 +1909,168 @@
     }
   }
 
-  // ── Enrichment Pipeline ──
-  // Runs after search results are displayed. Non-blocking background enrichment.
-  async function runEnrichmentPipeline(results) {
-    // Phase 1: Social discovery (existing Yelp + DuckDuckGo)
-    enrichWithSocialProfiles(results).then(() => {
-      renderTable();
-    }).catch((err) => {
-      console.warn('Social enrichment error:', err);
-    });
+  // ── Enrichment Modal ──
+  const ENRICHMENT_STEPS = [
+    { id: 'social-profiles', labelKey: 'enrichmentSocialProfiles', doneKey: 'enrichmentSocialProfilesDone' },
+    { id: 'google-reviews', labelKey: 'enrichmentGoogleReviews', doneKey: 'enrichmentGoogleReviewsDone' },
+    { id: 'place-details', labelKey: 'enrichmentPlaceDetails', doneKey: 'enrichmentPlaceDetailsDone' },
+    { id: 'additional-reviews', labelKey: 'enrichmentReviews', doneKey: 'enrichmentReviewsDone' },
+    { id: 'photos', labelKey: 'enrichmentPhotos', doneKey: 'enrichmentPhotosDone' },
+    { id: 'facebook', labelKey: 'enrichmentFacebook', doneKey: 'enrichmentFacebookDone' },
+    { id: 'instagram', labelKey: 'enrichmentInstagram', doneKey: 'enrichmentInstagramDone' },
+    { id: 'saving', labelKey: 'enrichmentSaving', doneKey: 'enrichmentSavingDone' },
+  ];
 
-    // Phase 2: Auto-save qualifying businesses to Supabase
-    if (supabaseClient) {
-      const toSave = results.filter((p) => !savedPlaceIds.has(p.placeId));
-      if (toSave.length > 0) {
-        updateProgress(96, t('autoSaving'));
-        let savedCount = 0;
-        for (const place of toSave) {
-          const ok = await saveBusiness(place);
-          if (ok) savedCount++;
-        }
-        if (savedCount > 0) {
-          showToast(t('autoSaveComplete', savedCount), 'success');
-          renderTable();
-        }
-      }
+  function showEnrichmentModal(totalCount) {
+    const existing = document.getElementById('enrichment-modal');
+    if (existing) existing.remove();
+
+    const stepsHtml = ENRICHMENT_STEPS.map((step) => `
+      <div class="enrichment-step" id="enrichment-step-${step.id}" data-status="pending">
+        <span class="enrichment-step-icon">&#9675;</span>
+        <span class="enrichment-step-label">${t(step.labelKey)}</span>
+      </div>
+    `).join('');
+
+    const modal = document.createElement('div');
+    modal.id = 'enrichment-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-header">
+          <h2>${t('enrichmentModalTitle')}</h2>
+        </div>
+        <div class="modal-body">
+          <div class="enrichment-biz-progress" id="enrichment-biz-progress"></div>
+          <div class="enrichment-steps">
+            ${stepsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  function updateEnrichmentStep(stepId, status, customLabel) {
+    const stepEl = document.getElementById('enrichment-step-' + stepId);
+    if (!stepEl) return;
+    const step = ENRICHMENT_STEPS.find(s => s.id === stepId);
+    stepEl.setAttribute('data-status', status);
+    const iconEl = stepEl.querySelector('.enrichment-step-icon');
+    const labelEl = stepEl.querySelector('.enrichment-step-label');
+    if (status === 'active') {
+      iconEl.innerHTML = '<span class="spinner-sm"></span>';
+      labelEl.textContent = customLabel || t(step.labelKey);
+    } else if (status === 'done') {
+      iconEl.innerHTML = '&#10003;';
+      labelEl.textContent = customLabel || t(step.doneKey);
+    } else if (status === 'skipped') {
+      iconEl.innerHTML = '&#8211;';
+      labelEl.textContent = customLabel || t(step.doneKey);
+      stepEl.setAttribute('data-status', 'skipped');
     }
+  }
 
-    // Phase 3: Fetch reviews via Google Places JS API (for SearchAPI results that lack reviews)
+  function updateEnrichmentBizProgress(current, total) {
+    const el = document.getElementById('enrichment-biz-progress');
+    if (el) el.textContent = t('enrichmentBizProgress', current, total);
+  }
+
+  function closeEnrichmentModal() {
+    const modal = document.getElementById('enrichment-modal');
+    if (modal) modal.remove();
+  }
+
+  // ── Enrichment Pipeline ──
+  // Runs after search results are displayed. Shows modal with live progress.
+  // Saves to database only after all enrichment is complete.
+  async function runEnrichmentPipeline(results) {
+    showEnrichmentModal(results.length);
+
+    // Phase 1: Social discovery (Yelp, Facebook/Instagram search, Knowledge Graph)
+    updateEnrichmentStep('social-profiles', 'active');
+    try {
+      await enrichWithSocialProfiles(results);
+      renderTable();
+    } catch (err) {
+      console.warn('Social enrichment error:', err);
+    }
+    updateEnrichmentStep('social-profiles', 'done');
+
+    // Phase 2: Fetch reviews via Google Places JS API
     if (mapsLoaded) {
+      updateEnrichmentStep('google-reviews', 'active');
       await enrichWithGoogleReviews(results);
       renderTable();
+      updateEnrichmentStep('google-reviews', 'done');
+    } else {
+      updateEnrichmentStep('google-reviews', 'skipped', 'Google reviews — Maps not loaded');
     }
 
-    // Phase 4: Enrich with SearchAPI.io place details (description, amenities, inline reviews)
+    // Phase 3: Enrich with SearchAPI.io place details
+    updateEnrichmentStep('place-details', 'active');
     await enrichWithPlaceDetails(results);
     renderTable();
+    updateEnrichmentStep('place-details', 'done');
 
-    // Phase 5: Fetch additional reviews for businesses still lacking them
+    // Phase 4: Fetch additional reviews
+    updateEnrichmentStep('additional-reviews', 'active');
     await enrichWithSearchAPIReviews(results);
     renderTable();
+    updateEnrichmentStep('additional-reviews', 'done');
 
-    // Phase 6: Fetch additional photos for businesses with few/no photos
+    // Phase 5: Fetch additional photos
+    updateEnrichmentStep('photos', 'active');
     await enrichWithSearchAPIPhotos(results);
     renderTable();
+    updateEnrichmentStep('photos', 'done');
 
-    // Phase 7: Enrich with Facebook/Instagram data (after social discovery has run)
-    await enrichWithSocialData(results);
+    // Phase 6: Facebook enrichment
+    updateEnrichmentStep('facebook', 'active');
+    try {
+      await enrichWithSocialDataByPlatform(results, 'facebook');
+      renderTable();
+    } catch (err) {
+      console.warn('Facebook enrichment error:', err);
+    }
+    updateEnrichmentStep('facebook', 'done');
+
+    // Phase 7: Instagram enrichment
+    updateEnrichmentStep('instagram', 'active');
+    try {
+      await enrichWithSocialDataByPlatform(results, 'instagram');
+      renderTable();
+    } catch (err) {
+      console.warn('Instagram enrichment error:', err);
+    }
+    updateEnrichmentStep('instagram', 'done');
+
+    // Phase 8: Save everything to database (after ALL enrichment is done)
+    if (supabaseClient) {
+      updateEnrichmentStep('saving', 'active');
+      const toSave = results.filter((p) => !savedPlaceIds.has(p.placeId));
+      let savedCount = 0;
+      for (let i = 0; i < toSave.length; i++) {
+        updateEnrichmentBizProgress(i + 1, toSave.length);
+        const ok = await saveBusiness(toSave[i]);
+        if (ok) savedCount++;
+      }
+      if (savedCount > 0) {
+        showToast(t('autoSaveComplete', savedCount), 'success');
+        renderTable();
+      }
+      updateEnrichmentStep('saving', 'done');
+    } else {
+      updateEnrichmentStep('saving', 'skipped', 'Database not connected');
+    }
 
     updateProgress(100, t('searchComplete'));
     renderTable();
+
+    // Brief pause to show completion state, then close
+    setTimeout(() => {
+      closeEnrichmentModal();
+    }, 1500);
   }
 
   // Enrich businesses with SearchAPI.io place details
@@ -1994,54 +2150,38 @@
 
   // Enrich businesses that have discovered Facebook/Instagram profiles
   async function enrichWithSocialData(results) {
+    await enrichWithSocialDataByPlatform(results, 'facebook');
+    await enrichWithSocialDataByPlatform(results, 'instagram');
+  }
+
+  async function enrichWithSocialDataByPlatform(results, platform) {
     const batchSize = 3;
+    const dataKey = platform === 'facebook' ? 'facebookData' : 'instagramData';
+    const endpoint = platform === 'facebook' ? '/api/enrich/facebook' : '/api/enrich/instagram';
+    const saveFn = platform === 'facebook' ? saveFacebookData : saveInstagramData;
+
     for (let i = 0; i < results.length; i += batchSize) {
       const batch = results.slice(i, i + batchSize);
       await Promise.all(batch.map(async (place) => {
         const profiles = place.socialProfiles || [];
-        // Facebook enrichment
-        const fb = profiles.find(p => p.platform === 'facebook');
-        if (fb && fb.handle && !place.facebookData) {
-          try {
-            const res = await withTimeout(
-              fetch('/api/enrich/facebook?username=' + encodeURIComponent(fb.handle)),
-              15000,
-              'Facebook enrichment'
-            );
-            if (res.ok) {
-              place.facebookData = await res.json();
-              // Persist Facebook data to Supabase
-              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-                saveFacebookData(place).catch(err =>
-                  console.warn('Failed to save Facebook data:', err)
-                );
-              }
+        const profile = profiles.find(p => p.platform === platform);
+        if (!profile || !profile.handle || place[dataKey]) return;
+        try {
+          const res = await withTimeout(
+            fetch(endpoint + '?username=' + encodeURIComponent(profile.handle)),
+            15000,
+            platform + ' enrichment'
+          );
+          if (res.ok) {
+            place[dataKey] = await res.json();
+            if (supabaseClient && savedPlaceIds.has(place.placeId)) {
+              saveFn(place).catch(err =>
+                console.warn('Failed to save ' + platform + ' data:', err)
+              );
             }
-          } catch (err) {
-            console.warn('Facebook enrichment failed for', place.name, err);
           }
-        }
-        // Instagram enrichment
-        const ig = profiles.find(p => p.platform === 'instagram');
-        if (ig && ig.handle && !place.instagramData) {
-          try {
-            const res = await withTimeout(
-              fetch('/api/enrich/instagram?username=' + encodeURIComponent(ig.handle)),
-              15000,
-              'Instagram enrichment'
-            );
-            if (res.ok) {
-              place.instagramData = await res.json();
-              // Persist Instagram data to Supabase
-              if (supabaseClient && savedPlaceIds.has(place.placeId)) {
-                saveInstagramData(place).catch(err =>
-                  console.warn('Failed to save Instagram data:', err)
-                );
-              }
-            }
-          } catch (err) {
-            console.warn('Instagram enrichment failed for', place.name, err);
-          }
+        } catch (err) {
+          console.warn(platform + ' enrichment failed for', place.name, err);
         }
       }));
     }
