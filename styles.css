@@ -1825,3 +1825,67 @@ select.input {
     justify-content: center;
   }
 }
+
+/* === Enrichment Modal === */
+.enrichment-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.enrichment-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.enrichment-step[data-status="active"] {
+  background: var(--primary-bg);
+  border: 1px solid var(--primary);
+}
+
+.enrichment-step[data-status="done"] {
+  opacity: 0.7;
+}
+
+.enrichment-step[data-status="skipped"] {
+  opacity: 0.4;
+}
+
+.enrichment-step-icon {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.enrichment-step[data-status="active"] .enrichment-step-icon {
+  color: var(--primary);
+}
+
+.enrichment-step[data-status="done"] .enrichment-step-icon {
+  color: var(--success);
+}
+
+.enrichment-step-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.enrichment-step[data-status="pending"] .enrichment-step-label {
+  color: var(--text-muted);
+}
+
+.enrichment-biz-progress {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  min-height: 18px;
+  margin-bottom: 4px;
+}
