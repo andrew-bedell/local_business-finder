@@ -2302,17 +2302,17 @@
       console.warn('Social discovery failed:', err);
     }
 
-    // Source 2: SerpApi Knowledge Graph (discovers Twitter, LinkedIn, TikTok, YouTube, etc.)
+    // Source 2: Knowledge Graph (discovers Twitter, LinkedIn, TikTok, YouTube, etc.)
     try {
-      const serpProfiles = await lookupSerpApiProfiles(place.name, place.address);
-      for (const sp of serpProfiles) {
+      const kgProfiles = await lookupKnowledgeGraphProfiles(place.name, place.address);
+      for (const sp of kgProfiles) {
         if (!foundPlatforms.has(sp.platform)) {
           profiles.push(sp);
           foundPlatforms.add(sp.platform);
         }
       }
     } catch (err) {
-      console.warn('SerpApi discovery failed:', err);
+      console.warn('Knowledge Graph discovery failed:', err);
     }
 
     return profiles;
@@ -2412,8 +2412,8 @@
     }
   }
 
-  // ── SerpApi Knowledge Graph Lookup ──
-  const SERPAPI_PLATFORM_MAP = {
+  // ── Knowledge Graph Lookup ──
+  const KG_PLATFORM_MAP = {
     'Facebook':    'facebook',
     'Instagram':   'instagram',
     'Twitter':     'twitter',
@@ -2426,10 +2426,10 @@
     'Pinterest':   'pinterest',
   };
 
-  function mapSerpApiProfile(profile) {
+  function mapKnowledgeGraphProfile(profile) {
     const name = profile.name || '';
     const url = profile.link || '';
-    const platform = SERPAPI_PLATFORM_MAP[name];
+    const platform = KG_PLATFORM_MAP[name];
     if (!platform || !url) return null;
     return {
       platform: platform,
@@ -2438,22 +2438,22 @@
     };
   }
 
-  async function lookupSerpApiProfiles(businessName, address) {
+  async function lookupKnowledgeGraphProfiles(businessName, address) {
     const city = address.split(',')[0].trim();
     const q = businessName + ' ' + city;
     try {
       const resp = await withTimeout(
-        fetch('/api/serpapi/lookup?q=' + encodeURIComponent(q)),
+        fetch('/api/social/knowledge-graph?q=' + encodeURIComponent(q)),
         10000,
-        'SerpApi'
+        'Knowledge Graph'
       );
       if (!resp.ok) return [];
       const data = await resp.json();
       return (data.profiles || [])
-        .map(mapSerpApiProfile)
+        .map(mapKnowledgeGraphProfile)
         .filter(Boolean);
     } catch (err) {
-      console.warn('SerpApi lookup failed for', businessName, err);
+      console.warn('Knowledge Graph lookup failed for', businessName, err);
       return [];
     }
   }
