@@ -497,6 +497,11 @@ select.input {
   text-align: center !important;
 }
 
+.col-type {
+  min-width: 100px;
+  white-space: nowrap;
+}
+
 .col-name {
   min-width: 180px;
 }

@@ -113,6 +113,7 @@
       sortName: 'Sort by Name',
       sortRating: 'Sort by Rating',
       sortReviews: 'Sort by Reviews',
+      thType: 'Type',
       thName: 'Business Name',
       thAddress: 'Address',
       thPhone: 'Phone',
@@ -416,6 +417,7 @@
       sortName: 'Ordenar por Nombre',
       sortRating: 'Ordenar por Calificación',
       sortReviews: 'Ordenar por Reseñas',
+      thType: 'Tipo',
       thName: 'Nombre del Negocio',
       thAddress: 'Dirección',
       thPhone: 'Teléfono',
@@ -732,6 +734,7 @@
         longitude: place.longitude || null,
         hours: place.hours || [],
         search_location: location,
+        category: place.searchType || type,
         search_type: place.searchType || type,
         description: place.description || null,
         thumbnail: place.thumbnail || null,
@@ -1288,8 +1291,11 @@
 
       const socialCellHtml = buildSocialCellHtml(place.socialProfiles);
 
+      const typeLabel = getTypeLabel(place.searchType || businessType.value);
+
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
+        <td>${escapeHtml(typeLabel)}</td>
         <td><strong>${escapeHtml(place.name)}</strong></td>
         <td>${escapeHtml(place.address)}</td>
         <td>${escapeHtml(place.phone) || '<span style="color:var(--text-dim)">N/A</span>'}</td>
@@ -1341,7 +1347,7 @@
   function exportCsv() {
     if (filteredResults.length === 0) return;
 
-    const headers = ['#', t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Yelp', 'Facebook', 'Instagram', 'Other Social', 'Google Maps URL'].map(csvEscape);
+    const headers = ['#', t('thType'), t('thName'), t('thAddress'), t('thPhone'), t('thRating'), t('thReviews'), t('thStatus'), 'Yelp', 'Facebook', 'Instagram', 'Other Social', 'Google Maps URL'].map(csvEscape);
     const rows = filteredResults.map((p, i) => {
       const socialUrls = {};
       (p.socialProfiles || []).forEach((sp) => { socialUrls[sp.platform] = sp.url; });
@@ -1351,6 +1357,7 @@
         .join('; ');
       return [
         i + 1,
+        csvEscape(getTypeLabel(p.searchType || businessType.value)),
         csvEscape(p.name),
         csvEscape(p.address),
         csvEscape(p.phone),
@@ -1392,6 +1399,12 @@
   }
 
   // ── Utility ──
+  function getTypeLabel(typeValue) {
+    if (!typeValue) return '';
+    const opt = businessType.querySelector(`option[value="${typeValue}"]`);
+    return opt ? opt.textContent : typeValue;
+  }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
