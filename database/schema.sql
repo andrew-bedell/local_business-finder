@@ -415,3 +415,28 @@ ALTER TABLE whatsapp_templates ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access" ON whatsapp_conversations FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON whatsapp_messages FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON whatsapp_templates FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 10. MARKETING_LEADS — Lead capture from marketing website
+-- ============================================================================
+-- Stores leads submitted via the marketing landing page contact form.
+
+CREATE TABLE IF NOT EXISTS marketing_leads (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                    TEXT NOT NULL,
+  business_name           TEXT NOT NULL,
+  phone                   TEXT NOT NULL,
+  city                    TEXT NOT NULL,
+  source                  TEXT DEFAULT 'website',
+  status                  TEXT DEFAULT 'new'
+                            CHECK (status IN ('new', 'contacted', 'qualified', 'converted', 'lost')),
+  notes                   TEXT,
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_marketing_leads_status ON marketing_leads (status);
+CREATE INDEX IF NOT EXISTS idx_marketing_leads_created ON marketing_leads (created_at DESC);
+
+ALTER TABLE marketing_leads ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON marketing_leads FOR ALL USING (true) WITH CHECK (true);

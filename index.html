@@ -1,29 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0f1117">
-  <title>Local Business Finder — Discover &amp; Build</title>
-  <meta name="description" content="Find local businesses without websites, gather their info, and generate ready-to-publish sites. The lead-to-website pipeline that turns prospects into paying customers.">
+  <meta name="theme-color" content="#1A56DB">
+  <title>Tu Negocio en Internet — Paginas Web Profesionales para Negocios Locales</title>
+  <meta name="description" content="Creamos paginas web profesionales para negocios locales. Sin complicaciones, lista en 72 horas. Mas clientes, mas ventas, mas visibilidad.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://local-business-finder-kegt.vercel.app/">
-  <meta property="og:locale" content="en_US">
-  <meta property="og:title" content="Local Business Finder — Discover & Build">
-  <meta property="og:description" content="Find local businesses without websites, gather their info, and generate ready-to-publish sites. Turn prospects into paying customers.">
-  <meta property="og:image" content="https://local-business-finder-kegt.vercel.app/og-image.png">
-  <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Local Business Finder — Find, Gather, Curate, Generate, Sell, Manage, Analyze">
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Local Business Finder — Discover & Build">
-  <meta name="twitter:description" content="Find local businesses without websites, gather their info, and generate ready-to-publish sites. Turn prospects into paying customers.">
-  <meta name="twitter:image" content="https://local-business-finder-kegt.vercel.app/og-image.png">
+  <meta property="og:locale" content="es_LA">
+  <meta property="og:title" content="Tu Negocio en Internet — Paginas Web Profesionales">
+  <meta property="og:description" content="Creamos paginas web profesionales para negocios locales. Sin complicaciones, lista en 72 horas.">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -32,241 +20,373 @@
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/marketing.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-  <div id="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-inner">
-        <div class="header-top">
-          <div>
-            <h1 class="logo" data-i18n="logo">Local Business Finder</h1>
-            <p class="tagline" data-i18n="tagline">Find businesses without websites near any location</p>
+<body class="m-body">
+
+  <!-- ── Navigation ── -->
+  <nav class="m-nav" id="m-nav">
+    <div class="m-nav-inner">
+      <a href="/" class="m-nav-logo">TuPagina</a>
+      <div class="m-nav-links">
+        <a href="#problema" class="m-nav-link">El Problema</a>
+        <a href="#como-funciona" class="m-nav-link">Como Funciona</a>
+        <a href="#funciones" class="m-nav-link">Funciones</a>
+        <a href="#precios" class="m-nav-link">Precios</a>
+        <a href="#faq" class="m-nav-link">FAQ</a>
+        <button class="m-nav-cta" data-open-modal>Quiero Mi Pagina</button>
+      </div>
+      <button class="m-hamburger" id="m-hamburger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="m-mobile-menu" id="m-mobile-menu">
+      <a href="#problema" class="m-nav-link">El Problema</a>
+      <a href="#como-funciona" class="m-nav-link">Como Funciona</a>
+      <a href="#funciones" class="m-nav-link">Funciones</a>
+      <a href="#precios" class="m-nav-link">Precios</a>
+      <a href="#faq" class="m-nav-link">FAQ</a>
+      <button class="m-nav-cta" data-open-modal>Quiero Mi Pagina</button>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="m-hero">
+    <div class="m-hero-bg"></div>
+    <div class="m-hero-inner">
+      <h1>Tu negocio ya existe.<br><span>Ahora ponlo en internet.</span></h1>
+      <p class="m-hero-sub">Creamos tu pagina web profesional en 72 horas. Sin complicaciones, sin contratos largos. Solo resultados.</p>
+      <div class="m-hero-ctas">
+        <button class="m-btn-cta m-btn-green" data-open-modal>Quiero Mi Pagina Web</button>
+        <a href="#como-funciona" class="m-btn-cta m-btn-outline">Ver Como Funciona</a>
+      </div>
+      <!-- Video placeholder -->
+      <div class="m-video-container" id="m-video" data-video-id="">
+        <img class="m-video-thumb" src="/assets/images/hero-bg.webp" alt="Video explicativo" onerror="this.style.display='none'">
+        <div class="m-video-play"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Social Proof Bar ── -->
+  <section class="m-proof">
+    <div class="m-proof-inner" data-reveal>
+      <div class="m-proof-item">
+        <div class="m-proof-value">+500</div>
+        <div class="m-proof-label">Negocios atendidos</div>
+      </div>
+      <div class="m-proof-item">
+        <div class="m-proof-value">72 hrs</div>
+        <div class="m-proof-label">Tiempo de entrega</div>
+      </div>
+      <div class="m-proof-item">
+        <div class="m-proof-value">$0</div>
+        <div class="m-proof-label">Costo de cancelacion</div>
+      </div>
+      <div class="m-proof-item">
+        <div class="m-proof-value">100%</div>
+        <div class="m-proof-label">Soporte en espanol</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Problem Section ── -->
+  <section class="m-problem" id="problema">
+    <div class="m-problem-inner">
+      <div data-reveal>
+        <span class="m-problem-tag">El Problema</span>
+        <h2>Tus clientes te buscan en Google. Si no apareces, no existes.</h2>
+        <p>El 97% de las personas buscan negocios locales en internet antes de visitarlos. Sin una pagina web, estas perdiendo clientes todos los dias.</p>
+        <ul class="m-problem-list">
+          <li>Tus clientes no pueden encontrarte cuando buscan en Google</li>
+          <li>Pierdes credibilidad frente a competidores que si tienen pagina</li>
+          <li>No puedes mostrar tus servicios, precios ni horarios facilmente</li>
+          <li>Dependes solo del trafico que pasa por tu puerta</li>
+          <li>No tienes forma de recibir citas o consultas en linea</li>
+        </ul>
+      </div>
+      <div data-reveal>
+        <img class="m-problem-img" src="/assets/images/problem-section.webp" alt="Persona buscando negocio en su celular" onerror="this.style.background='linear-gradient(135deg, #dbeafe, #e2e8f0)'">
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Solution (How It Works) ── -->
+  <section class="m-solution" id="como-funciona">
+    <div class="m-container">
+      <span class="m-solution-tag">Como Funciona</span>
+      <h2>Tu pagina web en 3 pasos simples</h2>
+      <p class="m-solution-sub">Nos encargamos de todo. Tu solo revisas y apruebas.</p>
+      <div class="m-steps">
+        <div class="m-step" data-reveal>
+          <div class="m-step-num">1</div>
+          <h3>Investigamos tu negocio</h3>
+          <p>Recopilamos toda la informacion de tu negocio: fotos, resenas, horarios, servicios y redes sociales. Tu no tienes que hacer nada.</p>
+        </div>
+        <div class="m-step" data-reveal>
+          <div class="m-step-num">2</div>
+          <h3>Tu la revisas</h3>
+          <p>Te enviamos una vista previa de tu pagina web. Tu la revisas, nos dices si quieres cambios, y la ajustamos hasta que quede perfecta.</p>
+        </div>
+        <div class="m-step" data-reveal>
+          <div class="m-step-num">3</div>
+          <h3>La lanzamos al mundo</h3>
+          <p>Publicamos tu pagina, la conectamos a Google y la optimizamos para que tus clientes te encuentren. Lista para recibir visitas y clientes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Case Study ── -->
+  <section class="m-case" id="caso-de-exito">
+    <div class="m-case-inner">
+      <div data-reveal>
+        <span class="m-case-tag">Caso de Exito</span>
+        <h2>Maria aumento sus citas un 40% en el primer mes</h2>
+        <p class="m-case-desc">Maria tiene un salon de unas en Bogota. Antes dependia solo de clientes que pasaban por su local. Ahora recibe citas por su pagina web y sus clientes la encuentran en Google.</p>
+        <div class="m-case-stats">
+          <div class="m-case-stat">
+            <div class="m-case-stat-value">+40%</div>
+            <div class="m-case-stat-label">Mas clientes</div>
           </div>
-          <div class="header-actions">
-            <nav class="header-nav">
-              <a href="index.html" class="nav-tab active" data-i18n="navSearch">Search</a>
-              <a href="operator-admin.html" class="nav-tab" data-i18n="navSaved">Saved</a>
-            </nav>
-            <div class="lang-switcher" id="lang-switcher">
-              <button class="lang-btn active" data-lang="en">EN</button>
-              <button class="lang-btn" data-lang="es">ES</button>
-            </div>
+          <div class="m-case-stat">
+            <div class="m-case-stat-value">+60%</div>
+            <div class="m-case-stat-label">Mas visitas</div>
+          </div>
+          <div class="m-case-stat">
+            <div class="m-case-stat-value">0</div>
+            <div class="m-case-stat-label">Citas perdidas</div>
           </div>
         </div>
       </div>
-    </header>
+      <div data-reveal>
+        <img class="m-case-img" src="/assets/images/case-study.webp" alt="Duena de salon sonriendo con tablet" onerror="this.style.background='linear-gradient(135deg, #dcfce7, #dbeafe)'">
+      </div>
+    </div>
+  </section>
 
-    <main class="main">
-      <!-- API Key Setup -->
-      <section class="card api-card" id="api-setup">
-        <div class="card-header">
-          <h2 data-i18n="apiKeyTitle">Google Places API Key</h2>
-          <button class="btn btn-text" id="api-help-toggle" data-i18n="setupGuide">Setup Guide</button>
+  <!-- ── Features ── -->
+  <section class="m-features" id="funciones">
+    <div class="m-container">
+      <span class="m-features-tag">Funciones</span>
+      <h2>Todo lo que tu pagina necesita</h2>
+      <p class="m-features-sub">Cada pagina viene con todo lo necesario para que tu negocio brille en internet.</p>
+      <div class="m-features-grid">
+        <div class="m-feature-card" data-reveal>
+          <div class="m-feature-icon">&#127760;</div>
+          <h3>Pagina web profesional</h3>
+          <p>Diseno moderno y profesional que refleja la calidad de tu negocio. Personalizada con tus fotos, colores y estilo.</p>
         </div>
-        <div class="api-key-row">
-          <input type="password" id="api-key-input" data-i18n-placeholder="apiKeyPlaceholder" placeholder="Enter your Google Places API key" class="input" autocomplete="off">
-          <button class="btn btn-primary" id="btn-save-key" data-i18n="saveKey">Save Key</button>
+        <div class="m-feature-card" data-reveal>
+          <div class="m-feature-icon">&#128241;</div>
+          <h3>Optimizada para celular</h3>
+          <p>Tu pagina se ve perfecta en cualquier dispositivo. El 80% de tus clientes te buscaran desde su celular.</p>
         </div>
-        <div class="api-status" id="api-status"></div>
-        <div class="api-help" id="api-help" style="display:none;">
-          <ol>
-            <li data-i18n="helpStep1">Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a></li>
-            <li data-i18n="helpStep2">Create a new project (or select existing)</li>
-            <li data-i18n="helpStep3">Enable the <strong>Places API (New)</strong> and <strong>Maps JavaScript API</strong></li>
-            <li data-i18n="helpStep4">Go to <strong>Credentials</strong> and create an API key</li>
-            <li data-i18n="helpStep5">For security, restrict the key to your domain and the Places/Maps APIs</li>
-            <li data-i18n="helpStep6">Paste your key above and click Save</li>
-          </ol>
+        <div class="m-feature-card" data-reveal>
+          <div class="m-feature-icon">&#128269;</div>
+          <h3>Visible en Google</h3>
+          <p>Optimizamos tu pagina para que aparezca en los resultados de busqueda cuando tus clientes busquen negocios como el tuyo.</p>
         </div>
-      </section>
+        <div class="m-feature-card" data-reveal>
+          <div class="m-feature-icon">&#128197;</div>
+          <h3>Sistema de citas</h3>
+          <p>Tus clientes pueden agendar citas directamente desde tu pagina. Sin llamadas, sin mensajes, sin complicaciones.</p>
+        </div>
+        <div class="m-feature-card" data-reveal>
+          <div class="m-feature-icon">&#128247;</div>
+          <h3>Redes sociales integradas</h3>
+          <p>Conectamos tu Instagram, Facebook y WhatsApp para que tus clientes te sigan y te contacten facilmente.</p>
+        </div>
+        <div class="m-feature-card" data-reveal>
+          <div class="m-feature-icon">&#128200;</div>
+          <h3>Seguimiento de visitas</h3>
+          <p>Panel de control donde ves cuantas personas visitan tu pagina, de donde vienen y que hacen. Datos reales, sin adivinar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <!-- Search Form -->
-      <section class="card search-card" id="search-section">
-        <h2 data-i18n="searchTitle">Search for Businesses</h2>
-        <div class="search-form">
-          <div class="form-group">
-            <label for="country-select" data-i18n="countryLabel">Country</label>
-            <select id="country-select" class="input">
-              <option value="us" data-i18n="countryUS">United States</option>
-              <option value="mx" data-i18n="countryMX">Mexico</option>
-              <option value="co" data-i18n="countryCO">Colombia</option>
-            </select>
+  <!-- ── Pricing ── -->
+  <section class="m-pricing" id="precios">
+    <div class="m-container">
+      <span class="m-pricing-tag">Precios</span>
+      <h2>Simple y transparente</h2>
+      <p class="m-pricing-sub">Sin sorpresas, sin costos ocultos. Cancela cuando quieras.</p>
+      <div class="m-pricing-card" data-reveal>
+        <div class="m-pricing-price">$29 <span>USD / mes</span></div>
+        <p class="m-pricing-note">Sin costo de instalacion. Sin contratos.</p>
+        <div class="m-pricing-features">
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Pagina web profesional personalizada
           </div>
-          <div class="form-group">
-            <label for="location-input" data-i18n="locationLabel">Location</label>
-            <input type="text" id="location-input" class="input" data-i18n-placeholder="locationPlaceholder" placeholder="City, zip code, or address (e.g., Austin TX, 90210, 123 Main St)">
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Optimizada para celular y Google
           </div>
-          <div class="form-group">
-            <label for="business-type" data-i18n="businessTypeLabel">Business Type</label>
-            <div class="type-selector">
-              <select id="business-type" class="input">
-                <option value="" data-i18n="selectType">Select a business type...</option>
-                <option value="all" data-i18n="typeAll">All Types</option>
-                <optgroup label="Food & Drink" data-i18n-label="groupFood">
-                  <option value="restaurant" data-i18n="typeRestaurant">Restaurants</option>
-                  <option value="cafe" data-i18n="typeCafe">Cafes & Coffee Shops</option>
-                  <option value="bakery" data-i18n="typeBakery">Bakeries</option>
-                  <option value="bar" data-i18n="typeBar">Bars & Pubs</option>
-                  <option value="meal_delivery" data-i18n="typeMealDelivery">Meal Delivery</option>
-                  <option value="meal_takeaway" data-i18n="typeMealTakeaway">Takeaway / Fast Food</option>
-                </optgroup>
-                <optgroup label="Beauty & Personal Care" data-i18n-label="groupBeauty">
-                  <option value="hair_care" data-i18n="typeHairCare">Barbers & Hair Salons</option>
-                  <option value="beauty_salon" data-i18n="typeBeautySalon">Beauty Salons</option>
-                  <option value="spa" data-i18n="typeSpa">Spas & Massage</option>
-                  <option value="nail_salon" data-i18n="typeNailSalon">Nail Salons</option>
-                </optgroup>
-                <optgroup label="Health & Fitness" data-i18n-label="groupHealth">
-                  <option value="gym" data-i18n="typeGym">Gyms & Fitness Centers</option>
-                  <option value="dentist" data-i18n="typeDentist">Dentists</option>
-                  <option value="doctor" data-i18n="typeDoctor">Doctors</option>
-                  <option value="pharmacy" data-i18n="typePharmacy">Pharmacies</option>
-                  <option value="physiotherapist" data-i18n="typePhysio">Physiotherapists</option>
-                  <option value="veterinary_care" data-i18n="typeVet">Veterinary Care</option>
-                </optgroup>
-                <optgroup label="Home Services" data-i18n-label="groupHome">
-                  <option value="plumber" data-i18n="typePlumber">Plumbers</option>
-                  <option value="electrician" data-i18n="typeElectrician">Electricians</option>
-                  <option value="locksmith" data-i18n="typeLocksmith">Locksmiths</option>
-                  <option value="painter" data-i18n="typePainter">Painters</option>
-                  <option value="roofing_contractor" data-i18n="typeRoofing">Roofing Contractors</option>
-                  <option value="moving_company" data-i18n="typeMoving">Moving Companies</option>
-                </optgroup>
-                <optgroup label="Automotive" data-i18n-label="groupAuto">
-                  <option value="car_repair" data-i18n="typeCarRepair">Auto Repair</option>
-                  <option value="car_wash" data-i18n="typeCarWash">Car Washes</option>
-                  <option value="car_dealer" data-i18n="typeCarDealer">Car Dealers</option>
-                  <option value="gas_station" data-i18n="typeGasStation">Gas Stations</option>
-                </optgroup>
-                <optgroup label="Shopping" data-i18n-label="groupShopping">
-                  <option value="clothing_store" data-i18n="typeClothing">Clothing Stores</option>
-                  <option value="jewelry_store" data-i18n="typeJewelry">Jewelry Stores</option>
-                  <option value="florist" data-i18n="typeFlorist">Florists</option>
-                  <option value="pet_store" data-i18n="typePetStore">Pet Stores</option>
-                  <option value="furniture_store" data-i18n="typeFurniture">Furniture Stores</option>
-                  <option value="hardware_store" data-i18n="typeHardware">Hardware Stores</option>
-                </optgroup>
-                <optgroup label="Professional Services" data-i18n-label="groupProfessional">
-                  <option value="lawyer" data-i18n="typeLawyer">Lawyers</option>
-                  <option value="accounting" data-i18n="typeAccountant">Accountants</option>
-                  <option value="real_estate_agency" data-i18n="typeRealEstate">Real Estate Agencies</option>
-                  <option value="insurance_agency" data-i18n="typeInsurance">Insurance Agencies</option>
-                </optgroup>
-                <optgroup label="Other" data-i18n-label="groupOther">
-                  <option value="laundry" data-i18n="typeLaundry">Laundry & Dry Cleaning</option>
-                  <option value="storage" data-i18n="typeStorage">Storage Facilities</option>
-                  <option value="travel_agency" data-i18n="typeTravel">Travel Agencies</option>
-                  <option value="lodging" data-i18n="typeLodging">Hotels & Lodging</option>
-                </optgroup>
-              </select>
-            </div>
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Dominio personalizado incluido
           </div>
-          <div class="form-row">
-            <div class="form-group form-group-half">
-              <label for="radius-select" data-i18n="radiusLabel">Search Radius</label>
-              <select id="radius-select" class="input">
-                <option value="1609">1 mile</option>
-                <option value="4828">3 miles</option>
-                <option value="8047" selected>5 miles</option>
-                <option value="16093">10 miles</option>
-                <option value="32187">20 miles</option>
-                <option value="48280">30 miles</option>
-              </select>
-            </div>
-            <div class="form-group form-group-half">
-              <label for="max-results" data-i18n="maxResultsLabel">Max Results</label>
-              <select id="max-results" class="input">
-                <option value="10">10</option>
-                <option value="20" selected>20</option>
-                <option value="40">40</option>
-                <option value="60">60</option>
-                <option value="80">80</option>
-                <option value="100">100</option>
-              </select>
-            </div>
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Hosting y SSL incluidos
           </div>
-          <button class="btn btn-primary btn-search" id="btn-search" disabled>
-            <span class="btn-text" data-i18n="searchBtn">Search Businesses</span>
-            <span class="btn-loading" style="display:none;">
-              <span class="spinner"></span> <span data-i18n="searching">Searching...</span>
-            </span>
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Cambios y actualizaciones ilimitados
+          </div>
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Soporte en espanol por WhatsApp
+          </div>
+          <div class="m-pricing-feature">
+            <span class="m-pricing-check">&#10003;</span>
+            Panel de analiticas incluido
+          </div>
+        </div>
+        <button class="m-pricing-cta" data-open-modal>Comenzar Ahora</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ── -->
+  <section class="m-faq" id="faq">
+    <div class="m-container">
+      <span class="m-faq-tag">Preguntas Frecuentes</span>
+      <h2>Resolvemos tus dudas</h2>
+      <div class="m-faq-list">
+        <div class="m-faq-item">
+          <button class="m-faq-question">
+            <span>Necesito saber de tecnologia para tener mi pagina?</span>
+            <span class="m-faq-icon">+</span>
           </button>
-        </div>
-      </section>
-
-      <!-- Progress -->
-      <section class="card progress-card" id="progress-section" style="display:none;">
-        <h2 data-i18n="progressTitle">Search Progress</h2>
-        <div class="progress-bar-container">
-          <div class="progress-bar" id="progress-bar"></div>
-        </div>
-        <p class="progress-text" id="progress-text"></p>
-        <div class="progress-stats" id="progress-stats"></div>
-      </section>
-
-      <!-- Results -->
-      <section class="card results-card" id="results-section" style="display:none;">
-        <div class="results-header">
-          <div>
-            <h2 data-i18n="resultsTitle">Results</h2>
-            <p class="results-summary" id="results-summary"></p>
-          </div>
-          <div class="results-actions">
-            <button class="btn btn-secondary" id="btn-export-csv" data-i18n="exportCsv">Export CSV</button>
-            <button class="btn btn-save-db" id="btn-save-all" data-i18n="saveAllBtn">Save All to DB</button>
-            <button class="btn btn-secondary" id="btn-clear" data-i18n="clearBtn">Clear</button>
+          <div class="m-faq-answer">
+            <p>No, para nada. Nosotros nos encargamos de todo: diseno, contenido, publicacion y mantenimiento. Tu solo nos dices que quieres y nosotros lo hacemos realidad.</p>
           </div>
         </div>
-
-        <!-- Filter bar -->
-        <div class="filter-bar">
-          <input type="text" id="filter-input" class="input" data-i18n-placeholder="filterPlaceholder" placeholder="Filter results by name or address...">
-          <select id="sort-select" class="input input-sort">
-            <option value="name" data-i18n="sortName">Sort by Name</option>
-            <option value="rating" data-i18n="sortRating">Sort by Rating</option>
-            <option value="reviews" data-i18n="sortReviews">Sort by Reviews</option>
-          </select>
+        <div class="m-faq-item">
+          <button class="m-faq-question">
+            <span>Cuanto tiempo toma tener mi pagina lista?</span>
+            <span class="m-faq-icon">+</span>
+          </button>
+          <div class="m-faq-answer">
+            <p>Tu pagina estara lista en 72 horas o menos. Recopilamos la informacion de tu negocio, creamos tu pagina y te la enviamos para que la revises antes de publicarla.</p>
+          </div>
         </div>
-
-        <div class="results-table-wrapper">
-          <table class="results-table" id="results-table">
-            <thead>
-              <tr>
-                <th class="col-num">#</th>
-                <th class="col-type" data-i18n="thType">Type</th>
-                <th class="col-name" data-i18n="thName">Business Name</th>
-                <th class="col-address" data-i18n="thAddress">Address</th>
-                <th class="col-phone" data-i18n="thPhone">Phone</th>
-                <th class="col-rating" data-i18n="thRating">Rating</th>
-                <th class="col-reviews" data-i18n="thReviews">Reviews</th>
-                <th class="col-status" data-i18n="thStatus">Status</th>
-                <th class="col-social" data-i18n="thSocial">Social</th>
-                <th class="col-details" data-i18n="thDetails">Details</th>
-                <th class="col-maps">Maps</th>
-                <th class="col-save" data-i18n="thSave">Save</th>
-              </tr>
-            </thead>
-            <tbody id="results-body"></tbody>
-          </table>
+        <div class="m-faq-item">
+          <button class="m-faq-question">
+            <span>Puedo cancelar en cualquier momento?</span>
+            <span class="m-faq-icon">+</span>
+          </button>
+          <div class="m-faq-answer">
+            <p>Si, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu pagina se desactiva al final del periodo pagado.</p>
+          </div>
         </div>
-
-        <div class="no-results" id="no-results" style="display:none;">
-          <p data-i18n="noResults1">All businesses found in this area already have websites.</p>
-          <p data-i18n="noResults2">Try expanding the search radius or changing the business type.</p>
+        <div class="m-faq-item">
+          <button class="m-faq-question">
+            <span>Que pasa si quiero hacer cambios en mi pagina?</span>
+            <span class="m-faq-icon">+</span>
+          </button>
+          <div class="m-faq-answer">
+            <p>Cambios ilimitados estan incluidos en tu plan. Solo envias un mensaje por WhatsApp con lo que quieres cambiar y nosotros lo actualizamos, generalmente en menos de 24 horas.</p>
+          </div>
         </div>
-      </section>
-    </main>
+        <div class="m-faq-item">
+          <button class="m-faq-question">
+            <span>Mi negocio es muy pequeno, vale la pena tener pagina web?</span>
+            <span class="m-faq-icon">+</span>
+          </button>
+          <div class="m-faq-answer">
+            <p>Absolutamente. Los negocios pequenos son los que mas se benefician. Una pagina web te da credibilidad, te hace visible en Google y te permite competir con negocios mas grandes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <footer class="footer">
-      <p data-i18n="footer">Powered by Google Places API. Results may not be 100% accurate — always verify before outreach.</p>
-    </footer>
+  <!-- ── Final CTA ── -->
+  <section class="m-cta-final">
+    <div class="m-cta-bg"></div>
+    <div class="m-container" data-reveal>
+      <h2>Tu competencia ya tiene pagina. Y tu?</h2>
+      <p>No dejes que tus clientes se vayan con otro negocio. Empieza hoy y ten tu pagina lista en 72 horas.</p>
+      <button class="m-btn-cta m-btn-green" data-open-modal>Quiero Mi Pagina Web</button>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="m-footer">
+    <div class="m-footer-inner">
+      <div class="m-footer-brand">
+        <h3>TuPagina</h3>
+        <p>Creamos paginas web profesionales para negocios locales en Latinoamerica. Simple, rapido y sin complicaciones.</p>
+      </div>
+      <div class="m-footer-col">
+        <h4>Enlaces</h4>
+        <a href="#como-funciona">Como Funciona</a>
+        <a href="#funciones">Funciones</a>
+        <a href="#precios">Precios</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="m-footer-col">
+        <h4>Contacto</h4>
+        <a href="https://wa.me/1234567890" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="mailto:hola@tupagina.com">hola@tupagina.com</a>
+      </div>
+    </div>
+    <div class="m-footer-bottom">
+      &copy; 2026 TuPagina. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <!-- ── Lead Capture Modal ── -->
+  <div class="m-modal-overlay" id="m-lead-modal">
+    <div class="m-modal">
+      <div class="m-modal-header">
+        <div>
+          <h2>Solicita tu pagina web</h2>
+          <p>Completá tus datos y te contactamos en menos de 24 horas.</p>
+        </div>
+        <button class="m-modal-close" id="m-modal-close">&times;</button>
+      </div>
+      <div class="m-modal-body">
+        <form id="m-lead-form">
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-name">Tu nombre</label>
+            <input class="m-form-input" type="text" id="lead-name" name="name" placeholder="Ej: Maria Garcia" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-business">Nombre de tu negocio</label>
+            <input class="m-form-input" type="text" id="lead-business" name="business_name" placeholder="Ej: Salon de Unas Maria" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-phone">WhatsApp / Telefono</label>
+            <input class="m-form-input" type="tel" id="lead-phone" name="phone" placeholder="Ej: +57 300 123 4567" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-city">Ciudad</label>
+            <input class="m-form-input" type="text" id="lead-city" name="city" placeholder="Ej: Bogota" required>
+          </div>
+          <button type="submit" class="m-form-submit" id="m-form-submit">Solicitar Mi Pagina Web</button>
+        </form>
+        <div class="m-form-success" id="m-form-success" style="display:none;">
+          <div class="m-form-success-icon">&#10003;</div>
+          <h3>Solicitud enviada!</h3>
+          <p>Te contactaremos por WhatsApp en menos de 24 horas para comenzar con tu pagina web.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="toast-container" id="toast-container"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
+  <!-- ── WhatsApp Float ── -->
+  <a href="https://wa.me/1234567890" target="_blank" rel="noopener" class="m-whatsapp-float" aria-label="Contactar por WhatsApp">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <script src="/marketing.js"></script>
 </body>
 </html>
