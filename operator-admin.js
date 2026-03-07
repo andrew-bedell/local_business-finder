@@ -110,6 +110,34 @@
       websiteOpenNewTab: 'Open in New Tab',
       websiteSaved: 'Website saved to database',
       timeoutError: '{0} timed out after {1}s.',
+      // WhatsApp messaging
+      navMessages: 'Messages',
+      msgConversations: 'Conversations',
+      msgSearchPlaceholder: 'Search businesses...',
+      msgSelectConversation: 'Select a conversation to start messaging',
+      msgSend: 'Send',
+      msgSendTemplate: 'Send Template',
+      msgPlaceholder: 'Type a message...',
+      msgWindowOpen: '24h window open',
+      msgWindowClosed: 'Window closed',
+      msgTemplateRequired: 'Use a template to start a conversation',
+      msgNoConversations: 'No conversations yet',
+      msgTemplateSelect: 'Select template...',
+      msgTemplateParam: 'Parameter {0}',
+      msgSending: 'Sending...',
+      msgSendError: 'Failed to send message',
+      msgSendSuccess: 'Message sent',
+      msgSyncTemplates: 'Syncing templates...',
+      msgSyncSuccess: 'Templates synced',
+      msgSyncError: 'Failed to sync templates',
+      msgBtnLabel: 'Msg',
+      msgNoPhone: 'No phone number available for this business',
+      msgStatusSent: 'Sent',
+      msgStatusDelivered: 'Delivered',
+      msgStatusRead: 'Read',
+      msgStatusFailed: 'Failed',
+      msgToday: 'Today',
+      msgYesterday: 'Yesterday',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -211,6 +239,34 @@
       websiteOpenNewTab: 'Abrir en Nueva Pestaña',
       websiteSaved: 'Sitio web guardado en la base de datos',
       timeoutError: '{0} agotó el tiempo después de {1}s.',
+      // WhatsApp messaging
+      navMessages: 'Mensajes',
+      msgConversations: 'Conversaciones',
+      msgSearchPlaceholder: 'Buscar negocios...',
+      msgSelectConversation: 'Seleccione una conversación para enviar mensajes',
+      msgSend: 'Enviar',
+      msgSendTemplate: 'Enviar Plantilla',
+      msgPlaceholder: 'Escribe un mensaje...',
+      msgWindowOpen: 'Ventana 24h abierta',
+      msgWindowClosed: 'Ventana cerrada',
+      msgTemplateRequired: 'Use una plantilla para iniciar una conversación',
+      msgNoConversations: 'Sin conversaciones aún',
+      msgTemplateSelect: 'Seleccionar plantilla...',
+      msgTemplateParam: 'Parámetro {0}',
+      msgSending: 'Enviando...',
+      msgSendError: 'Error al enviar mensaje',
+      msgSendSuccess: 'Mensaje enviado',
+      msgSyncTemplates: 'Sincronizando plantillas...',
+      msgSyncSuccess: 'Plantillas sincronizadas',
+      msgSyncError: 'Error al sincronizar plantillas',
+      msgBtnLabel: 'Msg',
+      msgNoPhone: 'No hay número de teléfono para este negocio',
+      msgStatusSent: 'Enviado',
+      msgStatusDelivered: 'Entregado',
+      msgStatusRead: 'Leído',
+      msgStatusFailed: 'Fallido',
+      msgToday: 'Hoy',
+      msgYesterday: 'Ayer',
     },
   };
 
@@ -387,6 +443,39 @@
         loadBusinesses();
       }
     });
+
+    // Messaging tab navigation
+    const navSaved = document.getElementById('nav-saved');
+    const navMessages = document.getElementById('nav-messages');
+
+    if (navSaved) {
+      navSaved.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('saved');
+      });
+    }
+    if (navMessages) {
+      navMessages.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('messages');
+      });
+    }
+
+    // Sync templates button
+    const syncBtn = document.getElementById('btn-sync-templates');
+    if (syncBtn) {
+      syncBtn.addEventListener('click', syncTemplates);
+    }
+
+    // Conversation search
+    const convSearch = document.getElementById('conv-search');
+    if (convSearch) {
+      convSearch.addEventListener('input', renderConversationsList);
+    }
+
+    // Load templates and start realtime
+    loadTemplates();
+    setupRealtimeSubscription();
 
     // Initial load
     loadStats();
@@ -596,7 +685,10 @@
         <td>${fbBadge}</td>
         <td>${reportBadge}</td>
         <td>${websiteBadge}</td>
-        <td><button class="btn btn-view" data-id="${b.id}" data-i18n="viewBtn">${t('viewBtn')}</button></td>
+        <td>
+          <button class="btn btn-view" data-id="${b.id}" data-i18n="viewBtn">${t('viewBtn')}</button>
+          ${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}
+        </td>
       </tr>`;
     }).join('');
 
@@ -606,6 +698,15 @@
         const businessId = btn.getAttribute('data-id');
         const business = currentResults.find(b => b.id === businessId);
         if (business) openDetailModal(business);
+      });
+    });
+
+    // Bind msg buttons
+    resultsBody.querySelectorAll('.btn-msg').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const phone = btn.getAttribute('data-phone');
+        startNewConversation(businessId, phone);
       });
     });
   }
@@ -1176,6 +1277,643 @@
     } catch (e) {
       console.warn('Website save exception:', e);
     }
+  }
+
+  // ── WhatsApp Messaging ──
+
+  // Messaging state
+  let activeConversationId = null;
+  let conversations = [];
+  let currentMessages = [];
+  let templates = [];
+  let realtimeChannel = null;
+  let activeTab = 'saved'; // 'saved' or 'messages'
+
+  function switchTab(tab) {
+    activeTab = tab;
+    const statsBar = document.getElementById('stats-bar');
+    const filterSection = document.getElementById('filter-section');
+    const resultsSection = document.getElementById('results-section');
+    const messagingSection = document.getElementById('messaging-section');
+    const navSaved = document.getElementById('nav-saved');
+    const navMessages = document.getElementById('nav-messages');
+
+    if (tab === 'saved') {
+      statsBar.style.display = '';
+      filterSection.style.display = '';
+      resultsSection.style.display = '';
+      messagingSection.style.display = 'none';
+      navSaved.classList.add('active');
+      navMessages.classList.remove('active');
+    } else {
+      statsBar.style.display = 'none';
+      filterSection.style.display = 'none';
+      resultsSection.style.display = 'none';
+      messagingSection.style.display = '';
+      navSaved.classList.remove('active');
+      navMessages.classList.add('active');
+      loadConversations();
+    }
+  }
+
+  async function loadConversations() {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('whatsapp_conversations')
+        .select('*, businesses(name, phone)')
+        .order('last_message_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading conversations:', error);
+        return;
+      }
+      conversations = data || [];
+      renderConversationsList();
+    } catch (err) {
+      console.error('Load conversations error:', err);
+    }
+  }
+
+  function renderConversationsList() {
+    const container = document.getElementById('conversations-list');
+    const searchTerm = (document.getElementById('conv-search')?.value || '').toLowerCase();
+
+    const filtered = searchTerm
+      ? conversations.filter(c => {
+          const name = c.businesses?.name || '';
+          return name.toLowerCase().includes(searchTerm);
+        })
+      : conversations;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">${t('msgNoConversations')}</div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(c => {
+      const name = escapeHtml(c.businesses?.name || 'Unknown');
+      const preview = escapeHtml(c.last_message_text || '');
+      const time = c.last_message_at ? formatMessageTime(c.last_message_at) : '';
+      const isActive = c.id === activeConversationId;
+      const unread = c.unread_count > 0
+        ? `<span class="unread-badge">${c.unread_count}</span>`
+        : '';
+      const initial = (c.businesses?.name || '?')[0].toUpperCase();
+
+      return `<div class="conversation-item${isActive ? ' active' : ''}" data-conv-id="${c.id}">
+        <div class="conversation-avatar">${initial}</div>
+        <div class="conversation-info">
+          <div class="conversation-name">${name}</div>
+          <div class="conversation-preview">${preview}</div>
+        </div>
+        <div class="conversation-meta">
+          <span class="conversation-time">${time}</span>
+          ${unread}
+        </div>
+      </div>`;
+    }).join('');
+
+    container.querySelectorAll('.conversation-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const convId = el.getAttribute('data-conv-id');
+        openConversation(convId);
+      });
+    });
+  }
+
+  async function openConversation(convId) {
+    activeConversationId = convId;
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+
+    // Reset unread count
+    if (conv.unread_count > 0) {
+      conv.unread_count = 0;
+      if (supabaseClient) {
+        supabaseClient
+          .from('whatsapp_conversations')
+          .update({ unread_count: 0 })
+          .eq('id', convId)
+          .then(() => {});
+      }
+    }
+
+    renderConversationsList();
+    await loadMessages(convId);
+    renderChatView(conv);
+  }
+
+  async function loadMessages(conversationId) {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('whatsapp_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading messages:', error);
+        return;
+      }
+      currentMessages = data || [];
+    } catch (err) {
+      console.error('Load messages error:', err);
+    }
+  }
+
+  function renderChatView(conv) {
+    const chatPanel = document.getElementById('chat-panel');
+    const name = escapeHtml(conv.businesses?.name || 'Unknown');
+    const phone = escapeHtml(conv.recipient_phone || '');
+    const windowOpen = check24HourWindow(conv);
+    const windowBadge = windowOpen
+      ? `<span class="chat-window-badge chat-window-open">${t('msgWindowOpen')}</span>`
+      : `<span class="chat-window-badge chat-window-closed">${t('msgWindowClosed')}</span>`;
+
+    let inputHtml;
+    if (windowOpen) {
+      inputHtml = `<div class="chat-input-area">
+        <textarea id="chat-input" rows="1" placeholder="${t('msgPlaceholder')}"></textarea>
+        <button class="btn-send" id="btn-send-msg">${t('msgSend')}</button>
+      </div>`;
+    } else {
+      inputHtml = `<div class="template-selector" id="template-selector">
+        <div class="template-selector-label">${t('msgTemplateRequired')}</div>
+        <div class="template-selector-row">
+          <select class="input" id="template-select">
+            <option value="">${t('msgTemplateSelect')}</option>
+            ${templates.filter(tpl => tpl.meta_status === 'APPROVED').map(tpl =>
+              `<option value="${escapeHtml(tpl.template_name)}" data-params="${tpl.param_count}">${escapeHtml(tpl.template_name)} (${escapeHtml(tpl.language)})</option>`
+            ).join('')}
+          </select>
+          <button class="btn-send" id="btn-send-template">${t('msgSendTemplate')}</button>
+        </div>
+        <div class="template-params" id="template-params"></div>
+      </div>`;
+    }
+
+    chatPanel.innerHTML = `
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <h3>${name}</h3>
+          <div class="chat-header-phone">${phone}</div>
+        </div>
+        ${windowBadge}
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      ${inputHtml}
+    `;
+
+    renderMessages();
+    bindChatEvents(conv);
+
+    // Scroll to bottom
+    const messagesContainer = document.getElementById('chat-messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
+
+  function renderMessages() {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+
+    let lastDate = '';
+    container.innerHTML = currentMessages.map(msg => {
+      const msgDate = new Date(msg.created_at).toLocaleDateString();
+      let dateDivider = '';
+      if (msgDate !== lastDate) {
+        lastDate = msgDate;
+        dateDivider = `<div class="msg-date-divider">${formatDateLabel(msg.created_at)}</div>`;
+      }
+
+      const isOutbound = msg.direction === 'outbound';
+      const bubbleClass = isOutbound ? 'msg-outbound' : 'msg-inbound';
+      const failedClass = msg.status === 'failed' ? ' msg-failed' : '';
+      const templateClass = msg.message_type === 'template' ? ' msg-template' : '';
+      const time = formatMessageTime(msg.created_at, true);
+      const statusTick = isOutbound ? renderStatusTick(msg.status) : '';
+      const body = msg.body
+        ? escapeHtml(msg.body)
+        : msg.template_name
+          ? `[${escapeHtml(msg.template_name)}]`
+          : '';
+
+      return `${dateDivider}<div class="msg-bubble ${bubbleClass}${failedClass}${templateClass}" data-msg-id="${msg.id}">
+        <div>${body}</div>
+        <div class="msg-time">${time}${statusTick}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderStatusTick(status) {
+    switch (status) {
+      case 'sent': return ' <span class="msg-status" title="' + t('msgStatusSent') + '">&#10003;</span>';
+      case 'delivered': return ' <span class="msg-status" title="' + t('msgStatusDelivered') + '">&#10003;&#10003;</span>';
+      case 'read': return ' <span class="msg-status" title="' + t('msgStatusRead') + '" style="color:#53bdeb">&#10003;&#10003;</span>';
+      case 'failed': return ' <span class="msg-status" title="' + t('msgStatusFailed') + '" style="color:var(--danger)">&#10007;</span>';
+      default: return ' <span class="msg-status">&#9711;</span>';
+    }
+  }
+
+  function bindChatEvents(conv) {
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('btn-send-msg');
+    const templateSelect = document.getElementById('template-select');
+    const sendTemplateBtn = document.getElementById('btn-send-template');
+    const templateParamsContainer = document.getElementById('template-params');
+
+    if (chatInput && sendBtn) {
+      // Auto-resize textarea
+      chatInput.addEventListener('input', () => {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+      });
+
+      // Send on Enter (Shift+Enter for newline)
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage(conv);
+        }
+      });
+
+      sendBtn.addEventListener('click', () => sendMessage(conv));
+    }
+
+    if (templateSelect) {
+      templateSelect.addEventListener('change', () => {
+        if (!templateParamsContainer) return;
+        const paramCount = parseInt(templateSelect.selectedOptions[0]?.getAttribute('data-params') || '0', 10);
+        templateParamsContainer.innerHTML = '';
+        for (let i = 0; i < paramCount; i++) {
+          templateParamsContainer.innerHTML += `<input type="text" class="input" placeholder="${t('msgTemplateParam', i + 1)}" data-param-index="${i}">`;
+        }
+      });
+    }
+
+    if (sendTemplateBtn) {
+      sendTemplateBtn.addEventListener('click', () => sendTemplateMessage(conv));
+    }
+  }
+
+  async function sendMessage(conv) {
+    const chatInput = document.getElementById('chat-input');
+    const text = chatInput?.value?.trim();
+    if (!text) return;
+
+    const sendBtn = document.getElementById('btn-send-msg');
+    sendBtn.disabled = true;
+    sendBtn.textContent = t('msgSending');
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // Optimistic UI
+    const optimisticMsg = {
+      id: 'temp-' + Date.now(),
+      conversation_id: conv.id,
+      business_id: conv.business_id,
+      direction: 'outbound',
+      message_type: 'text',
+      body: text,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+    currentMessages.push(optimisticMsg);
+    renderMessages();
+    scrollChatToBottom();
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessId: conv.business_id,
+            phone: conv.recipient_phone,
+            message: text,
+          }),
+        }),
+        15000,
+        'WhatsApp send'
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Send failed');
+      }
+
+      // Update optimistic message
+      const idx = currentMessages.findIndex(m => m.id === optimisticMsg.id);
+      if (idx >= 0) {
+        currentMessages[idx].id = data.messageId;
+        currentMessages[idx].wamid = data.wamid;
+        currentMessages[idx].status = 'sent';
+      }
+      renderMessages();
+
+      // Update conversation preview
+      conv.last_message_text = text.substring(0, 200);
+      conv.last_message_at = new Date().toISOString();
+      renderConversationsList();
+    } catch (err) {
+      console.error('Send message error:', err);
+      showToast(t('msgSendError'), 'error');
+      // Mark optimistic message as failed
+      const idx = currentMessages.findIndex(m => m.id === optimisticMsg.id);
+      if (idx >= 0) {
+        currentMessages[idx].status = 'failed';
+      }
+      renderMessages();
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = t('msgSend');
+    }
+  }
+
+  async function sendTemplateMessage(conv) {
+    const templateSelect = document.getElementById('template-select');
+    const templateName = templateSelect?.value;
+    if (!templateName) return;
+
+    const paramInputs = document.querySelectorAll('#template-params input');
+    const templateParams = Array.from(paramInputs).map(inp => inp.value);
+
+    const sendBtn = document.getElementById('btn-send-template');
+    sendBtn.disabled = true;
+    sendBtn.textContent = t('msgSending');
+
+    // Find template for language
+    const tpl = templates.find(t => t.template_name === templateName);
+
+    // Optimistic UI
+    const optimisticMsg = {
+      id: 'temp-' + Date.now(),
+      conversation_id: conv.id,
+      business_id: conv.business_id,
+      direction: 'outbound',
+      message_type: 'template',
+      template_name: templateName,
+      body: null,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+    currentMessages.push(optimisticMsg);
+    renderMessages();
+    scrollChatToBottom();
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessId: conv.business_id,
+            phone: conv.recipient_phone,
+            templateName: templateName,
+            templateParams: templateParams.length > 0 ? templateParams : undefined,
+            language: tpl?.language || 'en',
+          }),
+        }),
+        15000,
+        'WhatsApp send template'
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Send failed');
+      }
+
+      const idx = currentMessages.findIndex(m => m.id === optimisticMsg.id);
+      if (idx >= 0) {
+        currentMessages[idx].id = data.messageId;
+        currentMessages[idx].wamid = data.wamid;
+        currentMessages[idx].status = 'sent';
+      }
+      renderMessages();
+      showToast(t('msgSendSuccess'), 'success');
+
+      conv.last_message_text = `[Template: ${templateName}]`;
+      conv.last_message_at = new Date().toISOString();
+      renderConversationsList();
+    } catch (err) {
+      console.error('Send template error:', err);
+      showToast(t('msgSendError'), 'error');
+      const idx = currentMessages.findIndex(m => m.id === optimisticMsg.id);
+      if (idx >= 0) {
+        currentMessages[idx].status = 'failed';
+      }
+      renderMessages();
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = t('msgSendTemplate');
+    }
+  }
+
+  function check24HourWindow(conv) {
+    if (!conv.last_inbound_at) return false;
+    const lastInbound = new Date(conv.last_inbound_at);
+    const hoursSince = (Date.now() - lastInbound.getTime()) / (1000 * 60 * 60);
+    return hoursSince <= 24;
+  }
+
+  async function startNewConversation(businessId, phone) {
+    if (!phone) {
+      showToast(t('msgNoPhone'), 'warning');
+      return;
+    }
+
+    // Switch to messages tab
+    switchTab('messages');
+
+    // Check if conversation already exists
+    const existing = conversations.find(c => c.business_id == businessId);
+    if (existing) {
+      openConversation(existing.id);
+      return;
+    }
+
+    // Upsert new conversation
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('whatsapp_conversations')
+        .upsert({
+          business_id: businessId,
+          recipient_phone: phone,
+          status: 'active',
+        }, { onConflict: 'business_id' })
+        .select('*, businesses(name, phone)');
+
+      if (error) {
+        console.error('Create conversation error:', error);
+        return;
+      }
+      if (data && data.length > 0) {
+        // Refresh and open
+        await loadConversations();
+        openConversation(data[0].id);
+      }
+    } catch (err) {
+      console.error('Start conversation error:', err);
+    }
+  }
+
+  async function loadTemplates() {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('whatsapp_templates')
+        .select('*')
+        .eq('meta_status', 'APPROVED');
+
+      if (error) {
+        console.warn('Error loading templates:', error);
+        return;
+      }
+      templates = data || [];
+    } catch (err) {
+      console.warn('Load templates error:', err);
+    }
+  }
+
+  async function syncTemplates() {
+    showToast(t('msgSyncTemplates'), 'warning');
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/templates'),
+        15000,
+        'Template sync'
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Sync failed');
+      }
+      templates = data.templates || [];
+      showToast(t('msgSyncSuccess'), 'success');
+    } catch (err) {
+      console.error('Sync templates error:', err);
+      showToast(t('msgSyncError'), 'error');
+    }
+  }
+
+  function setupRealtimeSubscription() {
+    if (!supabaseClient) return;
+
+    realtimeChannel = supabaseClient
+      .channel('whatsapp-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'whatsapp_messages' },
+        (payload) => {
+          const msg = payload.new;
+          // Inbound message
+          if (msg.direction === 'inbound') {
+            handleNewInboundMessage(msg);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'whatsapp_messages' },
+        (payload) => {
+          handleMessageStatusUpdate(payload.new);
+        }
+      )
+      .subscribe();
+  }
+
+  function handleNewInboundMessage(msg) {
+    // If viewing this conversation, append message
+    if (msg.conversation_id === activeConversationId) {
+      currentMessages.push(msg);
+      renderMessages();
+      scrollChatToBottom();
+
+      // Reset unread since we're viewing
+      if (supabaseClient) {
+        supabaseClient
+          .from('whatsapp_conversations')
+          .update({ unread_count: 0 })
+          .eq('id', msg.conversation_id)
+          .then(() => {});
+      }
+    }
+
+    // Update conversations list
+    const conv = conversations.find(c => c.id === msg.conversation_id);
+    if (conv) {
+      conv.last_message_text = (msg.body || '').substring(0, 200);
+      conv.last_message_at = msg.created_at;
+      conv.last_inbound_at = msg.created_at;
+      if (msg.conversation_id !== activeConversationId) {
+        conv.unread_count = (conv.unread_count || 0) + 1;
+      }
+      // Re-sort conversations
+      conversations.sort((a, b) => {
+        const aTime = a.last_message_at || a.created_at;
+        const bTime = b.last_message_at || b.created_at;
+        return new Date(bTime) - new Date(aTime);
+      });
+      renderConversationsList();
+    } else {
+      // New conversation — reload the list
+      loadConversations();
+    }
+  }
+
+  function handleMessageStatusUpdate(msg) {
+    if (msg.conversation_id !== activeConversationId) return;
+    const idx = currentMessages.findIndex(m => m.id === msg.id || m.wamid === msg.wamid);
+    if (idx >= 0) {
+      currentMessages[idx].status = msg.status;
+      currentMessages[idx].delivered_at = msg.delivered_at;
+      currentMessages[idx].read_at = msg.read_at;
+      renderMessages();
+    }
+  }
+
+  function scrollChatToBottom() {
+    const container = document.getElementById('chat-messages');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  function formatMessageTime(ts, timeOnly) {
+    if (!ts) return '';
+    const date = new Date(ts);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (timeOnly) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      return t('msgYesterday');
+    } else if (diffDays < 7) {
+      return date.toLocaleDateString([], { weekday: 'short' });
+    } else {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  }
+
+  function formatDateLabel(ts) {
+    if (!ts) return '';
+    const date = new Date(ts);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return t('msgToday');
+    if (diffDays === 1) return t('msgYesterday');
+    return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
   }
 
   // ── Start ──

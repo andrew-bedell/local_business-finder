@@ -25,7 +25,8 @@
           <div class="header-actions">
             <nav class="header-nav">
               <a href="index.html" class="nav-tab" data-i18n="navSearch">Search</a>
-              <a href="operator-admin.html" class="nav-tab active" data-i18n="navSaved">Saved</a>
+              <a href="#" class="nav-tab active" id="nav-saved" data-i18n="navSaved">Saved</a>
+              <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Messages</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
@@ -217,6 +218,25 @@
 
         <div class="no-results" id="no-results" style="display:none;">
           <p data-i18n="adminNoResults">No businesses match your filters.</p>
+        </div>
+      </section>
+
+      <!-- Messages Section -->
+      <section id="messaging-section" style="display:none">
+        <div class="messaging-layout">
+          <div class="conversations-panel">
+            <div class="conversations-header">
+              <h3 data-i18n="msgConversations">Conversations</h3>
+              <button class="btn btn-text" id="btn-sync-templates" title="Sync templates">&#x21bb;</button>
+            </div>
+            <div class="conversations-search">
+              <input type="text" class="input" id="conv-search" data-i18n-placeholder="msgSearchPlaceholder" placeholder="Search businesses...">
+            </div>
+            <div class="conversations-list" id="conversations-list"></div>
+          </div>
+          <div class="chat-panel" id="chat-panel">
+            <div class="chat-empty" id="chat-empty" data-i18n="msgSelectConversation">Select a conversation to start messaging</div>
+          </div>
         </div>
       </section>
     </main>

@@ -319,3 +319,99 @@ CREATE TRIGGER businesses_updated_at
   BEFORE UPDATE ON businesses
   FOR EACH ROW
   EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 7. WHATSAPP_CONVERSATIONS — One conversation per business
+-- ============================================================================
+-- Tracks 24-hour messaging window and unread state for the operator dashboard.
+
+CREATE TABLE IF NOT EXISTS whatsapp_conversations (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id             BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  recipient_phone         TEXT NOT NULL,            -- business owner's WhatsApp number (E.164)
+  status                  TEXT DEFAULT 'active'
+                            CHECK (status IN ('active', 'archived')),
+  last_inbound_at         TIMESTAMPTZ,             -- tracks 24-hour messaging window
+  unread_count            INTEGER DEFAULT 0,        -- denormalized for fast list display
+  last_message_text       TEXT,                     -- preview for conversations list
+  last_message_at         TIMESTAMPTZ,             -- sort conversations by recency
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW(),
+
+  -- One conversation per business
+  UNIQUE (business_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_conv_business ON whatsapp_conversations (business_id);
+CREATE INDEX IF NOT EXISTS idx_wa_conv_last_msg ON whatsapp_conversations (last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_wa_conv_unread ON whatsapp_conversations (unread_count) WHERE unread_count > 0;
+
+CREATE TRIGGER whatsapp_conversations_updated_at
+  BEFORE UPDATE ON whatsapp_conversations
+  FOR EACH ROW
+  EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 8. WHATSAPP_MESSAGES — Individual messages (both directions)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS whatsapp_messages (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  conversation_id         UUID NOT NULL REFERENCES whatsapp_conversations(id) ON DELETE CASCADE,
+  business_id             BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  direction               TEXT NOT NULL
+                            CHECK (direction IN ('outbound', 'inbound')),
+  message_type            TEXT DEFAULT 'text'
+                            CHECK (message_type IN ('text', 'template', 'image', 'document')),
+  body                    TEXT,                     -- message content
+  template_name           TEXT,                     -- WhatsApp template name (if template msg)
+  template_params         JSONB,                    -- template parameter values
+  wamid                   TEXT UNIQUE,              -- WhatsApp Message ID from Meta
+  status                  TEXT DEFAULT 'pending'
+                            CHECK (status IN ('pending', 'sent', 'delivered', 'read', 'failed')),
+  error_message           TEXT,                     -- error details if failed
+  sent_at                 TIMESTAMPTZ,
+  delivered_at            TIMESTAMPTZ,
+  read_at                 TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_msg_conv ON whatsapp_messages (conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_wa_msg_business ON whatsapp_messages (business_id);
+CREATE INDEX IF NOT EXISTS idx_wa_msg_wamid ON whatsapp_messages (wamid);
+CREATE INDEX IF NOT EXISTS idx_wa_msg_status ON whatsapp_messages (status) WHERE status NOT IN ('delivered', 'read');
+
+
+-- ============================================================================
+-- 9. WHATSAPP_TEMPLATES — Cached Meta-approved message templates
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS whatsapp_templates (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  template_name           TEXT UNIQUE NOT NULL,      -- Meta template name
+  language                TEXT DEFAULT 'en',
+  category                TEXT,                      -- MARKETING / UTILITY / AUTHENTICATION
+  body_text               TEXT,                      -- body with {{1}}, {{2}} placeholders
+  header_text             TEXT,
+  footer_text             TEXT,
+  param_count             INTEGER DEFAULT 0,         -- number of parameters
+  meta_status             TEXT DEFAULT 'PENDING'
+                            CHECK (meta_status IN ('APPROVED', 'PENDING', 'REJECTED')),
+  last_synced_at          TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- ============================================================================
+-- WHATSAPP RLS POLICIES
+-- ============================================================================
+
+ALTER TABLE whatsapp_conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE whatsapp_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all access" ON whatsapp_conversations FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON whatsapp_messages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON whatsapp_templates FOR ALL USING (true) WITH CHECK (true);
