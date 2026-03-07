@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    { "source": "/employee", "destination": "/employee/index.html" },
+    { "source": "/employee/search", "destination": "/employee/index.html" },
+    { "source": "/employee/admin", "destination": "/employee/admin.html" },
+    { "source": "/employee/saved", "destination": "/employee/admin.html" },
+    { "source": "/employee/messages", "destination": "/employee/admin.html" },
+    { "source": "/mipagina/:nombre", "destination": "/customer/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}
