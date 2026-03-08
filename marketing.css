@@ -187,7 +187,7 @@ ul, ol { list-style: none; }
 .m-hero-bg {
   position: absolute;
   inset: 0;
-  background: url('/assets/images/hero-bg.webp') center/cover no-repeat;
+  background: url('/assets/images/hero-bg.png') center/cover no-repeat;
   opacity: 0.3;
 }
 .m-hero-inner {
@@ -748,7 +748,7 @@ ul, ol { list-style: none; }
 .m-cta-bg {
   position: absolute;
   inset: 0;
-  background: url('/assets/images/cta-bg.webp') center/cover no-repeat;
+  background: url('/assets/images/cta-bg.png') center/cover no-repeat;
   opacity: 0.2;
 }
 .m-cta-final .m-container {
