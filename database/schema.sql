@@ -420,14 +420,16 @@ CREATE POLICY "Allow all access" ON whatsapp_templates FOR ALL USING (true) WITH
 -- ============================================================================
 -- 10. MARKETING_LEADS — Lead capture from marketing website
 -- ============================================================================
--- Stores leads submitted via the marketing landing page contact form.
+-- Stores leads submitted via the marketing landing page "create free page" form.
 
 CREATE TABLE IF NOT EXISTS marketing_leads (
   id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name                    TEXT NOT NULL,
   business_name           TEXT NOT NULL,
-  phone                   TEXT NOT NULL,
-  city                    TEXT NOT NULL,
+  facebook_url            TEXT,
+  google_listing_url      TEXT,
+  name                    TEXT,
+  phone                   TEXT,
+  city                    TEXT,
   source                  TEXT DEFAULT 'website',
   status                  TEXT DEFAULT 'new'
                             CHECK (status IN ('new', 'contacted', 'qualified', 'converted', 'lost')),

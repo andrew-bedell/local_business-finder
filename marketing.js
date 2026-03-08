@@ -128,21 +128,20 @@
   leadForm.addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    var name = document.getElementById('lead-name').value.trim();
     var businessName = document.getElementById('lead-business').value.trim();
-    var phone = document.getElementById('lead-phone').value.trim();
-    var city = document.getElementById('lead-city').value.trim();
+    var facebookUrl = document.getElementById('lead-facebook').value.trim();
+    var googleListingUrl = document.getElementById('lead-google').value.trim();
 
-    if (!name || !businessName || !phone || !city) return;
+    if (!businessName) return;
 
     formSubmitBtn.disabled = true;
-    formSubmitBtn.textContent = 'Enviando...';
+    formSubmitBtn.textContent = 'Creando...';
 
     try {
       var response = await fetch('/api/leads/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, business_name: businessName, phone: phone, city: city })
+        body: JSON.stringify({ business_name: businessName, facebook_url: facebookUrl || null, google_listing_url: googleListingUrl || null })
       });
 
       if (!response.ok) throw new Error('Server error');
@@ -156,7 +155,7 @@
       formSubmitBtn.textContent = 'Error. Intentar de nuevo.';
       formSubmitBtn.style.background = '#ef4444';
       setTimeout(function() {
-        formSubmitBtn.textContent = 'Solicitar Mi Pagina Web';
+        formSubmitBtn.textContent = 'Crear Mi Pagina Gratis';
         formSubmitBtn.style.background = '';
       }, 3000);
     }
