@@ -15,7 +15,7 @@ if (!API_KEY) {
 }
 
 const OUTPUT_DIR = path.join(__dirname, '..', 'assets', 'images');
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${API_KEY}`;
 
 const IMAGES = [
   {
