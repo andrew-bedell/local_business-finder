@@ -43,12 +43,13 @@
     <div class="m-nav-inner">
       <a href="/" class="m-nav-logo">AhoraTengoPagina</a>
       <div class="m-nav-links">
-        <a href="#problema" class="m-nav-link">El Problema</a>
-        <a href="#como-funciona" class="m-nav-link">Como Funciona</a>
-        <a href="#funciones" class="m-nav-link">Funciones</a>
-        <a href="#precios" class="m-nav-link">Precios</a>
+        <a href="#problema" class="m-nav-link" data-i18n="nav_problem">El Problema</a>
+        <a href="#como-funciona" class="m-nav-link" data-i18n="nav_how">Como Funciona</a>
+        <a href="#funciones" class="m-nav-link" data-i18n="nav_features">Funciones</a>
+        <a href="#precios" class="m-nav-link" data-i18n="nav_pricing">Precios</a>
         <a href="#faq" class="m-nav-link">FAQ</a>
-        <button class="m-nav-cta" data-open-modal>Crea Tu Pagina Gratis</button>
+        <button class="m-lang-toggle" id="m-lang-toggle" aria-label="Change language">EN</button>
+        <button class="m-nav-cta" data-open-modal data-i18n="nav_cta">Crea Tu Pagina Gratis</button>
       </div>
       <button class="m-hamburger" id="m-hamburger" aria-label="Menu">
         <span></span>
@@ -57,12 +58,13 @@
       </button>
     </div>
     <div class="m-mobile-menu" id="m-mobile-menu">
-      <a href="#problema" class="m-nav-link">El Problema</a>
-      <a href="#como-funciona" class="m-nav-link">Como Funciona</a>
-      <a href="#funciones" class="m-nav-link">Funciones</a>
-      <a href="#precios" class="m-nav-link">Precios</a>
+      <a href="#problema" class="m-nav-link" data-i18n="nav_problem">El Problema</a>
+      <a href="#como-funciona" class="m-nav-link" data-i18n="nav_how">Como Funciona</a>
+      <a href="#funciones" class="m-nav-link" data-i18n="nav_features">Funciones</a>
+      <a href="#precios" class="m-nav-link" data-i18n="nav_pricing">Precios</a>
       <a href="#faq" class="m-nav-link">FAQ</a>
-      <button class="m-nav-cta" data-open-modal>Crea Tu Pagina Gratis</button>
+      <button class="m-lang-toggle m-lang-toggle--mobile" id="m-lang-toggle-mobile" aria-label="Change language">EN</button>
+      <button class="m-nav-cta" data-open-modal data-i18n="nav_cta">Crea Tu Pagina Gratis</button>
     </div>
   </nav>
 
@@ -70,11 +72,11 @@
   <section class="m-hero">
     <div class="m-hero-bg"></div>
     <div class="m-hero-inner">
-      <h1>Tu negocio ya existe.<br><span>Ahora ponlo en internet.</span></h1>
-      <p class="m-hero-sub">Creamos tu pagina web profesional en 72 horas. Sin complicaciones, sin contratos largos. Solo resultados.</p>
+      <h1 data-i18n-html="hero_title">Tu negocio ya existe.<br><span>Ahora ponlo en internet.</span></h1>
+      <p class="m-hero-sub" data-i18n="hero_sub">Creamos tu pagina web profesional en 72 horas. Sin complicaciones, sin contratos largos. Solo resultados.</p>
       <div class="m-hero-ctas">
-        <button class="m-btn-cta m-btn-green" data-open-modal>Crea Tu Pagina Gratis</button>
-        <a href="#como-funciona" class="m-btn-cta m-btn-outline">Ver Como Funciona</a>
+        <button class="m-btn-cta m-btn-green" data-open-modal data-i18n="hero_cta">Crea Tu Pagina Gratis</button>
+        <a href="#como-funciona" class="m-btn-cta m-btn-outline" data-i18n="hero_how">Ver Como Funciona</a>
       </div>
       <!-- Video placeholder -->
       <div class="m-video-container" id="m-video" data-video-id="">
@@ -89,19 +91,19 @@
     <div class="m-proof-inner" data-reveal>
       <div class="m-proof-item">
         <div class="m-proof-value">+500</div>
-        <div class="m-proof-label">Negocios atendidos</div>
+        <div class="m-proof-label" data-i18n="proof_businesses">Negocios atendidos</div>
       </div>
       <div class="m-proof-item">
         <div class="m-proof-value">72 hrs</div>
-        <div class="m-proof-label">Tiempo de entrega</div>
+        <div class="m-proof-label" data-i18n="proof_delivery">Tiempo de entrega</div>
       </div>
       <div class="m-proof-item">
         <div class="m-proof-value">$0</div>
-        <div class="m-proof-label">Costo de cancelacion</div>
+        <div class="m-proof-label" data-i18n="proof_cancel">Costo de cancelacion</div>
       </div>
       <div class="m-proof-item">
         <div class="m-proof-value">100%</div>
-        <div class="m-proof-label">Soporte en espanol</div>
+        <div class="m-proof-label" data-i18n="proof_support">Soporte en espanol</div>
       </div>
     </div>
   </section>
@@ -110,15 +112,15 @@
   <section class="m-problem" id="problema">
     <div class="m-problem-inner">
       <div data-reveal>
-        <span class="m-problem-tag">El Problema</span>
-        <h2>Tus clientes te buscan en Google. Si no apareces, no existes.</h2>
-        <p>El 97% de las personas buscan negocios locales en internet antes de visitarlos. Sin una pagina web, estas perdiendo clientes todos los dias.</p>
+        <span class="m-problem-tag" data-i18n="problem_tag">El Problema</span>
+        <h2 data-i18n="problem_title">Tus clientes te buscan en Google. Si no apareces, no existes.</h2>
+        <p data-i18n="problem_desc">El 97% de las personas buscan negocios locales en internet antes de visitarlos. Sin una pagina web, estas perdiendo clientes todos los dias.</p>
         <ul class="m-problem-list">
-          <li>Tus clientes no pueden encontrarte cuando buscan en Google</li>
-          <li>Pierdes credibilidad frente a competidores que si tienen pagina</li>
-          <li>No puedes mostrar tus servicios, precios ni horarios facilmente</li>
-          <li>Dependes solo del trafico que pasa por tu puerta</li>
-          <li>No tienes forma de recibir citas o consultas en linea</li>
+          <li data-i18n="problem_li1">Tus clientes no pueden encontrarte cuando buscan en Google</li>
+          <li data-i18n="problem_li2">Pierdes credibilidad frente a competidores que si tienen pagina</li>
+          <li data-i18n="problem_li3">No puedes mostrar tus servicios, precios ni horarios facilmente</li>
+          <li data-i18n="problem_li4">Dependes solo del trafico que pasa por tu puerta</li>
+          <li data-i18n="problem_li5">No tienes forma de recibir citas o consultas en linea</li>
         </ul>
       </div>
       <div data-reveal>
@@ -130,24 +132,24 @@
   <!-- ── Solution (How It Works) ── -->
   <section class="m-solution" id="como-funciona">
     <div class="m-container">
-      <span class="m-solution-tag">Como Funciona</span>
-      <h2>Tu pagina web en 3 pasos simples</h2>
-      <p class="m-solution-sub">Nos encargamos de todo. Tu solo revisas y apruebas.</p>
+      <span class="m-solution-tag" data-i18n="solution_tag">Como Funciona</span>
+      <h2 data-i18n="solution_title">Tu pagina web en 3 pasos simples</h2>
+      <p class="m-solution-sub" data-i18n="solution_sub">Nos encargamos de todo. Tu solo revisas y apruebas.</p>
       <div class="m-steps">
         <div class="m-step" data-reveal>
           <div class="m-step-num">1</div>
-          <h3>Ingresa tu informacion</h3>
-          <p>Danos el nombre de tu negocio, tu pagina de Facebook y tu perfil de Google. Con eso recopilamos fotos, resenas, horarios y todo lo necesario.</p>
+          <h3 data-i18n="step1_title">Ingresa tu informacion</h3>
+          <p data-i18n="step1_desc">Danos el nombre de tu negocio, tu pagina de Facebook y tu perfil de Google. Con eso recopilamos fotos, resenas, horarios y todo lo necesario.</p>
         </div>
         <div class="m-step" data-reveal>
           <div class="m-step-num">2</div>
-          <h3>Tu la revisas</h3>
-          <p>Te enviamos una vista previa de tu pagina web. Tu la revisas, nos dices si quieres cambios, y la ajustamos hasta que quede perfecta.</p>
+          <h3 data-i18n="step2_title">Tu la revisas</h3>
+          <p data-i18n="step2_desc">Te enviamos una vista previa de tu pagina web. Tu la revisas, nos dices si quieres cambios, y la ajustamos hasta que quede perfecta.</p>
         </div>
         <div class="m-step" data-reveal>
           <div class="m-step-num">3</div>
-          <h3>La lanzamos al mundo</h3>
-          <p>Publicamos tu pagina, la conectamos a Google y la optimizamos para que tus clientes te encuentren. Lista para recibir visitas y clientes.</p>
+          <h3 data-i18n="step3_title">La lanzamos al mundo</h3>
+          <p data-i18n="step3_desc">Publicamos tu pagina, la conectamos a Google y la optimizamos para que tus clientes te encuentren. Lista para recibir visitas y clientes.</p>
         </div>
       </div>
     </div>
@@ -157,21 +159,21 @@
   <section class="m-case" id="caso-de-exito">
     <div class="m-case-inner">
       <div data-reveal>
-        <span class="m-case-tag">Caso de Exito</span>
-        <h2>Maria aumento sus citas un 40% en el primer mes</h2>
-        <p class="m-case-desc">Maria tiene un salon de unas en Bogota. Antes dependia solo de clientes que pasaban por su local. Ahora recibe citas por su pagina web y sus clientes la encuentran en Google.</p>
+        <span class="m-case-tag" data-i18n="case_tag">Caso de Exito</span>
+        <h2 data-i18n="case_title">Maria aumento sus citas un 40% en el primer mes</h2>
+        <p class="m-case-desc" data-i18n="case_desc">Maria tiene un salon de unas en Bogota. Antes dependia solo de clientes que pasaban por su local. Ahora recibe citas por su pagina web y sus clientes la encuentran en Google.</p>
         <div class="m-case-stats">
           <div class="m-case-stat">
             <div class="m-case-stat-value">+40%</div>
-            <div class="m-case-stat-label">Mas clientes</div>
+            <div class="m-case-stat-label" data-i18n="case_stat1">Mas clientes</div>
           </div>
           <div class="m-case-stat">
             <div class="m-case-stat-value">+60%</div>
-            <div class="m-case-stat-label">Mas visitas</div>
+            <div class="m-case-stat-label" data-i18n="case_stat2">Mas visitas</div>
           </div>
           <div class="m-case-stat">
             <div class="m-case-stat-value">0</div>
-            <div class="m-case-stat-label">Citas perdidas</div>
+            <div class="m-case-stat-label" data-i18n="case_stat3">Citas perdidas</div>
           </div>
         </div>
       </div>
@@ -184,39 +186,39 @@
   <!-- ── Features ── -->
   <section class="m-features" id="funciones">
     <div class="m-container">
-      <span class="m-features-tag">Funciones</span>
-      <h2>Todo lo que tu pagina necesita</h2>
-      <p class="m-features-sub">Cada pagina viene con todo lo necesario para que tu negocio brille en internet.</p>
+      <span class="m-features-tag" data-i18n="features_tag">Funciones</span>
+      <h2 data-i18n="features_title">Todo lo que tu pagina necesita</h2>
+      <p class="m-features-sub" data-i18n="features_sub">Cada pagina viene con todo lo necesario para que tu negocio brille en internet.</p>
       <div class="m-features-grid">
         <div class="m-feature-card" data-reveal>
           <div class="m-feature-icon">&#127760;</div>
-          <h3>Pagina web profesional</h3>
-          <p>Diseno moderno y profesional que refleja la calidad de tu negocio. Personalizada con tus fotos, colores y estilo.</p>
+          <h3 data-i18n="feat1_title">Pagina web profesional</h3>
+          <p data-i18n="feat1_desc">Diseno moderno y profesional que refleja la calidad de tu negocio. Personalizada con tus fotos, colores y estilo.</p>
         </div>
         <div class="m-feature-card" data-reveal>
           <div class="m-feature-icon">&#128241;</div>
-          <h3>Optimizada para celular</h3>
-          <p>Tu pagina se ve perfecta en cualquier dispositivo. El 80% de tus clientes te buscaran desde su celular.</p>
+          <h3 data-i18n="feat2_title">Optimizada para celular</h3>
+          <p data-i18n="feat2_desc">Tu pagina se ve perfecta en cualquier dispositivo. El 80% de tus clientes te buscaran desde su celular.</p>
         </div>
         <div class="m-feature-card" data-reveal>
           <div class="m-feature-icon">&#128269;</div>
-          <h3>Visible en Google</h3>
-          <p>Optimizamos tu pagina para que aparezca en los resultados de busqueda cuando tus clientes busquen negocios como el tuyo.</p>
+          <h3 data-i18n="feat3_title">Visible en Google</h3>
+          <p data-i18n="feat3_desc">Optimizamos tu pagina para que aparezca en los resultados de busqueda cuando tus clientes busquen negocios como el tuyo.</p>
         </div>
         <div class="m-feature-card" data-reveal>
           <div class="m-feature-icon">&#128197;</div>
-          <h3>Sistema de citas</h3>
-          <p>Tus clientes pueden agendar citas directamente desde tu pagina. Sin llamadas, sin mensajes, sin complicaciones.</p>
+          <h3 data-i18n="feat4_title">Sistema de citas</h3>
+          <p data-i18n="feat4_desc">Tus clientes pueden agendar citas directamente desde tu pagina. Sin llamadas, sin mensajes, sin complicaciones.</p>
         </div>
         <div class="m-feature-card" data-reveal>
           <div class="m-feature-icon">&#128247;</div>
-          <h3>Redes sociales integradas</h3>
-          <p>Conectamos tu Instagram, Facebook y WhatsApp para que tus clientes te sigan y te contacten facilmente.</p>
+          <h3 data-i18n="feat5_title">Redes sociales integradas</h3>
+          <p data-i18n="feat5_desc">Conectamos tu Instagram, Facebook y WhatsApp para que tus clientes te sigan y te contacten facilmente.</p>
         </div>
         <div class="m-feature-card" data-reveal>
           <div class="m-feature-icon">&#128200;</div>
-          <h3>Seguimiento de visitas</h3>
-          <p>Panel de control donde ves cuantas personas visitan tu pagina, de donde vienen y que hacen. Datos reales, sin adivinar.</p>
+          <h3 data-i18n="feat6_title">Seguimiento de visitas</h3>
+          <p data-i18n="feat6_desc">Panel de control donde ves cuantas personas visitan tu pagina, de donde vienen y que hacen. Datos reales, sin adivinar.</p>
         </div>
       </div>
     </div>
@@ -225,43 +227,43 @@
   <!-- ── Pricing ── -->
   <section class="m-pricing" id="precios">
     <div class="m-container">
-      <span class="m-pricing-tag">Precios</span>
-      <h2>Simple y transparente</h2>
-      <p class="m-pricing-sub">Sin sorpresas, sin costos ocultos. Cancela cuando quieras.</p>
+      <span class="m-pricing-tag" data-i18n="pricing_tag">Precios</span>
+      <h2 data-i18n="pricing_title">Simple y transparente</h2>
+      <p class="m-pricing-sub" data-i18n="pricing_sub">Sin sorpresas, sin costos ocultos. Cancela cuando quieras.</p>
       <div class="m-pricing-card" data-reveal>
         <div class="m-pricing-price">$250 <span>MXN / mes</span></div>
-        <p class="m-pricing-note">Sin costo de instalacion. Sin contratos.</p>
+        <p class="m-pricing-note" data-i18n="pricing_note">Sin costo de instalacion. Sin contratos.</p>
         <div class="m-pricing-features">
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Pagina web profesional personalizada
+            <span data-i18n="pricing_f1">Pagina web profesional personalizada</span>
           </div>
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Optimizada para celular y Google
+            <span data-i18n="pricing_f2">Optimizada para celular y Google</span>
           </div>
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Dominio personalizado incluido
+            <span data-i18n="pricing_f3">Dominio personalizado incluido</span>
           </div>
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Hosting y SSL incluidos
+            <span data-i18n="pricing_f4">Hosting y SSL incluidos</span>
           </div>
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Cambios y actualizaciones ilimitados
+            <span data-i18n="pricing_f5">Cambios y actualizaciones ilimitados</span>
           </div>
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Soporte en espanol por WhatsApp
+            <span data-i18n="pricing_f6">Soporte en espanol por WhatsApp</span>
           </div>
           <div class="m-pricing-feature">
             <span class="m-pricing-check">&#10003;</span>
-            Panel de analiticas incluido
+            <span data-i18n="pricing_f7">Panel de analiticas incluido</span>
           </div>
         </div>
-        <button class="m-pricing-cta" data-open-modal>Comenzar Ahora</button>
+        <button class="m-pricing-cta" data-open-modal data-i18n="pricing_cta">Comenzar Ahora</button>
       </div>
     </div>
   </section>
@@ -269,52 +271,52 @@
   <!-- ── FAQ ── -->
   <section class="m-faq" id="faq">
     <div class="m-container">
-      <span class="m-faq-tag">Preguntas Frecuentes</span>
-      <h2>Resolvemos tus dudas</h2>
+      <span class="m-faq-tag" data-i18n="faq_tag">Preguntas Frecuentes</span>
+      <h2 data-i18n="faq_title">Resolvemos tus dudas</h2>
       <div class="m-faq-list">
         <div class="m-faq-item">
           <button class="m-faq-question">
-            <span>Necesito saber de tecnologia para tener mi pagina?</span>
+            <span data-i18n="faq_q1">Necesito saber de tecnologia para tener mi pagina?</span>
             <span class="m-faq-icon">+</span>
           </button>
           <div class="m-faq-answer">
-            <p>No, para nada. Nosotros nos encargamos de todo: diseno, contenido, publicacion y mantenimiento. Tu solo nos dices que quieres y nosotros lo hacemos realidad.</p>
+            <p data-i18n="faq_a1">No, para nada. Nosotros nos encargamos de todo: diseno, contenido, publicacion y mantenimiento. Tu solo nos dices que quieres y nosotros lo hacemos realidad.</p>
           </div>
         </div>
         <div class="m-faq-item">
           <button class="m-faq-question">
-            <span>Cuanto tiempo toma tener mi pagina lista?</span>
+            <span data-i18n="faq_q2">Cuanto tiempo toma tener mi pagina lista?</span>
             <span class="m-faq-icon">+</span>
           </button>
           <div class="m-faq-answer">
-            <p>Tu pagina estara lista en 72 horas o menos. Recopilamos la informacion de tu negocio, creamos tu pagina y te la enviamos para que la revises antes de publicarla.</p>
+            <p data-i18n="faq_a2">Tu pagina estara lista en 72 horas o menos. Recopilamos la informacion de tu negocio, creamos tu pagina y te la enviamos para que la revises antes de publicarla.</p>
           </div>
         </div>
         <div class="m-faq-item">
           <button class="m-faq-question">
-            <span>Puedo cancelar en cualquier momento?</span>
+            <span data-i18n="faq_q3">Puedo cancelar en cualquier momento?</span>
             <span class="m-faq-icon">+</span>
           </button>
           <div class="m-faq-answer">
-            <p>Si, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu pagina se desactiva al final del periodo pagado.</p>
+            <p data-i18n="faq_a3">Si, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu pagina se desactiva al final del periodo pagado.</p>
           </div>
         </div>
         <div class="m-faq-item">
           <button class="m-faq-question">
-            <span>Que pasa si quiero hacer cambios en mi pagina?</span>
+            <span data-i18n="faq_q4">Que pasa si quiero hacer cambios en mi pagina?</span>
             <span class="m-faq-icon">+</span>
           </button>
           <div class="m-faq-answer">
-            <p>Cambios ilimitados estan incluidos en tu plan. Solo envias un mensaje por WhatsApp con lo que quieres cambiar y nosotros lo actualizamos, generalmente en menos de 24 horas.</p>
+            <p data-i18n="faq_a4">Cambios ilimitados estan incluidos en tu plan. Solo envias un mensaje por WhatsApp con lo que quieres cambiar y nosotros lo actualizamos, generalmente en menos de 24 horas.</p>
           </div>
         </div>
         <div class="m-faq-item">
           <button class="m-faq-question">
-            <span>Mi negocio es muy pequeno, vale la pena tener pagina web?</span>
+            <span data-i18n="faq_q5">Mi negocio es muy pequeno, vale la pena tener pagina web?</span>
             <span class="m-faq-icon">+</span>
           </button>
           <div class="m-faq-answer">
-            <p>Absolutamente. Los negocios pequenos son los que mas se benefician. Una pagina web te da credibilidad, te hace visible en Google y te permite competir con negocios mas grandes.</p>
+            <p data-i18n="faq_a5">Absolutamente. Los negocios pequenos son los que mas se benefician. Una pagina web te da credibilidad, te hace visible en Google y te permite competir con negocios mas grandes.</p>
           </div>
         </div>
       </div>
@@ -325,9 +327,9 @@
   <section class="m-cta-final">
     <div class="m-cta-bg"></div>
     <div class="m-container" data-reveal>
-      <h2>Tu competencia ya tiene pagina. Y tu?</h2>
-      <p>No dejes que tus clientes se vayan con otro negocio. Empieza hoy y ten tu pagina lista en 72 horas.</p>
-      <button class="m-btn-cta m-btn-green" data-open-modal>Crea Tu Pagina Gratis</button>
+      <h2 data-i18n="cta_title">Tu competencia ya tiene pagina. Y tu?</h2>
+      <p data-i18n="cta_desc">No dejes que tus clientes se vayan con otro negocio. Empieza hoy y ten tu pagina lista en 72 horas.</p>
+      <button class="m-btn-cta m-btn-green" data-open-modal data-i18n="cta_btn">Crea Tu Pagina Gratis</button>
     </div>
   </section>
 
@@ -336,24 +338,22 @@
     <div class="m-footer-inner">
       <div class="m-footer-brand">
         <h3>AhoraTengoPagina</h3>
-        <p>Creamos paginas web profesionales para negocios locales en Latinoamerica. Simple, rapido y sin complicaciones.</p>
+        <p data-i18n="footer_desc">Creamos paginas web profesionales para negocios locales en Latinoamerica. Simple, rapido y sin complicaciones.</p>
       </div>
       <div class="m-footer-col">
-        <h4>Enlaces</h4>
-        <a href="#como-funciona">Como Funciona</a>
-        <a href="#funciones">Funciones</a>
-        <a href="#precios">Precios</a>
+        <h4 data-i18n="footer_links">Enlaces</h4>
+        <a href="#como-funciona" data-i18n="nav_how">Como Funciona</a>
+        <a href="#funciones" data-i18n="nav_features">Funciones</a>
+        <a href="#precios" data-i18n="nav_pricing">Precios</a>
         <a href="#faq">FAQ</a>
       </div>
       <div class="m-footer-col">
-        <h4>Contacto</h4>
+        <h4 data-i18n="footer_contact">Contacto</h4>
         <a href="https://wa.me/1234567890" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a>
       </div>
     </div>
-    <div class="m-footer-bottom">
-      &copy; 2026 AhoraTengoPagina. Todos los derechos reservados.
-    </div>
+    <div class="m-footer-bottom" data-i18n-html="footer_copy">&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.</div>
   </footer>
 
   <!-- ── Lead Capture Modal ── -->
@@ -361,32 +361,32 @@
     <div class="m-modal">
       <div class="m-modal-header">
         <div>
-          <h2>Crea tu pagina gratis</h2>
-          <p>Solo necesitamos estos datos para armar tu pagina web.</p>
+          <h2 data-i18n="modal_title">Crea tu pagina gratis</h2>
+          <p data-i18n="modal_sub">Solo necesitamos estos datos para armar tu pagina web.</p>
         </div>
         <button class="m-modal-close" id="m-modal-close">&times;</button>
       </div>
       <div class="m-modal-body">
         <form id="m-lead-form">
           <div class="m-form-group">
-            <label class="m-form-label" for="lead-business">Nombre de tu negocio</label>
-            <input class="m-form-input" type="text" id="lead-business" name="business_name" placeholder="Ej: Salon de Unas Maria" required>
+            <label class="m-form-label" for="lead-business" data-i18n="modal_business_label">Nombre de tu negocio</label>
+            <input class="m-form-input" type="text" id="lead-business" name="business_name" data-i18n-placeholder="modal_business_ph" placeholder="Ej: Salon de Unas Maria" required>
           </div>
           <div class="m-form-group">
-            <label class="m-form-label" for="lead-facebook">Tu pagina de Facebook</label>
-            <input class="m-form-input" type="url" id="lead-facebook" name="facebook_url" placeholder="Ej: https://facebook.com/tunegocio">
+            <label class="m-form-label" for="lead-facebook" data-i18n="modal_facebook_label">Tu pagina de Facebook</label>
+            <input class="m-form-input" type="url" id="lead-facebook" name="facebook_url" data-i18n-placeholder="modal_facebook_ph" placeholder="Ej: https://facebook.com/tunegocio">
           </div>
           <div class="m-form-group">
-            <label class="m-form-label" for="lead-google">Tu perfil de Google</label>
-            <input class="m-form-input" type="url" id="lead-google" name="google_listing_url" placeholder="Ej: https://maps.google.com/...">
-            <span class="m-form-hint">Buscate en Google Maps y copia el enlace de tu negocio.</span>
+            <label class="m-form-label" for="lead-google" data-i18n="modal_google_label">Tu perfil de Google</label>
+            <input class="m-form-input" type="url" id="lead-google" name="google_listing_url" data-i18n-placeholder="modal_google_ph" placeholder="Ej: https://maps.google.com/...">
+            <span class="m-form-hint" data-i18n="modal_google_hint">Buscate en Google Maps y copia el enlace de tu negocio.</span>
           </div>
-          <button type="submit" class="m-form-submit" id="m-form-submit">Crear Mi Pagina Gratis</button>
+          <button type="submit" class="m-form-submit" id="m-form-submit" data-i18n="modal_submit">Crear Mi Pagina Gratis</button>
         </form>
         <div class="m-form-success" id="m-form-success" style="display:none;">
           <div class="m-form-success-icon">&#10003;</div>
-          <h3>Estamos creando tu pagina!</h3>
-          <p>Recibimos tu informacion. Te avisaremos cuando tu pagina este lista para que la revises.</p>
+          <h3 data-i18n="modal_success_title">Estamos creando tu pagina!</h3>
+          <p data-i18n="modal_success_desc">Recibimos tu informacion. Te avisaremos cuando tu pagina este lista para que la revises.</p>
         </div>
       </div>
     </div>
