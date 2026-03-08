@@ -19,19 +19,19 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-
 
 const IMAGES = [
   {
-    filename: 'hero-bg.webp',
+    filename: 'hero-bg.png',
     prompt: 'Create a subtle dark abstract background image with topographic map-style flowing lines. Deep navy blue color palette (#0F172A base) with slight cyan and indigo glow effects. Professional tech feel, minimal, elegant. No text, no logos. 16:9 aspect ratio. Suitable as a website hero background with text overlay.',
   },
   {
-    filename: 'problem-section.webp',
+    filename: 'problem-section.png',
     prompt: 'Photograph of a Latin American woman in her 30s standing outside a small local storefront (like a bakery or salon), looking frustrated at her smartphone screen. Warm natural lighting, daytime. The storefront is modest but clean. She looks confused or disappointed, as if she cannot find something online. Realistic, candid style. 4:3 aspect ratio.',
   },
   {
-    filename: 'case-study.webp',
+    filename: 'case-study.png',
     prompt: 'Photograph of a happy Latina woman in her late 20s, nail salon owner, smiling warmly while looking at a tablet that shows an appointment booking interface. She is inside a bright, modern nail salon with clean white and pink decor. Natural light, professional but warm atmosphere. Realistic, authentic, positive. 4:3 aspect ratio.',
   },
   {
-    filename: 'cta-bg.webp',
+    filename: 'cta-bg.png',
     prompt: 'Aerial nighttime photograph of a Latin American city (like Bogota or Mexico City) with glowing city lights stretching to the horizon. Dark moody atmosphere, cinematic color grading with warm amber city lights against deep blue-black sky. No text. 16:9 aspect ratio. Suitable as a website background with text overlay.',
   },
 ];
