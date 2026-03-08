@@ -125,6 +125,31 @@ ul, ol { list-style: none; }
 .m-nav-cta:hover { background: var(--m-green-dark); }
 .m-nav-cta:active { transform: scale(0.97); }
 
+.m-lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--m-text-muted);
+  background: var(--m-bg);
+  border: 1px solid var(--m-border);
+  border-radius: var(--m-radius);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  letter-spacing: 0.5px;
+}
+.m-lang-toggle:hover {
+  color: var(--m-text);
+  border-color: var(--m-text-muted);
+}
+.m-lang-toggle--mobile {
+  align-self: flex-start;
+  margin-bottom: 4px;
+}
+
 /* Hamburger */
 .m-hamburger {
   display: none;
