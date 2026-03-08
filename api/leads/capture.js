@@ -14,10 +14,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, business_name, phone, city } = req.body || {};
+  const { business_name, facebook_url, google_listing_url } = req.body || {};
 
-  if (!name || !business_name || !phone || !city) {
-    return res.status(400).json({ error: 'Missing required fields: name, business_name, phone, city' });
+  if (!business_name) {
+    return res.status(400).json({ error: 'Missing required field: business_name' });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
@@ -29,6 +29,13 @@ export default async function handler(req, res) {
   }
 
   try {
+    const row = {
+      business_name: business_name.trim(),
+      source: 'website',
+    };
+    if (facebook_url) row.facebook_url = facebook_url.trim();
+    if (google_listing_url) row.google_listing_url = google_listing_url.trim();
+
     const response = await fetch(
       `${supabaseUrl}/rest/v1/marketing_leads`,
       {
@@ -39,13 +46,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal',
         },
-        body: JSON.stringify({
-          name: name.trim(),
-          business_name: business_name.trim(),
-          phone: phone.trim(),
-          city: city.trim(),
-          source: 'website',
-        }),
+        body: JSON.stringify(row),
       }
     );
 
