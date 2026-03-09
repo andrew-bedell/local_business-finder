@@ -793,7 +793,7 @@
     resultsBody.querySelectorAll('.btn-view').forEach((btn) => {
       btn.addEventListener('click', () => {
         const businessId = btn.getAttribute('data-id');
-        const business = currentResults.find(b => b.id === businessId);
+        const business = currentResults.find(b => String(b.id) === businessId);
         if (business) openDetailModal(business);
       });
     });
