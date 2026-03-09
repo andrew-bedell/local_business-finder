@@ -44,16 +44,46 @@
       thName: 'Business Name',
       thLocation: 'Location',
       thType: 'Type',
+      thPhone: 'Phone',
       thRating: 'Rating',
       thReviews: 'Reviews',
-      thInstagram: 'IG',
-      thFacebook: 'FB',
+      thSocial: 'Social',
+      thDetails: 'Details',
       thReport: 'Report',
       thWebsite: 'Website',
       thActions: 'Actions',
       viewBtn: 'View',
       badgeYes: 'Yes',
       badgeNo: '—',
+      noData: 'No Data',
+      // Modal detail sections
+      modalDescription: 'Description',
+      modalServiceOptions: 'Service Options',
+      modalHighlights: 'Highlights',
+      modalAmenities: 'Amenities',
+      modalAccessibility: 'Accessibility',
+      modalReviewBreakdown: 'Review Breakdown',
+      topPick: 'Top Pick',
+      good: 'Good',
+      topReviewsTitle: 'Top Reviews',
+      topReviewsSubtitle: 'Best reviews selected by sentiment analysis',
+      noReviewsAvailable: 'No reviews available',
+      copyTopReviews: 'Copy Top Reviews',
+      closeBtn: 'Close',
+      facebookProfile: 'Facebook Profile',
+      instagramProfile: 'Instagram Profile',
+      followers: '{0} followers',
+      viewOnFacebook: 'View on Facebook',
+      fbReactions: 'reactions',
+      fbReviewsTitle: 'Facebook Reviews ({0})',
+      igPosts: 'posts',
+      igFollowers: 'followers',
+      igFollowing: 'following',
+      igVerified: 'Verified account',
+      priceRange: 'Price Range',
+      anonymous: 'Anonymous',
+      reviews: 'reviews',
+      noReviews: 'No reviews',
       badgeDraft: 'Draft',
       badgePublished: 'Published',
       loadingData: 'Loading...',
@@ -176,16 +206,45 @@
       thName: 'Nombre',
       thLocation: 'Ubicación',
       thType: 'Tipo',
+      thPhone: 'Teléfono',
       thRating: 'Calificación',
       thReviews: 'Reseñas',
-      thInstagram: 'IG',
-      thFacebook: 'FB',
+      thSocial: 'Social',
+      thDetails: 'Detalles',
       thReport: 'Informe',
       thWebsite: 'Sitio Web',
       thActions: 'Acciones',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
       badgeNo: '—',
+      noData: 'Sin Datos',
+      modalDescription: 'Descripción',
+      modalServiceOptions: 'Opciones de Servicio',
+      modalHighlights: 'Destacados',
+      modalAmenities: 'Comodidades',
+      modalAccessibility: 'Accesibilidad',
+      modalReviewBreakdown: 'Desglose de Reseñas',
+      topPick: 'Top',
+      good: 'Bueno',
+      topReviewsTitle: 'Mejores Reseñas',
+      topReviewsSubtitle: 'Mejores reseñas seleccionadas por análisis de sentimiento',
+      noReviewsAvailable: 'No hay reseñas disponibles',
+      copyTopReviews: 'Copiar Mejores Reseñas',
+      closeBtn: 'Cerrar',
+      facebookProfile: 'Perfil de Facebook',
+      instagramProfile: 'Perfil de Instagram',
+      followers: '{0} seguidores',
+      viewOnFacebook: 'Ver en Facebook',
+      fbReactions: 'reacciones',
+      fbReviewsTitle: 'Reseñas de Facebook ({0})',
+      igPosts: 'publicaciones',
+      igFollowers: 'seguidores',
+      igFollowing: 'siguiendo',
+      igVerified: 'Cuenta verificada',
+      priceRange: 'Rango de Precio',
+      anonymous: 'Anónimo',
+      reviews: 'reseñas',
+      noReviews: 'Sin reseñas',
       badgeDraft: 'Borrador',
       badgePublished: 'Publicado',
       loadingData: 'Cargando...',
@@ -510,7 +569,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -640,6 +699,48 @@
     return type.replace(/_/g, ' ');
   }
 
+  // ── Social Cell Rendering ──
+  const SOCIAL_ICONS = {
+    yelp: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12.271 6.997c-.263 3.6-.681 5.632-1.554 5.632-.192 0-.417-.085-.661-.254L6.59 9.834c-.748-.516-.88-1.2-.355-1.838.526-.637 2.009-1.782 3.236-2.502.765-.449 1.395-.49 1.823-.118.284.247.248.788-.023 1.621zm-2.225 8.592c.206-.134.482-.2.807-.2.855 0 1.618.525 1.699.612l3.01 3.345c.542.638.453 1.338-.243 1.883a10.146 10.146 0 0 1-3.643 1.619c-.86.212-1.447-.026-1.67-.593l-1.255-3.91c-.268-.833.154-1.487 1.295-2.756zm5.96-2.461l3.773-1.367c.825-.278 1.431-.067 1.63.563a10.15 10.15 0 0 1-.104 3.99c-.228.847-.766 1.196-1.488.96l-3.828-1.186c-.9-.279-1.217-.864-1.042-1.628.138-.612.55-1.12 1.059-1.332zm-.34-2.138l-3.808-1.27c-.868-.291-1.16-.882-.96-1.638.16-.606.587-1.1 1.1-1.296l3.754-1.445c.823-.295 1.435-.095 1.647.536a10.151 10.151 0 0 1 .022 3.994c-.213.852-.762 1.213-1.495.986l-.26-.087v.22zm-5.49 3.858c.867.113 1.308.614 1.308 1.414 0 .175-.018.362-.052.558l-.722 3.981c-.16.814-.69 1.155-1.476.925a10.063 10.063 0 0 1-3.3-2.088c-.615-.614-.692-1.262-.21-1.793l2.808-2.825c.31-.31.547-.343 1.644-.172z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
+  };
+
+  const SOCIAL_COLORS = {
+    yelp: '#d32323',
+    facebook: '#1877f2',
+    instagram: '#e4405f',
+  };
+
+  const SOCIAL_PLATFORM_EMOJIS = {
+    facebook: '\uD83D\uDCD8', instagram: '\uD83D\uDCF7', whatsapp: '\uD83D\uDCAC',
+    twitter: '\uD83D\uDCAD', tiktok: '\uD83C\uDFB5', linkedin: '\uD83D\uDCBC',
+    youtube: '\u25B6\uFE0F', yelp: '\u2B50', tripadvisor: '\uD83E\uDDED',
+    opentable: '\uD83C\uDF7D\uFE0F', resy: '\uD83D\uDCCB', doordash: '\uD83D\uDE97',
+    ubereats: '\uD83C\uDF54', grubhub: '\uD83C\uDF71',
+  };
+
+  function buildSocialCellHtml(profiles) {
+    if (!profiles || profiles.length === 0) {
+      return '<span class="social-cell-none">--</span>';
+    }
+    const maxShow = 4;
+    const shown = profiles.slice(0, maxShow);
+    const icons = shown.map((p) => {
+      const icon = SOCIAL_ICONS[p.platform] || '';
+      const color = SOCIAL_COLORS[p.platform] || 'var(--text-muted)';
+      const title = p.platform.charAt(0).toUpperCase() + p.platform.slice(1);
+      const url = p.url || '#';
+      if (!icon) {
+        const emoji = SOCIAL_PLATFORM_EMOJIS[p.platform] || '\uD83C\uDF10';
+        return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="social-cell-icon" title="${escapeHtml(title)}">${emoji}</a>`;
+      }
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="social-cell-icon" title="${escapeHtml(title)}" style="color:${color}">${icon}</a>`;
+    }).join('');
+    const extra = profiles.length > maxShow ? `<span class="social-cell-more">+${profiles.length - maxShow}</span>` : '';
+    return `<span class="social-cell">${icons}${extra}</span>`;
+  }
+
   // ── Render Table ──
   function renderTable() {
     if (currentResults.length === 0) {
@@ -654,17 +755,10 @@
 
     const offset = currentPage * pageSize;
     resultsBody.innerHTML = currentResults.map((b, i) => {
-      const ig = getProfile(b, 'instagram');
-      const fb = getProfile(b, 'facebook');
+      const profiles = b.business_social_profiles || [];
       const websiteStatus = getWebsiteStatus(b);
 
-      const igBadge = ig
-        ? `<span class="badge badge-has-site">${ig.post_count ? ig.post_count + ' posts' : t('badgeYes')}</span>`
-        : `<span style="color:var(--text-dim)">${t('badgeNo')}</span>`;
-
-      const fbBadge = fb
-        ? `<span class="badge badge-has-site">${t('badgeYes')}</span>`
-        : `<span style="color:var(--text-dim)">${t('badgeNo')}</span>`;
+      const socialCellHtml = buildSocialCellHtml(profiles);
 
       const reportBadge = websiteStatus
         ? `<span class="badge badge-has-site">${t('badgeYes')}</span>`
@@ -674,21 +768,24 @@
         ? `<span class="badge ${websiteStatus === 'published' ? 'badge-has-site' : 'badge-no-site'}">${t('badge' + websiteStatus.charAt(0).toUpperCase() + websiteStatus.slice(1))}</span>`
         : `<span style="color:var(--text-dim)">${t('badgeNo')}</span>`;
 
+      const mapsLink = b.maps_url
+        ? `<a href="${escapeHtml(b.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
+        : `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.name + ' ' + (b.address_full || ''))}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
+
       return `<tr>
-        <td>${offset + i + 1}</td>
+        <td class="td-center">${offset + i + 1}</td>
         <td><strong>${escapeHtml(b.name)}</strong></td>
         <td>${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
-        <td><span class="stars">${renderStars(b.rating)}</span> ${b.rating ? b.rating.toFixed(1) : '—'}</td>
-        <td>${b.review_count || 0}</td>
-        <td>${igBadge}</td>
-        <td>${fbBadge}</td>
-        <td>${reportBadge}</td>
-        <td>${websiteBadge}</td>
-        <td>
-          <button class="btn btn-view" data-id="${b.id}" data-i18n="viewBtn">${t('viewBtn')}</button>
-          ${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}
-        </td>
+        <td>${b.phone ? escapeHtml(b.phone) : '<span style="color:var(--text-dim)">N/A</span>'}</td>
+        <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
+        <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
+        <td class="td-center">${socialCellHtml}</td>
+        <td class="td-center">${reportBadge}</td>
+        <td class="td-center">${websiteBadge}</td>
+        <td class="td-center"><button class="btn btn-view" data-id="${b.id}">${t('viewBtn')}</button></td>
+        <td class="td-center">${mapsLink}</td>
+        <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
       </tr>`;
     }).join('');
 
@@ -721,12 +818,16 @@
 
   // ── Detail Modal ──
   async function openDetailModal(business) {
+    // Remove existing modal if any
+    const existing = document.getElementById('detail-modal');
+    if (existing) existing.remove();
+
     // Load full details (reviews, photos) if not cached
     let details = detailCache[business.id];
     if (!details) {
       try {
         const [reviewsRes, photosRes] = await Promise.all([
-          supabaseClient.from('business_reviews').select('*').eq('business_id', business.id).order('rating', { ascending: false }).limit(20),
+          supabaseClient.from('business_reviews').select('*').eq('business_id', business.id).order('sentiment_score', { ascending: false, nullsFirst: false }).limit(20),
           supabaseClient.from('business_photos').select('*').eq('business_id', business.id).limit(30),
         ]);
         details = {
@@ -741,74 +842,177 @@
     }
 
     const profiles = business.business_social_profiles || [];
-    const googleReviews = details.reviews.filter(r => r.source === 'google');
-    const fbReviews = details.reviews.filter(r => r.source === 'facebook');
+    const allReviews = details.reviews;
+    const googleReviews = allReviews.filter(r => r.source === 'google');
+    const fbReviews = allReviews.filter(r => r.source === 'facebook');
     const photos = details.photos;
+
+    // Star rating display
+    const starsHtml = renderStars(business.rating);
+
+    // Build description HTML
+    let descriptionHtml = '';
+    if (business.description) {
+      descriptionHtml = `
+        <div class="modal-section">
+          <h3>${t('modalDescription')}</h3>
+          <p class="business-description-text">${escapeHtml(business.description)}</p>
+        </div>
+      `;
+    }
+
+    // Build price level HTML
+    let priceHtml = '';
+    if (business.price_level) {
+      const priceDisplay = '$'.repeat(business.price_level);
+      priceHtml = `<span class="meta-sep">|</span><span>${escapeHtml(priceDisplay)}</span>`;
+    }
+
+    // Build photo gallery HTML
+    let photosHtml = '';
+    if (photos.length > 0) {
+      const imgs = photos.map(p => `<div class="photo-item"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.caption || '')}" loading="lazy"></div>`).join('');
+      photosHtml = `<div class="modal-section"><h3>${t('modalPhotos')}</h3><div class="photo-gallery">${imgs}</div></div>`;
+    }
+
+    // Build service options HTML
+    let serviceOptionsHtml = '';
+    if (business.service_options && business.service_options.length > 0) {
+      const tags = business.service_options.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
+      serviceOptionsHtml = `<div class="modal-section"><h3>${t('modalServiceOptions')}</h3><div class="features-grid">${tags}</div></div>`;
+    }
+
+    // Build highlights HTML
+    let highlightsHtml = '';
+    if (business.highlights && business.highlights.length > 0) {
+      const tags = business.highlights.map(f => `<span class="feature-tag feature-tag-highlight">${escapeHtml(f)}</span>`).join('');
+      highlightsHtml = `<div class="modal-section"><h3>${t('modalHighlights')}</h3><div class="features-grid">${tags}</div></div>`;
+    }
+
+    // Build amenities HTML
+    let amenitiesHtml = '';
+    if (business.amenities && business.amenities.length > 0) {
+      const tags = business.amenities.map(f => `<span class="feature-tag">${escapeHtml(f)}</span>`).join('');
+      amenitiesHtml = `<div class="modal-section"><h3>${t('modalAmenities')}</h3><div class="features-grid">${tags}</div></div>`;
+    }
+
+    // Build accessibility HTML
+    let accessibilityHtml = '';
+    if (business.accessibility_info) {
+      // accessibility_info is TEXT in DB, may be comma-separated or a single string
+      const items = business.accessibility_info.split(',').map(s => s.trim()).filter(Boolean);
+      if (items.length > 0) {
+        const tags = items.map(f => `<span class="feature-tag feature-tag-accessibility">${escapeHtml(f)}</span>`).join('');
+        accessibilityHtml = `<div class="modal-section"><h3>${t('modalAccessibility')}</h3><div class="features-grid">${tags}</div></div>`;
+      }
+    }
+
+    // Build review histogram HTML
+    let histogramHtml = '';
+    if (googleReviews.length > 0) {
+      const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      googleReviews.forEach(r => { if (r.rating >= 1 && r.rating <= 5) counts[r.rating]++; });
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      if (total > 0) {
+        const rows = [5, 4, 3, 2, 1].map(star => {
+          const count = counts[star];
+          const pct = Math.round((count / total) * 100);
+          return `
+            <div class="histogram-row">
+              <span class="histogram-star">${star}</span>
+              <div class="histogram-bar-track">
+                <div class="histogram-bar-fill" style="width:${pct}%"></div>
+              </div>
+              <span class="histogram-count">${count}</span>
+            </div>
+          `;
+        }).join('');
+        histogramHtml = `<div class="modal-section"><h3>${t('modalReviewBreakdown')}</h3><div class="review-histogram">${rows}</div></div>`;
+      }
+    }
+
+    // Build reviews HTML with sentiment badges (matching search modal style)
+    let reviewsHtml = '';
+    // Sort by sentiment score desc for "top reviews"
+    const topReviews = [...allReviews].sort((a, b) => (b.sentiment_score || 0) - (a.sentiment_score || 0)).slice(0, 10);
+    if (topReviews.length > 0) {
+      const reviewItems = topReviews.map(r => {
+        const stars = '\u2605'.repeat(Math.floor(r.rating || 0)) + '\u2606'.repeat(5 - Math.floor(r.rating || 0));
+        const label = r.sentiment_label || '';
+        const sentimentBadge = label === 'very_positive'
+          ? `<span class="sentiment-badge sentiment-great">${t('topPick')}</span>`
+          : label === 'positive'
+          ? `<span class="sentiment-badge sentiment-good">${t('good')}</span>`
+          : '';
+        const authorName = r.author_name || t('anonymous');
+        const timeAgo = r.published_at || '';
+        return `
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-author">
+                ${r.author_photo_url ? `<img src="${escapeHtml(r.author_photo_url)}" alt="" class="review-avatar">` : '<div class="review-avatar-placeholder"></div>'}
+                <div>
+                  <strong>${escapeHtml(authorName)}</strong>
+                  ${r.source !== 'google' ? `<span class="review-source-badge">${escapeHtml(r.source)}</span>` : ''}
+                  <span class="review-time">${escapeHtml(timeAgo)}</span>
+                </div>
+              </div>
+              <div class="review-meta">
+                <span class="stars">${stars}</span>
+                ${sentimentBadge}
+              </div>
+            </div>
+            <p class="review-text">${escapeHtml(r.text || '')}</p>
+          </div>
+        `;
+      }).join('');
+      reviewsHtml = `
+        <div class="modal-section">
+          <h3>${t('topReviewsTitle')} (${allReviews.length})</h3>
+          <p class="section-subtitle">${t('topReviewsSubtitle')}</p>
+          <div class="reviews-list">${reviewItems}</div>
+        </div>
+      `;
+    } else {
+      reviewsHtml = `
+        <div class="modal-section">
+          <h3>${t('topReviewsTitle')}</h3>
+          <p class="section-subtitle" style="color:var(--text-dim)">${t('noReviewsAvailable')}</p>
+        </div>
+      `;
+    }
 
     // Build hours HTML
     let hoursHtml = '';
     if (business.hours && business.hours.length > 0) {
-      hoursHtml = `<div class="modal-section">
-        <h3>${t('modalHours')}</h3>
-        <ul style="list-style:none;padding:0;font-size:13px;color:var(--text-muted)">${business.hours.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>
-      </div>`;
+      const hourItems = business.hours.map(h => `<li>${escapeHtml(h)}</li>`).join('');
+      hoursHtml = `<div class="modal-section"><h3>${t('modalHours')}</h3><ul class="hours-list">${hourItems}</ul></div>`;
     }
 
     // Build categories HTML
     let typesHtml = '';
     if (business.types && business.types.length > 0) {
-      const tags = business.types.map(t => `<span class="feature-tag">${escapeHtml(t.replace(/_/g, ' '))}</span>`).join('');
+      const tags = business.types.map(ty => `<span class="feature-tag">${escapeHtml(ty.replace(/_/g, ' '))}</span>`).join('');
       typesHtml = `<div class="modal-section"><h3>${t('modalTypes')}</h3><div class="features-grid">${tags}</div></div>`;
     }
 
     // Build social profiles HTML
     let socialHtml = '';
     if (profiles.length > 0) {
-      const items = profiles.map(p =>
-        `<a href="${escapeHtml(p.url || '#')}" target="_blank" rel="noopener" class="social-profile-item">
+      const items = profiles.map(p => {
+        const icon = SOCIAL_ICONS[p.platform] || '';
+        const color = SOCIAL_COLORS[p.platform] || 'var(--text-muted)';
+        const emoji = SOCIAL_PLATFORM_EMOJIS[p.platform] || '\uD83C\uDF10';
+        const iconHtml = icon ? `<span style="color:${color}">${icon}</span>` : emoji;
+        return `<a href="${escapeHtml(p.url || '#')}" target="_blank" rel="noopener" class="social-profile-item">
+          ${iconHtml}
           <span style="text-transform:capitalize;font-weight:600">${escapeHtml(p.platform)}</span>
           ${p.handle ? `<span style="color:var(--text-muted)">@${escapeHtml(p.handle)}</span>` : ''}
           ${p.follower_count ? `<span style="color:var(--text-muted)">${p.follower_count.toLocaleString()} followers</span>` : ''}
-        </a>`
-      ).join('');
+          ${p.post_count ? `<span style="color:var(--text-muted)">${p.post_count.toLocaleString()} posts</span>` : ''}
+        </a>`;
+      }).join('');
       socialHtml = `<div class="modal-section"><h3>${t('modalSocialProfiles')}</h3><div class="social-profiles-list">${items}</div></div>`;
-    }
-
-    // Build photos HTML
-    let photosHtml = '';
-    if (photos.length > 0) {
-      const imgs = photos.map(p => `<img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.caption || '')}" class="photo-grid-item" loading="lazy">`).join('');
-      photosHtml = `<div class="modal-section"><h3>${t('modalPhotos')}</h3><div class="photo-grid">${imgs}</div></div>`;
-    }
-
-    // Build Google reviews HTML
-    let gReviewsHtml = '';
-    if (googleReviews.length > 0) {
-      const items = googleReviews.map(r =>
-        `<div class="review-item">
-          <div class="review-header">
-            <strong>${escapeHtml(r.author_name || 'Anonymous')}</strong>
-            <span class="stars">${renderStars(r.rating)}</span>
-          </div>
-          <p class="review-text">${escapeHtml(r.text || '')}</p>
-        </div>`
-      ).join('');
-      gReviewsHtml = `<div class="modal-section"><h3>${t('modalGoogleReviews')} (${googleReviews.length})</h3>${items}</div>`;
-    }
-
-    // Build Facebook reviews HTML
-    let fbReviewsHtml = '';
-    if (fbReviews.length > 0) {
-      const items = fbReviews.map(r =>
-        `<div class="review-item">
-          <div class="review-header">
-            <strong>${escapeHtml(r.author_name || 'Anonymous')}</strong>
-            <span class="stars">${renderStars(r.rating)}</span>
-          </div>
-          <p class="review-text">${escapeHtml(r.text || '')}</p>
-        </div>`
-      ).join('');
-      fbReviewsHtml = `<div class="modal-section"><h3>${t('modalFacebookReviews')} (${fbReviews.length})</h3>${items}</div>`;
     }
 
     // Check if there's already a generated website
@@ -819,25 +1023,34 @@
     modal.className = 'modal-overlay';
     modal.id = 'detail-modal';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width:900px">
+      <div class="modal-content">
         <div class="modal-header">
-          <h2>${escapeHtml(business.name)}</h2>
+          <div>
+            <h2>${escapeHtml(business.name)}</h2>
+            <p class="modal-address">${escapeHtml(business.address_full || '')}</p>
+            <div class="modal-meta">
+              <span class="stars">${starsHtml}</span>
+              <span>${business.rating ? business.rating.toFixed(1) : 'N/A'}</span>
+              <span class="meta-sep">|</span>
+              <span>${business.review_count ? business.review_count.toLocaleString() + ' ' + t('reviews') : t('noReviews')}</span>
+              ${priceHtml}
+              ${business.phone ? `<span class="meta-sep">|</span><span>${escapeHtml(business.phone)}</span>` : ''}
+            </div>
+          </div>
           <button class="modal-close" id="modal-close-btn">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="modal-section">
-            <p><strong>${t('modalAddress')}:</strong> ${escapeHtml(business.address_full || '—')}</p>
-            <p><strong>${t('modalPhone')}:</strong> ${business.phone ? `<a href="tel:${escapeHtml(business.phone)}">${escapeHtml(business.phone)}</a>` : '—'}</p>
-            <p><strong>${t('modalRating')}:</strong> <span class="stars">${renderStars(business.rating)}</span> ${business.rating ? business.rating.toFixed(1) : '—'} (${business.review_count || 0} ${t('modalReviews').toLowerCase()})</p>
-            ${business.maps_url ? `<p><a href="${escapeHtml(business.maps_url)}" target="_blank" rel="noopener" style="color:var(--primary)">Google Maps</a></p>` : ''}
-          </div>
-
+          ${descriptionHtml}
+          ${photosHtml}
+          ${serviceOptionsHtml}
+          ${highlightsHtml}
+          ${amenitiesHtml}
+          ${accessibilityHtml}
           ${typesHtml}
+          ${histogramHtml}
+          ${reviewsHtml}
           ${hoursHtml}
           ${socialHtml}
-          ${photosHtml}
-          ${gReviewsHtml}
-          ${fbReviewsHtml}
 
           <!-- Research Report -->
           <div class="modal-section" id="research-report-section">
@@ -853,6 +1066,10 @@
             <div id="website-generation-container"></div>
           </div>
         </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="modal-copy-reviews">${t('copyTopReviews')}</button>
+          <button class="btn btn-primary" id="modal-close-btn-footer">${t('closeBtn')}</button>
+        </div>
       </div>
     `;
 
@@ -860,6 +1077,7 @@
 
     // Close handlers
     modal.querySelector('#modal-close-btn').addEventListener('click', () => modal.remove());
+    modal.querySelector('#modal-close-btn-footer').addEventListener('click', () => modal.remove());
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.remove();
     });
@@ -869,6 +1087,18 @@
         if (m) m.remove();
         document.removeEventListener('keydown', handler);
       }
+    });
+
+    // Copy top reviews button
+    modal.querySelector('#modal-copy-reviews').addEventListener('click', () => {
+      const reviewTexts = topReviews.map(r => {
+        const authorName = r.author_name || t('anonymous');
+        const stars = '\u2605'.repeat(r.rating || 0);
+        return `${stars} — ${authorName}\n"${r.text || ''}"`;
+      }).join('\n\n');
+      navigator.clipboard.writeText(reviewTexts).then(() => {
+        showToast(t('copyTopReviews') + ' \u2713', 'success');
+      });
     });
 
     // Report button
