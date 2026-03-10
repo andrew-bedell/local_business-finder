@@ -5,7 +5,8 @@
     { "source": "/employee/admin", "destination": "/employee/admin.html" },
     { "source": "/employee/saved", "destination": "/employee/admin.html" },
     { "source": "/employee/messages", "destination": "/employee/admin.html" },
-    { "source": "/mipagina/:nombre", "destination": "/customer/index.html" }
+    { "source": "/mipagina/:nombre", "destination": "/customer/index.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html" }
   ],
   "headers": [
     {
