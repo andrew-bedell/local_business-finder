@@ -101,15 +101,16 @@
       modal_sub: 'Solo necesitamos estos datos para armar tu pagina web.',
       modal_business_label: 'Nombre de tu negocio',
       modal_business_ph: 'Ej: Salon de Unas Maria',
-      modal_facebook_label: 'Tu pagina de Facebook',
-      modal_facebook_ph: 'Ej: https://facebook.com/tunegocio',
-      modal_google_label: 'Tu perfil de Google',
-      modal_google_ph: 'Ej: https://maps.google.com/...',
-      modal_google_hint: 'Buscate en Google Maps y copia el enlace de tu negocio.',
-      modal_submit: 'Crear Mi Pagina Gratis',
+      modal_address_label: 'Direccion de tu negocio',
+      modal_address_ph: 'Ej: Calle 5 #12-34, Bogota',
+      modal_type_label: 'Tipo de negocio',
+      modal_type_ph: 'Ej: Restaurante, Salon de belleza, Taller mecanico',
+      modal_whatsapp_label: 'Tu numero de WhatsApp',
+      modal_whatsapp_ph: 'Ej: +52 55 1234 5678',
+      modal_submit: 'Habla Con Mi Disenador',
       modal_success_title: 'Estamos creando tu pagina!',
       modal_success_desc: 'Recibimos tu informacion. Te avisaremos cuando tu pagina este lista para que la revises.',
-      modal_sending: 'Creando...',
+      modal_sending: 'Enviando...',
       modal_error: 'Error. Intentar de nuevo.',
     },
     en: {
@@ -210,15 +211,16 @@
       modal_sub: 'We just need this info to build your website.',
       modal_business_label: 'Your business name',
       modal_business_ph: 'E.g.: Maria\'s Nail Salon',
-      modal_facebook_label: 'Your Facebook page',
-      modal_facebook_ph: 'E.g.: https://facebook.com/yourbusiness',
-      modal_google_label: 'Your Google profile',
-      modal_google_ph: 'E.g.: https://maps.google.com/...',
-      modal_google_hint: 'Search for yourself on Google Maps and copy the link to your business.',
-      modal_submit: 'Create My Free Page',
+      modal_address_label: 'Your business address',
+      modal_address_ph: 'E.g.: 123 Main St, Mexico City',
+      modal_type_label: 'Type of business',
+      modal_type_ph: 'E.g.: Restaurant, Beauty salon, Auto shop',
+      modal_whatsapp_label: 'Your WhatsApp number',
+      modal_whatsapp_ph: 'E.g.: +52 55 1234 5678',
+      modal_submit: 'Talk To My Designer',
       modal_success_title: 'We\'re building your page!',
       modal_success_desc: 'We received your info. We\'ll let you know when your page is ready for review.',
-      modal_sending: 'Creating...',
+      modal_sending: 'Sending...',
       modal_error: 'Error. Try again.',
     }
   };
@@ -385,40 +387,27 @@
   });
 
   // ── Lead Form Submission ──
-  leadForm.addEventListener('submit', async function(e) {
+  var WHATSAPP_NUMBER = '529991095806'; // Our business WhatsApp number
+
+  leadForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
     var businessName = document.getElementById('lead-business').value.trim();
-    var facebookUrl = document.getElementById('lead-facebook').value.trim();
-    var googleListingUrl = document.getElementById('lead-google').value.trim();
+    var businessAddress = document.getElementById('lead-address').value.trim();
+    var businessType = document.getElementById('lead-type').value.trim();
+    var whatsappNumber = document.getElementById('lead-whatsapp').value.trim();
 
-    if (!businessName) return;
+    if (!businessName || !businessAddress || !businessType || !whatsappNumber) return;
 
-    formSubmitBtn.disabled = true;
-    formSubmitBtn.textContent = t('modal_sending');
+    var message = 'Hola! Quiero crear mi pagina web.\n\n'
+      + 'Negocio: ' + businessName + '\n'
+      + 'Direccion: ' + businessAddress + '\n'
+      + 'Tipo: ' + businessType + '\n'
+      + 'WhatsApp: ' + whatsappNumber;
 
-    try {
-      var response = await fetch('/api/leads/capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ business_name: businessName, facebook_url: facebookUrl || null, google_listing_url: googleListingUrl || null })
-      });
-
-      if (!response.ok) throw new Error('Server error');
-
-      // Show success state
-      leadForm.style.display = 'none';
-      formSuccess.style.display = 'block';
-    } catch (err) {
-      console.error('Lead capture error:', err);
-      formSubmitBtn.disabled = false;
-      formSubmitBtn.textContent = t('modal_error');
-      formSubmitBtn.style.background = '#ef4444';
-      setTimeout(function() {
-        formSubmitBtn.textContent = t('modal_submit');
-        formSubmitBtn.style.background = '';
-      }, 3000);
-    }
+    var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
+    window.open(waUrl, '_blank');
+    closeModal();
   });
 
   // ── YouTube Lite Embed ──
