@@ -25,6 +25,40 @@
       margin: 0 auto;
       padding: 0 24px;
     }
+    .m-legal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .m-legal-lang {
+      display: inline-flex;
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius);
+      overflow: hidden;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .m-legal-lang button {
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      background: var(--m-white);
+      color: var(--m-text-muted);
+    }
+    .m-legal-lang button.m-active {
+      background: var(--m-blue);
+      color: var(--m-white);
+    }
+    .m-legal-lang button:not(.m-active):hover {
+      background: var(--m-bg);
+      color: var(--m-text);
+    }
     .m-legal-nav {
       display: flex;
       gap: 24px;
@@ -52,7 +86,7 @@
     .m-legal-date {
       font-size: 14px;
       color: var(--m-text-muted);
-      margin-bottom: 48px;
+      margin-bottom: 0;
     }
     .m-legal h2 {
       font-size: 28px;
@@ -98,10 +132,17 @@
     .m-legal a.m-inline-link:hover {
       color: var(--m-blue-dark);
     }
+    [data-lang] { display: none; }
+    .m-lang-es [data-lang="es"] { display: block; }
+    .m-lang-en [data-lang="en"] { display: block; }
+    .m-lang-es .m-legal-nav[data-lang="es"],
+    .m-lang-en .m-legal-nav[data-lang="en"] { display: flex; }
     @media (max-width: 768px) {
       .m-legal { padding: 100px 0 60px; }
       .m-legal h1 { font-size: 28px; }
       .m-legal h2 { font-size: 22px; }
+      .m-legal-top { flex-direction: column; }
+      .m-legal-nav { flex-wrap: wrap; gap: 12px; }
     }
   </style>
 </head>
@@ -130,239 +171,496 @@
   </nav>
 
   <!-- ── Legal Content ── -->
-  <section class="m-legal">
+  <section class="m-legal m-lang-es">
     <div class="m-legal-inner">
-      <h1>Politica de Privacidad y Terminos de Servicio</h1>
-      <p class="m-legal-date">Fecha de vigencia: Marzo 2026</p>
 
-      <div class="m-legal-nav">
+      <div class="m-legal-top">
+        <div>
+          <div data-lang="es">
+            <h1>Politica de Privacidad y Terminos de Servicio</h1>
+            <p class="m-legal-date">Fecha de vigencia: Marzo 2026</p>
+          </div>
+          <div data-lang="en">
+            <h1>Privacy Policy and Terms of Service</h1>
+            <p class="m-legal-date">Effective date: March 2026</p>
+          </div>
+        </div>
+        <div class="m-legal-lang" id="m-lang-switcher">
+          <button data-set-lang="es" class="m-active">ES</button>
+          <button data-set-lang="en">EN</button>
+        </div>
+      </div>
+
+      <!-- ── Section Nav (ES) ── -->
+      <div class="m-legal-nav" data-lang="es">
         <a href="#privacy">Politica de Privacidad</a>
         <a href="#terms">Terminos de Servicio</a>
         <a href="#government">Solicitudes de Autoridades</a>
+      </div>
+      <!-- ── Section Nav (EN) ── -->
+      <div class="m-legal-nav" data-lang="en">
+        <a href="#privacy">Privacy Policy</a>
+        <a href="#terms">Terms of Service</a>
+        <a href="#government">Government Data Requests</a>
       </div>
 
       <!-- ════════════════════════════════════════════════ -->
       <!-- PRIVACY POLICY -->
       <!-- ════════════════════════════════════════════════ -->
-      <h2 id="privacy">Politica de Privacidad</h2>
 
-      <p>En AhoraTengoPagina nos comprometemos a proteger tu informacion personal. Esta politica explica que datos recopilamos, como los usamos y cuales son tus derechos.</p>
+      <!-- ── Spanish ── -->
+      <div data-lang="es">
+        <h2 id="privacy">Politica de Privacidad</h2>
 
-      <h3>1. Informacion que recopilamos</h3>
-      <p>Recopilamos la informacion que nos proporcionas directamente a traves de nuestro formulario de contacto:</p>
-      <ul>
-        <li>Nombre de tu negocio</li>
-        <li>URL de tu pagina de Facebook (opcional)</li>
-        <li>URL de tu perfil de Google Maps (opcional)</li>
-      </ul>
-      <p>Cuando te conviertes en cliente, tambien recopilamos:</p>
-      <ul>
-        <li>Nombre del propietario o contacto principal</li>
-        <li>Correo electronico</li>
-        <li>Numero de telefono o WhatsApp</li>
-        <li>Informacion de facturacion procesada por Stripe</li>
-      </ul>
+        <p>En AhoraTengoPagina nos comprometemos a proteger tu informacion personal. Esta politica explica que datos recopilamos, como los usamos y cuales son tus derechos.</p>
 
-      <h3>2. Como usamos tu informacion</h3>
-      <p>Utilizamos tu informacion para:</p>
-      <ul>
-        <li>Crear y administrar tu pagina web</li>
-        <li>Comunicarnos contigo sobre tu servicio</li>
-        <li>Procesar pagos y gestionar tu suscripcion</li>
-        <li>Mejorar nuestros servicios</li>
-      </ul>
+        <h3>1. Informacion que recopilamos</h3>
+        <p>Recopilamos la informacion que nos proporcionas directamente a traves de nuestro formulario de contacto:</p>
+        <ul>
+          <li>Nombre de tu negocio</li>
+          <li>URL de tu pagina de Facebook (opcional)</li>
+          <li>URL de tu perfil de Google Maps (opcional)</li>
+        </ul>
+        <p>Cuando te conviertes en cliente, tambien recopilamos:</p>
+        <ul>
+          <li>Nombre del propietario o contacto principal</li>
+          <li>Correo electronico</li>
+          <li>Numero de telefono o WhatsApp</li>
+          <li>Informacion de facturacion procesada por Stripe</li>
+        </ul>
 
-      <h3>3. Servicios de terceros</h3>
-      <p>Utilizamos los siguientes servicios de terceros para operar nuestra plataforma:</p>
-      <ul>
-        <li><strong>Google (Maps y Places API)</strong> — Para obtener informacion publica de tu negocio como ubicacion, resenas y fotos. Sujeto a la <a class="m-inline-link" href="https://policies.google.com/privacy" target="_blank" rel="noopener">Politica de Privacidad de Google</a>.</li>
-        <li><strong>Meta (WhatsApp Business)</strong> — Para comunicarnos contigo por WhatsApp. Sujeto a la <a class="m-inline-link" href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">Politica de Privacidad de WhatsApp</a>.</li>
-        <li><strong>Supabase</strong> — Para almacenar datos de forma segura en nuestra base de datos. Sujeto a la <a class="m-inline-link" href="https://supabase.com/privacy" target="_blank" rel="noopener">Politica de Privacidad de Supabase</a>.</li>
-        <li><strong>Vercel</strong> — Para alojar nuestra plataforma y las paginas web generadas. Sujeto a la <a class="m-inline-link" href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Politica de Privacidad de Vercel</a>.</li>
-        <li><strong>Stripe</strong> — Para procesar pagos de forma segura. Nunca almacenamos datos de tarjetas de credito. Sujeto a la <a class="m-inline-link" href="https://stripe.com/privacy" target="_blank" rel="noopener">Politica de Privacidad de Stripe</a>.</li>
-      </ul>
+        <h3>2. Como usamos tu informacion</h3>
+        <p>Utilizamos tu informacion para:</p>
+        <ul>
+          <li>Crear y administrar tu pagina web</li>
+          <li>Comunicarnos contigo sobre tu servicio</li>
+          <li>Procesar pagos y gestionar tu suscripcion</li>
+          <li>Mejorar nuestros servicios</li>
+        </ul>
 
-      <h3>4. Cookies y almacenamiento local</h3>
-      <p>Nuestro sitio utiliza almacenamiento local (localStorage) del navegador unicamente para guardar preferencias de idioma. No utilizamos cookies de rastreo ni publicidad de terceros.</p>
-      <p>Las paginas web que generamos para nuestros clientes incluyen un script de analiticas propio que registra visitas, clics en telefono, correo y direcciones. No compartimos estos datos con terceros.</p>
+        <h3>3. Servicios de terceros</h3>
+        <p>Utilizamos los siguientes servicios de terceros para operar nuestra plataforma:</p>
+        <ul>
+          <li><strong>Google (Maps y Places API)</strong> — Para obtener informacion publica de tu negocio como ubicacion, resenas y fotos. Sujeto a la <a class="m-inline-link" href="https://policies.google.com/privacy" target="_blank" rel="noopener">Politica de Privacidad de Google</a>.</li>
+          <li><strong>Meta (WhatsApp Business)</strong> — Para comunicarnos contigo por WhatsApp. Sujeto a la <a class="m-inline-link" href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">Politica de Privacidad de WhatsApp</a>.</li>
+          <li><strong>Supabase</strong> — Para almacenar datos de forma segura en nuestra base de datos. Sujeto a la <a class="m-inline-link" href="https://supabase.com/privacy" target="_blank" rel="noopener">Politica de Privacidad de Supabase</a>.</li>
+          <li><strong>Vercel</strong> — Para alojar nuestra plataforma y las paginas web generadas. Sujeto a la <a class="m-inline-link" href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Politica de Privacidad de Vercel</a>.</li>
+          <li><strong>Stripe</strong> — Para procesar pagos de forma segura. Nunca almacenamos datos de tarjetas de credito. Sujeto a la <a class="m-inline-link" href="https://stripe.com/privacy" target="_blank" rel="noopener">Politica de Privacidad de Stripe</a>.</li>
+        </ul>
 
-      <h3>5. Retencion de datos</h3>
-      <p>Conservamos tu informacion mientras tengas una cuenta activa con nosotros. Si cancelas tu suscripcion, retenemos tus datos por un periodo de 90 dias por si deseas reactivar tu servicio. Despues de ese periodo, eliminamos tu informacion personal de nuestros sistemas.</p>
+        <h3>4. Cookies y almacenamiento local</h3>
+        <p>Nuestro sitio utiliza almacenamiento local (localStorage) del navegador unicamente para guardar preferencias de idioma. No utilizamos cookies de rastreo ni publicidad de terceros.</p>
+        <p>Las paginas web que generamos para nuestros clientes incluyen un script de analiticas propio que registra visitas, clics en telefono, correo y direcciones. No compartimos estos datos con terceros.</p>
 
-      <h3>6. Tus derechos</h3>
-      <p>Tienes derecho a:</p>
-      <ul>
-        <li>Acceder a la informacion que tenemos sobre ti</li>
-        <li>Solicitar la correccion de datos inexactos</li>
-        <li>Solicitar la eliminacion de tus datos</li>
-        <li>Retirar tu consentimiento en cualquier momento</li>
-      </ul>
+        <h3>5. Retencion de datos</h3>
+        <p>Conservamos tu informacion mientras tengas una cuenta activa con nosotros. Si cancelas tu suscripcion, retenemos tus datos por un periodo de 90 dias por si deseas reactivar tu servicio. Despues de ese periodo, eliminamos tu informacion personal de nuestros sistemas.</p>
 
-      <h3>7. Seguridad</h3>
-      <p>Protegemos tu informacion mediante cifrado SSL/TLS en todas las comunicaciones, almacenamiento seguro en servidores con acceso restringido, y procesamiento de pagos a traves de Stripe (certificado PCI DSS).</p>
+        <h3>6. Tus derechos</h3>
+        <p>Tienes derecho a:</p>
+        <ul>
+          <li>Acceder a la informacion que tenemos sobre ti</li>
+          <li>Solicitar la correccion de datos inexactos</li>
+          <li>Solicitar la eliminacion de tus datos</li>
+          <li>Retirar tu consentimiento en cualquier momento</li>
+        </ul>
 
-      <h3>8. Contacto</h3>
-      <p>Si tienes preguntas sobre esta politica de privacidad, puedes contactarnos en:</p>
-      <ul>
-        <li>Correo: <a class="m-inline-link" href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a></li>
-        <li>WhatsApp: <a class="m-inline-link" href="https://wa.me/1234567890" target="_blank" rel="noopener">Enviar mensaje</a></li>
-      </ul>
+        <h3>7. Seguridad</h3>
+        <p>Protegemos tu informacion mediante cifrado SSL/TLS en todas las comunicaciones, almacenamiento seguro en servidores con acceso restringido, y procesamiento de pagos a traves de Stripe (certificado PCI DSS).</p>
+
+        <h3>8. Contacto</h3>
+        <p>Si tienes preguntas sobre esta politica de privacidad, puedes contactarnos en:</p>
+        <ul>
+          <li>Correo: <a class="m-inline-link" href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a></li>
+          <li>WhatsApp: <a class="m-inline-link" href="https://wa.me/1234567890" target="_blank" rel="noopener">Enviar mensaje</a></li>
+        </ul>
+      </div>
+
+      <!-- ── English ── -->
+      <div data-lang="en">
+        <h2 id="privacy">Privacy Policy</h2>
+
+        <p>At AhoraTengoPagina we are committed to protecting your personal information. This policy explains what data we collect, how we use it, and what your rights are.</p>
+
+        <h3>1. Information we collect</h3>
+        <p>We collect the information you provide directly through our contact form:</p>
+        <ul>
+          <li>Your business name</li>
+          <li>Your Facebook page URL (optional)</li>
+          <li>Your Google Maps profile URL (optional)</li>
+        </ul>
+        <p>When you become a customer, we also collect:</p>
+        <ul>
+          <li>Owner or primary contact name</li>
+          <li>Email address</li>
+          <li>Phone number or WhatsApp</li>
+          <li>Billing information processed by Stripe</li>
+        </ul>
+
+        <h3>2. How we use your information</h3>
+        <p>We use your information to:</p>
+        <ul>
+          <li>Create and manage your website</li>
+          <li>Communicate with you about your service</li>
+          <li>Process payments and manage your subscription</li>
+          <li>Improve our services</li>
+        </ul>
+
+        <h3>3. Third-party services</h3>
+        <p>We use the following third-party services to operate our platform:</p>
+        <ul>
+          <li><strong>Google (Maps and Places API)</strong> — To obtain public information about your business such as location, reviews, and photos. Subject to <a class="m-inline-link" href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+          <li><strong>Meta (WhatsApp Business)</strong> — To communicate with you via WhatsApp. Subject to <a class="m-inline-link" href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">WhatsApp's Privacy Policy</a>.</li>
+          <li><strong>Supabase</strong> — To securely store data in our database. Subject to <a class="m-inline-link" href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase's Privacy Policy</a>.</li>
+          <li><strong>Vercel</strong> — To host our platform and generated websites. Subject to <a class="m-inline-link" href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel's Privacy Policy</a>.</li>
+          <li><strong>Stripe</strong> — To process payments securely. We never store credit card data. Subject to <a class="m-inline-link" href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe's Privacy Policy</a>.</li>
+        </ul>
+
+        <h3>4. Cookies and local storage</h3>
+        <p>Our site uses browser local storage (localStorage) only to save language preferences. We do not use tracking cookies or third-party advertising.</p>
+        <p>The websites we generate for our customers include a first-party analytics script that records visits, phone clicks, email clicks, and directions clicks. We do not share this data with third parties.</p>
+
+        <h3>5. Data retention</h3>
+        <p>We retain your information as long as you have an active account with us. If you cancel your subscription, we retain your data for a period of 90 days in case you wish to reactivate your service. After that period, we delete your personal information from our systems.</p>
+
+        <h3>6. Your rights</h3>
+        <p>You have the right to:</p>
+        <ul>
+          <li>Access the information we hold about you</li>
+          <li>Request correction of inaccurate data</li>
+          <li>Request deletion of your data</li>
+          <li>Withdraw your consent at any time</li>
+        </ul>
+
+        <h3>7. Security</h3>
+        <p>We protect your information through SSL/TLS encryption on all communications, secure storage on servers with restricted access, and payment processing through Stripe (PCI DSS certified).</p>
+
+        <h3>8. Contact</h3>
+        <p>If you have questions about this privacy policy, you can contact us at:</p>
+        <ul>
+          <li>Email: <a class="m-inline-link" href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a></li>
+          <li>WhatsApp: <a class="m-inline-link" href="https://wa.me/1234567890" target="_blank" rel="noopener">Send message</a></li>
+        </ul>
+      </div>
 
       <!-- ════════════════════════════════════════════════ -->
       <!-- TERMS OF SERVICE -->
       <!-- ════════════════════════════════════════════════ -->
-      <h2 id="terms">Terminos de Servicio</h2>
 
-      <p>Al utilizar los servicios de AhoraTengoPagina, aceptas los siguientes terminos y condiciones.</p>
+      <!-- ── Spanish ── -->
+      <div data-lang="es">
+        <h2 id="terms">Terminos de Servicio</h2>
 
-      <h3>1. Descripcion del servicio</h3>
-      <p>AhoraTengoPagina es un servicio de creacion y hospedaje de paginas web para negocios locales. Nosotros nos encargamos de disenar, publicar y mantener tu pagina web, incluyendo:</p>
-      <ul>
-        <li>Diseno y creacion de tu pagina web personalizada</li>
-        <li>Hospedaje web y certificado SSL</li>
-        <li>Optimizacion para motores de busqueda (SEO)</li>
-        <li>Cambios y actualizaciones ilimitados</li>
-        <li>Soporte tecnico por WhatsApp</li>
-        <li>Panel de analiticas de visitas</li>
-      </ul>
+        <p>Al utilizar los servicios de AhoraTengoPagina, aceptas los siguientes terminos y condiciones.</p>
 
-      <h3>2. Precios y facturacion</h3>
-      <p>El costo del servicio es de <strong>$250 MXN por mes</strong>, facturado de forma mensual. No hay costo de instalacion ni contratos a largo plazo. Los pagos se procesan de forma segura a traves de Stripe.</p>
-      <p>Nos reservamos el derecho de modificar los precios con un aviso previo de 30 dias. Los cambios de precio no afectaran el periodo de facturacion en curso.</p>
+        <h3>1. Descripcion del servicio</h3>
+        <p>AhoraTengoPagina es un servicio de creacion y hospedaje de paginas web para negocios locales. Nosotros nos encargamos de disenar, publicar y mantener tu pagina web, incluyendo:</p>
+        <ul>
+          <li>Diseno y creacion de tu pagina web personalizada</li>
+          <li>Hospedaje web y certificado SSL</li>
+          <li>Optimizacion para motores de busqueda (SEO)</li>
+          <li>Cambios y actualizaciones ilimitados</li>
+          <li>Soporte tecnico por WhatsApp</li>
+          <li>Panel de analiticas de visitas</li>
+        </ul>
 
-      <h3>3. Cancelacion</h3>
-      <p>Puedes cancelar tu suscripcion en cualquier momento sin penalizacion. Al cancelar:</p>
-      <ul>
-        <li>Tu pagina web permanecera activa hasta el final del periodo pagado</li>
-        <li>No se realizaran cobros adicionales</li>
-        <li>Despues del periodo pagado, tu pagina sera desactivada</li>
-        <li>Tienes 90 dias para reactivar tu servicio antes de que eliminemos tus datos</li>
-      </ul>
+        <h3>2. Precios y facturacion</h3>
+        <p>El costo del servicio es de <strong>$250 MXN por mes</strong>, facturado de forma mensual. No hay costo de instalacion ni contratos a largo plazo. Los pagos se procesan de forma segura a traves de Stripe.</p>
+        <p>Nos reservamos el derecho de modificar los precios con un aviso previo de 30 dias. Los cambios de precio no afectaran el periodo de facturacion en curso.</p>
 
-      <h3>4. Contenido y propiedad</h3>
-      <p>El contenido de tu negocio (fotos, textos, logos) sigue siendo de tu propiedad. AhoraTengoPagina retiene los derechos sobre el diseno, plantillas y codigo utilizado para generar tu pagina web.</p>
-      <p>Al proporcionarnos contenido, confirmas que tienes los derechos necesarios para usarlo y nos autorizas a publicarlo en tu pagina web.</p>
+        <h3>3. Cancelacion</h3>
+        <p>Puedes cancelar tu suscripcion en cualquier momento sin penalizacion. Al cancelar:</p>
+        <ul>
+          <li>Tu pagina web permanecera activa hasta el final del periodo pagado</li>
+          <li>No se realizaran cobros adicionales</li>
+          <li>Despues del periodo pagado, tu pagina sera desactivada</li>
+          <li>Tienes 90 dias para reactivar tu servicio antes de que eliminemos tus datos</li>
+        </ul>
 
-      <h3>5. Uso aceptable</h3>
-      <p>Tu pagina web no puede ser utilizada para:</p>
-      <ul>
-        <li>Actividades ilegales o fraudulentas</li>
-        <li>Contenido que infrinja derechos de autor o propiedad intelectual</li>
-        <li>Material ofensivo, difamatorio o discriminatorio</li>
-        <li>Distribucion de malware o software danino</li>
-        <li>Spam o practicas enganosas</li>
-      </ul>
-      <p>Nos reservamos el derecho de suspender o cancelar el servicio si se detecta un uso inaceptable, sin derecho a reembolso.</p>
+        <h3>4. Contenido y propiedad</h3>
+        <p>El contenido de tu negocio (fotos, textos, logos) sigue siendo de tu propiedad. AhoraTengoPagina retiene los derechos sobre el diseno, plantillas y codigo utilizado para generar tu pagina web.</p>
+        <p>Al proporcionarnos contenido, confirmas que tienes los derechos necesarios para usarlo y nos autorizas a publicarlo en tu pagina web.</p>
 
-      <h3>6. Disponibilidad del servicio</h3>
-      <p>Nos esforzamos por mantener tu pagina web disponible las 24 horas del dia, los 7 dias de la semana. Sin embargo, no garantizamos una disponibilidad del 100%. Pueden ocurrir interrupciones por mantenimiento programado o circunstancias fuera de nuestro control.</p>
+        <h3>5. Uso aceptable</h3>
+        <p>Tu pagina web no puede ser utilizada para:</p>
+        <ul>
+          <li>Actividades ilegales o fraudulentas</li>
+          <li>Contenido que infrinja derechos de autor o propiedad intelectual</li>
+          <li>Material ofensivo, difamatorio o discriminatorio</li>
+          <li>Distribucion de malware o software danino</li>
+          <li>Spam o practicas enganosas</li>
+        </ul>
+        <p>Nos reservamos el derecho de suspender o cancelar el servicio si se detecta un uso inaceptable, sin derecho a reembolso.</p>
 
-      <h3>7. Limitacion de responsabilidad</h3>
-      <p>AhoraTengoPagina no sera responsable por danos indirectos, incidentales o consecuentes derivados del uso o la imposibilidad de uso de nuestros servicios, incluyendo pero no limitado a perdida de ingresos, datos o oportunidades de negocio.</p>
-      <p>Nuestra responsabilidad total no excedera el monto pagado por el servicio en los ultimos 3 meses.</p>
+        <h3>6. Disponibilidad del servicio</h3>
+        <p>Nos esforzamos por mantener tu pagina web disponible las 24 horas del dia, los 7 dias de la semana. Sin embargo, no garantizamos una disponibilidad del 100%. Pueden ocurrir interrupciones por mantenimiento programado o circunstancias fuera de nuestro control.</p>
 
-      <h3>8. Modificaciones a estos terminos</h3>
-      <p>Podemos actualizar estos terminos periodicamente. Te notificaremos de cambios significativos por correo electronico o WhatsApp con al menos 15 dias de anticipacion. El uso continuado del servicio despues de los cambios constituye tu aceptacion de los nuevos terminos.</p>
+        <h3>7. Limitacion de responsabilidad</h3>
+        <p>AhoraTengoPagina no sera responsable por danos indirectos, incidentales o consecuentes derivados del uso o la imposibilidad de uso de nuestros servicios, incluyendo pero no limitado a perdida de ingresos, datos o oportunidades de negocio.</p>
+        <p>Nuestra responsabilidad total no excedera el monto pagado por el servicio en los ultimos 3 meses.</p>
 
-      <h3>9. Contacto</h3>
-      <p>Para preguntas sobre estos terminos de servicio:</p>
-      <ul>
-        <li>Correo: <a class="m-inline-link" href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a></li>
-        <li>WhatsApp: <a class="m-inline-link" href="https://wa.me/1234567890" target="_blank" rel="noopener">Enviar mensaje</a></li>
-      </ul>
+        <h3>8. Modificaciones a estos terminos</h3>
+        <p>Podemos actualizar estos terminos periodicamente. Te notificaremos de cambios significativos por correo electronico o WhatsApp con al menos 15 dias de anticipacion. El uso continuado del servicio despues de los cambios constituye tu aceptacion de los nuevos terminos.</p>
+
+        <h3>9. Contacto</h3>
+        <p>Para preguntas sobre estos terminos de servicio:</p>
+        <ul>
+          <li>Correo: <a class="m-inline-link" href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a></li>
+          <li>WhatsApp: <a class="m-inline-link" href="https://wa.me/1234567890" target="_blank" rel="noopener">Enviar mensaje</a></li>
+        </ul>
+      </div>
+
+      <!-- ── English ── -->
+      <div data-lang="en">
+        <h2 id="terms">Terms of Service</h2>
+
+        <p>By using AhoraTengoPagina's services, you accept the following terms and conditions.</p>
+
+        <h3>1. Service description</h3>
+        <p>AhoraTengoPagina is a website creation and hosting service for local businesses. We handle designing, publishing, and maintaining your website, including:</p>
+        <ul>
+          <li>Custom website design and creation</li>
+          <li>Web hosting and SSL certificate</li>
+          <li>Search engine optimization (SEO)</li>
+          <li>Unlimited changes and updates</li>
+          <li>Technical support via WhatsApp</li>
+          <li>Visitor analytics dashboard</li>
+        </ul>
+
+        <h3>2. Pricing and billing</h3>
+        <p>The service costs <strong>$250 MXN per month</strong>, billed monthly. There is no setup fee and no long-term contracts. Payments are processed securely through Stripe.</p>
+        <p>We reserve the right to modify prices with 30 days' prior notice. Price changes will not affect the current billing period.</p>
+
+        <h3>3. Cancellation</h3>
+        <p>You can cancel your subscription at any time without penalty. Upon cancellation:</p>
+        <ul>
+          <li>Your website will remain active until the end of the paid period</li>
+          <li>No additional charges will be made</li>
+          <li>After the paid period, your website will be deactivated</li>
+          <li>You have 90 days to reactivate your service before we delete your data</li>
+        </ul>
+
+        <h3>4. Content and ownership</h3>
+        <p>Your business content (photos, text, logos) remains your property. AhoraTengoPagina retains rights to the design, templates, and code used to generate your website.</p>
+        <p>By providing us with content, you confirm that you have the necessary rights to use it and authorize us to publish it on your website.</p>
+
+        <h3>5. Acceptable use</h3>
+        <p>Your website may not be used for:</p>
+        <ul>
+          <li>Illegal or fraudulent activities</li>
+          <li>Content that infringes copyright or intellectual property</li>
+          <li>Offensive, defamatory, or discriminatory material</li>
+          <li>Distribution of malware or harmful software</li>
+          <li>Spam or deceptive practices</li>
+        </ul>
+        <p>We reserve the right to suspend or cancel the service if unacceptable use is detected, without the right to a refund.</p>
+
+        <h3>6. Service availability</h3>
+        <p>We strive to keep your website available 24 hours a day, 7 days a week. However, we do not guarantee 100% availability. Interruptions may occur due to scheduled maintenance or circumstances beyond our control.</p>
+
+        <h3>7. Limitation of liability</h3>
+        <p>AhoraTengoPagina shall not be liable for indirect, incidental, or consequential damages arising from the use or inability to use our services, including but not limited to loss of revenue, data, or business opportunities.</p>
+        <p>Our total liability shall not exceed the amount paid for the service in the last 3 months.</p>
+
+        <h3>8. Changes to these terms</h3>
+        <p>We may update these terms periodically. We will notify you of significant changes by email or WhatsApp with at least 15 days' notice. Continued use of the service after changes constitutes your acceptance of the new terms.</p>
+
+        <h3>9. Contact</h3>
+        <p>For questions about these terms of service:</p>
+        <ul>
+          <li>Email: <a class="m-inline-link" href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a></li>
+          <li>WhatsApp: <a class="m-inline-link" href="https://wa.me/1234567890" target="_blank" rel="noopener">Send message</a></li>
+        </ul>
+      </div>
 
       <!-- ════════════════════════════════════════════════ -->
       <!-- GOVERNMENT & PUBLIC AUTHORITY DATA REQUEST POLICY -->
       <!-- ════════════════════════════════════════════════ -->
-      <h2 id="government">Government &amp; Public Authority Data Request Policy</h2>
 
-      <p><strong>AhoraTengoPagina.com</strong><br>
-      Effective Date: March 10, 2026 &nbsp;|&nbsp; Version 1.0</p>
+      <!-- ── Spanish ── -->
+      <div data-lang="es">
+        <h2 id="government">Politica de Solicitudes de Datos de Gobierno y Autoridades Publicas</h2>
 
-      <ul>
-        <li><strong>Website:</strong> www.AhoraTengoPagina.com</li>
-        <li><strong>Policy Type:</strong> Government &amp; Public Authority Data Requests</li>
-        <li><strong>Applies To:</strong> All users and their personal data processed by AhoraTengoPagina.com</li>
-        <li><strong>Review Date:</strong> Annually, or upon material change in applicable law</li>
-      </ul>
+        <p><strong>AhoraTengoPagina.com</strong><br>
+        Fecha de vigencia: 10 de marzo de 2026 &nbsp;|&nbsp; Version 1.0</p>
 
-      <h3>1. Purpose and Scope</h3>
-      <p>This policy establishes the procedures and safeguards that AhoraTengoPagina.com ("we," "our," or "the Website") follows when responding to requests from government agencies, law enforcement bodies, regulatory authorities, courts, or other public authorities seeking access to personal data or personal information belonging to our users.</p>
-      <p>This policy covers all personal data collected, processed, or stored by AhoraTengoPagina.com, including but not limited to names, email addresses, IP addresses, usage data, and any other identifying information.</p>
+        <ul>
+          <li><strong>Sitio web:</strong> www.AhoraTengoPagina.com</li>
+          <li><strong>Tipo de politica:</strong> Solicitudes de datos de gobierno y autoridades publicas</li>
+          <li><strong>Aplica a:</strong> Todos los usuarios y sus datos personales procesados por AhoraTengoPagina.com</li>
+          <li><strong>Fecha de revision:</strong> Anualmente, o ante cambios sustanciales en la legislacion aplicable</li>
+        </ul>
 
-      <h3>2. Our Core Commitment</h3>
-      <p>AhoraTengoPagina.com is committed to protecting the privacy and rights of its users. We will not voluntarily disclose user data to any government or public authority without following the procedures outlined in this policy. We treat every request with the same rigorous standard regardless of the authority making it.</p>
+        <h3>1. Proposito y alcance</h3>
+        <p>Esta politica establece los procedimientos y salvaguardas que sigue AhoraTengoPagina.com ("nosotros", "nuestro" o "el Sitio Web") al responder a solicitudes de agencias gubernamentales, cuerpos de seguridad, autoridades regulatorias, tribunales u otras autoridades publicas que buscan acceso a datos personales o informacion personal de nuestros usuarios.</p>
+        <p>Esta politica cubre todos los datos personales recopilados, procesados o almacenados por AhoraTengoPagina.com, incluyendo pero no limitado a nombres, direcciones de correo electronico, direcciones IP, datos de uso y cualquier otra informacion identificable.</p>
 
-      <h3>3. Legality Review Requirement</h3>
-      <p>Before complying with any request from a public authority, AhoraTengoPagina.com will conduct a formal review to assess the legality of the request. This review includes:</p>
-      <ul>
-        <li>Verifying the identity and jurisdiction of the requesting authority</li>
-        <li>Confirming the request is accompanied by valid legal documentation (e.g., court order, subpoena, warrant, or equivalent instrument)</li>
-        <li>Assessing whether the request complies with applicable local, national, and international laws</li>
-        <li>Evaluating whether the request falls within the legitimate scope and authority of the requesting body</li>
-        <li>Consulting with legal counsel when the validity of the request is unclear</li>
-      </ul>
-      <p>Requests that do not meet our legal requirements will be rejected or returned with a request for proper documentation.</p>
+        <h3>2. Nuestro compromiso fundamental</h3>
+        <p>AhoraTengoPagina.com esta comprometido con la proteccion de la privacidad y los derechos de sus usuarios. No divulgaremos voluntariamente datos de usuarios a ningun gobierno o autoridad publica sin seguir los procedimientos descritos en esta politica. Tratamos cada solicitud con el mismo estandar riguroso independientemente de la autoridad que la realice.</p>
 
-      <h3>4. Right to Challenge Unlawful Requests</h3>
-      <p>AhoraTengoPagina.com reserves the right to challenge any data request that we determine to be unlawful, overly broad, or an abuse of authority. Our process for challenging such requests includes:</p>
-      <ul>
-        <li>Notifying the requesting authority in writing of our legal objections</li>
-        <li>Seeking legal advice and, where appropriate, engaging legal representation</li>
-        <li>Filing formal objections or motions to quash with the appropriate court or oversight body</li>
-        <li>Cooperating with industry organizations or civil liberties groups where systemic issues are identified</li>
-      </ul>
-      <p>We will not be pressured or coerced into complying with requests that we reasonably believe to be unlawful.</p>
+        <h3>3. Requisito de revision de legalidad</h3>
+        <p>Antes de cumplir con cualquier solicitud de una autoridad publica, AhoraTengoPagina.com realizara una revision formal para evaluar la legalidad de la solicitud. Esta revision incluye:</p>
+        <ul>
+          <li>Verificar la identidad y jurisdiccion de la autoridad solicitante</li>
+          <li>Confirmar que la solicitud esta acompanada de documentacion legal valida (por ejemplo, orden judicial, citacion, mandamiento u otro instrumento equivalente)</li>
+          <li>Evaluar si la solicitud cumple con las leyes locales, nacionales e internacionales aplicables</li>
+          <li>Determinar si la solicitud se encuentra dentro del alcance legitimo y la autoridad del organismo solicitante</li>
+          <li>Consultar con asesores legales cuando la validez de la solicitud no sea clara</li>
+        </ul>
+        <p>Las solicitudes que no cumplan con nuestros requisitos legales seran rechazadas o devueltas con una solicitud de documentacion adecuada.</p>
 
-      <h3>5. Data Minimization Policy</h3>
-      <p>In the event that a valid, lawful request must be fulfilled, AhoraTengoPagina.com will apply a strict data minimization standard. This means:</p>
-      <ul>
-        <li>We will disclose only the specific data explicitly required by the legal instrument — no more, no less</li>
-        <li>We will not proactively expand the scope of disclosure beyond what is legally compelled</li>
-        <li>We will redact or withhold data that falls outside the scope of the request, even if technically related</li>
-        <li>We will seek clarification from the requesting authority if the scope of the request is ambiguous</li>
-        <li>We will not disclose data in formats or aggregations that reveal more than the minimum necessary</li>
-      </ul>
-      <p>This data minimization approach applies regardless of the size, urgency, or authority level of the requesting body.</p>
+        <h3>4. Derecho a impugnar solicitudes ilegales</h3>
+        <p>AhoraTengoPagina.com se reserva el derecho de impugnar cualquier solicitud de datos que determinemos como ilegal, excesivamente amplia o un abuso de autoridad. Nuestro proceso para impugnar dichas solicitudes incluye:</p>
+        <ul>
+          <li>Notificar a la autoridad solicitante por escrito de nuestras objeciones legales</li>
+          <li>Buscar asesoramiento legal y, cuando sea apropiado, contratar representacion legal</li>
+          <li>Presentar objeciones formales o mociones de anulacion ante el tribunal u organismo de supervision correspondiente</li>
+          <li>Cooperar con organizaciones de la industria o grupos de libertades civiles cuando se identifiquen problemas sistemicos</li>
+        </ul>
+        <p>No seremos presionados ni coaccionados para cumplir con solicitudes que razonablemente consideremos ilegales.</p>
 
-      <h3>6. Documentation and Record-Keeping</h3>
-      <p>AhoraTengoPagina.com maintains detailed records of all government and public authority data requests received. Our documentation includes:</p>
-      <ul>
-        <li>The date and method by which the request was received</li>
-        <li>The identity and jurisdiction of the requesting authority</li>
-        <li>A copy or summary of the legal instrument submitted with the request</li>
-        <li>The legal reasoning applied in our legality review</li>
-        <li>The outcome of any challenge proceedings, if applicable</li>
-        <li>The nature, scope, and volume of data disclosed (if any)</li>
-        <li>The date on which any disclosure was made</li>
-        <li>The name and role of internal staff who handled the request</li>
-      </ul>
-      <p>These records are retained for a minimum of five (5) years and are available for internal audit purposes.</p>
+        <h3>5. Politica de minimizacion de datos</h3>
+        <p>En caso de que deba cumplirse una solicitud valida y legal, AhoraTengoPagina.com aplicara un estandar estricto de minimizacion de datos. Esto significa:</p>
+        <ul>
+          <li>Solo divulgaremos los datos especificos explicitamente requeridos por el instrumento legal — ni mas, ni menos</li>
+          <li>No ampliaremos proactivamente el alcance de la divulgacion mas alla de lo legalmente obligado</li>
+          <li>Redactaremos o retendremos datos que esten fuera del alcance de la solicitud, incluso si estan tecnicamente relacionados</li>
+          <li>Solicitaremos aclaracion a la autoridad solicitante si el alcance de la solicitud es ambiguo</li>
+          <li>No divulgaremos datos en formatos o agregaciones que revelen mas de lo minimo necesario</li>
+        </ul>
+        <p>Este enfoque de minimizacion de datos se aplica independientemente del tamano, urgencia o nivel de autoridad del organismo solicitante.</p>
 
-      <h3>7. User Notification</h3>
-      <p>Where legally permitted, AhoraTengoPagina.com will attempt to notify affected users of a data request prior to disclosure. We believe users have a right to know when their data is being sought by authorities so they may seek their own legal protections.</p>
-      <p>However, we acknowledge that in certain circumstances (such as when a gag order or non-disclosure requirement is legally imposed), we may be prohibited by law from notifying users. In such cases, we will seek to have such restrictions lifted as soon as legally possible.</p>
+        <h3>6. Documentacion y registro</h3>
+        <p>AhoraTengoPagina.com mantiene registros detallados de todas las solicitudes de datos de gobierno y autoridades publicas recibidas. Nuestra documentacion incluye:</p>
+        <ul>
+          <li>La fecha y el metodo por el cual se recibio la solicitud</li>
+          <li>La identidad y jurisdiccion de la autoridad solicitante</li>
+          <li>Una copia o resumen del instrumento legal presentado con la solicitud</li>
+          <li>El razonamiento legal aplicado en nuestra revision de legalidad</li>
+          <li>El resultado de cualquier procedimiento de impugnacion, si aplica</li>
+          <li>La naturaleza, alcance y volumen de datos divulgados (si los hay)</li>
+          <li>La fecha en que se realizo cualquier divulgacion</li>
+          <li>El nombre y cargo del personal interno que manejo la solicitud</li>
+        </ul>
+        <p>Estos registros se conservan por un minimo de cinco (5) anos y estan disponibles para fines de auditoria interna.</p>
 
-      <h3>8. Emergency Requests</h3>
-      <p>AhoraTengoPagina.com recognizes that some situations may require urgent response (e.g., imminent risk to life or safety). In such cases, we may expedite our review process. However, emergency requests must still:</p>
-      <ul>
-        <li>Be submitted by a legitimate public authority</li>
-        <li>Include a clear articulation of the emergency and imminent harm</li>
-        <li>Specify the minimum data necessary to address the emergency</li>
-      </ul>
-      <p>We reserve the right to verify the legitimacy of any emergency request and to document our response thoroughly.</p>
+        <h3>7. Notificacion al usuario</h3>
+        <p>Cuando la ley lo permita, AhoraTengoPagina.com intentara notificar a los usuarios afectados sobre una solicitud de datos antes de la divulgacion. Creemos que los usuarios tienen derecho a saber cuando sus datos estan siendo solicitados por las autoridades para que puedan buscar sus propias protecciones legales.</p>
+        <p>Sin embargo, reconocemos que en ciertas circunstancias (como cuando se impone legalmente una orden de confidencialidad o un requisito de no divulgacion), la ley puede prohibirnos notificar a los usuarios. En tales casos, buscaremos que dichas restricciones se levanten lo antes posible legalmente.</p>
 
-      <h3>9. How to Submit a Request</h3>
-      <p>Public authorities wishing to submit a data request to AhoraTengoPagina.com must do so in writing, accompanied by the applicable legal instrument, directed to our designated legal contact point:</p>
-      <p><strong>Legal Requests — AhoraTengoPagina.com</strong><br>
-      Email: <a class="m-inline-link" href="mailto:andy@discoverymarketing.io">andy@discoverymarketing.io</a></p>
-      <p>Requests submitted through any other channel will be directed to this process before any action is taken.</p>
+        <h3>8. Solicitudes de emergencia</h3>
+        <p>AhoraTengoPagina.com reconoce que algunas situaciones pueden requerir una respuesta urgente (por ejemplo, riesgo inminente para la vida o la seguridad). En tales casos, podemos agilizar nuestro proceso de revision. Sin embargo, las solicitudes de emergencia aun deben:</p>
+        <ul>
+          <li>Ser presentadas por una autoridad publica legitima</li>
+          <li>Incluir una articulacion clara de la emergencia y el dano inminente</li>
+          <li>Especificar los datos minimos necesarios para atender la emergencia</li>
+        </ul>
+        <p>Nos reservamos el derecho de verificar la legitimidad de cualquier solicitud de emergencia y de documentar nuestra respuesta exhaustivamente.</p>
 
-      <h3>10. Governing Law and Amendments</h3>
-      <p>This policy is governed by the laws of the jurisdiction in which AhoraTengoPagina.com operates. We reserve the right to amend this policy at any time to reflect changes in law, regulatory requirements, or our operational practices. The most current version will always be published on our website.</p>
-      <p>Nothing in this policy limits any rights or obligations imposed by applicable mandatory law.</p>
+        <h3>9. Como enviar una solicitud</h3>
+        <p>Las autoridades publicas que deseen enviar una solicitud de datos a AhoraTengoPagina.com deben hacerlo por escrito, acompanada del instrumento legal aplicable, dirigida a nuestro punto de contacto legal designado:</p>
+        <p><strong>Solicitudes Legales — AhoraTengoPagina.com</strong><br>
+        Correo electronico: <a class="m-inline-link" href="mailto:andy@discoverymarketing.io">andy@discoverymarketing.io</a></p>
+        <p>Las solicitudes enviadas por cualquier otro canal seran dirigidas a este proceso antes de tomar cualquier accion.</p>
 
-      <p><em>Last updated: March 10, 2026 &nbsp;|&nbsp; www.AhoraTengoPagina.com</em></p>
+        <h3>10. Ley aplicable y modificaciones</h3>
+        <p>Esta politica se rige por las leyes de la jurisdiccion en la que opera AhoraTengoPagina.com. Nos reservamos el derecho de modificar esta politica en cualquier momento para reflejar cambios en la ley, requisitos regulatorios o nuestras practicas operativas. La version mas actualizada siempre estara publicada en nuestro sitio web.</p>
+        <p>Nada en esta politica limita cualquier derecho u obligacion impuesto por la ley aplicable obligatoria.</p>
+
+        <p><em>Ultima actualizacion: 10 de marzo de 2026 &nbsp;|&nbsp; www.AhoraTengoPagina.com</em></p>
+      </div>
+
+      <!-- ── English ── -->
+      <div data-lang="en">
+        <h2 id="government">Government &amp; Public Authority Data Request Policy</h2>
+
+        <p><strong>AhoraTengoPagina.com</strong><br>
+        Effective Date: March 10, 2026 &nbsp;|&nbsp; Version 1.0</p>
+
+        <ul>
+          <li><strong>Website:</strong> www.AhoraTengoPagina.com</li>
+          <li><strong>Policy Type:</strong> Government &amp; Public Authority Data Requests</li>
+          <li><strong>Applies To:</strong> All users and their personal data processed by AhoraTengoPagina.com</li>
+          <li><strong>Review Date:</strong> Annually, or upon material change in applicable law</li>
+        </ul>
+
+        <h3>1. Purpose and Scope</h3>
+        <p>This policy establishes the procedures and safeguards that AhoraTengoPagina.com ("we," "our," or "the Website") follows when responding to requests from government agencies, law enforcement bodies, regulatory authorities, courts, or other public authorities seeking access to personal data or personal information belonging to our users.</p>
+        <p>This policy covers all personal data collected, processed, or stored by AhoraTengoPagina.com, including but not limited to names, email addresses, IP addresses, usage data, and any other identifying information.</p>
+
+        <h3>2. Our Core Commitment</h3>
+        <p>AhoraTengoPagina.com is committed to protecting the privacy and rights of its users. We will not voluntarily disclose user data to any government or public authority without following the procedures outlined in this policy. We treat every request with the same rigorous standard regardless of the authority making it.</p>
+
+        <h3>3. Legality Review Requirement</h3>
+        <p>Before complying with any request from a public authority, AhoraTengoPagina.com will conduct a formal review to assess the legality of the request. This review includes:</p>
+        <ul>
+          <li>Verifying the identity and jurisdiction of the requesting authority</li>
+          <li>Confirming the request is accompanied by valid legal documentation (e.g., court order, subpoena, warrant, or equivalent instrument)</li>
+          <li>Assessing whether the request complies with applicable local, national, and international laws</li>
+          <li>Evaluating whether the request falls within the legitimate scope and authority of the requesting body</li>
+          <li>Consulting with legal counsel when the validity of the request is unclear</li>
+        </ul>
+        <p>Requests that do not meet our legal requirements will be rejected or returned with a request for proper documentation.</p>
+
+        <h3>4. Right to Challenge Unlawful Requests</h3>
+        <p>AhoraTengoPagina.com reserves the right to challenge any data request that we determine to be unlawful, overly broad, or an abuse of authority. Our process for challenging such requests includes:</p>
+        <ul>
+          <li>Notifying the requesting authority in writing of our legal objections</li>
+          <li>Seeking legal advice and, where appropriate, engaging legal representation</li>
+          <li>Filing formal objections or motions to quash with the appropriate court or oversight body</li>
+          <li>Cooperating with industry organizations or civil liberties groups where systemic issues are identified</li>
+        </ul>
+        <p>We will not be pressured or coerced into complying with requests that we reasonably believe to be unlawful.</p>
+
+        <h3>5. Data Minimization Policy</h3>
+        <p>In the event that a valid, lawful request must be fulfilled, AhoraTengoPagina.com will apply a strict data minimization standard. This means:</p>
+        <ul>
+          <li>We will disclose only the specific data explicitly required by the legal instrument — no more, no less</li>
+          <li>We will not proactively expand the scope of disclosure beyond what is legally compelled</li>
+          <li>We will redact or withhold data that falls outside the scope of the request, even if technically related</li>
+          <li>We will seek clarification from the requesting authority if the scope of the request is ambiguous</li>
+          <li>We will not disclose data in formats or aggregations that reveal more than the minimum necessary</li>
+        </ul>
+        <p>This data minimization approach applies regardless of the size, urgency, or authority level of the requesting body.</p>
+
+        <h3>6. Documentation and Record-Keeping</h3>
+        <p>AhoraTengoPagina.com maintains detailed records of all government and public authority data requests received. Our documentation includes:</p>
+        <ul>
+          <li>The date and method by which the request was received</li>
+          <li>The identity and jurisdiction of the requesting authority</li>
+          <li>A copy or summary of the legal instrument submitted with the request</li>
+          <li>The legal reasoning applied in our legality review</li>
+          <li>The outcome of any challenge proceedings, if applicable</li>
+          <li>The nature, scope, and volume of data disclosed (if any)</li>
+          <li>The date on which any disclosure was made</li>
+          <li>The name and role of internal staff who handled the request</li>
+        </ul>
+        <p>These records are retained for a minimum of five (5) years and are available for internal audit purposes.</p>
+
+        <h3>7. User Notification</h3>
+        <p>Where legally permitted, AhoraTengoPagina.com will attempt to notify affected users of a data request prior to disclosure. We believe users have a right to know when their data is being sought by authorities so they may seek their own legal protections.</p>
+        <p>However, we acknowledge that in certain circumstances (such as when a gag order or non-disclosure requirement is legally imposed), we may be prohibited by law from notifying users. In such cases, we will seek to have such restrictions lifted as soon as legally possible.</p>
+
+        <h3>8. Emergency Requests</h3>
+        <p>AhoraTengoPagina.com recognizes that some situations may require urgent response (e.g., imminent risk to life or safety). In such cases, we may expedite our review process. However, emergency requests must still:</p>
+        <ul>
+          <li>Be submitted by a legitimate public authority</li>
+          <li>Include a clear articulation of the emergency and imminent harm</li>
+          <li>Specify the minimum data necessary to address the emergency</li>
+        </ul>
+        <p>We reserve the right to verify the legitimacy of any emergency request and to document our response thoroughly.</p>
+
+        <h3>9. How to Submit a Request</h3>
+        <p>Public authorities wishing to submit a data request to AhoraTengoPagina.com must do so in writing, accompanied by the applicable legal instrument, directed to our designated legal contact point:</p>
+        <p><strong>Legal Requests — AhoraTengoPagina.com</strong><br>
+        Email: <a class="m-inline-link" href="mailto:andy@discoverymarketing.io">andy@discoverymarketing.io</a></p>
+        <p>Requests submitted through any other channel will be directed to this process before any action is taken.</p>
+
+        <h3>10. Governing Law and Amendments</h3>
+        <p>This policy is governed by the laws of the jurisdiction in which AhoraTengoPagina.com operates. We reserve the right to amend this policy at any time to reflect changes in law, regulatory requirements, or our operational practices. The most current version will always be published on our website.</p>
+        <p>Nothing in this policy limits any rights or obligations imposed by applicable mandatory law.</p>
+
+        <p><em>Last updated: March 10, 2026 &nbsp;|&nbsp; www.AhoraTengoPagina.com</em></p>
+      </div>
 
     </div>
   </section>
@@ -404,6 +702,22 @@
           hamburger.classList.remove('m-active');
           mobileMenu.classList.remove('m-active');
         });
+      });
+    }
+
+    // Language switcher
+    const legalSection = document.querySelector('.m-legal');
+    const langSwitcher = document.getElementById('m-lang-switcher');
+    if (langSwitcher && legalSection) {
+      langSwitcher.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-set-lang]');
+        if (!btn) return;
+        const lang = btn.dataset.setLang;
+        legalSection.classList.remove('m-lang-es', 'm-lang-en');
+        legalSection.classList.add('m-lang-' + lang);
+        langSwitcher.querySelectorAll('button').forEach(b => b.classList.remove('m-active'));
+        btn.classList.add('m-active');
+        document.documentElement.lang = lang;
       });
     }
   </script>
