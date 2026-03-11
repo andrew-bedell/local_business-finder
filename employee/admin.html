@@ -26,7 +26,9 @@
             <nav class="header-nav">
               <a href="/employee" class="nav-tab" data-i18n="navSearch">Search</a>
               <a href="#" class="nav-tab active" id="nav-saved" data-i18n="navSaved">Saved</a>
-              <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Messages</a>
+              <a href="#" class="nav-tab" id="nav-audiences" data-i18n="navAudiences">Audiences</a>
+              <a href="#" class="nav-tab" id="nav-campaigns" data-i18n="navCampaigns">Campaigns</a>
+              <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
@@ -220,6 +222,178 @@
 
         <div class="no-results" id="no-results" style="display:none;">
           <p data-i18n="adminNoResults">No businesses match your filters.</p>
+        </div>
+      </section>
+
+      <!-- Audiences Section -->
+      <section id="audiences-section" style="display:none">
+        <div class="card" id="audiences-list-card">
+          <div class="card-header">
+            <h2 data-i18n="audiencesTitle">Audiences</h2>
+            <button class="btn btn-primary" id="btn-create-audience" data-i18n="audienceCreate">Create Audience</button>
+          </div>
+          <div id="audiences-list" class="audiences-list"></div>
+          <div class="no-results" id="no-audiences" style="display:none">
+            <p data-i18n="audiencesEmpty">No audiences created yet. Create one to start targeting businesses.</p>
+          </div>
+        </div>
+
+        <!-- Audience Editor -->
+        <div class="card" id="audience-editor" style="display:none">
+          <div class="card-header">
+            <h2 id="audience-editor-title" data-i18n="audienceNew">New Audience</h2>
+            <button class="btn btn-text" id="btn-cancel-audience" data-i18n="cancel">Cancel</button>
+          </div>
+          <div class="audience-form">
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="audienceName">Audience Name</label>
+              <input type="text" class="input" id="audience-name" data-i18n-placeholder="audienceNamePh" placeholder="e.g. Restaurants in Merida">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="audienceDesc">Description (optional)</label>
+              <input type="text" class="input" id="audience-desc" data-i18n-placeholder="audienceDescPh" placeholder="Short description of this audience">
+            </div>
+            <h3 style="font-size:14px;font-weight:700;margin:18px 0 10px;color:var(--text)" data-i18n="audienceFilters">Filters</h3>
+            <div class="admin-filter-grid">
+              <div class="form-group">
+                <label data-i18n="filterCity">City</label>
+                <input type="text" class="input" id="aud-filter-city" placeholder="">
+              </div>
+              <div class="form-group">
+                <label data-i18n="filterState">State</label>
+                <input type="text" class="input" id="aud-filter-state" placeholder="">
+              </div>
+              <div class="form-group">
+                <label data-i18n="filterCountry">Country</label>
+                <select class="input" id="aud-filter-country">
+                  <option value="">All</option>
+                  <option value="US">US</option>
+                  <option value="MX">MX</option>
+                  <option value="CO">CO</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterCategory">Category</label>
+                <input type="text" class="input" id="aud-filter-category" data-i18n-placeholder="audienceFilterCategoryPh" placeholder="e.g. restaurant, salon">
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterRatingMin">Rating Min</label>
+                <select class="input" id="aud-filter-rating-min">
+                  <option value="">Any</option>
+                  <option value="3">3+</option>
+                  <option value="3.5">3.5+</option>
+                  <option value="4">4+</option>
+                  <option value="4.5">4.5+</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterRatingMax">Rating Max</label>
+                <select class="input" id="aud-filter-rating-max">
+                  <option value="">Any</option>
+                  <option value="3">3</option>
+                  <option value="3.5">3.5</option>
+                  <option value="4">4</option>
+                  <option value="4.5">4.5</option>
+                  <option value="5">5</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterMsgSentMin">Msgs Sent Min</label>
+                <input type="number" class="input" id="aud-filter-msg-min" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterMsgSentMax">Msgs Sent Max</label>
+                <input type="number" class="input" id="aud-filter-msg-max" min="0" placeholder="">
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterRepliesMin">Replies Min</label>
+                <input type="number" class="input" id="aud-filter-replies-min" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterRepliesMax">Replies Max</label>
+                <input type="number" class="input" id="aud-filter-replies-max" min="0" placeholder="">
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterNeverContacted">Never Contacted</label>
+                <select class="input" id="aud-filter-never-contacted">
+                  <option value="">Any</option>
+                  <option value="true">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="audienceFilterLastContactAfter">Last Contact After</label>
+                <input type="date" class="input" id="aud-filter-last-after">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;align-items:center">
+              <button class="btn btn-secondary" id="btn-preview-audience" data-i18n="audiencePreview">Preview Audience</button>
+              <span class="audience-preview-count" id="audience-preview-count"></span>
+            </div>
+            <div id="audience-preview-results" style="margin-top:12px"></div>
+            <div style="margin-top:16px">
+              <button class="btn btn-primary" id="btn-save-audience" data-i18n="audienceSave">Save Audience</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Campaigns Section -->
+      <section id="campaigns-section" style="display:none">
+        <div class="card" id="campaigns-list-card">
+          <div class="card-header">
+            <h2 data-i18n="campaignsTitle">Campaigns</h2>
+            <button class="btn btn-primary" id="btn-create-campaign" data-i18n="campaignCreate">New Campaign</button>
+          </div>
+          <div id="campaigns-list" class="campaigns-list"></div>
+          <div class="no-results" id="no-campaigns" style="display:none">
+            <p data-i18n="campaignsEmpty">No campaigns yet. Create one to start messaging your audience.</p>
+          </div>
+        </div>
+
+        <!-- Campaign Editor -->
+        <div class="card" id="campaign-editor" style="display:none">
+          <div class="card-header">
+            <h2 id="campaign-editor-title" data-i18n="campaignNew">New Campaign</h2>
+            <button class="btn btn-text" id="btn-cancel-campaign" data-i18n="cancel">Cancel</button>
+          </div>
+          <div class="campaign-form">
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="campaignName">Campaign Name</label>
+              <input type="text" class="input" id="campaign-name" data-i18n-placeholder="campaignNamePh" placeholder="e.g. March outreach - restaurants">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="campaignAudience">Target Audience</label>
+              <select class="input" id="campaign-audience">
+                <option value="" data-i18n="campaignSelectAudience">Select audience...</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="campaignTemplate">WhatsApp Template</label>
+              <select class="input" id="campaign-template">
+                <option value="" data-i18n="campaignSelectTemplate">Select template...</option>
+              </select>
+            </div>
+            <div id="campaign-template-preview" class="template-preview" style="display:none"></div>
+            <div id="campaign-template-params" class="campaign-params"></div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="campaignSchedule">Schedule (optional)</label>
+              <input type="datetime-local" class="input" id="campaign-schedule">
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px">
+              <button class="btn btn-primary" id="btn-save-campaign" data-i18n="campaignSaveDraft">Save as Draft</button>
+              <button class="btn btn-secondary" id="btn-send-campaign" data-i18n="campaignSendNow" style="background:var(--success);color:#fff;border-color:var(--success)">Send Now</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campaign Detail -->
+        <div class="card" id="campaign-detail" style="display:none">
+          <div class="card-header">
+            <h2 id="campaign-detail-title"></h2>
+            <button class="btn btn-text" id="btn-back-campaigns" data-i18n="backToCampaigns">Back to Campaigns</button>
+          </div>
+          <div class="campaign-stats-bar" id="campaign-stats-bar"></div>
+          <div id="campaign-detail-messages" class="campaign-messages-list"></div>
         </div>
       </section>
 
