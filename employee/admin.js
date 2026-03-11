@@ -50,11 +50,18 @@
       thSocial: 'Social',
       thDetails: 'Details',
       thReport: 'Report',
+      thAiPhotos: 'AI Photos',
       thWebsite: 'Website',
       thActions: 'Actions',
       viewBtn: 'View',
       badgeYes: 'Yes',
       badgeNo: '—',
+      btnReport: 'Report',
+      btnPhotos: 'Photos',
+      btnWebsite: 'Website',
+      reportSuccess: 'Research report generated for {0}',
+      websiteSuccess: 'Website generated for {0}',
+      needsReport: 'Generate report first to see photo plan',
       noData: 'No Data',
       // Modal detail sections
       modalDescription: 'Description',
@@ -272,11 +279,18 @@
       thSocial: 'Social',
       thDetails: 'Detalles',
       thReport: 'Informe',
+      thAiPhotos: 'Fotos IA',
       thWebsite: 'Sitio Web',
       thActions: 'Acciones',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
       badgeNo: '—',
+      btnReport: 'Informe',
+      btnPhotos: 'Fotos',
+      btnWebsite: 'Sitio',
+      reportSuccess: 'Informe generado para {0}',
+      websiteSuccess: 'Sitio web generado para {0}',
+      needsReport: 'Genera el informe primero para ver el plan de fotos',
       noData: 'Sin Datos',
       modalDescription: 'Descripción',
       modalServiceOptions: 'Opciones de Servicio',
@@ -899,13 +913,10 @@
 
       const socialCellHtml = buildSocialCellHtml(profiles);
 
-      const reportBadge = websiteStatus
-        ? `<span class="badge badge-has-site">${t('badgeYes')}</span>`
-        : `<span style="color:var(--text-dim)">${t('badgeNo')}</span>`;
-
-      const websiteBadge = websiteStatus
-        ? `<span class="badge ${websiteStatus === 'published' ? 'badge-has-site' : 'badge-no-site'}">${t('badge' + websiteStatus.charAt(0).toUpperCase() + websiteStatus.slice(1))}</span>`
-        : `<span style="color:var(--text-dim)">${t('badgeNo')}</span>`;
+      const hasReport = (b.generated_websites || []).some(w => w.config && w.config.researchReport);
+      const reportBtnLabel = hasReport ? '\u2713' : t('btnReport');
+      const websiteBtnLabel = websiteStatus ? '\u2713' : t('btnWebsite');
+      const photosDisabled = hasReport ? '' : 'disabled';
 
       const mapsLink = b.maps_url
         ? `<a href="${escapeHtml(b.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
@@ -920,16 +931,44 @@
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
         <td class="td-center">${socialCellHtml}</td>
-        <td class="td-center">${reportBadge}</td>
-        <td class="td-center">${websiteBadge}</td>
-        <td class="td-center"><button class="btn btn-view" data-id="${b.id}">${t('viewBtn')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-report" data-id="${b.id}">${reportBtnLabel}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-photos" data-id="${b.id}" ${photosDisabled}>${t('btnPhotos')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-website" data-id="${b.id}">${websiteBtnLabel}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
       </tr>`;
     }).join('');
 
+    // Bind report buttons
+    resultsBody.querySelectorAll('.btn-report').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === businessId);
+        if (business) handleAdminTableReport(business, btn);
+      });
+    });
+
+    // Bind photos buttons
+    resultsBody.querySelectorAll('.btn-photos').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === businessId);
+        if (business) handleAdminTableAiPhotos(business);
+      });
+    });
+
+    // Bind website buttons
+    resultsBody.querySelectorAll('.btn-website').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === businessId);
+        if (business) handleAdminTableWebsite(business, btn);
+      });
+    });
+
     // Bind view buttons
-    resultsBody.querySelectorAll('.btn-view').forEach((btn) => {
+    resultsBody.querySelectorAll('.btn-detail').forEach((btn) => {
       btn.addEventListener('click', () => {
         const businessId = btn.getAttribute('data-id');
         const business = currentResults.find(b => String(b.id) === businessId);
@@ -1344,7 +1383,128 @@
     }));
   }
 
-  // ── Research Report ──
+  // ── Table Action Handlers ──
+  async function loadDetailsForBusiness(business) {
+    let details = detailCache[business.id];
+    if (!details) {
+      try {
+        const [reviewsRes, photosRes] = await Promise.all([
+          supabaseClient.from('business_reviews').select('*').eq('business_id', business.id).order('sentiment_score', { ascending: false, nullsFirst: false }).limit(20),
+          supabaseClient.from('business_photos').select('*').eq('business_id', business.id).limit(30),
+        ]);
+        details = { reviews: reviewsRes.data || [], photos: photosRes.data || [] };
+        detailCache[business.id] = details;
+      } catch (err) {
+        console.error('Detail load error:', err);
+        details = { reviews: [], photos: [] };
+      }
+    }
+    return details;
+  }
+
+  async function handleAdminTableReport(business, btn) {
+    const existingReport = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    if (existingReport || business._cachedReport) {
+      openDetailModal(business);
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = t('generatingReport');
+    try {
+      const details = await loadDetailsForBusiness(business);
+      const businessData = compileBusinessDataForPrompt(business, details);
+      const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
+      const res = await withTimeout(
+        fetch('/api/ai/research-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessData, name: business.name, language }),
+        }),
+        120000,
+        'Research report'
+      );
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Request failed');
+      }
+      const data = await res.json();
+      business._cachedReport = data.report;
+      btn.disabled = false;
+      btn.textContent = '\u2713';
+      btn.title = t('generateReport');
+      showToast(t('reportSuccess', business.name), 'success');
+      // Enable photos button in same row
+      const row = btn.closest('tr');
+      const photosBtn = row ? row.querySelector('.btn-photos') : null;
+      if (photosBtn) photosBtn.disabled = false;
+    } catch (err) {
+      console.error('Research report error:', err);
+      showToast(t('reportError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('btnReport');
+    }
+  }
+
+  function handleAdminTableAiPhotos(business) {
+    const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
+    if (!hasReport) {
+      showToast(t('needsReport'), 'warning');
+      return;
+    }
+    openDetailModal(business);
+  }
+
+  async function handleAdminTableWebsite(business, btn) {
+    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
+    if (existingWebsite) {
+      openDetailModal(business);
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = t('generatingWebsite');
+    try {
+      const details = await loadDetailsForBusiness(business);
+      const businessData = compileBusinessDataForPrompt(business, details);
+      const photoInventory = buildPhotoInventory(details);
+      const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
+      const report = business._cachedReport ||
+        ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+      const res = await withTimeout(
+        fetch('/api/ai/generate-website', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessData,
+            researchReport: report || null,
+            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            name: business.name,
+            language,
+          }),
+        }),
+        90000,
+        'Website generation'
+      );
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Request failed');
+      }
+      const data = await res.json();
+      btn.disabled = false;
+      btn.textContent = '\u2713';
+      btn.title = t('generateWebsite');
+      showToast(t('websiteSuccess', business.name), 'success');
+      saveGeneratedWebsite(business, data.html, report).catch(err =>
+        console.warn('Failed to save generated website:', err)
+      );
+    } catch (err) {
+      console.error('Website generation error:', err);
+      showToast(t('websiteError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('btnWebsite');
+    }
+  }
+
+  // ── Research Report (Modal) ──
   async function generateResearchReport(modal, business, details, btn) {
     // Check for cached report in existing website
     const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
