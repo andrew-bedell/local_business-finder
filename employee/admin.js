@@ -235,6 +235,39 @@
       msgStatusFailed: 'Failed',
       msgToday: 'Today',
       msgYesterday: 'Yesterday',
+      // Products
+      navProducts: 'Products',
+      productsTitle: 'Products',
+      productCreate: 'New Product',
+      productsEmpty: 'No products yet. Create one to start selling.',
+      productNew: 'New Product',
+      productEdit: 'Edit Product',
+      productName: 'Product Name',
+      productNamePh: 'e.g. Monthly Website Plan',
+      productPrice: 'Price',
+      productCurrency: 'Currency',
+      productInterval: 'Billing Interval',
+      productMonthly: 'Monthly',
+      productYearly: 'Yearly',
+      productOneTime: 'One Time',
+      productDescription: 'Description',
+      productDescPh: 'Brief description of this product',
+      productFeatures: 'Features (one per line)',
+      productFeaturesPh: 'Custom website design\nMobile responsive\nMonthly updates\n24/7 support',
+      productStripeProductId: 'Stripe Product ID',
+      productStripePriceId: 'Stripe Price ID',
+      productSortOrder: 'Sort Order',
+      productActive: 'Active',
+      productSave: 'Save Product',
+      productSaved: 'Product saved',
+      productDeleteConfirm: 'Delete this product?',
+      productDeleted: 'Product deleted',
+      productPerMonth: '{0}/mo',
+      productPerYear: '{0}/yr',
+      // Preview links
+      websiteCopyLink: 'Copy Preview Link',
+      websiteSendWhatsApp: 'Send via WhatsApp',
+      websiteLinkCopied: 'Preview link copied to clipboard',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -460,6 +493,39 @@
       msgStatusFailed: 'Fallido',
       msgToday: 'Hoy',
       msgYesterday: 'Ayer',
+      // Products
+      navProducts: 'Productos',
+      productsTitle: 'Productos',
+      productCreate: 'Nuevo Producto',
+      productsEmpty: 'No hay productos. Crea uno para empezar a vender.',
+      productNew: 'Nuevo Producto',
+      productEdit: 'Editar Producto',
+      productName: 'Nombre del Producto',
+      productNamePh: 'Ej: Plan Mensual Sitio Web',
+      productPrice: 'Precio',
+      productCurrency: 'Moneda',
+      productInterval: 'Intervalo de Cobro',
+      productMonthly: 'Mensual',
+      productYearly: 'Anual',
+      productOneTime: 'Único',
+      productDescription: 'Descripción',
+      productDescPh: 'Descripción breve del producto',
+      productFeatures: 'Características (una por línea)',
+      productFeaturesPh: 'Diseño de sitio web personalizado\nAdaptable a móviles\nActualizaciones mensuales\nSoporte 24/7',
+      productStripeProductId: 'Stripe Product ID',
+      productStripePriceId: 'Stripe Price ID',
+      productSortOrder: 'Orden',
+      productActive: 'Activo',
+      productSave: 'Guardar Producto',
+      productSaved: 'Producto guardado',
+      productDeleteConfirm: '¿Eliminar este producto?',
+      productDeleted: 'Producto eliminado',
+      productPerMonth: '{0}/mes',
+      productPerYear: '{0}/año',
+      // Preview links
+      websiteCopyLink: 'Copiar Enlace',
+      websiteSendWhatsApp: 'Enviar por WhatsApp',
+      websiteLinkCopied: 'Enlace de vista previa copiado',
     },
   };
 
@@ -638,7 +704,7 @@
     });
 
     // Tab navigation
-    ['saved', 'audiences', 'campaigns', 'messages'].forEach(tab => {
+    ['saved', 'audiences', 'campaigns', 'messages', 'products'].forEach(tab => {
       const navEl = document.getElementById('nav-' + tab);
       if (navEl) {
         navEl.addEventListener('click', (e) => {
@@ -1753,11 +1819,17 @@
     const container = modal.querySelector('#website-generation-container');
     if (!container) return;
 
+    // Find the website UUID for this business
+    const websiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
+    const websiteUuid = websiteRecord ? websiteRecord.id : null;
+
     container.innerHTML = `
       <div class="website-preview-wrapper">
         <div class="website-preview-toolbar">
           <button class="btn btn-secondary" id="website-download-btn">${t('websiteDownload')}</button>
           <button class="btn btn-secondary" id="website-new-tab-btn">${t('websiteOpenNewTab')}</button>
+          ${websiteUuid ? `<button class="btn btn-secondary" id="website-copy-link-btn">${t('websiteCopyLink')}</button>` : ''}
+          ${websiteUuid && business.phone ? `<button class="btn btn-secondary" id="website-whatsapp-btn" style="background:var(--success);color:#fff;border-color:var(--success)">${t('websiteSendWhatsApp')}</button>` : ''}
         </div>
         <iframe id="website-preview-iframe" class="website-preview-iframe" sandbox="allow-same-origin"></iframe>
       </div>
@@ -1784,6 +1856,50 @@
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
     });
+
+    // Copy preview link
+    const copyLinkBtn = container.querySelector('#website-copy-link-btn');
+    if (copyLinkBtn && websiteUuid) {
+      copyLinkBtn.addEventListener('click', () => {
+        const previewUrl = `${window.location.origin}/ver/${websiteUuid}`;
+        navigator.clipboard.writeText(previewUrl).then(() => {
+          showToast(t('websiteLinkCopied'), 'success');
+        }).catch(() => {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = previewUrl;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast(t('websiteLinkCopied'), 'success');
+        });
+      });
+    }
+
+    // Send via WhatsApp
+    const whatsappBtn = container.querySelector('#website-whatsapp-btn');
+    if (whatsappBtn && websiteUuid && business.phone) {
+      whatsappBtn.addEventListener('click', async () => {
+        const previewUrl = `${window.location.origin}/ver/${websiteUuid}`;
+        const message = `¡Hola! Tu página web ya está lista para revisar: ${previewUrl}`;
+        try {
+          await fetch('/api/whatsapp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: business.phone,
+              message: message,
+              businessId: business.id,
+            }),
+          });
+          showToast(t('msgSendSuccess'), 'success');
+        } catch (err) {
+          console.error('WhatsApp send error:', err);
+          showToast(t('msgSendError'), 'error');
+        }
+      });
+    }
   }
 
   // ── Save Generated Website ──
@@ -1824,7 +1940,7 @@
   let currentMessages = [];
   let templates = [];
   let realtimeChannel = null;
-  let activeTab = 'saved'; // 'saved' | 'audiences' | 'campaigns' | 'messages'
+  let activeTab = 'saved'; // 'saved' | 'audiences' | 'campaigns' | 'messages' | 'products'
 
   // Audiences & Campaigns state
   let audiences = [];
@@ -1839,10 +1955,11 @@
       audiences: ['audiences-section'],
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
+      products: ['products-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -1854,11 +1971,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -1866,6 +1983,7 @@
     if (tab === 'audiences') loadAudiences();
     if (tab === 'campaigns') loadCampaigns();
     if (tab === 'messages') loadConversations();
+    if (tab === 'products') loadProducts();
   }
 
   async function loadConversations() {
@@ -3042,6 +3160,186 @@
     document.getElementById('campaign-detail').style.display = 'none';
     document.getElementById('campaigns-list-card').style.display = '';
   }
+
+
+  // ── Products ──
+
+  let products = [];
+  let editingProductId = null;
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('/api/products/list');
+      if (!res.ok) throw new Error('Failed to load products');
+      const data = await res.json();
+      products = data.products || [];
+      renderProductsList();
+    } catch (err) {
+      console.error('Load products error:', err);
+    }
+  }
+
+  function renderProductsList() {
+    const container = document.getElementById('products-list');
+    const noProducts = document.getElementById('no-products');
+
+    if (!products.length) {
+      container.innerHTML = '';
+      noProducts.style.display = '';
+      return;
+    }
+
+    noProducts.style.display = 'none';
+    const currencySymbols = { MXN: '$', USD: '$', COP: '$' };
+
+    container.innerHTML = products.map(p => {
+      const symbol = currencySymbols[p.currency] || '$';
+      const priceStr = symbol + parseFloat(p.price).toLocaleString('en', { minimumFractionDigits: 0 });
+      const intervalLabels = { monthly: t('productPerMonth', priceStr), yearly: t('productPerYear', priceStr), one_time: priceStr };
+      const priceLabel = intervalLabels[p.billing_interval] || priceStr;
+      const features = p.features || [];
+
+      return `<div class="product-card ${!p.is_active ? 'product-inactive' : ''}">
+        <div class="product-card-header">
+          <div>
+            <div class="product-card-name">${escapeHtml(p.name)}</div>
+            <div class="product-card-price">${priceLabel} <span class="product-card-currency">${p.currency}</span></div>
+          </div>
+          <div class="product-card-actions">
+            <button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('edit-product',{detail:'${p.id}'}))">${t('productEdit')}</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.dispatchEvent(new CustomEvent('delete-product',{detail:'${p.id}'}))" style="color:var(--danger)">✕</button>
+          </div>
+        </div>
+        ${p.description ? `<div class="product-card-desc">${escapeHtml(p.description)}</div>` : ''}
+        ${features.length ? `<ul class="product-card-features">${features.map(f => `<li>${escapeHtml(f)}</li>`).join('')}</ul>` : ''}
+        <div class="product-card-meta">
+          ${p.stripe_price_id ? `<span class="badge badge-has-site">Stripe ✓</span>` : `<span class="badge badge-no-site">No Stripe</span>`}
+          ${!p.is_active ? `<span class="badge badge-no-site">Inactive</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openProductEditor(productId) {
+    editingProductId = productId || null;
+    const editor = document.getElementById('product-editor');
+    const listCard = document.getElementById('products-list-card');
+    const title = document.getElementById('product-editor-title');
+
+    listCard.style.display = 'none';
+    editor.style.display = '';
+
+    if (productId) {
+      title.textContent = t('productEdit');
+      const p = products.find(x => x.id === productId);
+      if (p) {
+        document.getElementById('product-name').value = p.name || '';
+        document.getElementById('product-price').value = p.price || '';
+        document.getElementById('product-currency').value = p.currency || 'MXN';
+        document.getElementById('product-interval').value = p.billing_interval || 'monthly';
+        document.getElementById('product-description').value = p.description || '';
+        document.getElementById('product-features').value = (p.features || []).join('\n');
+        document.getElementById('product-stripe-product-id').value = p.stripe_product_id || '';
+        document.getElementById('product-stripe-price-id').value = p.stripe_price_id || '';
+        document.getElementById('product-sort-order').value = p.sort_order || 0;
+        document.getElementById('product-active').value = p.is_active !== false ? 'true' : 'false';
+      }
+    } else {
+      title.textContent = t('productNew');
+      document.getElementById('product-name').value = '';
+      document.getElementById('product-price').value = '';
+      document.getElementById('product-currency').value = 'MXN';
+      document.getElementById('product-interval').value = 'monthly';
+      document.getElementById('product-description').value = '';
+      document.getElementById('product-features').value = '';
+      document.getElementById('product-stripe-product-id').value = '';
+      document.getElementById('product-stripe-price-id').value = '';
+      document.getElementById('product-sort-order').value = '0';
+      document.getElementById('product-active').value = 'true';
+    }
+  }
+
+  function closeProductEditor() {
+    document.getElementById('product-editor').style.display = 'none';
+    document.getElementById('products-list-card').style.display = '';
+    editingProductId = null;
+  }
+
+  async function saveProduct() {
+    const name = document.getElementById('product-name').value.trim();
+    const price = document.getElementById('product-price').value;
+    if (!name || !price) {
+      showToast('Name and price are required', 'error');
+      return;
+    }
+
+    const featuresText = document.getElementById('product-features').value.trim();
+    const features = featuresText ? featuresText.split('\n').map(f => f.trim()).filter(Boolean) : [];
+
+    const payload = {
+      name,
+      price: parseFloat(price),
+      currency: document.getElementById('product-currency').value,
+      billing_interval: document.getElementById('product-interval').value,
+      description: document.getElementById('product-description').value.trim() || null,
+      features,
+      stripe_product_id: document.getElementById('product-stripe-product-id').value.trim() || null,
+      stripe_price_id: document.getElementById('product-stripe-price-id').value.trim() || null,
+      sort_order: parseInt(document.getElementById('product-sort-order').value) || 0,
+      is_active: document.getElementById('product-active').value === 'true',
+    };
+
+    if (editingProductId) {
+      payload.id = editingProductId;
+    }
+
+    try {
+      const res = await fetch('/api/products/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      showToast(t('productSaved'), 'success');
+      closeProductEditor();
+      loadProducts();
+    } catch (err) {
+      console.error('Product save error:', err);
+      showToast('Failed to save product', 'error');
+    }
+  }
+
+  async function deleteProduct(productId) {
+    if (!confirm(t('productDeleteConfirm'))) return;
+    if (!supabaseClient) return;
+
+    try {
+      const { error } = await supabaseClient
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+      showToast(t('productDeleted'), 'success');
+      loadProducts();
+    } catch (err) {
+      console.error('Product delete error:', err);
+    }
+  }
+
+  // Product event listeners (using custom events for inline onclick)
+  document.addEventListener('edit-product', (e) => openProductEditor(e.detail));
+  document.addEventListener('delete-product', (e) => deleteProduct(e.detail));
+
+  // Product button listeners
+  const btnCreateProduct = document.getElementById('btn-create-product');
+  if (btnCreateProduct) btnCreateProduct.addEventListener('click', () => openProductEditor(null));
+
+  const btnCancelProduct = document.getElementById('btn-cancel-product');
+  if (btnCancelProduct) btnCancelProduct.addEventListener('click', closeProductEditor);
+
+  const btnSaveProduct = document.getElementById('btn-save-product');
+  if (btnSaveProduct) btnSaveProduct.addEventListener('click', saveProduct);
 
 
   // ── Start ──

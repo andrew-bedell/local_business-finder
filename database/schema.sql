@@ -69,6 +69,13 @@ CREATE TABLE IF NOT EXISTS businesses (
   search_location         TEXT,
   search_type             TEXT,
 
+  -- Pipeline
+  pipeline_status         TEXT DEFAULT 'prospect'
+                            CHECK (pipeline_status IN (
+                              'prospect', 'contacted', 'interested', 'customer', 'churned'
+                            )),
+  pipeline_status_changed_at TIMESTAMPTZ,
+
   -- Tracking
   data_completeness_score INTEGER DEFAULT 0    -- 0–100, how much data we've gathered
                             CHECK (data_completeness_score BETWEEN 0 AND 100),
@@ -608,7 +615,42 @@ $$ LANGUAGE plpgsql;
 
 
 -- ============================================================================
--- 11. CUSTOMERS — Business-to-customer relationship
+-- 11. PRODUCTS — Subscription products and pricing
+-- ============================================================================
+-- Defines the products available for purchase. Links to Stripe Product + Price.
+
+CREATE TABLE IF NOT EXISTS products (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                    TEXT NOT NULL,
+  description             TEXT,
+  price                   DECIMAL(10, 2) NOT NULL,
+  currency                TEXT DEFAULT 'MXN'
+                            CHECK (currency IN ('MXN', 'USD', 'COP')),
+  billing_interval        TEXT DEFAULT 'monthly'
+                            CHECK (billing_interval IN ('monthly', 'yearly', 'one_time')),
+  features                JSONB DEFAULT '[]',          -- array of strings (bullet points for checkout)
+  stripe_product_id       TEXT,
+  stripe_price_id         TEXT,
+  is_active               BOOLEAN DEFAULT TRUE,
+  sort_order              INTEGER DEFAULT 0,
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_products_active ON products (is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_products_sort ON products (sort_order);
+
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON products FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER products_updated_at
+  BEFORE UPDATE ON products
+  FOR EACH ROW
+  EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 12. CUSTOMERS — Business-to-customer relationship
 -- ============================================================================
 -- Created when a prospect converts to a paying customer via Stripe Checkout.
 

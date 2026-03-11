@@ -467,4 +467,101 @@
     footerObserver.observe(footer);
   }
 
+  // ── Dynamic Pricing Cards ──
+  var pricingGrid = document.getElementById('pricing-grid');
+  if (pricingGrid) {
+    loadPricingProducts();
+  }
+
+  function loadPricingProducts() {
+    fetch('/api/products/list')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var products = (data.products || []).slice(0, 3);
+        if (products.length === 0) {
+          renderFallbackPricing();
+          return;
+        }
+        pricingGrid.setAttribute('data-cols', products.length);
+        pricingGrid.innerHTML = products.map(function(p, i) {
+          var isFeatured = products.length > 1 && i === 1;
+          return renderPricingCard(p, isFeatured);
+        }).join('');
+
+        // Attach CTA click handlers
+        pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal();
+          });
+        });
+
+        // Add reveal animation
+        pricingGrid.querySelectorAll('.m-pricing-card').forEach(function(card) {
+          card.classList.add('m-visible');
+        });
+      })
+      .catch(function() {
+        renderFallbackPricing();
+      });
+  }
+
+  function renderPricingCard(product, isFeatured) {
+    var symbol = '$';
+    var price = parseFloat(product.price);
+    var formattedPrice = symbol + price.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    var intervalLabels = { monthly: ' / mes', yearly: ' / año', one_time: '' };
+    var intervalText = (product.currency || 'MXN') + (intervalLabels[product.billing_interval] || '');
+    var features = product.features || [];
+    var featuredClass = isFeatured ? ' m-pricing-featured' : '';
+    var badgeHtml = isFeatured ? '<span class="m-pricing-badge">Popular</span>' : '';
+    var noteKey = currentLang === 'en' ? 'No setup fee. No contracts.' : 'Sin costo de instalacion. Sin contratos.';
+
+    var featuresHtml = features.map(function(f) {
+      return '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + escapeHtml(f) + '</span></div>';
+    }).join('');
+
+    return '<div class="m-pricing-card' + featuredClass + '" data-reveal>' +
+      badgeHtml +
+      '<div class="m-pricing-price">' + formattedPrice + ' <span>' + intervalText + '</span></div>' +
+      '<p class="m-pricing-note">' + noteKey + '</p>' +
+      (product.name ? '<p style="font-size:16px;font-weight:700;margin-bottom:16px;color:#0c1b33">' + escapeHtml(product.name) + '</p>' : '') +
+      '<div class="m-pricing-features">' + featuresHtml + '</div>' +
+      '<button class="m-pricing-cta" data-open-modal>' + t('pricing_cta') + '</button>' +
+    '</div>';
+  }
+
+  function renderFallbackPricing() {
+    // Static fallback if API fails
+    pricingGrid.setAttribute('data-cols', '1');
+    pricingGrid.innerHTML =
+      '<div class="m-pricing-card m-visible" data-reveal>' +
+        '<div class="m-pricing-price">$250 <span>MXN / mes</span></div>' +
+        '<p class="m-pricing-note">' + t('pricing_note') + '</p>' +
+        '<div class="m-pricing-features">' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f1') + '</span></div>' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f2') + '</span></div>' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f3') + '</span></div>' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f4') + '</span></div>' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f5') + '</span></div>' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f6') + '</span></div>' +
+          '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f7') + '</span></div>' +
+        '</div>' +
+        '<button class="m-pricing-cta" data-open-modal>' + t('pricing_cta') + '</button>' +
+      '</div>';
+
+    pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal();
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
 })();
