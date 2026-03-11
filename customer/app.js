@@ -304,7 +304,7 @@
 
     try {
       var result = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname
+        redirectTo: window.location.origin + '/mipagina'
       });
 
       if (result.error) {
