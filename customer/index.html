@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1A56DB">
+  <title>Mi Portal — AhoraTengoPagina</title>
+  <meta name="description" content="Administra tu pagina web, facturacion y solicitudes desde tu portal de cliente AhoraTengoPagina.">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Supabase JS v2 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="/customer/styles.css">
+</head>
+<body class="c-body">
+
+  <!-- ── Loading Overlay ── -->
+  <div id="loading-overlay" class="c-loading-overlay">
+    <div class="c-loading-spinner"></div>
+    <span class="c-loading-text">Cargando...</span>
+  </div>
+
+  <!-- ── Toast Container ── -->
+  <div id="toast-container" class="c-toast-container" aria-live="polite"></div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- ── Login Screen ── -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="login-screen" class="c-auth-screen" style="display:none;">
+    <div class="c-auth-card">
+      <div class="c-auth-logo">
+        <a href="/" class="c-brand">AhoraTengoPagina</a>
+      </div>
+      <h1 class="c-auth-title">Iniciar Sesion</h1>
+      <p class="c-auth-subtitle">Ingresa a tu portal de cliente</p>
+
+      <form id="login-form" class="c-auth-form" novalidate>
+        <div class="c-form-group">
+          <label for="login-email" class="c-label">Correo electronico</label>
+          <input
+            type="email"
+            id="login-email"
+            class="c-input"
+            placeholder="tu@correo.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+        <div class="c-form-group">
+          <label for="login-password" class="c-label">Contrasena</label>
+          <input
+            type="password"
+            id="login-password"
+            class="c-input"
+            placeholder="Tu contrasena"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-login">
+          Iniciar Sesion
+        </button>
+      </form>
+
+      <div class="c-auth-footer">
+        <button type="button" class="c-auth-link" id="btn-forgot-password">
+          Olvidaste tu contrasena?
+        </button>
+      </div>
+    </div>
+
+    <p class="c-auth-legal">
+      <a href="/privacy-policy">Politica de Privacidad</a>
+    </p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- ── Password Reset Screen ── -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="reset-screen" class="c-auth-screen" style="display:none;">
+    <div class="c-auth-card">
+      <div class="c-auth-logo">
+        <a href="/" class="c-brand">AhoraTengoPagina</a>
+      </div>
+      <h1 class="c-auth-title">Recuperar Contrasena</h1>
+      <p class="c-auth-subtitle">Te enviaremos un enlace para restablecer tu contrasena</p>
+
+      <form id="reset-form" class="c-auth-form" novalidate>
+        <div class="c-form-group">
+          <label for="reset-email" class="c-label">Correo electronico</label>
+          <input
+            type="email"
+            id="reset-email"
+            class="c-input"
+            placeholder="tu@correo.com"
+            autocomplete="email"
+            required
+          >
+        </div>
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-send-reset">
+          Enviar Enlace
+        </button>
+      </form>
+
+      <div class="c-auth-footer">
+        <button type="button" class="c-auth-link" id="btn-back-to-login">
+          Volver a Iniciar Sesion
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- ── Dashboard ── -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="dashboard" style="display:none;">
+
+    <!-- ── Header ── -->
+    <header class="c-header">
+      <div class="c-header-inner">
+        <div class="c-header-left">
+          <a href="/" class="c-brand c-brand-sm">AhoraTengoPagina</a>
+          <span class="c-header-sep"></span>
+          <span class="c-header-business" id="business-name">Mi Negocio</span>
+        </div>
+        <div class="c-header-right">
+          <button type="button" class="c-btn c-btn-ghost" id="btn-logout">
+            Cerrar Sesion
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Mobile Nav Tabs ── -->
+    <nav class="c-mobile-tabs" id="mobile-tabs">
+      <button class="c-tab active" data-section="dashboard">Inicio</button>
+      <button class="c-tab" data-section="business">Negocio</button>
+      <button class="c-tab" data-section="billing">Facturacion</button>
+      <button class="c-tab" data-section="requests">Solicitudes</button>
+      <button class="c-tab" data-section="account">Cuenta</button>
+    </nav>
+
+    <div class="c-layout">
+
+      <!-- ── Sidebar (desktop) ── -->
+      <aside class="c-sidebar" id="sidebar">
+        <nav class="c-sidebar-nav">
+          <button class="c-nav-item active" data-section="dashboard">
+            <svg class="c-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+            <span>Dashboard</span>
+          </button>
+          <button class="c-nav-item" data-section="business">
+            <svg class="c-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg>
+            <span>Mi Negocio</span>
+          </button>
+          <button class="c-nav-item" data-section="billing">
+            <svg class="c-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+            <span>Facturacion</span>
+          </button>
+          <button class="c-nav-item" data-section="requests">
+            <svg class="c-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            <span>Solicitudes</span>
+          </button>
+          <button class="c-nav-item" data-section="account">
+            <svg class="c-nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+            <span>Mi Cuenta</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- ── Content Area ── -->
+      <main class="c-content">
+
+        <!-- ── Section: Dashboard Overview ── -->
+        <div id="section-dashboard" class="c-section active" data-section="dashboard">
+          <h2 class="c-section-title">Dashboard</h2>
+
+          <!-- Website URL Card -->
+          <div class="c-website-card">
+            <div class="c-website-card-label">Tu Pagina Web</div>
+            <div class="c-website-card-url" id="website-url">—</div>
+            <div class="c-website-card-actions">
+              <a href="#" class="c-website-card-btn c-website-card-btn--visit" id="website-visit-btn" target="_blank" rel="noopener">Visitar sitio</a>
+            </div>
+          </div>
+
+          <!-- Quick Stats Row -->
+          <div class="c-stats-grid">
+            <div class="c-stat-card">
+              <span class="c-stat-label">Visitas este mes</span>
+              <span class="c-stat-value" id="stat-visitors">—</span>
+            </div>
+            <div class="c-stat-card">
+              <span class="c-stat-label">Solicitudes abiertas</span>
+              <span class="c-stat-value" id="stat-requests">—</span>
+            </div>
+            <div class="c-stat-card">
+              <span class="c-stat-label">Estado</span>
+              <div id="subscription-status">—</div>
+            </div>
+            <div class="c-stat-card">
+              <span class="c-stat-label">Proximo cobro</span>
+              <span class="c-stat-value" id="next-billing">—</span>
+            </div>
+          </div>
+
+          <!-- Recent Requests -->
+          <div class="c-card">
+            <div class="c-card-header">
+              <h3 class="c-card-heading">Solicitudes Recientes</h3>
+              <button type="button" class="c-btn c-btn-sm c-btn-outline" data-section="requests" id="dash-view-all-requests">
+                Ver todas
+              </button>
+            </div>
+            <div id="dash-recent-requests" class="c-empty-state">
+              <p>No hay solicitudes recientes.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section: Mi Negocio ── -->
+        <div id="section-business" class="c-section" data-section="business">
+          <h2 class="c-section-title">Mi Negocio</h2>
+          <p class="c-section-desc">Actualiza la informacion de contacto que aparece en tu pagina web.</p>
+
+          <form id="business-form" class="c-form" novalidate>
+            <div class="c-card">
+              <h3 class="c-card-heading">Informacion de Contacto</h3>
+
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label for="biz-name" class="c-label">Nombre del Negocio</label>
+                  <input type="text" id="biz-name" class="c-input" placeholder="Mi Negocio" readonly>
+                </div>
+                <div class="c-form-group">
+                  <label for="biz-category" class="c-label">Categoria</label>
+                  <input type="text" id="biz-category" class="c-input" placeholder="Restaurante" readonly>
+                </div>
+              </div>
+
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label for="biz-phone" class="c-label">Telefono</label>
+                  <input type="tel" id="biz-phone" class="c-input" placeholder="+52 555 123 4567">
+                </div>
+                <div class="c-form-group">
+                  <label for="biz-email" class="c-label">Correo electronico</label>
+                  <input type="email" id="biz-email" class="c-input" placeholder="contacto@minegocio.com">
+                </div>
+              </div>
+
+              <div class="c-form-group">
+                <label for="biz-address" class="c-label">Direccion</label>
+                <input type="text" id="biz-address" class="c-input" placeholder="Calle, Colonia, Ciudad, Estado, CP">
+              </div>
+            </div>
+
+            <div class="c-card">
+              <h3 class="c-card-heading">Horario de Atencion</h3>
+
+              <div class="c-hours-grid" id="biz-hours">
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Lunes</span>
+                  <input type="text" class="c-input c-input-sm" data-day="monday" placeholder="9:00 AM - 6:00 PM">
+                </div>
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Martes</span>
+                  <input type="text" class="c-input c-input-sm" data-day="tuesday" placeholder="9:00 AM - 6:00 PM">
+                </div>
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Miercoles</span>
+                  <input type="text" class="c-input c-input-sm" data-day="wednesday" placeholder="9:00 AM - 6:00 PM">
+                </div>
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Jueves</span>
+                  <input type="text" class="c-input c-input-sm" data-day="thursday" placeholder="9:00 AM - 6:00 PM">
+                </div>
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Viernes</span>
+                  <input type="text" class="c-input c-input-sm" data-day="friday" placeholder="9:00 AM - 6:00 PM">
+                </div>
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Sabado</span>
+                  <input type="text" class="c-input c-input-sm" data-day="saturday" placeholder="10:00 AM - 3:00 PM">
+                </div>
+                <div class="c-hours-row">
+                  <span class="c-hours-day">Domingo</span>
+                  <input type="text" class="c-input c-input-sm" data-day="sunday" placeholder="Cerrado">
+                </div>
+              </div>
+            </div>
+
+            <div class="c-form-actions">
+              <button type="submit" class="c-btn c-btn-primary" id="btn-save-business">
+                Guardar Cambios
+              </button>
+              <p class="c-form-hint">Los cambios se reflejaran en tu pagina web dentro de 24 horas.</p>
+            </div>
+          </form>
+        </div>
+
+        <!-- ── Section: Facturacion ── -->
+        <div id="section-billing" class="c-section" data-section="billing">
+          <h2 class="c-section-title">Facturacion</h2>
+          <p class="c-section-desc">Administra tu suscripcion y metodo de pago.</p>
+
+          <!-- Current Plan -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Plan Actual</h3>
+            <div class="c-plan-summary">
+              <div class="c-plan-info">
+                <span class="c-plan-name" id="plan-name">—</span>
+                <span class="c-plan-price" id="plan-price">—</span>
+              </div>
+              <span class="c-badge c-badge--active" id="billing-status-badge">Activa</span>
+            </div>
+            <div class="c-card-row c-card-row-details">
+              <div>
+                <p class="c-text-muted">Proximo cobro</p>
+                <p class="c-text-strong" id="billing-date">—</p>
+              </div>
+              <div>
+                <p class="c-text-muted">Metodo de pago</p>
+                <p class="c-text-strong" id="payment-method">•••• ——</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manage Billing Button -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Administrar Pago</h3>
+            <p class="c-text-muted c-mb-12">Actualiza tu metodo de pago o descarga facturas desde el portal de facturacion.</p>
+            <button type="button" class="c-btn c-btn-primary" id="btn-stripe-portal">
+              Administrar Facturacion
+            </button>
+          </div>
+
+          <!-- Invoice History -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Historial de Facturas</h3>
+            <div class="c-table-wrapper">
+              <table class="c-table" id="invoice-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Factura</th>
+                  </tr>
+                </thead>
+                <tbody id="invoice-table-body">
+                  <tr>
+                    <td colspan="4" class="c-table-empty">Cargando facturas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section: Solicitudes ── -->
+        <div id="section-requests" class="c-section" data-section="requests">
+          <h2 class="c-section-title">Solicitudes de Cambios</h2>
+          <p class="c-section-desc">Solicita cambios a tu pagina web. Nuestro equipo los revisara y aplicara.</p>
+
+          <!-- New Request Form -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Nueva Solicitud</h3>
+            <form id="request-form" class="c-form" novalidate>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label for="req-type" class="c-label">Tipo de cambio</label>
+                  <select id="request-type" class="c-input c-select" required>
+                    <option value="">Seleccionar tipo...</option>
+                    <option value="content_update">Actualizar contenido</option>
+                    <option value="photo_update">Actualizar fotos</option>
+                    <option value="contact_update">Actualizar contacto</option>
+                    <option value="hours_update">Actualizar horario</option>
+                    <option value="menu_update">Actualizar menu</option>
+                    <option value="design_change">Cambio de diseno</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+                <div class="c-form-group">
+                  <label for="req-priority" class="c-label">Prioridad</label>
+                  <select id="request-priority" class="c-input c-select">
+                    <option value="normal">Normal</option>
+                    <option value="low">Baja</option>
+                    <option value="high">Alta</option>
+                    <option value="urgent">Urgente</option>
+                  </select>
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label for="req-description" class="c-label">Descripcion del cambio</label>
+                <textarea
+                  id="request-description"
+                  class="c-input c-textarea"
+                  rows="4"
+                  placeholder="Describe el cambio que necesitas. Se lo mas especifico posible."
+                  required
+                ></textarea>
+              </div>
+              <button type="submit" class="c-btn c-btn-primary" id="btn-submit-request">
+                Enviar Solicitud
+              </button>
+            </form>
+          </div>
+
+          <!-- Request History -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Historial de Solicitudes</h3>
+            <div class="c-table-wrapper">
+              <table class="c-table" id="requests-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Descripcion</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="requests-table-body">
+                  <tr>
+                    <td colspan="5" class="c-table-empty">No hay solicitudes todavia.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Section: Mi Cuenta ── -->
+        <div id="section-account" class="c-section" data-section="account">
+          <h2 class="c-section-title">Mi Cuenta</h2>
+          <p class="c-section-desc">Administra tu cuenta y seguridad.</p>
+
+          <!-- Account Info -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Informacion de la Cuenta</h3>
+            <div class="c-form-row">
+              <div class="c-form-group">
+                <p class="c-text-muted">Correo electronico</p>
+                <p class="c-text-strong" id="account-email">—</p>
+              </div>
+              <div class="c-form-group">
+                <p class="c-text-muted">Nombre de contacto</p>
+                <p class="c-text-strong" id="account-contact-name">—</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Password -->
+          <div class="c-card">
+            <h3 class="c-card-heading">Cambiar Contrasena</h3>
+            <form id="password-form" class="c-form" novalidate>
+              <div class="c-form-group">
+                <label for="pw-current" class="c-label">Contrasena actual</label>
+                <input type="password" id="current-password" class="c-input" placeholder="Tu contrasena actual" autocomplete="current-password" required>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label for="new-password" class="c-label">Nueva contrasena</label>
+                  <input type="password" id="new-password" class="c-input" placeholder="Minimo 8 caracteres" autocomplete="new-password" required>
+                </div>
+                <div class="c-form-group">
+                  <label for="confirm-password" class="c-label">Confirmar nueva contrasena</label>
+                  <input type="password" id="confirm-password" class="c-input" placeholder="Repite la nueva contrasena" autocomplete="new-password" required>
+                </div>
+              </div>
+              <button type="submit" class="c-btn c-btn-primary" id="btn-change-password">
+                Cambiar Contrasena
+              </button>
+            </form>
+          </div>
+
+          <!-- Cancel Subscription -->
+          <div class="c-card c-card-danger">
+            <h3 class="c-card-heading">Cancelar Suscripcion</h3>
+            <div class="c-warning-box">
+              <svg class="c-warning-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+              <div>
+                <p class="c-warning-title">Esta accion no se puede deshacer</p>
+                <p class="c-warning-text">Si cancelas tu suscripcion, tu pagina web se desactivara al final del periodo de facturacion actual. Perderas acceso a tu sitio web y a todas las estadisticas.</p>
+              </div>
+            </div>
+            <button type="button" class="c-btn c-btn-danger" id="btn-cancel-subscription">
+              Cancelar Mi Suscripcion
+            </button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- ── Footer ── -->
+    <footer class="c-footer">
+      <div class="c-footer-inner">
+        <p>&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.</p>
+        <div class="c-footer-links">
+          <a href="/privacy-policy">Privacidad</a>
+          <a href="mailto:soporte@ahoratengopagina.com">Soporte</a>
+        </div>
+      </div>
+    </footer>
+
+  </section>
+
+  <!-- App Logic -->
+  <script src="/customer/app.js"></script>
+</body>
+</html>
