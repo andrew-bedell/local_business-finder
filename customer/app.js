@@ -4,8 +4,8 @@
   'use strict';
 
   // ── Config ──
-  const SUPABASE_URL = 'https://jatywrfswxxghrbukkbx.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphdHl3cmZzd3h4Z2hyYnVra2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyODMxMzAsImV4cCI6MjA1Njg1OTEzMH0.xq1m4nHOMNrdMwTRvOgBf-o8mUmyFCmfuTCnFRGYm4E';
+  const SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
 
   // ── State ──
   let supabase = null;
