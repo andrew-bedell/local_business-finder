@@ -1,5 +1,5 @@
 // Vercel serverless function: Marketing lead capture
-// Receives lead form submissions and saves to Supabase marketing_leads table.
+// Saves lead to Supabase and auto-sends a WhatsApp welcome template message.
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { business_name, facebook_url, google_listing_url } = req.body || {};
+  const { business_name, business_address, business_type, whatsapp_number } = req.body || {};
 
   if (!business_name) {
     return res.status(400).json({ error: 'Missing required field: business_name' });
@@ -29,12 +29,14 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Save lead to database
     const row = {
       business_name: business_name.trim(),
+      city: business_address ? business_address.trim() : null,
+      phone: whatsapp_number ? whatsapp_number.trim() : null,
       source: 'website',
+      notes: business_type ? ('Tipo: ' + business_type.trim()) : null,
     };
-    if (facebook_url) row.facebook_url = facebook_url.trim();
-    if (google_listing_url) row.google_listing_url = google_listing_url.trim();
 
     const response = await fetch(
       `${supabaseUrl}/rest/v1/marketing_leads`,
@@ -56,9 +58,72 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to save lead' });
     }
 
-    return res.status(200).json({ success: true });
+    // Auto-send WhatsApp template message if phone number provided
+    let whatsappSent = false;
+    if (whatsapp_number) {
+      try {
+        whatsappSent = await sendWelcomeWhatsApp(whatsapp_number.trim(), business_name.trim());
+      } catch (waErr) {
+        console.warn('WhatsApp auto-send failed (non-blocking):', waErr.message);
+      }
+    }
+
+    return res.status(200).json({ success: true, whatsapp_sent: whatsappSent });
   } catch (err) {
     console.error('Lead capture error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+async function sendWelcomeWhatsApp(phone, businessName) {
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+  const templateName = process.env.WHATSAPP_WELCOME_TEMPLATE || 'website_welcome';
+  const templateLang = process.env.WHATSAPP_WELCOME_TEMPLATE_LANG || 'es';
+
+  if (!phoneNumberId || !accessToken) {
+    console.warn('WhatsApp credentials not configured, skipping auto-send');
+    return false;
+  }
+
+  // Normalize phone to E.164
+  const normalizedPhone = phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
+
+  const components = [{
+    type: 'body',
+    parameters: [{ type: 'text', text: businessName }],
+  }];
+
+  const metaPayload = {
+    messaging_product: 'whatsapp',
+    to: normalizedPhone,
+    type: 'template',
+    template: {
+      name: templateName,
+      language: { code: templateLang },
+      components,
+    },
+  };
+
+  const metaResp = await fetch(
+    `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(metaPayload),
+    }
+  );
+
+  const metaData = await metaResp.json();
+
+  if (!metaResp.ok) {
+    console.error('WhatsApp welcome send error:', metaData);
+    return false;
+  }
+
+  console.log('WhatsApp welcome sent to', normalizedPhone, 'wamid:', metaData.messages?.[0]?.id);
+  return true;
 }

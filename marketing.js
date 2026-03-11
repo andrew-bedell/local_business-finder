@@ -399,6 +399,27 @@
 
     if (!businessName || !businessAddress || !businessType || !whatsappNumber) return;
 
+    formSubmitBtn.disabled = true;
+    formSubmitBtn.textContent = t('modal_sending');
+
+    // Save lead to DB + auto-send WhatsApp template (non-blocking)
+    fetch('/api/leads/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        business_name: businessName,
+        business_address: businessAddress,
+        business_type: businessType,
+        whatsapp_number: whatsappNumber,
+      }),
+    }).catch(function(err) {
+      console.warn('Lead capture error (non-blocking):', err);
+    }).finally(function() {
+      formSubmitBtn.disabled = false;
+      formSubmitBtn.textContent = t('modal_submit');
+    });
+
+    // Open WhatsApp conversation immediately (don't wait for API)
     var message = 'Hola! Quiero crear mi pagina web.\n\n'
       + 'Negocio: ' + businessName + '\n'
       + 'Direccion: ' + businessAddress + '\n'
