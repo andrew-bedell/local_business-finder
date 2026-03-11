@@ -299,6 +299,16 @@
       websiteDownload: 'Download HTML',
       websiteOpenNewTab: 'Open in New Tab',
       websiteSaved: 'Website saved to database',
+      // Table action buttons
+      thReport: 'Report',
+      thAiPhotos: 'AI Photos',
+      thWebsite: 'Website',
+      btnReport: 'Report',
+      btnPhotos: 'Photos',
+      btnWebsite: 'Website',
+      reportSuccess: 'Research report generated for {0}',
+      websiteSuccess: 'Website generated for {0}',
+      needsReport: 'Generate report first to see photo plan',
       noDescription: 'No description available.',
       // Search pagination
       searchingPage: 'Searching page {0} of {1}...',
@@ -625,6 +635,16 @@
       websiteDownload: 'Descargar HTML',
       websiteOpenNewTab: 'Abrir en Nueva Pestaña',
       websiteSaved: 'Sitio web guardado en la base de datos',
+      // Table action buttons
+      thReport: 'Informe',
+      thAiPhotos: 'Fotos IA',
+      thWebsite: 'Sitio Web',
+      btnReport: 'Informe',
+      btnPhotos: 'Fotos',
+      btnWebsite: 'Sitio',
+      reportSuccess: 'Informe generado para {0}',
+      websiteSuccess: 'Sitio web generado para {0}',
+      needsReport: 'Genera el informe primero para ver el plan de fotos',
       noDescription: 'No hay descripción disponible.',
       // Search pagination
       searchingPage: 'Buscando página {0} de {1}...',
@@ -1370,13 +1390,34 @@
         <td class="td-center">${place.reviewCount > 0 ? place.reviewCount.toLocaleString() : '0'}</td>
         <td><span class="badge badge-no-site">${t('noWebsite')}</span></td>
         <td class="td-center" data-social-place="${escapeHtml(place.placeId)}">${socialCellHtml}</td>
+        <td class="td-center"><button class="btn btn-view btn-report" data-idx="${idx}">${place.researchReport ? '✓' : t('btnReport')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-photos" data-idx="${idx}" ${place.researchReport ? '' : 'disabled'}>${t('btnPhotos')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-website" data-idx="${idx}">${place.generatedWebsiteHtml ? '✓' : t('btnWebsite')}</button></td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
       `;
 
+      // Attach click handler for Report button
+      const reportBtn = tr.querySelector('.btn-report');
+      if (reportBtn) {
+        reportBtn.addEventListener('click', () => handleTableReport(place, reportBtn));
+      }
+
+      // Attach click handler for AI Photos button
+      const photosBtn = tr.querySelector('.btn-photos');
+      if (photosBtn) {
+        photosBtn.addEventListener('click', () => handleTableAiPhotos(place));
+      }
+
+      // Attach click handler for Website button
+      const websiteBtn = tr.querySelector('.btn-website');
+      if (websiteBtn) {
+        websiteBtn.addEventListener('click', () => handleTableWebsite(place, websiteBtn));
+      }
+
       // Attach click handler for View button
-      const viewBtn = tr.querySelector('.btn-view');
+      const viewBtn = tr.querySelector('.btn-view:not(.btn-report):not(.btn-photos):not(.btn-website)');
       if (viewBtn) {
         viewBtn.addEventListener('click', () => openDetailModal(place));
       }
@@ -3461,8 +3502,148 @@
     return sections.join('\n');
   }
 
+  // ── SSE Report Parsing Helper ──
+  async function parseSSEReportResponse(response) {
+    let fullText = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const eventData = line.slice(6).trim();
+        if (eventData === '[DONE]') continue;
+        try {
+          const event = JSON.parse(eventData);
+          if (event.type === 'content_block_delta' && event.delta && event.delta.type === 'text_delta') {
+            fullText += event.delta.text;
+          }
+        } catch (e) { /* skip malformed SSE events */ }
+      }
+    }
+
+    let jsonText = fullText.trim();
+    if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+    try {
+      return JSON.parse(jsonText);
+    } catch (parseErr) {
+      console.warn('Report JSON parse failed:', parseErr.message);
+      return { rawText: fullText, parseError: true };
+    }
+  }
+
+  // ── Fetch Report API (shared by modal and table) ──
+  async function fetchReportFromApi(place) {
+    const businessData = compileBusinessDataForPrompt(place);
+    const language = getSearchLanguage();
+    const res = await withTimeout(
+      fetch('/api/ai/research-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessData, name: place.name, language }),
+      }),
+      120000,
+      'Research report'
+    );
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Request failed');
+    }
+    return parseSSEReportResponse(res);
+  }
+
+  // ── Table Action Handlers ──
+  async function handleTableReport(place, btn) {
+    if (place.researchReport) {
+      openDetailModal(place);
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = t('generatingReport');
+    try {
+      const report = await fetchReportFromApi(place);
+      place.researchReport = report;
+      btn.disabled = false;
+      btn.textContent = '\u2713';
+      btn.title = t('generateReport');
+      showToast(t('reportSuccess', place.name), 'success');
+      // Enable AI photos button in same row
+      const row = btn.closest('tr');
+      const photosBtn = row ? row.querySelector('.btn-photos') : null;
+      if (photosBtn) photosBtn.disabled = false;
+    } catch (err) {
+      console.error('Research report error:', err);
+      showToast(t('reportError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('btnReport');
+    }
+  }
+
+  function handleTableAiPhotos(place) {
+    if (!place.researchReport) {
+      showToast(t('needsReport'), 'warning');
+      return;
+    }
+    openDetailModal(place);
+  }
+
+  async function handleTableWebsite(place, btn) {
+    if (place.generatedWebsiteHtml) {
+      openDetailModal(place);
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = t('generatingWebsite');
+    try {
+      const businessData = compileBusinessDataForPrompt(place);
+      const photoInventory = place._photoInventory || buildPhotoInventoryMap(place);
+      const language = getSearchLanguage();
+      const res = await withTimeout(
+        fetch('/api/ai/generate-website', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessData,
+            researchReport: place.researchReport,
+            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            name: place.name,
+            language,
+          }),
+        }),
+        90000,
+        'Website generation'
+      );
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Request failed');
+      }
+      const data = await res.json();
+      place.generatedWebsiteHtml = data.html;
+      btn.disabled = false;
+      btn.textContent = '\u2713';
+      btn.title = t('generateWebsite');
+      showToast(t('websiteSuccess', place.name), 'success');
+      saveGeneratedWebsite(place, data.html).catch(err =>
+        console.warn('Failed to save generated website:', err)
+      );
+    } catch (err) {
+      console.error('Website generation error:', err);
+      showToast(t('websiteError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('btnWebsite');
+    }
+  }
+
+  // ── Research Report (Modal) ──
   async function generateResearchReport(modal, place, btn) {
-    // Check if already cached
     if (place.researchReport) {
       btn.style.display = 'none';
       renderResearchReport(modal, place.researchReport);
@@ -3477,76 +3658,14 @@
     container.innerHTML = `<div class="report-loading"><span class="spinner"></span><p>${t('reportGenerating')}</p></div>`;
 
     try {
-      const businessData = compileBusinessDataForPrompt(place);
-      const language = getSearchLanguage();
-
-      const res = await withTimeout(
-        fetch('/api/ai/research-report', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessData, name: place.name, language }),
-        }),
-        120000,
-        'Research report'
-      );
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Request failed');
-      }
-
-      // Read the SSE stream from the server and assemble text deltas
-      let fullText = '';
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const eventData = line.slice(6).trim();
-          if (eventData === '[DONE]') continue;
-          try {
-            const event = JSON.parse(eventData);
-            if (event.type === 'content_block_delta' && event.delta && event.delta.type === 'text_delta') {
-              fullText += event.delta.text;
-            }
-          } catch (e) {
-            // Skip malformed SSE events
-          }
-        }
-      }
-
-      // Parse the assembled JSON
-      let jsonText = fullText.trim();
-      if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-      }
-
-      let report;
-      try {
-        report = JSON.parse(jsonText);
-      } catch (parseErr) {
-        console.warn('Report JSON parse failed:', parseErr.message);
-        report = { rawText: fullText, parseError: true };
-      }
-
+      const report = await fetchReportFromApi(place);
       place.researchReport = report;
 
-      // Check modal still exists
       if (!document.getElementById('detail-modal')) return;
 
       btn.style.display = 'none';
       renderResearchReport(modal, report);
 
-      // Show website generation section now that report exists
       const websiteSection = modal.querySelector('#website-generation-section');
       if (websiteSection) websiteSection.style.display = '';
     } catch (err) {

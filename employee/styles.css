@@ -633,9 +633,18 @@ select.input {
   transition: background 0.15s, color 0.15s;
 }
 
-.btn-view:hover {
+.btn-view:hover:not(:disabled) {
   background: var(--primary);
   color: #fff;
+}
+.btn-view:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-report, .btn-photos, .btn-website {
+  font-size: 11px;
+  padding: 4px 10px;
+  white-space: nowrap;
 }
 
 /* === Save to DB Button === */
