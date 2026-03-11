@@ -917,6 +917,7 @@
       const reportBtnLabel = hasReport ? '\u2713' : t('btnReport');
       const websiteBtnLabel = websiteStatus ? '\u2713' : t('btnWebsite');
       const photosDisabled = hasReport ? '' : 'disabled';
+      const websiteDisabled = hasReport ? '' : 'disabled';
 
       const mapsLink = b.maps_url
         ? `<a href="${escapeHtml(b.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
@@ -933,7 +934,7 @@
         <td class="td-center">${socialCellHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-report" data-id="${b.id}">${reportBtnLabel}</button></td>
         <td class="td-center"><button class="btn btn-view btn-photos" data-id="${b.id}" ${photosDisabled}>${t('btnPhotos')}</button></td>
-        <td class="td-center"><button class="btn btn-view btn-website" data-id="${b.id}">${websiteBtnLabel}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-website" data-id="${b.id}" ${websiteDisabled}>${websiteBtnLabel}</button></td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
@@ -1433,10 +1434,12 @@
       btn.textContent = '\u2713';
       btn.title = t('generateReport');
       showToast(t('reportSuccess', business.name), 'success');
-      // Enable photos button in same row
+      // Enable photos and website buttons in same row
       const row = btn.closest('tr');
       const photosBtn = row ? row.querySelector('.btn-photos') : null;
       if (photosBtn) photosBtn.disabled = false;
+      const websiteBtn = row ? row.querySelector('.btn-website') : null;
+      if (websiteBtn) websiteBtn.disabled = false;
     } catch (err) {
       console.error('Research report error:', err);
       showToast(t('reportError'), 'error');
@@ -1458,6 +1461,11 @@
     const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
     if (existingWebsite) {
       openDetailModal(business);
+      return;
+    }
+    const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
+    if (!hasReport) {
+      showToast(t('needsReport'), 'warning');
       return;
     }
     btn.disabled = true;

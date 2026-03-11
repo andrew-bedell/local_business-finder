@@ -78,7 +78,18 @@
     // Check for existing session
     supabase.auth.getSession().then(function (result) {
       var session = result.data.session;
-      if (session) {
+      if (isRecoveryMode) {
+        // In recovery mode, show password form — don't load dashboard
+        // The onAuthStateChange handler will also catch this, but
+        // if the user is already logged in we need to handle it here
+        if (session) {
+          currentUser = session.user;
+        }
+        if (window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        showNewPasswordScreen();
+      } else if (session) {
         currentUser = session.user;
         showLoading();
         loadDashboard();
