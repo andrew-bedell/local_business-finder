@@ -15,6 +15,7 @@
   let businessData = null;
   let websiteData = null;
   let subscriptionData = null;
+  let isRecoveryMode = false;
 
   // ── DOM refs ──
   const $ = function (sel) { return document.querySelector(sel); };
@@ -37,12 +38,29 @@
       businessSlug = decodeURIComponent(pathParts[1]);
     }
 
+    // Detect recovery mode from URL hash (before Supabase processes the token)
+    var hash = window.location.hash;
+    if (hash && hash.indexOf('type=recovery') !== -1) {
+      isRecoveryMode = true;
+    }
+
     // Set up event listeners
     bindEvents();
 
     // Listen for auth state changes (handles OAuth redirects and token refresh)
     // Skip SIGNED_IN if dashboard is already loading (handleLogin handles its own load)
     supabase.auth.onAuthStateChange(function (event, session) {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && isRecoveryMode)) {
+        // Recovery flow — show new password form instead of dashboard
+        isRecoveryMode = true;
+        currentUser = session.user;
+        // Clean the URL hash
+        if (window.history.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        showNewPasswordScreen();
+        return;
+      }
       if (event === 'SIGNED_IN' && session && !currentUser) {
         currentUser = session.user;
         showLoading();
@@ -167,6 +185,17 @@
     if (btnStripePortal) {
       btnStripePortal.addEventListener('click', function () {
         openStripePortal();
+      });
+    }
+
+    // New password form (recovery flow)
+    var newPasswordForm = $('#new-password-form');
+    if (newPasswordForm) {
+      newPasswordForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var newPw = ($('#recovery-new-password') || {}).value || '';
+        var confirmPw = ($('#recovery-confirm-password') || {}).value || '';
+        handleSetNewPassword(newPw, confirmPw);
       });
     }
 
@@ -354,6 +383,54 @@
       if (btnChange) {
         btnChange.disabled = false;
         btnChange.textContent = 'Cambiar Contraseña';
+      }
+    }
+  }
+
+  async function handleSetNewPassword(newPassword, confirmPassword) {
+    if (!newPassword || !confirmPassword) {
+      showToast('Por favor completa ambos campos.', 'warning');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showToast('Las contraseñas no coinciden.', 'error');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showToast('La contraseña debe tener al menos 6 caracteres.', 'warning');
+      return;
+    }
+
+    var btnSet = $('#btn-set-new-password');
+    if (btnSet) {
+      btnSet.disabled = true;
+      btnSet.textContent = 'Actualizando...';
+    }
+
+    try {
+      var result = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      isRecoveryMode = false;
+      showToast('Contraseña restablecida correctamente. Iniciando sesión...', 'success');
+
+      // Sign out and redirect to login so they can log in fresh
+      await supabase.auth.signOut();
+      showLoginScreen();
+    } catch (err) {
+      console.error('Set new password failed:', err);
+      showToast('Error al restablecer la contraseña: ' + (err.message || 'Intenta de nuevo.'), 'error');
+    } finally {
+      if (btnSet) {
+        btnSet.disabled = false;
+        btnSet.textContent = 'Restablecer Contraseña';
       }
     }
   }
@@ -978,10 +1055,12 @@
   function showLoginScreen() {
     var loginScreen = $('#login-screen');
     var resetScreen = $('#reset-screen');
+    var newPasswordScreen = $('#new-password-screen');
     var dashboard = $('#dashboard');
 
     if (loginScreen) loginScreen.style.display = '';
     if (resetScreen) resetScreen.style.display = 'none';
+    if (newPasswordScreen) newPasswordScreen.style.display = 'none';
     if (dashboard) dashboard.style.display = 'none';
 
     hideLoading();
@@ -995,13 +1074,29 @@
     if (resetScreen) resetScreen.style.display = '';
   }
 
-  function showDashboardScreen() {
+  function showNewPasswordScreen() {
     var loginScreen = $('#login-screen');
     var resetScreen = $('#reset-screen');
+    var newPasswordScreen = $('#new-password-screen');
     var dashboard = $('#dashboard');
 
     if (loginScreen) loginScreen.style.display = 'none';
     if (resetScreen) resetScreen.style.display = 'none';
+    if (newPasswordScreen) newPasswordScreen.style.display = '';
+    if (dashboard) dashboard.style.display = 'none';
+
+    hideLoading();
+  }
+
+  function showDashboardScreen() {
+    var loginScreen = $('#login-screen');
+    var resetScreen = $('#reset-screen');
+    var newPasswordScreen = $('#new-password-screen');
+    var dashboard = $('#dashboard');
+
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (resetScreen) resetScreen.style.display = 'none';
+    if (newPasswordScreen) newPasswordScreen.style.display = 'none';
     if (dashboard) dashboard.style.display = '';
   }
 

@@ -123,6 +123,47 @@
   </section>
 
   <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- ── Set New Password Screen (Recovery) ── -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="new-password-screen" class="c-auth-screen" style="display:none;">
+    <div class="c-auth-card">
+      <div class="c-auth-logo">
+        <a href="/" class="c-brand">AhoraTengoPagina</a>
+      </div>
+      <h1 class="c-auth-title">Nueva Contrasena</h1>
+      <p class="c-auth-subtitle">Ingresa tu nueva contrasena para restablecer el acceso a tu cuenta</p>
+
+      <form id="new-password-form" class="c-auth-form" novalidate>
+        <div class="c-form-group">
+          <label for="recovery-new-password" class="c-label">Nueva contrasena</label>
+          <input
+            type="password"
+            id="recovery-new-password"
+            class="c-input"
+            placeholder="Minimo 6 caracteres"
+            autocomplete="new-password"
+            required
+          >
+        </div>
+        <div class="c-form-group">
+          <label for="recovery-confirm-password" class="c-label">Confirmar nueva contrasena</label>
+          <input
+            type="password"
+            id="recovery-confirm-password"
+            class="c-input"
+            placeholder="Repite la nueva contrasena"
+            autocomplete="new-password"
+            required
+          >
+        </div>
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-set-new-password">
+          Restablecer Contrasena
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
   <!-- ── Dashboard ── -->
   <!-- ══════════════════════════════════════════════════════════ -->
   <section id="dashboard" style="display:none;">
