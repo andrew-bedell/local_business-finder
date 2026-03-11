@@ -1392,7 +1392,7 @@
         <td class="td-center" data-social-place="${escapeHtml(place.placeId)}">${socialCellHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-report" data-idx="${idx}">${place.researchReport ? '✓' : t('btnReport')}</button></td>
         <td class="td-center"><button class="btn btn-view btn-photos" data-idx="${idx}" ${place.researchReport ? '' : 'disabled'}>${t('btnPhotos')}</button></td>
-        <td class="td-center"><button class="btn btn-view btn-website" data-idx="${idx}">${place.generatedWebsiteHtml ? '✓' : t('btnWebsite')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-website" data-idx="${idx}" ${place.researchReport ? '' : 'disabled'}>${place.generatedWebsiteHtml ? '✓' : t('btnWebsite')}</button></td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
@@ -3575,10 +3575,12 @@
       btn.textContent = '\u2713';
       btn.title = t('generateReport');
       showToast(t('reportSuccess', place.name), 'success');
-      // Enable AI photos button in same row
+      // Enable AI photos and website buttons in same row
       const row = btn.closest('tr');
       const photosBtn = row ? row.querySelector('.btn-photos') : null;
       if (photosBtn) photosBtn.disabled = false;
+      const websiteBtn = row ? row.querySelector('.btn-website') : null;
+      if (websiteBtn) websiteBtn.disabled = false;
     } catch (err) {
       console.error('Research report error:', err);
       showToast(t('reportError'), 'error');
@@ -3598,6 +3600,10 @@
   async function handleTableWebsite(place, btn) {
     if (place.generatedWebsiteHtml) {
       openDetailModal(place);
+      return;
+    }
+    if (!place.researchReport) {
+      showToast(t('needsReport'), 'warning');
       return;
     }
     btn.disabled = true;
