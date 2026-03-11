@@ -190,6 +190,9 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, headers) {
       }),
     }
   );
+
+  // Track campaign reply
+  await updateCampaignReplyCount(conv.business_id, supabaseUrl, headers);
 }
 
 async function handleStatusUpdate(status, supabaseUrl, headers) {
@@ -215,6 +218,7 @@ async function handleStatusUpdate(status, supabaseUrl, headers) {
 
   if (Object.keys(updates).length === 0) return;
 
+  // Update message status
   await fetch(
     `${supabaseUrl}/rest/v1/whatsapp_messages?wamid=eq.${wamid}`,
     {
@@ -223,4 +227,75 @@ async function handleStatusUpdate(status, supabaseUrl, headers) {
       body: JSON.stringify(updates),
     }
   );
+
+  // Update campaign stats if this message belongs to a campaign
+  try {
+    const msgResp = await fetch(
+      `${supabaseUrl}/rest/v1/whatsapp_messages?wamid=eq.${wamid}&select=campaign_id`,
+      { headers }
+    );
+    const msgData = await msgResp.json();
+    const campaignId = msgData?.[0]?.campaign_id;
+
+    if (campaignId) {
+      const counterField =
+        statusValue === 'delivered' ? 'delivered_count' :
+        statusValue === 'read' ? 'read_count' :
+        statusValue === 'failed' ? 'failed_count' : null;
+
+      if (counterField) {
+        // Read current count and increment
+        const campResp = await fetch(
+          `${supabaseUrl}/rest/v1/whatsapp_campaigns?id=eq.${campaignId}&select=${counterField}`,
+          { headers }
+        );
+        const campData = await campResp.json();
+        if (campData && campData.length > 0) {
+          const currentCount = campData[0][counterField] || 0;
+          await fetch(
+            `${supabaseUrl}/rest/v1/whatsapp_campaigns?id=eq.${campaignId}`,
+            {
+              method: 'PATCH',
+              headers,
+              body: JSON.stringify({ [counterField]: currentCount + 1 }),
+            }
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Campaign stat update error:', err);
+  }
+}
+
+// Track campaign replies when inbound messages arrive
+async function updateCampaignReplyCount(businessId, supabaseUrl, headers) {
+  try {
+    // Check if this business has any campaign messages
+    const cmResp = await fetch(
+      `${supabaseUrl}/rest/v1/whatsapp_campaign_messages?business_id=eq.${businessId}&select=campaign_id&order=created_at.desc&limit=1`,
+      { headers }
+    );
+    const cmData = await cmResp.json();
+    if (cmData && cmData.length > 0) {
+      const campaignId = cmData[0].campaign_id;
+      const campResp = await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_campaigns?id=eq.${campaignId}&select=replied_count`,
+        { headers }
+      );
+      const campData = await campResp.json();
+      if (campData && campData.length > 0) {
+        await fetch(
+          `${supabaseUrl}/rest/v1/whatsapp_campaigns?id=eq.${campaignId}`,
+          {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({ replied_count: (campData[0].replied_count || 0) + 1 }),
+          }
+        );
+      }
+    }
+  } catch (err) {
+    console.warn('Campaign reply count update error:', err);
+  }
 }

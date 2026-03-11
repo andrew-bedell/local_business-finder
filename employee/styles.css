@@ -1902,6 +1902,307 @@ select.input {
   margin-bottom: 4px;
 }
 
+/* === Audiences === */
+.audiences-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.audience-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.audience-card:hover {
+  background: var(--bg-hover);
+}
+
+.audience-card:last-child {
+  border-bottom: none;
+}
+
+.audience-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.audience-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.audience-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.audience-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 12px;
+  white-space: nowrap;
+}
+
+.audience-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.audience-preview-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.audience-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.audience-preview-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.audience-preview-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* === Campaigns === */
+.campaigns-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.campaign-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.campaign-card:hover {
+  background: var(--bg-hover);
+}
+
+.campaign-card:last-child {
+  border-bottom: none;
+}
+
+.campaign-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.campaign-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.campaign-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.campaign-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: 12px;
+  white-space: nowrap;
+}
+
+.campaign-status-draft {
+  background: var(--bg-input);
+  color: var(--text-muted);
+}
+
+.campaign-status-scheduled {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+.campaign-status-sending {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.campaign-status-sent {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.campaign-status-cancelled,
+.campaign-status-failed {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.campaign-stats-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.campaign-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border-right: 1px solid var(--border);
+}
+
+.campaign-stat:last-child {
+  border-right: none;
+}
+
+.campaign-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.campaign-stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.campaign-stat-value.stat-sent { color: var(--primary); }
+.campaign-stat-value.stat-delivered { color: #60a5fa; }
+.campaign-stat-value.stat-read { color: #53bdeb; }
+.campaign-stat-value.stat-replied { color: var(--success); }
+.campaign-stat-value.stat-failed { color: var(--danger); }
+
+.campaign-messages-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.campaign-msg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.campaign-msg-row:last-child {
+  border-bottom: none;
+}
+
+.campaign-msg-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.campaign-msg-phone {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.template-preview {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.campaign-params {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.campaign-params .input {
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+/* Campaign mini stats on card */
+.campaign-mini-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.campaign-mini-stat {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.campaign-mini-stat span {
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .campaign-stats-bar {
+    flex-wrap: wrap;
+  }
+
+  .campaign-stat {
+    flex: 0 0 33.33%;
+  }
+
+  .audience-card,
+  .campaign-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .audience-count,
+  .campaign-status {
+    margin-right: 0;
+  }
+}
+
 /* === WhatsApp Messaging === */
 .messaging-layout {
   display: flex;

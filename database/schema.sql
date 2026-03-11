@@ -442,3 +442,315 @@ CREATE INDEX IF NOT EXISTS idx_marketing_leads_created ON marketing_leads (creat
 
 ALTER TABLE marketing_leads ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access" ON marketing_leads FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 10b. WHATSAPP_AUDIENCES — Named audience segments for campaign targeting
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS whatsapp_audiences (
+  id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                TEXT NOT NULL,
+  description         TEXT,
+  filters             JSONB NOT NULL DEFAULT '{}',
+  business_count      INTEGER DEFAULT 0,
+  last_computed_at    TIMESTAMPTZ,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_audiences_name ON whatsapp_audiences (name);
+
+ALTER TABLE whatsapp_audiences ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON whatsapp_audiences FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER whatsapp_audiences_updated_at
+  BEFORE UPDATE ON whatsapp_audiences FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 10c. WHATSAPP_CAMPAIGNS — Bulk message campaigns
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS whatsapp_campaigns (
+  id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                TEXT NOT NULL,
+  audience_id         UUID NOT NULL REFERENCES whatsapp_audiences(id) ON DELETE RESTRICT,
+  template_id         UUID NOT NULL REFERENCES whatsapp_templates(id) ON DELETE RESTRICT,
+  template_params     JSONB DEFAULT '[]',
+  status              TEXT DEFAULT 'draft'
+                        CHECK (status IN ('draft', 'scheduled', 'sending', 'sent', 'cancelled', 'failed')),
+  scheduled_at        TIMESTAMPTZ,
+  started_at          TIMESTAMPTZ,
+  completed_at        TIMESTAMPTZ,
+  send_offset         INTEGER DEFAULT 0,
+  total_recipients    INTEGER DEFAULT 0,
+  sent_count          INTEGER DEFAULT 0,
+  delivered_count     INTEGER DEFAULT 0,
+  read_count          INTEGER DEFAULT 0,
+  replied_count       INTEGER DEFAULT 0,
+  failed_count        INTEGER DEFAULT 0,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_campaigns_status ON whatsapp_campaigns (status);
+CREATE INDEX IF NOT EXISTS idx_wa_campaigns_audience ON whatsapp_campaigns (audience_id);
+
+ALTER TABLE whatsapp_campaigns ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON whatsapp_campaigns FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER whatsapp_campaigns_updated_at
+  BEFORE UPDATE ON whatsapp_campaigns FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 10d. WHATSAPP_CAMPAIGN_MESSAGES — Links campaigns to individual messages
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS whatsapp_campaign_messages (
+  id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  campaign_id     UUID NOT NULL REFERENCES whatsapp_campaigns(id) ON DELETE CASCADE,
+  message_id      UUID NOT NULL REFERENCES whatsapp_messages(id) ON DELETE CASCADE,
+  business_id     BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (campaign_id, message_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wa_campaign_msgs_campaign ON whatsapp_campaign_messages (campaign_id);
+CREATE INDEX IF NOT EXISTS idx_wa_campaign_msgs_business ON whatsapp_campaign_messages (business_id);
+
+ALTER TABLE whatsapp_campaign_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON whatsapp_campaign_messages FOR ALL USING (true) WITH CHECK (true);
+
+
+-- Add campaign_id to whatsapp_messages for fast filtering
+ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS campaign_id UUID REFERENCES whatsapp_campaigns(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_wa_msg_campaign ON whatsapp_messages (campaign_id) WHERE campaign_id IS NOT NULL;
+
+
+-- ============================================================================
+-- RPC: get_audience_businesses — resolve audience filters to business list
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION get_audience_businesses(p_filters JSONB, p_limit INT DEFAULT 100, p_offset INT DEFAULT 0)
+RETURNS TABLE (
+  business_id BIGINT,
+  name TEXT,
+  phone TEXT,
+  address_city TEXT,
+  address_country TEXT,
+  category TEXT,
+  rating DECIMAL,
+  messages_sent BIGINT,
+  replies_received BIGINT,
+  last_contacted_at TIMESTAMPTZ,
+  total_count BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH business_stats AS (
+    SELECT
+      b.id,
+      b.name,
+      b.phone,
+      b.address_city,
+      b.address_country,
+      b.category,
+      b.rating,
+      COALESCE(ms.sent_count, 0) AS messages_sent,
+      COALESCE(ms.reply_count, 0) AS replies_received,
+      ms.last_sent AS last_contacted_at
+    FROM businesses b
+    LEFT JOIN (
+      SELECT
+        wm.business_id,
+        COUNT(*) FILTER (WHERE wm.direction = 'outbound') AS sent_count,
+        COUNT(*) FILTER (WHERE wm.direction = 'inbound') AS reply_count,
+        MAX(wm.created_at) FILTER (WHERE wm.direction = 'outbound') AS last_sent
+      FROM whatsapp_messages wm
+      GROUP BY wm.business_id
+    ) ms ON ms.business_id = b.id
+    WHERE
+      b.phone IS NOT NULL AND b.phone != ''
+      AND (p_filters->>'address_city' IS NULL OR b.address_city ILIKE '%' || (p_filters->>'address_city') || '%')
+      AND (p_filters->>'address_state' IS NULL OR b.address_state ILIKE '%' || (p_filters->>'address_state') || '%')
+      AND (p_filters->>'address_country' IS NULL OR b.address_country = p_filters->>'address_country')
+      AND (p_filters->>'category' IS NULL OR b.category ILIKE '%' || (p_filters->>'category') || '%')
+      AND (p_filters->>'rating_min' IS NULL OR b.rating >= (p_filters->>'rating_min')::DECIMAL)
+      AND (p_filters->>'rating_max' IS NULL OR b.rating <= (p_filters->>'rating_max')::DECIMAL)
+      AND (p_filters->>'messages_sent_min' IS NULL OR COALESCE(ms.sent_count, 0) >= (p_filters->>'messages_sent_min')::INT)
+      AND (p_filters->>'messages_sent_max' IS NULL OR COALESCE(ms.sent_count, 0) <= (p_filters->>'messages_sent_max')::INT)
+      AND (p_filters->>'replies_min' IS NULL OR COALESCE(ms.reply_count, 0) >= (p_filters->>'replies_min')::INT)
+      AND (p_filters->>'replies_max' IS NULL OR COALESCE(ms.reply_count, 0) <= (p_filters->>'replies_max')::INT)
+      AND (p_filters->>'last_contacted_after' IS NULL OR ms.last_sent >= (p_filters->>'last_contacted_after')::TIMESTAMPTZ)
+      AND (p_filters->>'last_contacted_before' IS NULL OR ms.last_sent <= (p_filters->>'last_contacted_before')::TIMESTAMPTZ)
+      AND (p_filters->>'never_contacted' IS NULL OR (p_filters->>'never_contacted')::BOOLEAN = FALSE OR ms.last_sent IS NULL)
+  )
+  SELECT
+    bs.id AS business_id,
+    bs.name,
+    bs.phone,
+    bs.address_city,
+    bs.address_country,
+    bs.category,
+    bs.rating,
+    bs.messages_sent,
+    bs.replies_received,
+    bs.last_contacted_at,
+    COUNT(*) OVER () AS total_count
+  FROM business_stats bs
+  ORDER BY bs.name
+  LIMIT p_limit
+  OFFSET p_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ============================================================================
+-- 11. CUSTOMERS — Business-to-customer relationship
+-- ============================================================================
+-- Created when a prospect converts to a paying customer via Stripe Checkout.
+
+CREATE TABLE IF NOT EXISTS customers (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id             BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  stripe_customer_id      TEXT UNIQUE,               -- Stripe Customer ID
+  email                   TEXT NOT NULL,              -- customer email (for auth + billing)
+  contact_name            TEXT,                       -- business owner name
+  monthly_price           DECIMAL(10, 2),             -- subscription price
+  currency                TEXT DEFAULT 'USD',         -- USD, MXN, COP, etc.
+  notes                   TEXT,                       -- operator notes
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_customers_business ON customers (business_id);
+CREATE INDEX IF NOT EXISTS idx_customers_stripe ON customers (stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_customers_email ON customers (email);
+
+CREATE TRIGGER customers_updated_at
+  BEFORE UPDATE ON customers
+  FOR EACH ROW
+  EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 12. SUBSCRIPTIONS — Stripe subscription records
+-- ============================================================================
+-- Synced via Stripe webhooks. One active subscription per customer.
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  customer_id             UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  stripe_subscription_id  TEXT UNIQUE,               -- Stripe Subscription ID
+  stripe_price_id         TEXT,                      -- Stripe Price ID
+  status                  TEXT DEFAULT 'incomplete'
+                            CHECK (status IN ('active', 'past_due', 'cancelled', 'incomplete', 'trialing')),
+  current_period_start    TIMESTAMPTZ,
+  current_period_end      TIMESTAMPTZ,
+  cancel_at_period_end    BOOLEAN DEFAULT FALSE,
+  cancelled_at            TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_customer ON subscriptions (customer_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe ON subscriptions (stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status);
+
+
+-- ============================================================================
+-- 13. CUSTOMER_USERS — Links Supabase Auth users to customer records
+-- ============================================================================
+-- Enables RLS: each authenticated user can only access their own customer data.
+
+CREATE TABLE IF NOT EXISTS customer_users (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  auth_user_id            UUID NOT NULL UNIQUE,      -- Supabase Auth user UUID
+  customer_id             UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  role                    TEXT DEFAULT 'owner'
+                            CHECK (role IN ('owner', 'manager')),
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_customer_users_auth ON customer_users (auth_user_id);
+CREATE INDEX IF NOT EXISTS idx_customer_users_customer ON customer_users (customer_id);
+
+
+-- ============================================================================
+-- 14. EDIT_REQUESTS — Customer website change requests
+-- ============================================================================
+-- Submitted by customers via the admin portal. Managed by operators.
+
+CREATE TABLE IF NOT EXISTS edit_requests (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id             BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  customer_id             UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  website_id              UUID REFERENCES generated_websites(id) ON DELETE SET NULL,
+  request_type            TEXT NOT NULL
+                            CHECK (request_type IN (
+                              'content_update', 'photo_update', 'contact_update',
+                              'hours_update', 'menu_update', 'design_change', 'other'
+                            )),
+  description             TEXT NOT NULL,
+  status                  TEXT DEFAULT 'submitted'
+                            CHECK (status IN ('submitted', 'in_review', 'in_progress', 'completed', 'rejected')),
+  priority                TEXT DEFAULT 'normal'
+                            CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+  rejection_reason        TEXT,
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_edit_requests_customer ON edit_requests (customer_id);
+CREATE INDEX IF NOT EXISTS idx_edit_requests_business ON edit_requests (business_id);
+CREATE INDEX IF NOT EXISTS idx_edit_requests_status ON edit_requests (status);
+
+CREATE TRIGGER edit_requests_updated_at
+  BEFORE UPDATE ON edit_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- CUSTOMER PORTAL RLS POLICIES
+-- ============================================================================
+-- Open policies for operator access. Customer-scoped policies use auth.uid().
+
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customer_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE edit_requests ENABLE ROW LEVEL SECURITY;
+
+-- Operator (anon key) open access
+CREATE POLICY "Allow all access" ON customers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON subscriptions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON customer_users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON edit_requests FOR ALL USING (true) WITH CHECK (true);
+
+-- Customer-scoped read policies (for authenticated users via Supabase Auth)
+-- These allow customers to read only their own data when using the auth token.
+-- The "Allow all access" policies above take precedence for anon key (operator).
+
+CREATE POLICY "Customers read own data" ON customers
+  FOR SELECT USING (
+    id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
+  );
+
+CREATE POLICY "Customers read own subscriptions" ON subscriptions
+  FOR SELECT USING (
+    customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
+  );
+
+CREATE POLICY "Customers read own user record" ON customer_users
+  FOR SELECT USING (auth_user_id = auth.uid());
+
+CREATE POLICY "Customers read own edit requests" ON edit_requests
+  FOR SELECT USING (
+    customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
+  );
+
+CREATE POLICY "Customers insert edit requests" ON edit_requests
+  FOR INSERT WITH CHECK (
+    customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
+  );

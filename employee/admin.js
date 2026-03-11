@@ -140,8 +140,68 @@
       websiteOpenNewTab: 'Open in New Tab',
       websiteSaved: 'Website saved to database',
       timeoutError: '{0} timed out after {1}s.',
+      // Audiences & Campaigns
+      navAudiences: 'Audiences',
+      navCampaigns: 'Campaigns',
+      audiencesTitle: 'Audiences',
+      audienceCreate: 'Create Audience',
+      audiencesEmpty: 'No audiences created yet. Create one to start targeting businesses.',
+      audienceNew: 'New Audience',
+      audienceEdit: 'Edit Audience',
+      audienceName: 'Audience Name',
+      audienceNamePh: 'e.g. Restaurants in Merida',
+      audienceDesc: 'Description (optional)',
+      audienceDescPh: 'Short description of this audience',
+      audienceFilters: 'Filters',
+      audienceFilterCategory: 'Category',
+      audienceFilterCategoryPh: 'e.g. restaurant, salon',
+      audienceFilterRatingMin: 'Rating Min',
+      audienceFilterRatingMax: 'Rating Max',
+      audienceFilterMsgSentMin: 'Msgs Sent Min',
+      audienceFilterMsgSentMax: 'Msgs Sent Max',
+      audienceFilterRepliesMin: 'Replies Min',
+      audienceFilterRepliesMax: 'Replies Max',
+      audienceFilterNeverContacted: 'Never Contacted',
+      audienceFilterLastContactAfter: 'Last Contact After',
+      audiencePreview: 'Preview Audience',
+      audiencePreviewCount: '{0} businesses match',
+      audienceSave: 'Save Audience',
+      audienceDeleteConfirm: 'Delete this audience?',
+      audienceDeleted: 'Audience deleted',
+      audienceSaved: 'Audience saved',
+      filterCity: 'City',
+      filterState: 'State',
+      cancel: 'Cancel',
+      campaignsTitle: 'Campaigns',
+      campaignCreate: 'New Campaign',
+      campaignsEmpty: 'No campaigns yet. Create one to start messaging your audience.',
+      campaignNew: 'New Campaign',
+      campaignEdit: 'Edit Campaign',
+      campaignName: 'Campaign Name',
+      campaignNamePh: 'e.g. March outreach - restaurants',
+      campaignAudience: 'Target Audience',
+      campaignSelectAudience: 'Select audience...',
+      campaignTemplate: 'WhatsApp Template',
+      campaignSelectTemplate: 'Select template...',
+      campaignSchedule: 'Schedule (optional)',
+      campaignSaveDraft: 'Save as Draft',
+      campaignSendNow: 'Send Now',
+      campaignSending: 'Sending...',
+      campaignSaved: 'Campaign saved',
+      campaignCancelled: 'Campaign cancelled',
+      campaignSendConfirm: 'Send this campaign to {0} businesses now?',
+      campaignSendStarted: 'Campaign send started',
+      campaignSendComplete: 'Campaign sent to all recipients',
+      campaignSendError: 'Campaign send error',
+      backToCampaigns: 'Back to Campaigns',
+      campaignStatTotal: 'Total',
+      campaignStatSent: 'Sent',
+      campaignStatDelivered: 'Delivered',
+      campaignStatRead: 'Read',
+      campaignStatReplied: 'Replied',
+      campaignStatFailed: 'Failed',
       // WhatsApp messaging
-      navMessages: 'Messages',
+      navMessages: 'Chats',
       msgConversations: 'Conversations',
       msgSearchPlaceholder: 'Search businesses...',
       msgSelectConversation: 'Select a conversation to start messaging',
@@ -298,8 +358,68 @@
       websiteOpenNewTab: 'Abrir en Nueva Pestaña',
       websiteSaved: 'Sitio web guardado en la base de datos',
       timeoutError: '{0} agotó el tiempo después de {1}s.',
+      // Audiences & Campaigns
+      navAudiences: 'Audiencias',
+      navCampaigns: 'Campañas',
+      audiencesTitle: 'Audiencias',
+      audienceCreate: 'Crear Audiencia',
+      audiencesEmpty: 'No hay audiencias creadas. Crea una para empezar a segmentar negocios.',
+      audienceNew: 'Nueva Audiencia',
+      audienceEdit: 'Editar Audiencia',
+      audienceName: 'Nombre de Audiencia',
+      audienceNamePh: 'Ej: Restaurantes en Mérida',
+      audienceDesc: 'Descripción (opcional)',
+      audienceDescPh: 'Descripción corta de esta audiencia',
+      audienceFilters: 'Filtros',
+      audienceFilterCategory: 'Categoría',
+      audienceFilterCategoryPh: 'Ej: restaurante, salón',
+      audienceFilterRatingMin: 'Calificación Mín',
+      audienceFilterRatingMax: 'Calificación Máx',
+      audienceFilterMsgSentMin: 'Msgs Enviados Mín',
+      audienceFilterMsgSentMax: 'Msgs Enviados Máx',
+      audienceFilterRepliesMin: 'Respuestas Mín',
+      audienceFilterRepliesMax: 'Respuestas Máx',
+      audienceFilterNeverContacted: 'Nunca Contactado',
+      audienceFilterLastContactAfter: 'Último Contacto Después',
+      audiencePreview: 'Vista Previa',
+      audiencePreviewCount: '{0} negocios coinciden',
+      audienceSave: 'Guardar Audiencia',
+      audienceDeleteConfirm: '¿Eliminar esta audiencia?',
+      audienceDeleted: 'Audiencia eliminada',
+      audienceSaved: 'Audiencia guardada',
+      filterCity: 'Ciudad',
+      filterState: 'Estado',
+      cancel: 'Cancelar',
+      campaignsTitle: 'Campañas',
+      campaignCreate: 'Nueva Campaña',
+      campaignsEmpty: 'No hay campañas. Crea una para empezar a enviar mensajes.',
+      campaignNew: 'Nueva Campaña',
+      campaignEdit: 'Editar Campaña',
+      campaignName: 'Nombre de Campaña',
+      campaignNamePh: 'Ej: Alcance marzo - restaurantes',
+      campaignAudience: 'Audiencia Objetivo',
+      campaignSelectAudience: 'Seleccionar audiencia...',
+      campaignTemplate: 'Plantilla de WhatsApp',
+      campaignSelectTemplate: 'Seleccionar plantilla...',
+      campaignSchedule: 'Programar (opcional)',
+      campaignSaveDraft: 'Guardar Borrador',
+      campaignSendNow: 'Enviar Ahora',
+      campaignSending: 'Enviando...',
+      campaignSaved: 'Campaña guardada',
+      campaignCancelled: 'Campaña cancelada',
+      campaignSendConfirm: '¿Enviar esta campaña a {0} negocios ahora?',
+      campaignSendStarted: 'Envío de campaña iniciado',
+      campaignSendComplete: 'Campaña enviada a todos los destinatarios',
+      campaignSendError: 'Error al enviar campaña',
+      backToCampaigns: 'Volver a Campañas',
+      campaignStatTotal: 'Total',
+      campaignStatSent: 'Enviados',
+      campaignStatDelivered: 'Entregados',
+      campaignStatRead: 'Leídos',
+      campaignStatReplied: 'Respondidos',
+      campaignStatFailed: 'Fallidos',
       // WhatsApp messaging
-      navMessages: 'Mensajes',
+      navMessages: 'Chats',
       msgConversations: 'Conversaciones',
       msgSearchPlaceholder: 'Buscar negocios...',
       msgSelectConversation: 'Seleccione una conversación para enviar mensajes',
@@ -503,22 +623,16 @@
       }
     });
 
-    // Messaging tab navigation
-    const navSaved = document.getElementById('nav-saved');
-    const navMessages = document.getElementById('nav-messages');
-
-    if (navSaved) {
-      navSaved.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchTab('saved');
-      });
-    }
-    if (navMessages) {
-      navMessages.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchTab('messages');
-      });
-    }
+    // Tab navigation
+    ['saved', 'audiences', 'campaigns', 'messages'].forEach(tab => {
+      const navEl = document.getElementById('nav-' + tab);
+      if (navEl) {
+        navEl.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchTab(tab);
+        });
+      }
+    });
 
     // Sync templates button
     const syncBtn = document.getElementById('btn-sync-templates');
@@ -531,6 +645,31 @@
     if (convSearch) {
       convSearch.addEventListener('input', renderConversationsList);
     }
+
+    // Audiences bindings
+    const btnCreateAudience = document.getElementById('btn-create-audience');
+    if (btnCreateAudience) btnCreateAudience.addEventListener('click', () => openAudienceEditor());
+    const btnCancelAudience = document.getElementById('btn-cancel-audience');
+    if (btnCancelAudience) btnCancelAudience.addEventListener('click', closeAudienceEditor);
+    const btnPreviewAudience = document.getElementById('btn-preview-audience');
+    if (btnPreviewAudience) btnPreviewAudience.addEventListener('click', previewAudience);
+    const btnSaveAudience = document.getElementById('btn-save-audience');
+    if (btnSaveAudience) btnSaveAudience.addEventListener('click', saveAudience);
+
+    // Campaigns bindings
+    const btnCreateCampaign = document.getElementById('btn-create-campaign');
+    if (btnCreateCampaign) btnCreateCampaign.addEventListener('click', () => openCampaignEditor());
+    const btnCancelCampaign = document.getElementById('btn-cancel-campaign');
+    if (btnCancelCampaign) btnCancelCampaign.addEventListener('click', closeCampaignEditor);
+    const btnSaveCampaign = document.getElementById('btn-save-campaign');
+    if (btnSaveCampaign) btnSaveCampaign.addEventListener('click', () => saveCampaign(false));
+    const btnSendCampaign = document.getElementById('btn-send-campaign');
+    if (btnSendCampaign) btnSendCampaign.addEventListener('click', () => saveCampaign(true));
+    const btnBackCampaigns = document.getElementById('btn-back-campaigns');
+    if (btnBackCampaigns) btnBackCampaigns.addEventListener('click', closeCampaignDetail);
+
+    const campaignTemplate = document.getElementById('campaign-template');
+    if (campaignTemplate) campaignTemplate.addEventListener('change', onCampaignTemplateChange);
 
     // Load templates and start realtime
     loadTemplates();
@@ -1517,33 +1656,48 @@
   let currentMessages = [];
   let templates = [];
   let realtimeChannel = null;
-  let activeTab = 'saved'; // 'saved' or 'messages'
+  let activeTab = 'saved'; // 'saved' | 'audiences' | 'campaigns' | 'messages'
+
+  // Audiences & Campaigns state
+  let audiences = [];
+  let campaigns = [];
+  let editingAudienceId = null;
+  let editingCampaignId = null;
 
   function switchTab(tab) {
     activeTab = tab;
-    const statsBar = document.getElementById('stats-bar');
-    const filterSection = document.getElementById('filter-section');
-    const resultsSection = document.getElementById('results-section');
-    const messagingSection = document.getElementById('messaging-section');
-    const navSaved = document.getElementById('nav-saved');
-    const navMessages = document.getElementById('nav-messages');
+    const sections = {
+      saved: ['stats-bar', 'filter-section', 'results-section'],
+      audiences: ['audiences-section'],
+      campaigns: ['campaigns-section'],
+      messages: ['messaging-section'],
+    };
 
-    if (tab === 'saved') {
-      statsBar.style.display = '';
-      filterSection.style.display = '';
-      resultsSection.style.display = '';
-      messagingSection.style.display = 'none';
-      navSaved.classList.add('active');
-      navMessages.classList.remove('active');
-    } else {
-      statsBar.style.display = 'none';
-      filterSection.style.display = 'none';
-      resultsSection.style.display = 'none';
-      messagingSection.style.display = '';
-      navSaved.classList.remove('active');
-      navMessages.classList.add('active');
-      loadConversations();
-    }
+    // Hide all sections
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    // Show sections for active tab
+    (sections[tab] || []).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
+
+    // Update nav active states
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages' };
+    const activeNav = document.getElementById(tabToNav[tab]);
+    if (activeNav) activeNav.classList.add('active');
+
+    // Load data for the tab
+    if (tab === 'audiences') loadAudiences();
+    if (tab === 'campaigns') loadCampaigns();
+    if (tab === 'messages') loadConversations();
   }
 
   async function loadConversations() {
@@ -2145,6 +2299,582 @@
     if (diffDays === 1) return t('msgYesterday');
     return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
   }
+
+  // ── Audiences ──
+
+  async function loadAudiences() {
+    try {
+      const res = await withTimeout(fetch('/api/whatsapp/audiences'), 10000, 'Load audiences');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      audiences = data || [];
+      renderAudiencesList();
+    } catch (err) {
+      console.error('Load audiences error:', err);
+    }
+  }
+
+  function renderAudiencesList() {
+    const container = document.getElementById('audiences-list');
+    const noAudiences = document.getElementById('no-audiences');
+
+    if (audiences.length === 0) {
+      container.innerHTML = '';
+      noAudiences.style.display = '';
+      return;
+    }
+    noAudiences.style.display = 'none';
+
+    container.innerHTML = audiences.map(a => {
+      const desc = a.description ? escapeHtml(a.description) : '';
+      const filterCount = Object.keys(a.filters || {}).filter(k => a.filters[k] !== null && a.filters[k] !== '').length;
+      return `<div class="audience-card" data-id="${a.id}">
+        <div class="audience-info">
+          <div class="audience-name">${escapeHtml(a.name)}</div>
+          <div class="audience-meta">${desc}${desc ? ' · ' : ''}${filterCount} filter${filterCount !== 1 ? 's' : ''}</div>
+        </div>
+        <span class="audience-count">${a.business_count || 0} businesses</span>
+        <div class="audience-actions">
+          <button class="btn btn-view btn-sm" data-edit-audience="${a.id}">${t('audienceEdit')}</button>
+          <button class="btn btn-secondary btn-sm" data-delete-audience="${a.id}" style="color:var(--danger);border-color:var(--danger)">&#10005;</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    container.querySelectorAll('[data-edit-audience]').forEach(btn => {
+      btn.addEventListener('click', () => openAudienceEditor(btn.getAttribute('data-edit-audience')));
+    });
+    container.querySelectorAll('[data-delete-audience]').forEach(btn => {
+      btn.addEventListener('click', () => deleteAudience(btn.getAttribute('data-delete-audience')));
+    });
+  }
+
+  function openAudienceEditor(audienceId) {
+    const editor = document.getElementById('audience-editor');
+    const listCard = document.getElementById('audiences-list-card');
+    const title = document.getElementById('audience-editor-title');
+
+    editor.style.display = '';
+    listCard.style.display = 'none';
+    editingAudienceId = audienceId || null;
+
+    // Reset form
+    document.getElementById('audience-name').value = '';
+    document.getElementById('audience-desc').value = '';
+    document.getElementById('aud-filter-city').value = '';
+    document.getElementById('aud-filter-state').value = '';
+    document.getElementById('aud-filter-country').value = '';
+    document.getElementById('aud-filter-category').value = '';
+    document.getElementById('aud-filter-rating-min').value = '';
+    document.getElementById('aud-filter-rating-max').value = '';
+    document.getElementById('aud-filter-msg-min').value = '';
+    document.getElementById('aud-filter-msg-max').value = '';
+    document.getElementById('aud-filter-replies-min').value = '';
+    document.getElementById('aud-filter-replies-max').value = '';
+    document.getElementById('aud-filter-never-contacted').value = '';
+    document.getElementById('aud-filter-last-after').value = '';
+    document.getElementById('audience-preview-count').textContent = '';
+    document.getElementById('audience-preview-results').innerHTML = '';
+
+    if (audienceId) {
+      title.textContent = t('audienceEdit');
+      const audience = audiences.find(a => a.id === audienceId);
+      if (audience) {
+        document.getElementById('audience-name').value = audience.name || '';
+        document.getElementById('audience-desc').value = audience.description || '';
+        const f = audience.filters || {};
+        if (f.address_city) document.getElementById('aud-filter-city').value = f.address_city;
+        if (f.address_state) document.getElementById('aud-filter-state').value = f.address_state;
+        if (f.address_country) document.getElementById('aud-filter-country').value = f.address_country;
+        if (f.category) document.getElementById('aud-filter-category').value = f.category;
+        if (f.rating_min) document.getElementById('aud-filter-rating-min').value = f.rating_min;
+        if (f.rating_max) document.getElementById('aud-filter-rating-max').value = f.rating_max;
+        if (f.messages_sent_min) document.getElementById('aud-filter-msg-min').value = f.messages_sent_min;
+        if (f.messages_sent_max) document.getElementById('aud-filter-msg-max').value = f.messages_sent_max;
+        if (f.replies_min) document.getElementById('aud-filter-replies-min').value = f.replies_min;
+        if (f.replies_max) document.getElementById('aud-filter-replies-max').value = f.replies_max;
+        if (f.never_contacted) document.getElementById('aud-filter-never-contacted').value = 'true';
+        if (f.last_contacted_after) document.getElementById('aud-filter-last-after').value = f.last_contacted_after.split('T')[0];
+      }
+    } else {
+      title.textContent = t('audienceNew');
+    }
+  }
+
+  function closeAudienceEditor() {
+    document.getElementById('audience-editor').style.display = 'none';
+    document.getElementById('audiences-list-card').style.display = '';
+    editingAudienceId = null;
+  }
+
+  function getAudienceFilters() {
+    const filters = {};
+    const city = document.getElementById('aud-filter-city').value.trim();
+    const state = document.getElementById('aud-filter-state').value.trim();
+    const country = document.getElementById('aud-filter-country').value;
+    const category = document.getElementById('aud-filter-category').value.trim();
+    const ratingMin = document.getElementById('aud-filter-rating-min').value;
+    const ratingMax = document.getElementById('aud-filter-rating-max').value;
+    const msgMin = document.getElementById('aud-filter-msg-min').value;
+    const msgMax = document.getElementById('aud-filter-msg-max').value;
+    const repliesMin = document.getElementById('aud-filter-replies-min').value;
+    const repliesMax = document.getElementById('aud-filter-replies-max').value;
+    const neverContacted = document.getElementById('aud-filter-never-contacted').value;
+    const lastAfter = document.getElementById('aud-filter-last-after').value;
+
+    if (city) filters.address_city = city;
+    if (state) filters.address_state = state;
+    if (country) filters.address_country = country;
+    if (category) filters.category = category;
+    if (ratingMin) filters.rating_min = ratingMin;
+    if (ratingMax) filters.rating_max = ratingMax;
+    if (msgMin) filters.messages_sent_min = msgMin;
+    if (msgMax) filters.messages_sent_max = msgMax;
+    if (repliesMin) filters.replies_min = repliesMin;
+    if (repliesMax) filters.replies_max = repliesMax;
+    if (neverContacted === 'true') filters.never_contacted = true;
+    if (lastAfter) filters.last_contacted_after = lastAfter + 'T00:00:00Z';
+
+    return filters;
+  }
+
+  async function previewAudience() {
+    const filters = getAudienceFilters();
+    const countEl = document.getElementById('audience-preview-count');
+    const resultsEl = document.getElementById('audience-preview-results');
+
+    countEl.textContent = '...';
+    resultsEl.innerHTML = '';
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/audience-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filters, limit: 20, offset: 0 }),
+        }),
+        15000,
+        'Audience preview'
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Preview failed');
+
+      countEl.textContent = t('audiencePreviewCount', data.total_count || 0);
+
+      if (data.businesses && data.businesses.length > 0) {
+        resultsEl.innerHTML = `<table class="audience-preview-table">
+          <thead><tr>
+            <th>${t('thName')}</th>
+            <th>${t('thPhone')}</th>
+            <th>${t('filterCity')}</th>
+            <th>${t('audienceFilterCategory')}</th>
+            <th>${t('thRating')}</th>
+            <th>Msgs</th>
+            <th>Replies</th>
+          </tr></thead>
+          <tbody>${data.businesses.map(b => `<tr>
+            <td>${escapeHtml(b.name || '')}</td>
+            <td>${escapeHtml(b.phone || '')}</td>
+            <td>${escapeHtml(b.address_city || '')}</td>
+            <td>${escapeHtml(b.category || '')}</td>
+            <td>${b.rating || '—'}</td>
+            <td>${b.messages_sent || 0}</td>
+            <td>${b.replies_received || 0}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      }
+    } catch (err) {
+      console.error('Preview error:', err);
+      countEl.textContent = 'Error';
+    }
+  }
+
+  async function saveAudience() {
+    const name = document.getElementById('audience-name').value.trim();
+    if (!name) {
+      showToast(t('audienceName') + ' required', 'warning');
+      return;
+    }
+
+    const description = document.getElementById('audience-desc').value.trim();
+    const filters = getAudienceFilters();
+
+    const payload = { name, description: description || null, filters };
+    if (editingAudienceId) payload.id = editingAudienceId;
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/audiences', {
+          method: editingAudienceId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }),
+        10000,
+        'Save audience'
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+
+      showToast(t('audienceSaved'), 'success');
+      closeAudienceEditor();
+      loadAudiences();
+    } catch (err) {
+      console.error('Save audience error:', err);
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function deleteAudience(id) {
+    if (!confirm(t('audienceDeleteConfirm'))) return;
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/audiences?id=' + id, { method: 'DELETE' }),
+        10000,
+        'Delete audience'
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Delete failed');
+
+      showToast(t('audienceDeleted'), 'success');
+      loadAudiences();
+    } catch (err) {
+      console.error('Delete audience error:', err);
+      showToast(err.message, 'error');
+    }
+  }
+
+
+  // ── Campaigns ──
+
+  async function loadCampaigns() {
+    try {
+      const res = await withTimeout(fetch('/api/whatsapp/campaigns'), 10000, 'Load campaigns');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      campaigns = data || [];
+      renderCampaignsList();
+    } catch (err) {
+      console.error('Load campaigns error:', err);
+    }
+  }
+
+  function renderCampaignsList() {
+    const container = document.getElementById('campaigns-list');
+    const noCampaigns = document.getElementById('no-campaigns');
+    const listCard = document.getElementById('campaigns-list-card');
+    const editor = document.getElementById('campaign-editor');
+    const detail = document.getElementById('campaign-detail');
+
+    // Show list, hide editor and detail
+    listCard.style.display = '';
+    editor.style.display = 'none';
+    detail.style.display = 'none';
+
+    if (campaigns.length === 0) {
+      container.innerHTML = '';
+      noCampaigns.style.display = '';
+      return;
+    }
+    noCampaigns.style.display = 'none';
+
+    container.innerHTML = campaigns.map(c => {
+      const audienceName = c.whatsapp_audiences?.name || '—';
+      const templateName = c.whatsapp_templates?.template_name || '—';
+      const statusClass = 'campaign-status-' + (c.status || 'draft');
+      const dateStr = c.created_at ? new Date(c.created_at).toLocaleDateString() : '';
+
+      return `<div class="campaign-card" data-campaign-id="${c.id}">
+        <div class="campaign-info">
+          <div class="campaign-name">${escapeHtml(c.name)}</div>
+          <div class="campaign-meta">${escapeHtml(audienceName)} · ${escapeHtml(templateName)} · ${dateStr}</div>
+          ${c.status === 'sent' || c.status === 'sending' ? `<div class="campaign-mini-stats">
+            <span class="campaign-mini-stat"><span>${c.sent_count || 0}</span> sent</span>
+            <span class="campaign-mini-stat"><span>${c.delivered_count || 0}</span> delivered</span>
+            <span class="campaign-mini-stat"><span>${c.read_count || 0}</span> read</span>
+            <span class="campaign-mini-stat"><span>${c.replied_count || 0}</span> replied</span>
+          </div>` : ''}
+        </div>
+        <span class="campaign-status ${statusClass}">${c.status || 'draft'}</span>
+      </div>`;
+    }).join('');
+
+    container.querySelectorAll('.campaign-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const id = card.getAttribute('data-campaign-id');
+        openCampaignDetail(id);
+      });
+    });
+  }
+
+  async function openCampaignEditor(campaignId) {
+    const editor = document.getElementById('campaign-editor');
+    const listCard = document.getElementById('campaigns-list-card');
+    const detail = document.getElementById('campaign-detail');
+    const title = document.getElementById('campaign-editor-title');
+
+    editor.style.display = '';
+    listCard.style.display = 'none';
+    detail.style.display = 'none';
+    editingCampaignId = campaignId || null;
+
+    // Populate audience select
+    if (audiences.length === 0) await loadAudiences();
+    const audSelect = document.getElementById('campaign-audience');
+    audSelect.innerHTML = `<option value="">${t('campaignSelectAudience')}</option>` +
+      audiences.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${a.business_count})</option>`).join('');
+
+    // Populate template select
+    if (templates.length === 0) await loadTemplates();
+    const tplSelect = document.getElementById('campaign-template');
+    tplSelect.innerHTML = `<option value="">${t('campaignSelectTemplate')}</option>` +
+      templates.filter(t => t.meta_status === 'APPROVED').map(tpl =>
+        `<option value="${tpl.id}" data-body="${escapeHtml(tpl.body_text || '')}" data-params="${tpl.param_count || 0}" data-lang="${escapeHtml(tpl.language || 'en')}">${escapeHtml(tpl.template_name)} (${escapeHtml(tpl.language || 'en')})</option>`
+      ).join('');
+
+    // Reset form
+    document.getElementById('campaign-name').value = '';
+    document.getElementById('campaign-schedule').value = '';
+    document.getElementById('campaign-template-preview').style.display = 'none';
+    document.getElementById('campaign-template-params').innerHTML = '';
+
+    if (campaignId) {
+      title.textContent = t('campaignEdit');
+      const campaign = campaigns.find(c => c.id === campaignId);
+      if (campaign) {
+        document.getElementById('campaign-name').value = campaign.name || '';
+        audSelect.value = campaign.audience_id || '';
+        tplSelect.value = campaign.template_id || '';
+        if (campaign.scheduled_at) {
+          document.getElementById('campaign-schedule').value = campaign.scheduled_at.slice(0, 16);
+        }
+        onCampaignTemplateChange();
+        // Fill params
+        const params = campaign.template_params || [];
+        setTimeout(() => {
+          params.forEach((p, i) => {
+            const input = document.querySelector(`#campaign-template-params input[data-param-index="${i}"]`);
+            if (input) input.value = p;
+          });
+        }, 50);
+      }
+    } else {
+      title.textContent = t('campaignNew');
+    }
+  }
+
+  function closeCampaignEditor() {
+    document.getElementById('campaign-editor').style.display = 'none';
+    document.getElementById('campaigns-list-card').style.display = '';
+    editingCampaignId = null;
+  }
+
+  function onCampaignTemplateChange() {
+    const select = document.getElementById('campaign-template');
+    const preview = document.getElementById('campaign-template-preview');
+    const paramsContainer = document.getElementById('campaign-template-params');
+    const opt = select.selectedOptions[0];
+
+    if (!opt || !opt.value) {
+      preview.style.display = 'none';
+      paramsContainer.innerHTML = '';
+      return;
+    }
+
+    const body = opt.getAttribute('data-body') || '';
+    const paramCount = parseInt(opt.getAttribute('data-params') || '0', 10);
+
+    if (body) {
+      preview.textContent = body;
+      preview.style.display = '';
+    } else {
+      preview.style.display = 'none';
+    }
+
+    paramsContainer.innerHTML = '';
+    for (let i = 0; i < paramCount; i++) {
+      paramsContainer.innerHTML += `<input type="text" class="input" placeholder="Parameter {{${i + 1}}}" data-param-index="${i}">`;
+    }
+  }
+
+  async function saveCampaign(sendNow) {
+    const name = document.getElementById('campaign-name').value.trim();
+    const audienceId = document.getElementById('campaign-audience').value;
+    const templateId = document.getElementById('campaign-template').value;
+    const scheduleVal = document.getElementById('campaign-schedule').value;
+
+    if (!name || !audienceId || !templateId) {
+      showToast('Name, audience, and template are required', 'warning');
+      return;
+    }
+
+    const paramInputs = document.querySelectorAll('#campaign-template-params input');
+    const templateParams = Array.from(paramInputs).map(inp => inp.value);
+
+    const payload = {
+      name,
+      audience_id: audienceId,
+      template_id: templateId,
+      template_params: templateParams.length > 0 ? templateParams : [],
+    };
+
+    if (editingCampaignId) payload.id = editingCampaignId;
+    if (scheduleVal && !sendNow) payload.scheduled_at = new Date(scheduleVal).toISOString();
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/whatsapp/campaigns', {
+          method: editingCampaignId ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }),
+        10000,
+        'Save campaign'
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+
+      showToast(t('campaignSaved'), 'success');
+
+      if (sendNow) {
+        const campaign = data;
+        const audience = audiences.find(a => a.id === audienceId);
+        const count = audience?.business_count || 0;
+
+        if (!confirm(t('campaignSendConfirm', count))) {
+          closeCampaignEditor();
+          loadCampaigns();
+          return;
+        }
+
+        await executeCampaignSend(campaign.id);
+      }
+
+      closeCampaignEditor();
+      loadCampaigns();
+    } catch (err) {
+      console.error('Save campaign error:', err);
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function executeCampaignSend(campaignId) {
+    showToast(t('campaignSendStarted'), 'warning');
+
+    let sending = true;
+    while (sending) {
+      try {
+        const res = await withTimeout(
+          fetch('/api/whatsapp/campaign-send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ campaign_id: campaignId }),
+          }),
+          120000, // 2min timeout per batch
+          'Campaign send batch'
+        );
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Send failed');
+
+        if (data.status === 'sent') {
+          sending = false;
+          showToast(t('campaignSendComplete'), 'success');
+        } else {
+          // Still sending — show progress
+          showToast(`Sent ${data.processed || 0} / ${data.total_recipients || 0}...`, 'warning');
+        }
+      } catch (err) {
+        console.error('Campaign send error:', err);
+        showToast(t('campaignSendError'), 'error');
+        sending = false;
+      }
+    }
+
+    loadCampaigns();
+  }
+
+  async function openCampaignDetail(campaignId) {
+    const campaign = campaigns.find(c => c.id === campaignId);
+    if (!campaign) return;
+
+    const listCard = document.getElementById('campaigns-list-card');
+    const editor = document.getElementById('campaign-editor');
+    const detail = document.getElementById('campaign-detail');
+
+    listCard.style.display = 'none';
+    editor.style.display = 'none';
+    detail.style.display = '';
+
+    document.getElementById('campaign-detail-title').textContent = escapeHtml(campaign.name);
+
+    // Stats bar
+    const statsBar = document.getElementById('campaign-stats-bar');
+    statsBar.innerHTML = [
+      { label: t('campaignStatTotal'), value: campaign.total_recipients || 0, cls: '' },
+      { label: t('campaignStatSent'), value: campaign.sent_count || 0, cls: 'stat-sent' },
+      { label: t('campaignStatDelivered'), value: campaign.delivered_count || 0, cls: 'stat-delivered' },
+      { label: t('campaignStatRead'), value: campaign.read_count || 0, cls: 'stat-read' },
+      { label: t('campaignStatReplied'), value: campaign.replied_count || 0, cls: 'stat-replied' },
+      { label: t('campaignStatFailed'), value: campaign.failed_count || 0, cls: 'stat-failed' },
+    ].map(s => `<div class="campaign-stat">
+      <span class="campaign-stat-value ${s.cls}">${s.value}</span>
+      <span class="campaign-stat-label">${s.label}</span>
+    </div>`).join('');
+
+    // Load campaign messages
+    const msgContainer = document.getElementById('campaign-detail-messages');
+    msgContainer.innerHTML = '<div style="padding:16px;color:var(--text-dim);font-size:13px">Loading messages...</div>';
+
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('whatsapp_campaign_messages')
+          .select('*, businesses(name, phone), whatsapp_messages(status, delivered_at, read_at)')
+          .eq('campaign_id', campaignId)
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (error) {
+          msgContainer.innerHTML = '<div style="padding:16px;color:var(--danger);font-size:13px">Error loading messages</div>';
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          msgContainer.innerHTML = '<div style="padding:16px;color:var(--text-dim);font-size:13px">No messages sent yet</div>';
+          return;
+        }
+
+        msgContainer.innerHTML = data.map(cm => {
+          const name = escapeHtml(cm.businesses?.name || 'Unknown');
+          const phone = escapeHtml(cm.businesses?.phone || '');
+          const msgStatus = cm.whatsapp_messages?.status || 'pending';
+          const statusIcon = renderStatusTick(msgStatus);
+
+          return `<div class="campaign-msg-row">
+            <div>
+              <span class="campaign-msg-name">${name}</span>
+              <span class="campaign-msg-phone">${phone}</span>
+            </div>
+            <div>${msgStatus}${statusIcon}</div>
+          </div>`;
+        }).join('');
+      } catch (err) {
+        console.error('Load campaign messages error:', err);
+        msgContainer.innerHTML = '<div style="padding:16px;color:var(--danger);font-size:13px">Error loading messages</div>';
+      }
+    }
+  }
+
+  function closeCampaignDetail() {
+    document.getElementById('campaign-detail').style.display = 'none';
+    document.getElementById('campaigns-list-card').style.display = '';
+  }
+
 
   // ── Start ──
   if (document.readyState === 'loading') {
