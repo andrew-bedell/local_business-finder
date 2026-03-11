@@ -40,9 +40,10 @@
     // Set up event listeners
     bindEvents();
 
-    // Listen for auth state changes
+    // Listen for auth state changes (handles OAuth redirects and token refresh)
+    // Skip SIGNED_IN if dashboard is already loading (handleLogin handles its own load)
     supabase.auth.onAuthStateChange(function (event, session) {
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session && !currentUser) {
         currentUser = session.user;
         showLoading();
         loadDashboard();
@@ -214,22 +215,33 @@
       }
 
       currentUser = result.data.user;
-      showLoading();
-      await loadDashboard();
     } catch (err) {
-      console.error('Login failed:', err);
+      console.error('Login failed:', err.message, err.status, err);
       var msg = 'Error al iniciar sesión. Verifica tus credenciales.';
       if (err.message && err.message.includes('Invalid login')) {
         msg = 'Correo o contraseña incorrectos.';
       } else if (err.message && err.message.includes('Email not confirmed')) {
         msg = 'Tu correo no ha sido confirmado. Revisa tu bandeja de entrada.';
+      } else if (err.message) {
+        msg = 'Error: ' + err.message;
       }
       showToast(msg, 'error');
+      return;
     } finally {
       if (btnLogin) {
         btnLogin.disabled = false;
         btnLogin.textContent = 'Iniciar Sesión';
       }
+    }
+
+    // Login succeeded — load dashboard (separate try/catch so login errors don't mix with data errors)
+    try {
+      showLoading();
+      await loadDashboard();
+    } catch (err) {
+      console.error('Dashboard load after login failed:', err);
+      hideLoading();
+      showToast('Sesión iniciada, pero hubo un error al cargar los datos.', 'error');
     }
   }
 
@@ -273,8 +285,8 @@
       showToast('Te enviamos un enlace para restablecer tu contraseña. Revisa tu correo.', 'success');
       showLoginScreen();
     } catch (err) {
-      console.error('Password reset failed:', err);
-      showToast('Error al enviar el enlace de restablecimiento.', 'error');
+      console.error('Password reset failed:', err.message, err.status, err);
+      showToast('Error: ' + (err.message || 'Error al enviar el enlace de restablecimiento.'), 'error');
     } finally {
       if (btnSendReset) {
         btnSendReset.disabled = false;
