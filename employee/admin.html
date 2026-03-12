@@ -31,7 +31,6 @@
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
               <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
               <a href="#" class="nav-tab" id="nav-customers" data-i18n="navCustomers">Customers</a>
-              <a href="#" class="nav-tab" id="nav-clients" data-i18n="navClients">Clients</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
@@ -470,57 +469,6 @@
             <button class="btn btn-text" id="btn-back-customers" data-i18n="backToCustomers">Back to Customers</button>
           </div>
           <div id="customer-detail-content"></div>
-        </div>
-      </section>
-
-      <!-- Clients Section -->
-      <section id="clients-section" style="display:none">
-        <div class="card" id="clients-list-card">
-          <div class="card-header">
-            <h2 data-i18n="clientsTitle">Clients</h2>
-            <div class="customers-header-actions">
-              <input type="text" class="input input-sort" id="clients-search" data-i18n-placeholder="clientsSearchPh" placeholder="Search clients..." style="width:220px">
-              <select class="input input-sort" id="clients-status-filter">
-                <option value="" data-i18n="filterAll">All</option>
-                <option value="published" data-i18n="clientsPublished">Published</option>
-                <option value="draft" data-i18n="clientsDraft">Draft</option>
-                <option value="suspended" data-i18n="clientsSuspended">Suspended</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="customers-stats" id="clients-stats"></div>
-
-          <div class="results-table-wrapper">
-            <table class="results-table" id="clients-table">
-              <thead>
-                <tr>
-                  <th class="col-num">#</th>
-                  <th data-i18n="thName">Business Name</th>
-                  <th data-i18n="thLocation">Location</th>
-                  <th data-i18n="thPhone">Phone</th>
-                  <th data-i18n="clientColWebStatus">Site Status</th>
-                  <th data-i18n="clientColUrl">Published URL</th>
-                  <th data-i18n="clientColDomain">Custom Domain</th>
-                  <th data-i18n="thActions">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="clients-table-body"></tbody>
-            </table>
-          </div>
-
-          <div class="no-results" id="no-clients" style="display:none;">
-            <p data-i18n="clientsEmpty">No clients with generated websites yet.</p>
-          </div>
-        </div>
-
-        <!-- Client Detail -->
-        <div class="card" id="client-detail" style="display:none">
-          <div class="card-header">
-            <h2 id="client-detail-title"></h2>
-            <button class="btn btn-text" id="btn-back-clients" data-i18n="clientsBack">Back to Clients</button>
-          </div>
-          <div id="client-detail-content"></div>
         </div>
       </section>
 
