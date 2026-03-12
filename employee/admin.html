@@ -30,6 +30,7 @@
               <a href="#" class="nav-tab" id="nav-campaigns" data-i18n="navCampaigns">Campaigns</a>
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
               <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
+              <a href="#" class="nav-tab" id="nav-customers" data-i18n="navCustomers">Customers</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
@@ -415,6 +416,59 @@
           <div class="chat-panel" id="chat-panel">
             <div class="chat-empty" id="chat-empty" data-i18n="msgSelectConversation">Select a conversation to start messaging</div>
           </div>
+        </div>
+      </section>
+
+      <!-- Customers Section -->
+      <section id="customers-section" style="display:none">
+        <div class="card" id="customers-list-card">
+          <div class="card-header">
+            <h2 data-i18n="customersTitle">Customers</h2>
+            <div class="customers-header-actions">
+              <input type="text" class="input input-sort" id="customers-search" data-i18n-placeholder="customersSearchPh" placeholder="Search customers..." style="width:220px">
+              <select class="input input-sort" id="customers-status-filter">
+                <option value="" data-i18n="filterAll">All</option>
+                <option value="active" data-i18n="customersStatusActive">Active</option>
+                <option value="past_due" data-i18n="customersStatusPastDue">Past Due</option>
+                <option value="cancelled" data-i18n="customersStatusCancelled">Cancelled</option>
+                <option value="incomplete" data-i18n="customersStatusIncomplete">Incomplete</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="customers-stats" id="customers-stats"></div>
+
+          <div class="results-table-wrapper">
+            <table class="results-table" id="customers-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th data-i18n="custColBusiness">Business</th>
+                  <th data-i18n="custColContact">Contact</th>
+                  <th data-i18n="custColEmail">Email</th>
+                  <th data-i18n="custColPhone">Phone</th>
+                  <th data-i18n="custColPlan">Plan</th>
+                  <th data-i18n="custColStatus">Status</th>
+                  <th data-i18n="custColSince">Since</th>
+                  <th data-i18n="custColActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customers-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="no-results" id="no-customers" style="display:none">
+            <p data-i18n="customersEmpty">No customers yet. Customers will appear here when they purchase a website.</p>
+          </div>
+        </div>
+
+        <!-- Customer Detail -->
+        <div class="card" id="customer-detail" style="display:none">
+          <div class="card-header">
+            <h2 id="customer-detail-title"></h2>
+            <button class="btn btn-text" id="btn-back-customers" data-i18n="backToCustomers">Back to Customers</button>
+          </div>
+          <div id="customer-detail-content"></div>
         </div>
       </section>
 

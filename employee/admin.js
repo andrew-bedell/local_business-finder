@@ -268,6 +268,44 @@
       websiteCopyLink: 'Copy Preview Link',
       websiteSendWhatsApp: 'Send via WhatsApp',
       websiteLinkCopied: 'Preview link copied to clipboard',
+      // Customers
+      navCustomers: 'Customers',
+      customersTitle: 'Customers',
+      customersSearchPh: 'Search customers...',
+      customersEmpty: 'No customers yet. Customers will appear here when they purchase a website.',
+      customersStatusActive: 'Active',
+      customersStatusPastDue: 'Past Due',
+      customersStatusCancelled: 'Cancelled',
+      customersStatusIncomplete: 'Incomplete',
+      custColBusiness: 'Business',
+      custColContact: 'Contact',
+      custColEmail: 'Email',
+      custColPhone: 'Phone',
+      custColPlan: 'Plan',
+      custColStatus: 'Status',
+      custColSince: 'Since',
+      custColActions: 'Actions',
+      backToCustomers: 'Back to Customers',
+      custView: 'View',
+      custTotalCustomers: '{0} customers',
+      custActiveCount: '{0} active',
+      custMrr: 'MRR: {0}',
+      custDetailBusiness: 'Business Information',
+      custDetailContact: 'Contact Information',
+      custDetailSubscription: 'Subscription',
+      custDetailNotes: 'Notes',
+      custNotesSave: 'Save Notes',
+      custNotesSaved: 'Notes saved',
+      custNoSubscription: 'No subscription',
+      custWhatsApp: 'WhatsApp',
+      custPortalLink: 'Customer Portal',
+      custWebsite: 'Website',
+      custCategory: 'Category',
+      custAddress: 'Address',
+      custRating: 'Rating',
+      custPipeline: 'Pipeline',
+      custStripeId: 'Stripe ID',
+      custBillingPeriod: 'Billing Period',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -526,6 +564,44 @@
       websiteCopyLink: 'Copiar Enlace',
       websiteSendWhatsApp: 'Enviar por WhatsApp',
       websiteLinkCopied: 'Enlace de vista previa copiado',
+      // Customers
+      navCustomers: 'Clientes',
+      customersTitle: 'Clientes',
+      customersSearchPh: 'Buscar clientes...',
+      customersEmpty: 'Aún no hay clientes. Los clientes aparecerán aquí cuando compren un sitio web.',
+      customersStatusActive: 'Activa',
+      customersStatusPastDue: 'Pago Pendiente',
+      customersStatusCancelled: 'Cancelada',
+      customersStatusIncomplete: 'Incompleta',
+      custColBusiness: 'Negocio',
+      custColContact: 'Contacto',
+      custColEmail: 'Correo',
+      custColPhone: 'Teléfono',
+      custColPlan: 'Plan',
+      custColStatus: 'Estado',
+      custColSince: 'Desde',
+      custColActions: 'Acciones',
+      backToCustomers: 'Volver a Clientes',
+      custView: 'Ver',
+      custTotalCustomers: '{0} clientes',
+      custActiveCount: '{0} activos',
+      custMrr: 'MRR: {0}',
+      custDetailBusiness: 'Información del Negocio',
+      custDetailContact: 'Información de Contacto',
+      custDetailSubscription: 'Suscripción',
+      custDetailNotes: 'Notas',
+      custNotesSave: 'Guardar Notas',
+      custNotesSaved: 'Notas guardadas',
+      custNoSubscription: 'Sin suscripción',
+      custWhatsApp: 'WhatsApp',
+      custPortalLink: 'Portal del Cliente',
+      custWebsite: 'Sitio Web',
+      custCategory: 'Categoría',
+      custAddress: 'Dirección',
+      custRating: 'Calificación',
+      custPipeline: 'Pipeline',
+      custStripeId: 'Stripe ID',
+      custBillingPeriod: 'Periodo de Cobro',
     },
   };
 
@@ -704,7 +780,7 @@
     });
 
     // Tab navigation
-    ['saved', 'audiences', 'campaigns', 'messages', 'products'].forEach(tab => {
+    ['saved', 'audiences', 'campaigns', 'messages', 'products', 'customers'].forEach(tab => {
       const navEl = document.getElementById('nav-' + tab);
       if (navEl) {
         navEl.addEventListener('click', (e) => {
@@ -1956,10 +2032,11 @@
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
       products: ['products-section'],
+      customers: ['customers-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section', 'customers-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -1971,11 +2048,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products', 'nav-customers'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products', customers: 'nav-customers' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -1984,6 +2061,7 @@
     if (tab === 'campaigns') loadCampaigns();
     if (tab === 'messages') loadConversations();
     if (tab === 'products') loadProducts();
+    if (tab === 'customers') loadCustomers();
   }
 
   async function loadConversations() {
@@ -3340,6 +3418,275 @@
 
   const btnSaveProduct = document.getElementById('btn-save-product');
   if (btnSaveProduct) btnSaveProduct.addEventListener('click', saveProduct);
+
+
+  // ── Customers ──
+
+  let customersData = [];
+  let customersFiltered = [];
+
+  async function loadCustomers() {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('customers')
+        .select('*, businesses(name, phone, whatsapp, email, category, subcategory, address_full, rating, review_count, pipeline_status), subscriptions(id, status, stripe_subscription_id, stripe_price_id, current_period_start, current_period_end, cancel_at_period_end, created_at)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      customersData = data || [];
+      applyCustomerFilters();
+    } catch (err) {
+      console.error('Load customers error:', err);
+    }
+  }
+
+  function applyCustomerFilters() {
+    const search = (document.getElementById('customers-search')?.value || '').toLowerCase().trim();
+    const statusFilter = document.getElementById('customers-status-filter')?.value || '';
+
+    customersFiltered = customersData.filter(c => {
+      // Status filter
+      if (statusFilter) {
+        const sub = (c.subscriptions || [])[0];
+        const subStatus = sub ? sub.status : 'incomplete';
+        if (subStatus !== statusFilter) return false;
+      }
+      // Search filter
+      if (search) {
+        const biz = c.businesses || {};
+        const haystack = [
+          biz.name, c.contact_name, c.email, biz.phone, biz.whatsapp
+        ].filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+
+    renderCustomersStats();
+    renderCustomersList();
+  }
+
+  function renderCustomersStats() {
+    const container = document.getElementById('customers-stats');
+    if (!container) return;
+
+    const total = customersFiltered.length;
+    const active = customersFiltered.filter(c => {
+      const sub = (c.subscriptions || [])[0];
+      return sub && sub.status === 'active';
+    }).length;
+
+    // Calculate MRR from active subscriptions
+    let mrr = 0;
+    customersFiltered.forEach(c => {
+      const sub = (c.subscriptions || [])[0];
+      if (sub && sub.status === 'active' && c.monthly_price) {
+        mrr += parseFloat(c.monthly_price);
+      }
+    });
+    const mrrStr = '$' + mrr.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+    container.innerHTML = `
+      <div class="customers-stat">${t('custTotalCustomers', total)}</div>
+      <div class="customers-stat customers-stat-active">${t('custActiveCount', active)}</div>
+      <div class="customers-stat customers-stat-mrr">${t('custMrr', mrrStr)}</div>
+    `;
+  }
+
+  function renderCustomersList() {
+    const tbody = document.getElementById('customers-table-body');
+    const noCustomers = document.getElementById('no-customers');
+    if (!tbody) return;
+
+    if (!customersFiltered.length) {
+      tbody.innerHTML = '';
+      if (noCustomers) noCustomers.style.display = '';
+      return;
+    }
+
+    if (noCustomers) noCustomers.style.display = 'none';
+
+    tbody.innerHTML = customersFiltered.map((c, idx) => {
+      const biz = c.businesses || {};
+      const sub = (c.subscriptions || [])[0];
+      const subStatus = sub ? sub.status : 'incomplete';
+
+      const statusLabels = { active: 'Active', past_due: 'Past Due', cancelled: 'Cancelled', incomplete: 'Incomplete', trialing: 'Trial' };
+      const statusBadge = subStatus === 'active'
+        ? 'badge-has-site'
+        : subStatus === 'cancelled' ? 'badge-no-site'
+        : 'badge-no-site';
+      const statusLabel = statusLabels[subStatus] || subStatus;
+
+      const priceStr = c.monthly_price
+        ? '$' + parseFloat(c.monthly_price).toLocaleString('en', { minimumFractionDigits: 0 }) + ' ' + (c.currency || '')
+        : '—';
+
+      const sinceDate = c.created_at ? new Date(c.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+
+      return `<tr>
+        <td>${idx + 1}</td>
+        <td><strong>${escapeHtml(biz.name || '—')}</strong></td>
+        <td>${escapeHtml(c.contact_name || '—')}</td>
+        <td>${escapeHtml(c.email || '—')}</td>
+        <td>${escapeHtml(biz.phone || '—')}</td>
+        <td>${priceStr}</td>
+        <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
+        <td>${sinceDate}</td>
+        <td><button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('view-customer',{detail:'${c.id}'}))">${t('custView')}</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openCustomerDetail(customerId) {
+    const customer = customersData.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const listCard = document.getElementById('customers-list-card');
+    const detail = document.getElementById('customer-detail');
+    const title = document.getElementById('customer-detail-title');
+    const content = document.getElementById('customer-detail-content');
+
+    listCard.style.display = 'none';
+    detail.style.display = '';
+
+    const biz = customer.businesses || {};
+    const sub = (customer.subscriptions || [])[0];
+    title.textContent = biz.name || customer.contact_name || 'Customer';
+
+    const statusLabels = { active: 'Active', past_due: 'Past Due', cancelled: 'Cancelled', incomplete: 'Incomplete', trialing: 'Trial' };
+    const subStatus = sub ? sub.status : null;
+    const statusBadge = subStatus === 'active' ? 'badge-has-site' : 'badge-no-site';
+
+    const whatsappNum = biz.whatsapp || biz.phone || '';
+    const whatsappLink = whatsappNum ? `https://wa.me/${whatsappNum.replace(/[^0-9]/g, '')}` : '';
+    const portalLink = biz.name ? `/mipagina/${encodeURIComponent(biz.name.toLowerCase().replace(/\s+/g, '-'))}` : '';
+
+    content.innerHTML = `
+      <div class="customer-detail-grid">
+        <div class="customer-detail-section">
+          <h3>${t('custDetailBusiness')}</h3>
+          <div class="customer-detail-rows">
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custColBusiness')}</span>
+              <span>${escapeHtml(biz.name || '—')}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custCategory')}</span>
+              <span>${escapeHtml(biz.category || biz.subcategory || '—')}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custAddress')}</span>
+              <span>${escapeHtml(biz.address_full || '—')}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custRating')}</span>
+              <span>${biz.rating ? biz.rating + ' ★ (' + (biz.review_count || 0) + ')' : '—'}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custPipeline')}</span>
+              <span><span class="badge badge-has-site">${escapeHtml(biz.pipeline_status || 'customer')}</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customer-detail-section">
+          <h3>${t('custDetailContact')}</h3>
+          <div class="customer-detail-rows">
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custColContact')}</span>
+              <span>${escapeHtml(customer.contact_name || '—')}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custColEmail')}</span>
+              <span><a href="mailto:${escapeHtml(customer.email)}" style="color:var(--primary)">${escapeHtml(customer.email || '—')}</a></span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custColPhone')}</span>
+              <span>${escapeHtml(biz.phone || '—')}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custWhatsApp')}</span>
+              <span>${whatsappLink ? `<a href="${whatsappLink}" target="_blank" style="color:var(--success)">${escapeHtml(whatsappNum)}</a>` : '—'}</span>
+            </div>
+            ${portalLink ? `<div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custPortalLink')}</span>
+              <span><a href="${portalLink}" target="_blank" style="color:var(--primary)">${portalLink}</a></span>
+            </div>` : ''}
+          </div>
+        </div>
+
+        <div class="customer-detail-section">
+          <h3>${t('custDetailSubscription')}</h3>
+          ${sub ? `<div class="customer-detail-rows">
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custColStatus')}</span>
+              <span><span class="badge ${statusBadge}">${statusLabels[subStatus] || subStatus}</span>${sub.cancel_at_period_end ? ' <span class="badge badge-no-site">Cancels at period end</span>' : ''}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custColPlan')}</span>
+              <span>${customer.monthly_price ? '$' + parseFloat(customer.monthly_price).toLocaleString('en', { minimumFractionDigits: 0 }) + ' ' + (customer.currency || '') + '/mo' : '—'}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custBillingPeriod')}</span>
+              <span>${sub.current_period_start ? new Date(sub.current_period_start).toLocaleDateString('en', { month: 'short', day: 'numeric' }) + ' — ' + new Date(sub.current_period_end).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custStripeId')}</span>
+              <span style="font-size:12px;color:var(--text-muted)">${escapeHtml(customer.stripe_customer_id || '—')}</span>
+            </div>
+          </div>` : `<p style="color:var(--text-muted);font-size:13px">${t('custNoSubscription')}</p>`}
+        </div>
+
+        <div class="customer-detail-section">
+          <h3>${t('custDetailNotes')}</h3>
+          <textarea class="input" id="customer-notes" rows="4" style="width:100%;resize:vertical">${escapeHtml(customer.notes || '')}</textarea>
+          <button class="btn btn-primary" id="btn-save-customer-notes" style="margin-top:10px" data-customer-id="${customer.id}">${t('custNotesSave')}</button>
+        </div>
+      </div>
+    `;
+
+    // Wire up save notes button
+    const btnSaveNotes = document.getElementById('btn-save-customer-notes');
+    if (btnSaveNotes) {
+      btnSaveNotes.addEventListener('click', async () => {
+        const notes = document.getElementById('customer-notes')?.value || '';
+        const cid = btnSaveNotes.getAttribute('data-customer-id');
+        try {
+          const { error } = await supabaseClient
+            .from('customers')
+            .update({ notes: notes.trim() || null })
+            .eq('id', cid);
+          if (error) throw error;
+          showToast(t('custNotesSaved'), 'success');
+          // Update local data
+          const c = customersData.find(x => x.id === cid);
+          if (c) c.notes = notes.trim() || null;
+        } catch (err) {
+          console.error('Save notes error:', err);
+          showToast('Failed to save notes', 'error');
+        }
+      });
+    }
+  }
+
+  function closeCustomerDetail() {
+    document.getElementById('customer-detail').style.display = 'none';
+    document.getElementById('customers-list-card').style.display = '';
+  }
+
+  // Customer event listeners
+  document.addEventListener('view-customer', (e) => openCustomerDetail(e.detail));
+
+  const btnBackCustomers = document.getElementById('btn-back-customers');
+  if (btnBackCustomers) btnBackCustomers.addEventListener('click', closeCustomerDetail);
+
+  const custSearch = document.getElementById('customers-search');
+  if (custSearch) custSearch.addEventListener('input', applyCustomerFilters);
+
+  const custStatusFilter = document.getElementById('customers-status-filter');
+  if (custStatusFilter) custStatusFilter.addEventListener('change', applyCustomerFilters);
 
 
   // ── Start ──
