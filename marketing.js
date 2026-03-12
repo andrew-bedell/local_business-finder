@@ -113,10 +113,6 @@
       modal_sending: 'Enviando...',
       modal_error: 'Error. Intentar de nuevo.',
 
-      wa_widget_name: 'AhoraTengoPagina',
-      wa_widget_status: 'Normalmente responde en minutos',
-      wa_widget_greeting: 'Hola! Como te podemos ayudar? Escribenos y te respondemos rapido.',
-      wa_widget_placeholder: 'Escribe tu mensaje...',
     },
     en: {
       nav_problem: 'The Problem',
@@ -228,10 +224,6 @@
       modal_sending: 'Sending...',
       modal_error: 'Error. Try again.',
 
-      wa_widget_name: 'AhoraTengoPagina',
-      wa_widget_status: 'Usually responds in minutes',
-      wa_widget_greeting: 'Hi! How can we help you? Send us a message and we\'ll reply quickly.',
-      wa_widget_placeholder: 'Type your message...',
     }
   };
 
@@ -463,47 +455,13 @@
     }
   }
 
-  // ── WhatsApp Chat Widget ──
+  // ── WhatsApp Button ──
   var WHATSAPP_WIDGET_NUMBER = '529991095806';
   var waFloatBtn = document.getElementById('m-wa-float-btn');
-  var waWidget = document.getElementById('m-wa-widget');
-  var waWidgetClose = document.getElementById('m-wa-widget-close');
-  var waWidgetInput = document.getElementById('m-wa-widget-input');
-  var waWidgetSend = document.getElementById('m-wa-widget-send');
 
-  if (waFloatBtn && waWidget) {
-    // Toggle widget on float button click
+  if (waFloatBtn) {
     waFloatBtn.addEventListener('click', function() {
-      var isOpen = waWidget.classList.contains('m-active');
-      if (isOpen) {
-        waWidget.classList.remove('m-active');
-      } else {
-        waWidget.classList.add('m-active');
-        setTimeout(function() { waWidgetInput.focus(); }, 100);
-      }
-    });
-
-    // Close widget
-    waWidgetClose.addEventListener('click', function() {
-      waWidget.classList.remove('m-active');
-    });
-
-    // Send message → opens WhatsApp with pre-filled text
-    function sendWaMessage() {
-      var msg = waWidgetInput.value.trim();
-      if (!msg) return;
-      var waUrl = 'https://wa.me/' + WHATSAPP_WIDGET_NUMBER + '?text=' + encodeURIComponent(msg);
-      window.open(waUrl, '_blank');
-      waWidgetInput.value = '';
-      waWidget.classList.remove('m-active');
-    }
-
-    waWidgetSend.addEventListener('click', sendWaMessage);
-    waWidgetInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendWaMessage();
-      }
+      window.open('https://wa.me/' + WHATSAPP_WIDGET_NUMBER, '_blank');
     });
 
     // Hide float button near footer
@@ -514,7 +472,6 @@
           var hidden = entries[0].isIntersecting;
           waFloatBtn.style.opacity = hidden ? '0' : '1';
           waFloatBtn.style.pointerEvents = hidden ? 'none' : 'auto';
-          if (hidden) waWidget.classList.remove('m-active');
         },
         { threshold: 0.1 }
       );
