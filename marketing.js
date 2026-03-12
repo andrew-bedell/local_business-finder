@@ -438,6 +438,12 @@
   if (videoContainer) {
     var videoId = videoContainer.getAttribute('data-video-id');
     if (videoId) {
+      // Set YouTube thumbnail dynamically from video ID
+      var thumb = videoContainer.querySelector('.m-video-thumb');
+      if (thumb) {
+        thumb.src = 'https://img.youtube.com/vi/' + videoId + '/maxresdefault.jpg';
+        thumb.onerror = function() { this.src = 'https://img.youtube.com/vi/' + videoId + '/hqdefault.jpg'; };
+      }
       videoContainer.addEventListener('click', function() {
         var iframe = document.createElement('iframe');
         iframe.setAttribute('src', 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0');
