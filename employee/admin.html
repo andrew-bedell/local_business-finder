@@ -29,6 +29,7 @@
               <a href="#" class="nav-tab" id="nav-audiences" data-i18n="navAudiences">Audiences</a>
               <a href="#" class="nav-tab" id="nav-campaigns" data-i18n="navCampaigns">Campaigns</a>
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
+              <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
@@ -413,6 +414,86 @@
           </div>
           <div class="chat-panel" id="chat-panel">
             <div class="chat-empty" id="chat-empty" data-i18n="msgSelectConversation">Select a conversation to start messaging</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products Section -->
+      <section id="products-section" style="display:none">
+        <div class="card" id="products-list-card">
+          <div class="card-header">
+            <h2 data-i18n="productsTitle">Products</h2>
+            <button class="btn btn-primary" id="btn-create-product" data-i18n="productCreate">New Product</button>
+          </div>
+          <div id="products-list" class="products-list"></div>
+          <div class="no-results" id="no-products" style="display:none">
+            <p data-i18n="productsEmpty">No products yet. Create one to start selling.</p>
+          </div>
+        </div>
+
+        <!-- Product Editor -->
+        <div class="card" id="product-editor" style="display:none">
+          <div class="card-header">
+            <h2 id="product-editor-title" data-i18n="productNew">New Product</h2>
+            <button class="btn btn-text" id="btn-cancel-product" data-i18n="cancel">Cancel</button>
+          </div>
+          <div class="product-form">
+            <div class="admin-filter-grid">
+              <div class="form-group">
+                <label data-i18n="productName">Product Name</label>
+                <input type="text" class="input" id="product-name" data-i18n-placeholder="productNamePh" placeholder="e.g. Monthly Website Plan">
+              </div>
+              <div class="form-group">
+                <label data-i18n="productPrice">Price</label>
+                <input type="number" class="input" id="product-price" min="0" step="0.01" placeholder="499">
+              </div>
+              <div class="form-group">
+                <label data-i18n="productCurrency">Currency</label>
+                <select class="input" id="product-currency">
+                  <option value="MXN">MXN</option>
+                  <option value="USD">USD</option>
+                  <option value="COP">COP</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="productInterval">Billing Interval</label>
+                <select class="input" id="product-interval">
+                  <option value="monthly" data-i18n="productMonthly">Monthly</option>
+                  <option value="yearly" data-i18n="productYearly">Yearly</option>
+                  <option value="one_time" data-i18n="productOneTime">One Time</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label data-i18n="productStripeProductId">Stripe Product ID</label>
+                <input type="text" class="input" id="product-stripe-product-id" placeholder="Auto-generated on save">
+              </div>
+              <div class="form-group">
+                <label data-i18n="productStripePriceId">Stripe Price ID</label>
+                <input type="text" class="input" id="product-stripe-price-id" placeholder="Auto-generated on save">
+              </div>
+              <div class="form-group">
+                <label data-i18n="productSortOrder">Sort Order</label>
+                <input type="number" class="input" id="product-sort-order" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label data-i18n="productActive">Active</label>
+                <select class="input" id="product-active">
+                  <option value="true" data-i18n="filterYes">Yes</option>
+                  <option value="false" data-i18n="filterNo">No</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:14px">
+              <label data-i18n="productDescription">Description</label>
+              <input type="text" class="input" id="product-description" data-i18n-placeholder="productDescPh" placeholder="Brief description of this product">
+            </div>
+            <div class="form-group" style="margin-top:14px">
+              <label data-i18n="productFeatures">Features (one per line)</label>
+              <textarea class="input" id="product-features" rows="4" data-i18n-placeholder="productFeaturesPh" placeholder="Custom website design&#10;Mobile responsive&#10;Monthly updates&#10;24/7 support"></textarea>
+            </div>
+            <div style="margin-top:16px">
+              <button class="btn btn-primary" id="btn-save-product" data-i18n="productSave">Save Product</button>
+            </div>
           </div>
         </div>
       </section>

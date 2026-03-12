@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>Vista previa — AhoraTengoPagina</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pv-banner {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .pv-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .pv-banner-logo {
+      font-size: 14px;
+      font-weight: 700;
+      color: #6366f1;
+      white-space: nowrap;
+    }
+
+    .pv-banner-sep {
+      width: 1px;
+      height: 20px;
+      background: #e5e7eb;
+    }
+
+    .pv-banner-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pv-banner-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+      white-space: nowrap;
+    }
+
+    .pv-banner-cta {
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .pv-banner-cta:hover {
+      background: #818cf8;
+    }
+
+    .pv-iframe-wrapper {
+      flex: 1;
+      display: flex;
+    }
+
+    .pv-iframe {
+      width: 100%;
+      border: none;
+      flex: 1;
+      min-height: calc(100vh - 56px);
+    }
+
+    .pv-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #6b7280;
+      gap: 16px;
+    }
+
+    .pv-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: pv-spin 0.6s linear infinite;
+    }
+
+    @keyframes pv-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .pv-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #ef4444;
+      gap: 8px;
+      font-size: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .pv-banner {
+        padding: 10px 14px;
+      }
+      .pv-banner-sep,
+      .pv-banner-badge {
+        display: none;
+      }
+      .pv-banner-name {
+        font-size: 13px;
+      }
+      .pv-banner-cta {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pv-banner" id="pv-banner" style="display:none">
+    <div class="pv-banner-left">
+      <span class="pv-banner-logo">AhoraTengoPagina</span>
+      <span class="pv-banner-sep"></span>
+      <span class="pv-banner-name" id="pv-business-name"></span>
+      <span class="pv-banner-badge">Vista previa</span>
+    </div>
+    <button class="pv-banner-cta" id="pv-activate-btn">Activa tu pagina web</button>
+  </div>
+
+  <div id="pv-loading" class="pv-loading">
+    <div class="pv-spinner"></div>
+    <span>Cargando vista previa...</span>
+  </div>
+
+  <div id="pv-error" class="pv-error" style="display:none">
+    <span id="pv-error-msg">No se pudo cargar la vista previa.</span>
+  </div>
+
+  <div class="pv-iframe-wrapper" id="pv-iframe-wrapper" style="display:none">
+    <iframe id="pv-iframe" class="pv-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // Extract website ID from URL path: /ver/:id
+    const pathParts = window.location.pathname.split('/');
+    const websiteId = pathParts[pathParts.length - 1];
+
+    if (!websiteId || websiteId === 'ver') {
+      showError('URL inválida. No se encontró el ID del sitio web.');
+      return;
+    }
+
+    loadPreview(websiteId);
+
+    async function loadPreview(id) {
+      try {
+        const res = await fetch('/api/preview/website?id=' + encodeURIComponent(id));
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Error al cargar');
+        }
+
+        const data = await res.json();
+
+        if (!data.html) {
+          throw new Error('El sitio web no tiene contenido.');
+        }
+
+        // Set business name
+        document.getElementById('pv-business-name').textContent = data.businessName || 'Negocio';
+        document.title = (data.businessName || 'Vista previa') + ' — AhoraTengoPagina';
+
+        // Load HTML into iframe
+        const iframe = document.getElementById('pv-iframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(data.html);
+        iframeDoc.close();
+
+        // Show banner and iframe
+        document.getElementById('pv-loading').style.display = 'none';
+        document.getElementById('pv-banner').style.display = '';
+        document.getElementById('pv-iframe-wrapper').style.display = '';
+
+        // CTA button → checkout
+        document.getElementById('pv-activate-btn').addEventListener('click', function() {
+          window.location.href = '/checkout/' + id;
+        });
+
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('pv-loading').style.display = 'none';
+      document.getElementById('pv-error').style.display = '';
+      document.getElementById('pv-error-msg').textContent = msg;
+    }
+  })();
+  </script>
+</body>
+</html>

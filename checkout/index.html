@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f5f5">
+  <title>Checkout — AhoraTengoPagina</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      color: #1f2937;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .ch-header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 24px;
+      text-align: center;
+    }
+    .ch-header-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #6366f1;
+      letter-spacing: -0.5px;
+    }
+    .ch-header-sub {
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    /* Main layout */
+    .ch-main {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Cards */
+    .ch-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 28px;
+    }
+    .ch-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 20px;
+    }
+
+    /* Form */
+    .ch-form-group {
+      margin-bottom: 16px;
+    }
+    .ch-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .ch-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1f2937;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ch-input:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .ch-input::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Stripe Elements container */
+    .ch-stripe-element {
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ch-stripe-element.StripeElement--focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .ch-stripe-element.StripeElement--invalid {
+      border-color: #ef4444;
+    }
+
+    /* Divider */
+    .ch-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 24px 0;
+    }
+
+    /* Submit button */
+    .ch-submit {
+      width: 100%;
+      padding: 14px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .ch-submit:hover:not(:disabled) {
+      background: #4f46e5;
+    }
+    .ch-submit:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    .ch-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .ch-submit-spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: ch-spin 0.6s linear infinite;
+      display: none;
+    }
+    .ch-submit.ch-loading .ch-submit-spinner {
+      display: block;
+    }
+
+    /* Order summary */
+    .ch-summary-card {
+      position: sticky;
+      top: 24px;
+    }
+    .ch-product-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+    }
+    .ch-product-desc {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .ch-features {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    .ch-features li {
+      font-size: 13px;
+      color: #374151;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ch-features li::before {
+      content: '✓';
+      color: #22c55e;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .ch-summary-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 16px 0;
+    }
+    .ch-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .ch-total-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .ch-total-price {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111;
+    }
+    .ch-total-interval {
+      font-size: 13px;
+      font-weight: 400;
+      color: #6b7280;
+    }
+
+    /* Secure badge */
+    .ch-secure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .ch-secure svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Error */
+    .ch-error {
+      background: rgba(239, 68, 68, 0.08);
+      color: #ef4444;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .ch-error.ch-visible {
+      display: block;
+    }
+
+    /* Success overlay */
+    .ch-success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      display: none;
+    }
+    .ch-success-overlay.ch-visible {
+      display: flex;
+    }
+    .ch-success-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      animation: ch-slideUp 0.3s ease;
+    }
+    .ch-success-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(34, 197, 94, 0.12);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+    .ch-success-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 8px;
+    }
+    .ch-success-text {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
+    .ch-success-btn {
+      padding: 12px 32px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .ch-success-btn:hover {
+      background: #4f46e5;
+    }
+
+    /* Loading state */
+    .ch-page-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #6b7280;
+      gap: 16px;
+    }
+    .ch-page-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: ch-spin 0.6s linear infinite;
+    }
+
+    .ch-page-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #ef4444;
+      gap: 8px;
+      font-size: 15px;
+    }
+
+    @keyframes ch-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes ch-slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .ch-main {
+        grid-template-columns: 1fr;
+        margin: 20px auto;
+      }
+      .ch-summary-card {
+        position: static;
+        order: -1;
+      }
+      .ch-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="ch-header">
+    <div class="ch-header-logo">AhoraTengoPagina</div>
+    <div class="ch-header-sub">Checkout seguro</div>
+  </header>
+
+  <!-- Loading state -->
+  <div id="ch-loading" class="ch-page-loading">
+    <div class="ch-page-spinner"></div>
+    <span>Cargando...</span>
+  </div>
+
+  <!-- Error state -->
+  <div id="ch-page-error" class="ch-page-error" style="display:none">
+    <span id="ch-page-error-msg">No se pudo cargar el checkout.</span>
+  </div>
+
+  <!-- Main checkout -->
+  <main class="ch-main" id="ch-main" style="display:none">
+    <!-- Left: Form -->
+    <div>
+      <div class="ch-card">
+        <h2 class="ch-card-title">Información de contacto</h2>
+
+        <div id="ch-error" class="ch-error"></div>
+
+        <form id="ch-form" autocomplete="on">
+          <div class="ch-form-group">
+            <label class="ch-label" for="ch-name">Nombre completo</label>
+            <input class="ch-input" type="text" id="ch-name" name="name" placeholder="Tu nombre" required autocomplete="name">
+          </div>
+
+          <div class="ch-form-group">
+            <label class="ch-label" for="ch-email">Correo electrónico</label>
+            <input class="ch-input" type="email" id="ch-email" name="email" placeholder="tu@email.com" required autocomplete="email">
+          </div>
+
+          <div class="ch-form-group">
+            <label class="ch-label" for="ch-phone">WhatsApp</label>
+            <input class="ch-input" type="tel" id="ch-phone" name="phone" placeholder="+52 1 999 123 4567" autocomplete="tel">
+          </div>
+
+          <div class="ch-divider"></div>
+
+          <h2 class="ch-card-title">Método de pago</h2>
+
+          <div class="ch-form-group">
+            <label class="ch-label">Tarjeta de crédito o débito</label>
+            <div class="ch-stripe-element" id="ch-card-element"></div>
+          </div>
+
+          <button class="ch-submit" type="submit" id="ch-submit-btn" disabled>
+            <span class="ch-submit-spinner"></span>
+            <span id="ch-submit-text">Activar mi pagina web</span>
+          </button>
+
+          <div class="ch-secure">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Pago seguro con Stripe
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Order summary -->
+    <div>
+      <div class="ch-card ch-summary-card">
+        <h2 class="ch-card-title">Resumen del pedido</h2>
+        <div class="ch-product-name" id="ch-product-name">—</div>
+        <div class="ch-product-desc" id="ch-product-desc"></div>
+        <ul class="ch-features" id="ch-features"></ul>
+        <div class="ch-summary-divider"></div>
+        <div class="ch-total-row">
+          <span class="ch-total-label">Total</span>
+          <span>
+            <span class="ch-total-price" id="ch-total-price">—</span>
+            <span class="ch-total-interval" id="ch-total-interval"></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success overlay -->
+  <div class="ch-success-overlay" id="ch-success">
+    <div class="ch-success-card">
+      <div class="ch-success-icon">🎉</div>
+      <h2 class="ch-success-title">¡Tu pagina web está activa!</h2>
+      <p class="ch-success-text">Recibirás un correo de confirmación con los detalles de tu suscripción y un enlace para administrar tu pagina.</p>
+      <button class="ch-success-btn" id="ch-success-btn">Entendido</button>
+    </div>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+  (function() {
+    'use strict';
+
+    // Extract website ID from URL path: /checkout/:id
+    const pathParts = window.location.pathname.split('/');
+    const websiteId = pathParts[pathParts.length - 1];
+
+    if (!websiteId || websiteId === 'checkout') {
+      showPageError('URL inválida. No se encontró el ID del sitio web.');
+      return;
+    }
+
+    let selectedProduct = null;
+    let stripe = null;
+    let cardElement = null;
+
+    init();
+
+    async function init() {
+      try {
+        // Fetch config to get Stripe publishable key
+        const configRes = await fetch('/api/config');
+        const config = await configRes.json();
+
+        if (!config.stripePublishableKey) {
+          throw new Error('Stripe no está configurado.');
+        }
+
+        // Initialize Stripe
+        stripe = Stripe(config.stripePublishableKey);
+        const elements = stripe.elements();
+        cardElement = elements.create('card', {
+          style: {
+            base: {
+              fontSize: '14px',
+              color: '#1f2937',
+              fontFamily: "'Inter', sans-serif",
+              '::placeholder': { color: '#9ca3af' },
+            },
+            invalid: { color: '#ef4444' },
+          },
+        });
+        cardElement.mount('#ch-card-element');
+        cardElement.on('change', function(event) {
+          document.getElementById('ch-submit-btn').disabled = !event.complete;
+        });
+
+        // Fetch products
+        const productsRes = await fetch('/api/products/list');
+        const productsData = await productsRes.json();
+        const products = productsData.products || [];
+
+        if (products.length === 0) {
+          throw new Error('No hay productos disponibles.');
+        }
+
+        // Use the first active product
+        selectedProduct = products[0];
+        renderOrderSummary(selectedProduct);
+
+        // Show main content
+        document.getElementById('ch-loading').style.display = 'none';
+        document.getElementById('ch-main').style.display = '';
+
+        // Form submit
+        document.getElementById('ch-form').addEventListener('submit', handleSubmit);
+
+        // Success button
+        document.getElementById('ch-success-btn').addEventListener('click', function() {
+          window.location.href = '/';
+        });
+
+      } catch (err) {
+        showPageError(err.message);
+      }
+    }
+
+    function renderOrderSummary(product) {
+      document.getElementById('ch-product-name').textContent = product.name;
+      document.getElementById('ch-product-desc').textContent = product.description || '';
+
+      const featuresList = document.getElementById('ch-features');
+      const features = product.features || [];
+      featuresList.innerHTML = features.map(function(f) {
+        return '<li>' + escapeHtml(f) + '</li>';
+      }).join('');
+
+      const currencySymbols = { MXN: '$', USD: '$', COP: '$' };
+      const symbol = currencySymbols[product.currency] || '$';
+      const formattedPrice = symbol + parseFloat(product.price).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+      document.getElementById('ch-total-price').textContent = formattedPrice + ' ' + product.currency;
+
+      const intervals = { monthly: '/mes', yearly: '/año', one_time: '' };
+      document.getElementById('ch-total-interval').textContent = intervals[product.billing_interval] || '';
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('ch-submit-btn');
+      const errorEl = document.getElementById('ch-error');
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('ch-loading');
+      document.getElementById('ch-submit-text').textContent = 'Procesando...';
+      errorEl.classList.remove('ch-visible');
+
+      try {
+        // Create payment method
+        const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: cardElement,
+          billing_details: {
+            name: document.getElementById('ch-name').value,
+            email: document.getElementById('ch-email').value,
+          },
+        });
+
+        if (pmError) {
+          throw new Error(pmError.message);
+        }
+
+        // Create subscription
+        const res = await fetch('/api/stripe/create-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            websiteId: websiteId,
+            productId: selectedProduct.id,
+            customerName: document.getElementById('ch-name').value,
+            customerEmail: document.getElementById('ch-email').value,
+            customerPhone: document.getElementById('ch-phone').value || null,
+            paymentMethodId: paymentMethod.id,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || data.detail || 'Error al procesar el pago.');
+        }
+
+        // Handle 3D Secure
+        if (data.requiresAction && data.clientSecret) {
+          const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret);
+          if (confirmError) {
+            throw new Error(confirmError.message);
+          }
+        }
+
+        // Show success
+        document.getElementById('ch-success').classList.add('ch-visible');
+
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.classList.add('ch-visible');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('ch-loading');
+        document.getElementById('ch-submit-text').textContent = 'Activar mi pagina web';
+      }
+    }
+
+    function showPageError(msg) {
+      document.getElementById('ch-loading').style.display = 'none';
+      document.getElementById('ch-page-error').style.display = '';
+      document.getElementById('ch-page-error-msg').textContent = msg;
+    }
+
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+  })();
+  </script>
+</body>
+</html>
