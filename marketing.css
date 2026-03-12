@@ -146,7 +146,7 @@ ul, ol { list-style: none; }
   border-color: var(--m-text-muted);
 }
 .m-lang-toggle--mobile {
-  align-self: flex-start;
+  align-self: flex-end;
   margin-bottom: 4px;
 }
 
