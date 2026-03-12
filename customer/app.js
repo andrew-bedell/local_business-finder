@@ -592,15 +592,45 @@
 
   // ── Rendering ──
   function renderDashboard(business, website, subscription) {
-    // Website URL
+    // Website URL — show actual published_url or custom domain
     var websiteUrlEl = $('#website-url');
+    var websiteSubEl = $('#website-sub');
+    var visitBtn = $('#website-visit-btn');
+    var displayUrl = null;
+
+    if (website && website.custom_domain && website.domain_status === 'verified') {
+      displayUrl = 'https://' + website.custom_domain;
+    } else if (website && website.published_url) {
+      displayUrl = website.published_url;
+    }
+
     if (websiteUrlEl) {
-      if (website && website.published_url) {
-        websiteUrlEl.innerHTML = '<a href="' + escapeHtml(website.published_url) + '" target="_blank" rel="noopener">' + escapeHtml(website.published_url) + '</a>';
+      if (displayUrl) {
+        websiteUrlEl.innerHTML = '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escapeHtml(displayUrl) + '</a>';
       } else {
-        websiteUrlEl.textContent = 'Tu sitio web está en construcción';
+        websiteUrlEl.textContent = 'Tu sitio web esta en construccion';
       }
     }
+
+    if (websiteSubEl) {
+      if (displayUrl) {
+        websiteSubEl.textContent = 'Tu pagina web esta activa y lista para recibir clientes.';
+      } else {
+        websiteSubEl.textContent = 'Estamos construyendo tu presencia en linea. Pronto tus clientes podran encontrarte.';
+      }
+    }
+
+    if (visitBtn) {
+      if (displayUrl) {
+        visitBtn.href = displayUrl;
+        visitBtn.style.display = '';
+      } else {
+        visitBtn.style.display = 'none';
+      }
+    }
+
+    // Render domain management card
+    renderDomainCard(website);
 
     // Subscription status
     var statusEl = $('#subscription-status');
@@ -1212,6 +1242,188 @@
         }
       }, 300);
     }, 4000);
+  }
+
+  // ── Domain Management ──
+  function renderDomainCard(website) {
+    var card = $('#domain-card');
+    if (!card) return;
+
+    // Only show if website is published
+    if (!website || website.status !== 'published') {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = '';
+
+    var stateNone = $('#domain-state-none');
+    var statePending = $('#domain-state-pending');
+    var stateVerified = $('#domain-state-verified');
+    var stateFailed = $('#domain-state-failed');
+    var badge = $('#domain-badge');
+
+    // Hide all states
+    if (stateNone) stateNone.style.display = 'none';
+    if (statePending) statePending.style.display = 'none';
+    if (stateVerified) stateVerified.style.display = 'none';
+    if (stateFailed) stateFailed.style.display = 'none';
+    if (badge) badge.style.display = 'none';
+
+    if (!website.custom_domain) {
+      // No domain
+      if (stateNone) stateNone.style.display = '';
+    } else if (website.domain_status === 'verified') {
+      // Verified
+      if (stateVerified) stateVerified.style.display = '';
+      var verifiedName = $('#domain-verified-name');
+      if (verifiedName) verifiedName.textContent = website.custom_domain;
+      if (badge) {
+        badge.style.display = '';
+        badge.className = 'c-badge c-badge--active';
+        badge.textContent = 'Verificado';
+      }
+    } else if (website.domain_status === 'failed') {
+      // Failed
+      if (stateFailed) stateFailed.style.display = '';
+      if (badge) {
+        badge.style.display = '';
+        badge.className = 'c-badge c-badge--cancelled';
+        badge.textContent = 'Error';
+      }
+    } else {
+      // Pending
+      if (statePending) statePending.style.display = '';
+      var dnsName = $('#dns-name');
+      if (dnsName) {
+        dnsName.textContent = website.custom_domain.startsWith('www.') ? 'www' : '@';
+      }
+      if (badge) {
+        badge.style.display = '';
+        badge.className = 'c-badge c-badge--past-due';
+        badge.textContent = 'Pendiente';
+      }
+    }
+
+    // Bind domain events (re-bind each render)
+    bindDomainEvents(website);
+  }
+
+  function bindDomainEvents(website) {
+    var btnAdd = $('#btn-add-domain');
+    var btnVerify = $('#btn-verify-domain');
+    var btnRetry = $('#btn-retry-domain');
+    var btnRemovePending = $('#btn-remove-domain-pending');
+    var btnRemoveVerified = $('#btn-remove-domain-verified');
+    var btnRemoveFailed = $('#btn-remove-domain-failed');
+
+    // Clone and replace to remove old listeners
+    function rebind(el, handler) {
+      if (!el) return;
+      var clone = el.cloneNode(true);
+      el.parentNode.replaceChild(clone, el);
+      clone.addEventListener('click', handler);
+    }
+
+    rebind(btnAdd, function () { addDomain(website); });
+    rebind(btnVerify, function () { verifyDomain(website); });
+    rebind(btnRetry, function () { verifyDomain(website); });
+    rebind(btnRemovePending, function () { removeDomain(website); });
+    rebind(btnRemoveVerified, function () { removeDomain(website); });
+    rebind(btnRemoveFailed, function () { removeDomain(website); });
+  }
+
+  async function addDomain(website) {
+    var input = $('#domain-input');
+    var domain = input ? input.value.trim() : '';
+    if (!domain) {
+      showToast('Por favor ingresa un dominio.', 'warning');
+      return;
+    }
+
+    var btn = $('#btn-add-domain');
+    if (btn) { btn.disabled = true; btn.textContent = 'Conectando...'; }
+
+    try {
+      var response = await fetch('/api/domains/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteId: website.id, domain: domain })
+      });
+      var data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Error al conectar dominio');
+      }
+
+      // Update local state
+      website.custom_domain = data.domain;
+      website.domain_status = 'pending_verification';
+      websiteData = website;
+
+      showToast('Dominio agregado. Configura tu DNS para verificarlo.', 'success');
+      renderDomainCard(website);
+    } catch (err) {
+      console.error('Add domain error:', err);
+      showToast(err.message || 'Error al conectar dominio.', 'error');
+    } finally {
+      // Re-query button since renderDomainCard may have replaced it
+      var newBtn = $('#btn-add-domain');
+      if (newBtn) { newBtn.disabled = false; newBtn.textContent = 'Conectar'; }
+    }
+  }
+
+  async function verifyDomain(website) {
+    var btn = $('#btn-verify-domain') || $('#btn-retry-domain');
+    if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
+
+    try {
+      var response = await fetch('/api/domains/verify?websiteId=' + encodeURIComponent(website.id));
+      var data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al verificar');
+      }
+
+      website.domain_status = data.status;
+      websiteData = website;
+
+      if (data.verified) {
+        showToast('Dominio verificado correctamente.', 'success');
+        // Update hero URL
+        renderDashboard(businessData, website, subscriptionData);
+      } else {
+        showToast('El dominio aun no esta verificado. Revisa tu configuracion DNS.', 'warning');
+      }
+      renderDomainCard(website);
+    } catch (err) {
+      console.error('Verify domain error:', err);
+      showToast('Error al verificar el dominio.', 'error');
+    }
+  }
+
+  async function removeDomain(website) {
+    if (!window.confirm('¿Desconectar el dominio ' + (website.custom_domain || '') + '?')) return;
+
+    try {
+      var response = await fetch('/api/domains/remove?websiteId=' + encodeURIComponent(website.id), {
+        method: 'DELETE'
+      });
+      var data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Error al desconectar');
+      }
+
+      website.custom_domain = null;
+      website.domain_status = null;
+      website.domain_verified_at = null;
+      websiteData = website;
+
+      showToast('Dominio desconectado.', 'success');
+      renderDomainCard(website);
+      // Update hero URL back to default
+      renderDashboard(businessData, website, subscriptionData);
+    } catch (err) {
+      console.error('Remove domain error:', err);
+      showToast('Error al desconectar el dominio.', 'error');
+    }
   }
 
   // ── Start ──

@@ -90,6 +90,7 @@ export default async function handler(req, res) {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription;
         if (subscriptionId) {
+          // Update subscription status
           await fetch(
             `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${encodeURIComponent(subscriptionId)}`,
             {
@@ -98,6 +99,19 @@ export default async function handler(req, res) {
               body: JSON.stringify({ status: 'active' }),
             }
           );
+
+          // Reactivate website if it was suspended (e.g. after past_due recovery)
+          const businessId = await getBusinessIdFromSubscription(subscriptionId, supabaseUrl, supabaseHeaders);
+          if (businessId) {
+            await fetch(
+              `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&status=eq.published&site_status=eq.suspended`,
+              {
+                method: 'PATCH',
+                headers: supabaseHeaders,
+                body: JSON.stringify({ site_status: 'active' }),
+              }
+            );
+          }
         }
         break;
       }
@@ -143,6 +157,7 @@ export default async function handler(req, res) {
 
       case 'customer.subscription.deleted': {
         const sub = event.data.object;
+        // Update subscription status
         await fetch(
           `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${encodeURIComponent(sub.id)}`,
           {
@@ -154,6 +169,19 @@ export default async function handler(req, res) {
             }),
           }
         );
+
+        // Suspend the website
+        const businessId = await getBusinessIdFromSubscription(sub.id, supabaseUrl, supabaseHeaders);
+        if (businessId) {
+          await fetch(
+            `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&status=eq.published`,
+            {
+              method: 'PATCH',
+              headers: supabaseHeaders,
+              body: JSON.stringify({ site_status: 'suspended' }),
+            }
+          );
+        }
         break;
       }
 
@@ -165,5 +193,30 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Webhook error:', err);
     return res.status(400).json({ error: 'Webhook processing failed', detail: err.message });
+  }
+}
+
+// Helper: look up business_id from a Stripe subscription ID
+async function getBusinessIdFromSubscription(stripeSubscriptionId, supabaseUrl, supabaseHeaders) {
+  try {
+    // subscriptions -> customers -> business_id
+    const subRes = await fetch(
+      `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${encodeURIComponent(stripeSubscriptionId)}&select=customer_id`,
+      { headers: supabaseHeaders }
+    );
+    const subs = await subRes.json();
+    if (!subs || subs.length === 0) return null;
+
+    const custRes = await fetch(
+      `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(subs[0].customer_id)}&select=business_id`,
+      { headers: supabaseHeaders }
+    );
+    const custs = await custRes.json();
+    if (!custs || custs.length === 0) return null;
+
+    return custs[0].business_id;
+  } catch (err) {
+    console.error('getBusinessIdFromSubscription error:', err);
+    return null;
   }
 }
