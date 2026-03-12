@@ -704,18 +704,46 @@
   }
 
   function renderBilling(subscription, customer) {
-    // Plan name
-    var planNameEl = $('#plan-name');
-    if (planNameEl) {
-      planNameEl.textContent = 'Plan Mensual — AhoraTengoPagina';
+    var planLabel = 'Plan Mensual — AhoraTengoPagina';
+    var priceLabel = '—';
+    if (customer) {
+      priceLabel = formatCurrency(customer.monthly_price, customer.currency);
     }
 
-    // Plan price
+    // Dashboard stat card
+    var planNameEl = $('#plan-name');
+    if (planNameEl) planNameEl.textContent = planLabel;
     var planPriceEl = $('#plan-price');
-    if (planPriceEl && customer) {
-      planPriceEl.textContent = formatCurrency(customer.monthly_price, customer.currency);
-    } else if (planPriceEl) {
-      planPriceEl.textContent = '—';
+    if (planPriceEl) planPriceEl.textContent = priceLabel;
+
+    // Billing section
+    var billingPlanNameEl = $('#billing-plan-name');
+    if (billingPlanNameEl) billingPlanNameEl.textContent = planLabel;
+    var billingPlanPriceEl = $('#billing-plan-price');
+    if (billingPlanPriceEl) billingPlanPriceEl.textContent = priceLabel;
+
+    // Billing status badge
+    var billingBadge = $('#billing-status-badge');
+    if (billingBadge && subscription) {
+      var statusLabels = {
+        active: 'Activa',
+        past_due: 'Pago pendiente',
+        cancelled: 'Cancelada',
+        incomplete: 'Incompleta',
+        trialing: 'Periodo de prueba'
+      };
+      var statusClasses = {
+        active: 'c-badge--active',
+        past_due: 'c-badge--past-due',
+        cancelled: 'c-badge--cancelled',
+        incomplete: 'c-badge--incomplete',
+        trialing: 'c-badge--trialing'
+      };
+      billingBadge.textContent = statusLabels[subscription.status] || subscription.status;
+      billingBadge.className = 'c-badge ' + (statusClasses[subscription.status] || '');
+    } else if (billingBadge) {
+      billingBadge.textContent = 'Sin suscripción';
+      billingBadge.className = 'c-badge c-badge--incomplete';
     }
 
     // Billing date
