@@ -1180,7 +1180,7 @@
       return new Intl.NumberFormat('es-MX', {
         style: 'currency',
         currency: currency
-      }).format(amount);
+      }).format(amount) + ' ' + currency;
     } catch (e) {
       return '$' + Number(amount).toFixed(2) + ' ' + currency;
     }
