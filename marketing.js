@@ -461,7 +461,8 @@
 
   if (waFloatBtn) {
     waFloatBtn.addEventListener('click', function() {
-      window.open('https://wa.me/' + WHATSAPP_WIDGET_NUMBER, '_blank');
+      var defaultMsg = encodeURIComponent('Hola! Quiero mas informacion sobre sus servicios de paginas web');
+      window.open('https://wa.me/' + WHATSAPP_WIDGET_NUMBER + '?text=' + defaultMsg, '_blank');
     });
 
     // Hide float button near footer
