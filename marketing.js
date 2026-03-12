@@ -440,7 +440,7 @@
     if (videoId) {
       videoContainer.addEventListener('click', function() {
         var iframe = document.createElement('iframe');
-        iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&rel=0');
+        iframe.setAttribute('src', 'https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&rel=0');
         iframe.setAttribute('frameborder', '0');
         iframe.setAttribute('allow', 'autoplay; encrypted-media');
         iframe.setAttribute('allowfullscreen', '');
