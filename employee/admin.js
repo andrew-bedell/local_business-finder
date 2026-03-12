@@ -268,6 +268,22 @@
       websiteCopyLink: 'Copy Preview Link',
       websiteSendWhatsApp: 'Send via WhatsApp',
       websiteLinkCopied: 'Preview link copied to clipboard',
+      // Website lifecycle
+      websitePublish: 'Publish',
+      websiteUnpublish: 'Unpublish',
+      websiteSuspend: 'Suspend',
+      websiteReactivate: 'Reactivate',
+      websiteCopyLiveUrl: 'Copy Live URL',
+      websitePublished: 'Website published',
+      websiteUnpublished: 'Website unpublished',
+      websiteSuspended: 'Website suspended',
+      websiteReactivated: 'Website reactivated',
+      websiteLiveUrlCopied: 'Live URL copied to clipboard',
+      websitePublishError: 'Failed to update website status',
+      websiteStatusDraft: 'Draft',
+      websiteStatusPublished: 'Published',
+      websiteStatusSuspended: 'Suspended',
+      websiteStatusActive: 'Active',
       // Customers
       navCustomers: 'Customers',
       customersTitle: 'Customers',
@@ -564,6 +580,22 @@
       websiteCopyLink: 'Copiar Enlace',
       websiteSendWhatsApp: 'Enviar por WhatsApp',
       websiteLinkCopied: 'Enlace de vista previa copiado',
+      // Website lifecycle
+      websitePublish: 'Publicar',
+      websiteUnpublish: 'Despublicar',
+      websiteSuspend: 'Suspender',
+      websiteReactivate: 'Reactivar',
+      websiteCopyLiveUrl: 'Copiar URL',
+      websitePublished: 'Sitio web publicado',
+      websiteUnpublished: 'Sitio web despublicado',
+      websiteSuspended: 'Sitio web suspendido',
+      websiteReactivated: 'Sitio web reactivado',
+      websiteLiveUrlCopied: 'URL del sitio copiado',
+      websitePublishError: 'Error al actualizar el sitio web',
+      websiteStatusDraft: 'Borrador',
+      websiteStatusPublished: 'Publicado',
+      websiteStatusSuspended: 'Suspendido',
+      websiteStatusActive: 'Activo',
       // Customers
       navCustomers: 'Clientes',
       customersTitle: 'Clientes',
@@ -1895,17 +1927,53 @@
     const container = modal.querySelector('#website-generation-container');
     if (!container) return;
 
-    // Find the website UUID for this business
+    // Find the website record for this business
     const websiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
     const websiteUuid = websiteRecord ? websiteRecord.id : null;
+    const websiteStatus = websiteRecord ? websiteRecord.status : 'draft';
+    const siteStatus = websiteRecord ? websiteRecord.site_status : null;
+    const publishedUrl = websiteRecord ? websiteRecord.published_url : null;
+    const isPublished = websiteStatus === 'published';
+    const isSuspended = siteStatus === 'suspended';
+
+    // Status badge
+    let statusBadge = '';
+    if (isPublished && isSuspended) {
+      statusBadge = `<span class="badge" style="background:var(--warning-bg);color:var(--warning)">${t('websiteStatusSuspended')}</span>`;
+    } else if (isPublished) {
+      statusBadge = `<span class="badge badge-has-site">${t('websiteStatusPublished')}</span>`;
+    } else {
+      statusBadge = `<span class="badge badge-no-site">${t('websiteStatusDraft')}</span>`;
+    }
+
+    // Lifecycle buttons
+    let lifecycleButtons = '';
+    if (websiteUuid) {
+      if (!isPublished) {
+        lifecycleButtons += `<button class="btn btn-secondary" id="website-publish-btn" style="background:var(--success);color:#fff;border-color:var(--success)">${t('websitePublish')}</button>`;
+      } else {
+        if (isSuspended) {
+          lifecycleButtons += `<button class="btn btn-secondary" id="website-reactivate-btn" style="background:var(--success);color:#fff;border-color:var(--success)">${t('websiteReactivate')}</button>`;
+        } else {
+          lifecycleButtons += `<button class="btn btn-secondary" id="website-suspend-btn" style="background:var(--warning-bg);color:var(--warning);border-color:var(--warning)">${t('websiteSuspend')}</button>`;
+        }
+        lifecycleButtons += `<button class="btn btn-secondary" id="website-unpublish-btn">${t('websiteUnpublish')}</button>`;
+        if (publishedUrl) {
+          lifecycleButtons += `<button class="btn btn-secondary" id="website-copy-live-url-btn">${t('websiteCopyLiveUrl')}</button>`;
+        }
+      }
+    }
 
     container.innerHTML = `
       <div class="website-preview-wrapper">
         <div class="website-preview-toolbar">
+          ${statusBadge}
+          ${publishedUrl ? `<a href="${publishedUrl}" target="_blank" rel="noopener" style="font-size:12px;color:var(--primary);text-decoration:underline;margin-right:auto">${publishedUrl}</a>` : ''}
           <button class="btn btn-secondary" id="website-download-btn">${t('websiteDownload')}</button>
           <button class="btn btn-secondary" id="website-new-tab-btn">${t('websiteOpenNewTab')}</button>
           ${websiteUuid ? `<button class="btn btn-secondary" id="website-copy-link-btn">${t('websiteCopyLink')}</button>` : ''}
           ${websiteUuid && business.phone ? `<button class="btn btn-secondary" id="website-whatsapp-btn" style="background:var(--success);color:#fff;border-color:var(--success)">${t('websiteSendWhatsApp')}</button>` : ''}
+          ${lifecycleButtons}
         </div>
         <iframe id="website-preview-iframe" class="website-preview-iframe" sandbox="allow-same-origin"></iframe>
       </div>
@@ -1938,20 +2006,23 @@
     if (copyLinkBtn && websiteUuid) {
       copyLinkBtn.addEventListener('click', () => {
         const previewUrl = `${window.location.origin}/ver/${websiteUuid}`;
-        navigator.clipboard.writeText(previewUrl).then(() => {
-          showToast(t('websiteLinkCopied'), 'success');
-        }).catch(() => {
-          // Fallback
-          const ta = document.createElement('textarea');
-          ta.value = previewUrl;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
-          showToast(t('websiteLinkCopied'), 'success');
-        });
+        copyToClipboard(previewUrl, t('websiteLinkCopied'));
       });
     }
+
+    // Copy live URL
+    const copyLiveUrlBtn = container.querySelector('#website-copy-live-url-btn');
+    if (copyLiveUrlBtn && publishedUrl) {
+      copyLiveUrlBtn.addEventListener('click', () => {
+        copyToClipboard(publishedUrl, t('websiteLiveUrlCopied'));
+      });
+    }
+
+    // Lifecycle actions
+    bindLifecycleBtn(container, '#website-publish-btn', 'publish', websiteUuid, business, modal, html);
+    bindLifecycleBtn(container, '#website-unpublish-btn', 'unpublish', websiteUuid, business, modal, html);
+    bindLifecycleBtn(container, '#website-suspend-btn', 'suspend', websiteUuid, business, modal, html);
+    bindLifecycleBtn(container, '#website-reactivate-btn', 'reactivate', websiteUuid, business, modal, html);
 
     // Send via WhatsApp
     const whatsappBtn = container.querySelector('#website-whatsapp-btn');
@@ -1976,6 +2047,68 @@
         }
       });
     }
+  }
+
+  function copyToClipboard(text, successMsg) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(successMsg, 'success');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(successMsg, 'success');
+    });
+  }
+
+  function bindLifecycleBtn(container, selector, action, websiteId, business, modal, html) {
+    const btn = container.querySelector(selector);
+    if (!btn || !websiteId) return;
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        const res = await fetch('/api/websites/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ websiteId, action }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Unknown error');
+        }
+
+        // Update the in-memory website record
+        const record = (business.generated_websites || []).find(w => w.id === websiteId);
+        if (record) {
+          record.status = data.website.status;
+          record.site_status = data.website.site_status;
+          record.published_url = data.website.published_url;
+          record.version = data.website.version;
+        }
+        if (data.slug) {
+          business.slug = data.slug;
+        }
+
+        const toastMap = {
+          publish: 'websitePublished',
+          unpublish: 'websiteUnpublished',
+          suspend: 'websiteSuspended',
+          reactivate: 'websiteReactivated',
+        };
+        showToast(t(toastMap[action]), 'success');
+
+        // Re-render the preview toolbar with updated state
+        renderWebsitePreview(modal, html, business);
+      } catch (err) {
+        console.error('Lifecycle action error:', err);
+        showToast(t('websitePublishError'), 'error');
+        btn.disabled = false;
+        btn.textContent = t('websitePublish');
+      }
+    });
   }
 
   // ── Save Generated Website ──

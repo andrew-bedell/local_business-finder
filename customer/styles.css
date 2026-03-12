@@ -616,6 +616,46 @@ body.c-body a { text-decoration: none; color: inherit; }
 
 
 /* ============================================================================
+   7b. DOMAIN CARD
+   ============================================================================ */
+.c-domain-card {
+  animation: c-fadeUp 0.5s ease 0.05s both;
+  margin-bottom: 28px;
+}
+
+.c-dns-record {
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  padding: 16px 20px;
+  font-family: 'DM Sans', monospace;
+  font-size: 13px;
+}
+
+.c-dns-row {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.c-dns-label {
+  color: var(--c-text-muted);
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.c-dns-value {
+  color: var(--c-text);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.c-domain-pending-info p {
+  margin: 0;
+}
+
+
+/* ============================================================================
    8. STAT CARDS
    ============================================================================ */
 .c-stats-grid {

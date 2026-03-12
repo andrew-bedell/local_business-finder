@@ -9,7 +9,13 @@
     { "source": "/mipagina/:nombre", "destination": "/customer/index.html" },
     { "source": "/ver/:id", "destination": "/preview/index.html" },
     { "source": "/checkout/:id", "destination": "/checkout/index.html" },
-    { "source": "/privacy-policy", "destination": "/privacy-policy.html" }
+    { "source": "/sitio/:slug", "destination": "/api/sitio/serve?slug=:slug" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
+    {
+      "source": "/:path*",
+      "destination": "/api/sitio/serve",
+      "has": [{ "type": "host", "value": "(?!.*ahoratengopagina\\.com)(?!.*vercel\\.app)(?!localhost).*" }]
+    }
   ],
   "headers": [
     {

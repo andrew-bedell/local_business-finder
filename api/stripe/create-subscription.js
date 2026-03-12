@@ -162,13 +162,63 @@ export default async function handler(req, res) {
       }
     );
 
-    // 8. Update generated_websites status to 'published'
+    // 8. Generate slug for the business if it doesn't have one
+    const bizLookupRes = await fetch(
+      `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=id,name,slug`,
+      { headers: supabaseHeaders }
+    );
+    const bizRecords = await bizLookupRes.json();
+    let slug = bizRecords && bizRecords[0] ? bizRecords[0].slug : null;
+
+    if (!slug && bizRecords && bizRecords[0]) {
+      slug = bizRecords[0].name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '') || 'negocio';
+
+      // Check uniqueness
+      let candidate = slug;
+      let suffix = 1;
+      while (true) {
+        const checkRes = await fetch(
+          `${supabaseUrl}/rest/v1/businesses?slug=eq.${encodeURIComponent(candidate)}&id=neq.${businessId}&select=id`,
+          { headers: supabaseHeaders }
+        );
+        const existing = await checkRes.json();
+        if (!existing || existing.length === 0) break;
+        suffix++;
+        candidate = `${slug}-${suffix}`;
+      }
+      slug = candidate;
+
+      // Save slug to business
+      await fetch(
+        `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`,
+        {
+          method: 'PATCH',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ slug }),
+        }
+      );
+    }
+
+    // 9. Update generated_websites status to 'published' with real URL
+    const publishedUrl = slug ? `https://ahoratengopagina.com/sitio/${slug}` : null;
     await fetch(
       `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}`,
       {
         method: 'PATCH',
         headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ status: 'published', published_at: new Date().toISOString() }),
+        body: JSON.stringify({
+          status: 'published',
+          site_status: 'active',
+          published_url: publishedUrl,
+          published_at: new Date().toISOString(),
+          version: 1,
+        }),
       }
     );
 
