@@ -284,41 +284,33 @@
       websiteStatusPublished: 'Published',
       websiteStatusSuspended: 'Suspended',
       websiteStatusActive: 'Active',
-      // Clients (businesses with websites)
-      navClients: 'Clients',
-      clientsTitle: 'Clients',
-      clientsSearchPh: 'Search clients...',
-      clientsEmpty: 'No clients with generated websites yet.',
-      clientsPublished: 'Published',
-      clientsDraft: 'Draft',
-      clientsSuspended: 'Suspended',
-      clientsBack: 'Back to Clients',
-      clientColWebStatus: 'Site Status',
-      clientColUrl: 'Published URL',
-      clientColDomain: 'Custom Domain',
-      clientsTotalSites: '{0} websites',
-      clientsLiveSites: '{0} live',
-      clientView: 'View',
-      clientDetailBusiness: 'Business Information',
-      clientDetailWebsite: 'Website',
-      clientDetailDomain: 'Custom Domain',
-      clientDomainNone: 'No custom domain',
-      clientDomainAdd: 'Add Domain',
-      clientDomainAdding: 'Adding...',
-      clientDomainPlaceholder: 'www.theirbusiness.com',
-      clientDomainVerify: 'Verify',
-      clientDomainVerifying: 'Verifying...',
-      clientDomainRemove: 'Remove',
-      clientDomainRemoving: 'Removing...',
-      clientDomainAdded: 'Domain added — awaiting DNS verification',
-      clientDomainVerified: 'Domain verified',
-      clientDomainPending: 'Pending verification',
-      clientDomainFailed: 'Verification failed — check DNS',
-      clientDomainRemoved: 'Domain removed',
-      clientDomainError: 'Domain operation failed',
-      clientDnsCname: 'CNAME',
-      clientDnsValue: 'cname.vercel-dns.com',
-      clientDnsInstructions: 'Add this DNS record at the domain registrar:',
+      // Website & Domain (in customer detail)
+      custWebsiteSection: 'Website',
+      custWebsiteStatus: 'Site Status',
+      custPublishedUrl: 'Published URL',
+      custWebsiteVersion: 'Version',
+      custDomainSection: 'Custom Domain',
+      custDomainNone: 'No custom domain',
+      custDomainAdd: 'Add Domain',
+      custDomainAdding: 'Adding...',
+      custDomainPlaceholder: 'www.theirbusiness.com',
+      custDomainVerify: 'Verify',
+      custDomainVerifying: 'Verifying...',
+      custDomainRemove: 'Remove',
+      custDomainRemoving: 'Removing...',
+      custDomainAdded: 'Domain added — awaiting DNS verification',
+      custDomainVerified: 'Domain verified',
+      custDomainPending: 'Pending verification',
+      custDomainFailed: 'Verification failed — check DNS',
+      custDomainRemoved: 'Domain removed',
+      custDomainError: 'Domain operation failed',
+      custDnsCname: 'CNAME',
+      custDnsValue: 'cname.vercel-dns.com',
+      custDnsInstructions: 'Add this DNS record at the domain registrar:',
+      custStatusPublished: 'Published',
+      custStatusDraft: 'Draft',
+      custStatusSuspended: 'Suspended',
+      custNoWebsite: 'No website generated yet',
       // Customers
       navCustomers: 'Customers',
       customersTitle: 'Customers',
@@ -631,41 +623,33 @@
       websiteStatusPublished: 'Publicado',
       websiteStatusSuspended: 'Suspendido',
       websiteStatusActive: 'Activo',
-      // Clients (businesses with websites)
-      navClients: 'Clientes',
-      clientsTitle: 'Clientes',
-      clientsSearchPh: 'Buscar clientes...',
-      clientsEmpty: 'Aún no hay clientes con sitios web generados.',
-      clientsPublished: 'Publicado',
-      clientsDraft: 'Borrador',
-      clientsSuspended: 'Suspendido',
-      clientsBack: 'Volver a Clientes',
-      clientColWebStatus: 'Estado del Sitio',
-      clientColUrl: 'URL Publicada',
-      clientColDomain: 'Dominio Propio',
-      clientsTotalSites: '{0} sitios web',
-      clientsLiveSites: '{0} activos',
-      clientView: 'Ver',
-      clientDetailBusiness: 'Información del Negocio',
-      clientDetailWebsite: 'Sitio Web',
-      clientDetailDomain: 'Dominio Personalizado',
-      clientDomainNone: 'Sin dominio propio',
-      clientDomainAdd: 'Agregar Dominio',
-      clientDomainAdding: 'Agregando...',
-      clientDomainPlaceholder: 'www.sunegocio.com',
-      clientDomainVerify: 'Verificar',
-      clientDomainVerifying: 'Verificando...',
-      clientDomainRemove: 'Quitar',
-      clientDomainRemoving: 'Quitando...',
-      clientDomainAdded: 'Dominio agregado — esperando verificación DNS',
-      clientDomainVerified: 'Dominio verificado',
-      clientDomainPending: 'Pendiente de verificación',
-      clientDomainFailed: 'Verificación fallida — revisar DNS',
-      clientDomainRemoved: 'Dominio eliminado',
-      clientDomainError: 'Error en operación de dominio',
-      clientDnsCname: 'CNAME',
-      clientDnsValue: 'cname.vercel-dns.com',
-      clientDnsInstructions: 'Agrega este registro DNS en el registrador de dominio:',
+      // Website & Domain (in customer detail)
+      custWebsiteSection: 'Sitio Web',
+      custWebsiteStatus: 'Estado del Sitio',
+      custPublishedUrl: 'URL Publicada',
+      custWebsiteVersion: 'Versión',
+      custDomainSection: 'Dominio Personalizado',
+      custDomainNone: 'Sin dominio propio',
+      custDomainAdd: 'Agregar Dominio',
+      custDomainAdding: 'Agregando...',
+      custDomainPlaceholder: 'www.sunegocio.com',
+      custDomainVerify: 'Verificar',
+      custDomainVerifying: 'Verificando...',
+      custDomainRemove: 'Quitar',
+      custDomainRemoving: 'Quitando...',
+      custDomainAdded: 'Dominio agregado — esperando verificación DNS',
+      custDomainVerified: 'Dominio verificado',
+      custDomainPending: 'Pendiente de verificación',
+      custDomainFailed: 'Verificación fallida — revisar DNS',
+      custDomainRemoved: 'Dominio eliminado',
+      custDomainError: 'Error en operación de dominio',
+      custDnsCname: 'CNAME',
+      custDnsValue: 'cname.vercel-dns.com',
+      custDnsInstructions: 'Agrega este registro DNS en el registrador de dominio:',
+      custStatusPublished: 'Publicado',
+      custStatusDraft: 'Borrador',
+      custStatusSuspended: 'Suspendido',
+      custNoWebsite: 'Aún no se ha generado un sitio web',
       // Customers
       navCustomers: 'Clientes',
       customersTitle: 'Clientes',
@@ -882,7 +866,7 @@
     });
 
     // Tab navigation
-    ['saved', 'audiences', 'campaigns', 'messages', 'products', 'customers', 'clients'].forEach(tab => {
+    ['saved', 'audiences', 'campaigns', 'messages', 'products', 'customers'].forEach(tab => {
       const navEl = document.getElementById('nav-' + tab);
       if (navEl) {
         navEl.addEventListener('click', (e) => {
@@ -2236,11 +2220,10 @@
       messages: ['messaging-section'],
       products: ['products-section'],
       customers: ['customers-section'],
-      clients: ['clients-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section', 'customers-section', 'clients-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section', 'customers-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2252,11 +2235,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products', 'nav-customers', 'nav-clients'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products', 'nav-customers'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products', customers: 'nav-customers', clients: 'nav-clients' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products', customers: 'nav-customers' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -2266,7 +2249,6 @@
     if (tab === 'messages') loadConversations();
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
-    if (tab === 'clients') loadClients();
   }
 
   async function loadConversations() {
@@ -3744,7 +3726,7 @@
     }).join('');
   }
 
-  function openCustomerDetail(customerId) {
+  async function openCustomerDetail(customerId) {
     const customer = customersData.find(c => c.id === customerId);
     if (!customer) return;
 
@@ -3767,6 +3749,86 @@
     const whatsappNum = biz.whatsapp || biz.phone || '';
     const whatsappLink = whatsappNum ? `https://wa.me/${whatsappNum.replace(/[^0-9]/g, '')}` : '';
     const portalLink = biz.name ? `/mipagina/${encodeURIComponent(biz.name.toLowerCase().replace(/\s+/g, '-'))}` : '';
+
+    // Fetch website data for this customer's business
+    let website = null;
+    if (supabaseClient && customer.business_id) {
+      try {
+        const { data: websites } = await supabaseClient
+          .from('generated_websites')
+          .select('id, status, site_status, published_url, custom_domain, domain_status, domain_verified_at, version')
+          .eq('business_id', customer.business_id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        website = (websites || [])[0] || null;
+      } catch (err) {
+        console.error('Fetch website error:', err);
+      }
+    }
+
+    // Website status
+    let siteStatusLabel = '', siteStatusBadge = '';
+    if (website) {
+      if (website.site_status === 'suspended') {
+        siteStatusLabel = t('custStatusSuspended');
+        siteStatusBadge = 'badge-no-site';
+      } else if (website.status === 'published') {
+        siteStatusLabel = t('custStatusPublished');
+        siteStatusBadge = 'badge-has-site';
+      } else {
+        siteStatusLabel = t('custStatusDraft');
+        siteStatusBadge = 'badge-no-site';
+      }
+    }
+
+    // Domain section HTML
+    let domainHtml = '';
+    if (website) {
+      if (!website.custom_domain) {
+        domainHtml = `
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">${t('custDomainNone')}</p>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" class="input" id="cust-domain-input" placeholder="${t('custDomainPlaceholder')}" style="flex:1;max-width:300px">
+            <button class="btn btn-primary" id="btn-cust-add-domain">${t('custDomainAdd')}</button>
+          </div>`;
+      } else if (website.domain_status === 'pending_verification') {
+        domainHtml = `
+          <div style="margin-bottom:10px">
+            <span class="badge badge-no-site" style="background:var(--warning-bg);color:var(--warning)">${t('custDomainPending')}</span>
+            <strong style="margin-left:8px">${escapeHtml(website.custom_domain)}</strong>
+          </div>
+          <div style="background:var(--bg-input);padding:12px;border-radius:var(--radius);margin-bottom:10px">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">${t('custDnsInstructions')}</p>
+            <div style="display:flex;gap:16px;font-size:13px">
+              <div><span style="color:var(--text-dim)">${t('custDnsCname')}</span> <strong>${escapeHtml(website.custom_domain)}</strong></div>
+              <div><span style="color:var(--text-dim)">→</span> <strong>${t('custDnsValue')}</strong></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" id="btn-cust-verify-domain">${t('custDomainVerify')}</button>
+            <button class="btn btn-secondary" id="btn-cust-remove-domain">${t('custDomainRemove')}</button>
+          </div>`;
+      } else if (website.domain_status === 'verified') {
+        domainHtml = `
+          <div style="margin-bottom:10px">
+            <span class="badge badge-has-site">${t('custDomainVerified')}</span>
+            <strong style="margin-left:8px">${escapeHtml(website.custom_domain)}</strong>
+          </div>
+          <button class="btn btn-secondary" id="btn-cust-remove-domain">${t('custDomainRemove')}</button>`;
+      } else if (website.domain_status === 'failed') {
+        domainHtml = `
+          <div style="margin-bottom:10px">
+            <span class="badge badge-no-site">${t('custDomainFailed')}</span>
+            <strong style="margin-left:8px">${escapeHtml(website.custom_domain)}</strong>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" id="btn-cust-verify-domain">${t('custDomainVerify')}</button>
+            <button class="btn btn-secondary" id="btn-cust-remove-domain">${t('custDomainRemove')}</button>
+          </div>`;
+      } else {
+        domainHtml = `<p style="color:var(--text-muted);font-size:13px">${t('custDomainNone')}</p>`;
+      }
+    }
 
     content.innerHTML = `
       <div class="customer-detail-grid">
@@ -3849,6 +3911,29 @@
           <textarea class="input" id="customer-notes" rows="4" style="width:100%;resize:vertical">${escapeHtml(customer.notes || '')}</textarea>
           <button class="btn btn-primary" id="btn-save-customer-notes" style="margin-top:10px" data-customer-id="${customer.id}">${t('custNotesSave')}</button>
         </div>
+
+        <div class="customer-detail-section">
+          <h3>${t('custWebsiteSection')}</h3>
+          ${website ? `<div class="customer-detail-rows">
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custWebsiteStatus')}</span>
+              <span><span class="badge ${siteStatusBadge}">${siteStatusLabel}</span></span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custPublishedUrl')}</span>
+              <span>${website.published_url ? `<a href="${escapeHtml(website.published_url)}" target="_blank" style="color:var(--primary)">${escapeHtml(website.published_url)}</a>` : '—'}</span>
+            </div>
+            <div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custWebsiteVersion')}</span>
+              <span>${website.version || 1}</span>
+            </div>
+          </div>` : `<p style="color:var(--text-muted);font-size:13px">${t('custNoWebsite')}</p>`}
+        </div>
+
+        ${website ? `<div class="customer-detail-section">
+          <h3>${t('custDomainSection')}</h3>
+          ${domainHtml}
+        </div>` : ''}
       </div>
     `;
 
@@ -3865,12 +3950,87 @@
             .eq('id', cid);
           if (error) throw error;
           showToast(t('custNotesSaved'), 'success');
-          // Update local data
           const c = customersData.find(x => x.id === cid);
           if (c) c.notes = notes.trim() || null;
         } catch (err) {
           console.error('Save notes error:', err);
           showToast('Failed to save notes', 'error');
+        }
+      });
+    }
+
+    // Wire up domain action buttons
+    if (website) bindCustomerDomainActions(website.id, customerId);
+  }
+
+  function bindCustomerDomainActions(websiteId, customerId) {
+    const btnAdd = document.getElementById('btn-cust-add-domain');
+    const btnVerify = document.getElementById('btn-cust-verify-domain');
+    const btnRemove = document.getElementById('btn-cust-remove-domain');
+
+    if (btnAdd) {
+      btnAdd.addEventListener('click', async () => {
+        const domain = document.getElementById('cust-domain-input')?.value.trim();
+        if (!domain) return;
+        btnAdd.disabled = true;
+        btnAdd.textContent = t('custDomainAdding');
+        try {
+          const res = await fetch('/api/domains/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ websiteId, domain })
+          });
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error || 'Failed');
+          showToast(t('custDomainAdded'), 'success');
+          openCustomerDetail(customerId);
+        } catch (err) {
+          console.error('Add domain error:', err);
+          showToast(t('custDomainError'), 'error');
+          btnAdd.disabled = false;
+          btnAdd.textContent = t('custDomainAdd');
+        }
+      });
+    }
+
+    if (btnVerify) {
+      btnVerify.addEventListener('click', async () => {
+        btnVerify.disabled = true;
+        btnVerify.textContent = t('custDomainVerifying');
+        try {
+          const res = await fetch(`/api/domains/verify?websiteId=${websiteId}`);
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error || 'Failed');
+          showToast(result.status === 'verified' ? t('custDomainVerified') : t('custDomainPending'), result.status === 'verified' ? 'success' : 'warning');
+          openCustomerDetail(customerId);
+        } catch (err) {
+          console.error('Verify domain error:', err);
+          showToast(t('custDomainError'), 'error');
+          btnVerify.disabled = false;
+          btnVerify.textContent = t('custDomainVerify');
+        }
+      });
+    }
+
+    if (btnRemove) {
+      btnRemove.addEventListener('click', async () => {
+        btnRemove.disabled = true;
+        btnRemove.textContent = t('custDomainRemoving');
+        try {
+          const res = await fetch('/api/domains/remove', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ websiteId })
+          });
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error || 'Failed');
+          showToast(t('custDomainRemoved'), 'success');
+          openCustomerDetail(customerId);
+        } catch (err) {
+          console.error('Remove domain error:', err);
+          showToast(t('custDomainError'), 'error');
+          btnRemove.disabled = false;
+          btnRemove.textContent = t('custDomainRemove');
         }
       });
     }
@@ -3893,355 +4053,6 @@
   const custStatusFilter = document.getElementById('customers-status-filter');
   if (custStatusFilter) custStatusFilter.addEventListener('change', applyCustomerFilters);
 
-
-  // ── Clients (businesses with websites) ──
-
-  let clientsData = [];
-  let clientsFiltered = [];
-
-  async function loadClients() {
-    if (!supabaseClient) return;
-    try {
-      const { data, error } = await supabaseClient
-        .from('generated_websites')
-        .select('*, businesses(id, name, phone, whatsapp, email, address_full, category, subcategory, slug, rating, review_count)')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      clientsData = data || [];
-      applyClientFilters();
-    } catch (err) {
-      console.error('Load clients error:', err);
-    }
-  }
-
-  function applyClientFilters() {
-    const search = (document.getElementById('clients-search')?.value || '').toLowerCase().trim();
-    const statusFilter = document.getElementById('clients-status-filter')?.value || '';
-
-    clientsFiltered = clientsData.filter(w => {
-      if (statusFilter) {
-        if (statusFilter === 'published' && w.status !== 'published') return false;
-        if (statusFilter === 'draft' && w.status !== 'draft') return false;
-        if (statusFilter === 'suspended' && w.site_status !== 'suspended') return false;
-      }
-      if (search) {
-        const biz = w.businesses || {};
-        const haystack = [
-          biz.name, biz.phone, biz.email, biz.address_full, w.published_url, w.custom_domain
-        ].filter(Boolean).join(' ').toLowerCase();
-        if (!haystack.includes(search)) return false;
-      }
-      return true;
-    });
-
-    renderClientsStats();
-    renderClientsList();
-  }
-
-  function renderClientsStats() {
-    const container = document.getElementById('clients-stats');
-    if (!container) return;
-
-    const total = clientsFiltered.length;
-    const live = clientsFiltered.filter(w => w.status === 'published' && w.site_status === 'active').length;
-
-    container.innerHTML = `
-      <div class="customers-stat">${t('clientsTotalSites', total)}</div>
-      <div class="customers-stat customers-stat-active">${t('clientsLiveSites', live)}</div>
-    `;
-  }
-
-  function renderClientsList() {
-    const tbody = document.getElementById('clients-table-body');
-    const noClients = document.getElementById('no-clients');
-    if (!tbody) return;
-
-    if (!clientsFiltered.length) {
-      tbody.innerHTML = '';
-      if (noClients) noClients.style.display = '';
-      return;
-    }
-
-    if (noClients) noClients.style.display = 'none';
-
-    tbody.innerHTML = clientsFiltered.map((w, idx) => {
-      const biz = w.businesses || {};
-
-      let statusLabel, statusBadge;
-      if (w.site_status === 'suspended') {
-        statusLabel = t('clientsSuspended');
-        statusBadge = 'badge-no-site';
-      } else if (w.status === 'published') {
-        statusLabel = t('clientsPublished');
-        statusBadge = 'badge-has-site';
-      } else {
-        statusLabel = t('clientsDraft');
-        statusBadge = 'badge-no-site';
-      }
-
-      const urlHtml = w.published_url
-        ? `<a href="${escapeHtml(w.published_url)}" target="_blank" style="color:var(--primary);font-size:12px">${escapeHtml(w.published_url.replace('https://', ''))}</a>`
-        : '<span style="color:var(--text-dim)">—</span>';
-
-      let domainHtml;
-      if (w.custom_domain && w.domain_status === 'verified') {
-        domainHtml = `<span class="badge badge-has-site">${escapeHtml(w.custom_domain)}</span>`;
-      } else if (w.custom_domain && w.domain_status === 'pending_verification') {
-        domainHtml = `<span class="badge badge-no-site" style="background:var(--warning-bg);color:var(--warning)">${escapeHtml(w.custom_domain)}</span>`;
-      } else if (w.custom_domain && w.domain_status === 'failed') {
-        domainHtml = `<span class="badge badge-no-site">${escapeHtml(w.custom_domain)}</span>`;
-      } else {
-        domainHtml = '<span style="color:var(--text-dim)">—</span>';
-      }
-
-      return `<tr>
-        <td>${idx + 1}</td>
-        <td><strong>${escapeHtml(biz.name || '—')}</strong></td>
-        <td>${escapeHtml(biz.address_full || '—')}</td>
-        <td>${escapeHtml(biz.phone || '—')}</td>
-        <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
-        <td>${urlHtml}</td>
-        <td>${domainHtml}</td>
-        <td><button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('view-client',{detail:'${w.id}'}))">${t('clientView')}</button></td>
-      </tr>`;
-    }).join('');
-  }
-
-  function openClientDetail(websiteId) {
-    const website = clientsData.find(w => w.id === websiteId);
-    if (!website) return;
-
-    const listCard = document.getElementById('clients-list-card');
-    const detail = document.getElementById('client-detail');
-    const title = document.getElementById('client-detail-title');
-    const content = document.getElementById('client-detail-content');
-
-    listCard.style.display = 'none';
-    detail.style.display = '';
-
-    const biz = website.businesses || {};
-    title.textContent = biz.name || 'Client';
-
-    let statusLabel, statusBadge;
-    if (website.site_status === 'suspended') {
-      statusLabel = t('clientsSuspended');
-      statusBadge = 'badge-no-site';
-    } else if (website.status === 'published') {
-      statusLabel = t('clientsPublished');
-      statusBadge = 'badge-has-site';
-    } else {
-      statusLabel = t('clientsDraft');
-      statusBadge = 'badge-no-site';
-    }
-
-    let domainHtml;
-    if (!website.custom_domain) {
-      domainHtml = `
-        <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">${t('clientDomainNone')}</p>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" class="input" id="client-domain-input" placeholder="${t('clientDomainPlaceholder')}" style="flex:1;max-width:300px">
-          <button class="btn btn-primary" id="btn-client-add-domain">${t('clientDomainAdd')}</button>
-        </div>`;
-    } else if (website.domain_status === 'pending_verification') {
-      domainHtml = `
-        <div style="margin-bottom:10px">
-          <span class="badge badge-no-site" style="background:var(--warning-bg);color:var(--warning)">${t('clientDomainPending')}</span>
-          <strong style="margin-left:8px">${escapeHtml(website.custom_domain)}</strong>
-        </div>
-        <div style="background:var(--bg-input);padding:12px;border-radius:var(--radius);margin-bottom:10px">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">${t('clientDnsInstructions')}</p>
-          <div style="display:flex;gap:16px;font-size:13px">
-            <div><span style="color:var(--text-dim)">${t('clientDnsCname')}</span> <strong>${escapeHtml(website.custom_domain)}</strong></div>
-            <div><span style="color:var(--text-dim)">→</span> <strong>${t('clientDnsValue')}</strong></div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" id="btn-client-verify-domain">${t('clientDomainVerify')}</button>
-          <button class="btn btn-secondary" id="btn-client-remove-domain">${t('clientDomainRemove')}</button>
-        </div>`;
-    } else if (website.domain_status === 'verified') {
-      domainHtml = `
-        <div style="margin-bottom:10px">
-          <span class="badge badge-has-site">${t('clientDomainVerified')}</span>
-          <strong style="margin-left:8px">${escapeHtml(website.custom_domain)}</strong>
-        </div>
-        <button class="btn btn-secondary" id="btn-client-remove-domain">${t('clientDomainRemove')}</button>`;
-    } else if (website.domain_status === 'failed') {
-      domainHtml = `
-        <div style="margin-bottom:10px">
-          <span class="badge badge-no-site">${t('clientDomainFailed')}</span>
-          <strong style="margin-left:8px">${escapeHtml(website.custom_domain)}</strong>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" id="btn-client-verify-domain">${t('clientDomainVerify')}</button>
-          <button class="btn btn-secondary" id="btn-client-remove-domain">${t('clientDomainRemove')}</button>
-        </div>`;
-    } else {
-      domainHtml = `<p style="color:var(--text-muted);font-size:13px">${t('clientDomainNone')}</p>`;
-    }
-
-    content.innerHTML = `
-      <div class="customer-detail-grid">
-        <div class="customer-detail-section">
-          <h3>${t('clientDetailBusiness')}</h3>
-          <div class="customer-detail-rows">
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">${t('thName')}</span>
-              <span>${escapeHtml(biz.name || '—')}</span>
-            </div>
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">${t('thLocation')}</span>
-              <span>${escapeHtml(biz.address_full || '—')}</span>
-            </div>
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">${t('thPhone')}</span>
-              <span>${escapeHtml(biz.phone || '—')}</span>
-            </div>
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">WhatsApp</span>
-              <span>${biz.whatsapp ? `<a href="https://wa.me/${biz.whatsapp.replace(/[^0-9]/g, '')}" target="_blank" style="color:var(--success)">${escapeHtml(biz.whatsapp)}</a>` : '—'}</span>
-            </div>
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">Email</span>
-              <span>${biz.email ? `<a href="mailto:${escapeHtml(biz.email)}" style="color:var(--primary)">${escapeHtml(biz.email)}</a>` : '—'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="customer-detail-section">
-          <h3>${t('clientDetailWebsite')}</h3>
-          <div class="customer-detail-rows">
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">${t('clientColWebStatus')}</span>
-              <span><span class="badge ${statusBadge}">${statusLabel}</span></span>
-            </div>
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">${t('clientColUrl')}</span>
-              <span>${website.published_url ? `<a href="${escapeHtml(website.published_url)}" target="_blank" style="color:var(--primary)">${escapeHtml(website.published_url)}</a>` : '—'}</span>
-            </div>
-            <div class="customer-detail-row">
-              <span class="customer-detail-label">Version</span>
-              <span>${website.version || 1}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="customer-detail-section">
-          <h3>${t('clientDetailDomain')}</h3>
-          ${domainHtml}
-        </div>
-      </div>
-    `;
-
-    bindClientDomainActions(websiteId);
-  }
-
-  function bindClientDomainActions(websiteId) {
-    const btnAdd = document.getElementById('btn-client-add-domain');
-    const btnVerify = document.getElementById('btn-client-verify-domain');
-    const btnRemove = document.getElementById('btn-client-remove-domain');
-
-    if (btnAdd) {
-      btnAdd.addEventListener('click', async () => {
-        const domain = document.getElementById('client-domain-input')?.value.trim();
-        if (!domain) return;
-        btnAdd.disabled = true;
-        btnAdd.textContent = t('clientDomainAdding');
-        try {
-          const res = await fetch('/api/domains/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ websiteId, domain })
-          });
-          const result = await res.json();
-          if (!res.ok) throw new Error(result.error || 'Failed');
-          showToast(t('clientDomainAdded'), 'success');
-          const w = clientsData.find(x => x.id === websiteId);
-          if (w) {
-            w.custom_domain = domain;
-            w.domain_status = 'pending_verification';
-          }
-          openClientDetail(websiteId);
-        } catch (err) {
-          console.error('Add domain error:', err);
-          showToast(t('clientDomainError'), 'error');
-          btnAdd.disabled = false;
-          btnAdd.textContent = t('clientDomainAdd');
-        }
-      });
-    }
-
-    if (btnVerify) {
-      btnVerify.addEventListener('click', async () => {
-        btnVerify.disabled = true;
-        btnVerify.textContent = t('clientDomainVerifying');
-        try {
-          const res = await fetch(`/api/domains/verify?websiteId=${websiteId}`);
-          const result = await res.json();
-          if (!res.ok) throw new Error(result.error || 'Failed');
-          showToast(result.status === 'verified' ? t('clientDomainVerified') : t('clientDomainPending'), result.status === 'verified' ? 'success' : 'warning');
-          const w = clientsData.find(x => x.id === websiteId);
-          if (w) {
-            w.domain_status = result.status;
-            if (result.status === 'verified') w.domain_verified_at = new Date().toISOString();
-          }
-          openClientDetail(websiteId);
-        } catch (err) {
-          console.error('Verify domain error:', err);
-          showToast(t('clientDomainError'), 'error');
-          btnVerify.disabled = false;
-          btnVerify.textContent = t('clientDomainVerify');
-        }
-      });
-    }
-
-    if (btnRemove) {
-      btnRemove.addEventListener('click', async () => {
-        btnRemove.disabled = true;
-        btnRemove.textContent = t('clientDomainRemoving');
-        try {
-          const res = await fetch('/api/domains/remove', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ websiteId })
-          });
-          const result = await res.json();
-          if (!res.ok) throw new Error(result.error || 'Failed');
-          showToast(t('clientDomainRemoved'), 'success');
-          const w = clientsData.find(x => x.id === websiteId);
-          if (w) {
-            w.custom_domain = null;
-            w.domain_status = null;
-            w.domain_verified_at = null;
-          }
-          openClientDetail(websiteId);
-        } catch (err) {
-          console.error('Remove domain error:', err);
-          showToast(t('clientDomainError'), 'error');
-          btnRemove.disabled = false;
-          btnRemove.textContent = t('clientDomainRemove');
-        }
-      });
-    }
-  }
-
-  function closeClientDetail() {
-    document.getElementById('client-detail').style.display = 'none';
-    document.getElementById('clients-list-card').style.display = '';
-  }
-
-  // Client event listeners
-  document.addEventListener('view-client', (e) => openClientDetail(e.detail));
-
-  const btnBackClients = document.getElementById('btn-back-clients');
-  if (btnBackClients) btnBackClients.addEventListener('click', closeClientDetail);
-
-  const clientSearch = document.getElementById('clients-search');
-  if (clientSearch) clientSearch.addEventListener('input', applyClientFilters);
-
-  const clientStatusFilter = document.getElementById('clients-status-filter');
-  if (clientStatusFilter) clientStatusFilter.addEventListener('change', applyClientFilters);
 
 
   // ── Start ──
