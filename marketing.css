@@ -984,6 +984,13 @@ ul, ol { list-style: none; }
   margin-top: 4px;
 }
 
+.m-form-disclaimer {
+  font-size: 14px;
+  color: var(--m-text-muted);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
 .m-form-submit {
   width: 100%;
   padding: 14px;
@@ -1032,11 +1039,49 @@ ul, ol { list-style: none; }
 }
 
 /* ============================================================================
+   STICKY CTA
+   ============================================================================ */
+.m-sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--m-border);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: center;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+.m-sticky-cta.m-visible {
+  transform: translateY(0);
+}
+.m-sticky-cta-btn {
+  width: 100%;
+  max-width: 480px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--m-green);
+  color: var(--m-white);
+  border: none;
+  border-radius: var(--m-radius);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.m-sticky-cta-btn:hover { background: var(--m-green-dark); }
+.m-sticky-cta-btn:active { transform: scale(0.97); }
+
+/* ============================================================================
    WHATSAPP FLOAT
    ============================================================================ */
 .m-whatsapp-float {
   position: fixed;
-  bottom: 24px;
+  bottom: 80px;
   right: 24px;
   width: 56px;
   height: 56px;
