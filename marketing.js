@@ -540,13 +540,17 @@
       return '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + escapeHtml(f) + '</span></div>';
     }).join('');
 
+    var descHtml = product.description ? '<p class="m-pricing-desc">' + escapeHtml(product.description) + '</p>' : '';
+    var ctaText = price === 0 ? (currentLang === 'en' ? 'Free Trial' : 'Prueba Gratis') : t('pricing_cta');
+
     return '<div class="m-pricing-card' + featuredClass + '" data-reveal>' +
       badgeHtml +
       '<div class="m-pricing-price">' + formattedPrice + ' <span>' + intervalText + '</span></div>' +
       '<p class="m-pricing-note">' + noteKey + '</p>' +
       (product.name ? '<p style="font-size:16px;font-weight:700;margin-bottom:16px;color:#0c1b33">' + escapeHtml(product.name) + '</p>' : '') +
+      descHtml +
       '<div class="m-pricing-features">' + featuresHtml + '</div>' +
-      '<button class="m-pricing-cta" data-open-modal>' + t('pricing_cta') + '</button>' +
+      '<button class="m-pricing-cta" data-open-modal>' + ctaText + '</button>' +
     '</div>';
   }
 
