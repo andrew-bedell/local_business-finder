@@ -119,8 +119,8 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      console.error('Product save error:', err);
-      return res.status(502).json({ error: 'Failed to save product' });
+      console.error('Product save error:', response.status, err);
+      return res.status(502).json({ error: 'Failed to save product', detail: err.message || err.msg || JSON.stringify(err) });
     }
 
     const data = await response.json();

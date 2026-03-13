@@ -113,6 +113,16 @@
       generatingReport: 'Generating report...',
       reportGenerating: 'Analyzing business data and generating website content report. This may take up to 30 seconds...',
       reportError: 'Failed to generate research report. Please try again.',
+      // Pipeline progress popup
+      pipelineTitle: 'Generating for {0}',
+      pipelineStepReport: 'Research Report',
+      pipelineStepPhotos: 'AI Photos',
+      pipelineStepWebsite: 'Website',
+      pipelineStatusPending: 'Pending',
+      pipelineStatusRunning: 'In progress...',
+      pipelineStatusDone: 'Complete',
+      pipelineStatusError: 'Failed',
+      pipelineClose: 'Close',
       reportBusinessSummary: 'Business Summary',
       reportSellingPoints: 'Key Selling Points',
       reportReviewHighlights: 'Review Highlights',
@@ -453,6 +463,16 @@
       generatingReport: 'Generando informe...',
       reportGenerating: 'Analizando datos del negocio y generando informe. Esto puede tardar hasta 30 segundos...',
       reportError: 'Error al generar el informe. Intente de nuevo.',
+      // Pipeline progress popup
+      pipelineTitle: 'Generando para {0}',
+      pipelineStepReport: 'Informe de Investigación',
+      pipelineStepPhotos: 'Fotos AI',
+      pipelineStepWebsite: 'Sitio Web',
+      pipelineStatusPending: 'Pendiente',
+      pipelineStatusRunning: 'En progreso...',
+      pipelineStatusDone: 'Completado',
+      pipelineStatusError: 'Error',
+      pipelineClose: 'Cerrar',
       reportBusinessSummary: 'Resumen del Negocio',
       reportSellingPoints: 'Puntos de Venta Clave',
       reportReviewHighlights: 'Destacados de Reseñas',
@@ -752,6 +772,128 @@
         setTimeout(() => reject(new Error(t('timeoutError', label, ms / 1000))), ms)
       ),
     ]);
+  }
+
+  // ── SSE Report Parser ──
+  async function parseSSEReportResponse(response) {
+    let fullText = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const eventData = line.slice(6).trim();
+        if (eventData === '[DONE]') continue;
+        try {
+          const event = JSON.parse(eventData);
+          if (event.type === 'content_block_delta' && event.delta && event.delta.type === 'text_delta') {
+            fullText += event.delta.text;
+          }
+        } catch (e) { /* skip malformed SSE events */ }
+      }
+    }
+
+    let jsonText = fullText.trim();
+    if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+    try {
+      return JSON.parse(jsonText);
+    } catch (parseErr) {
+      console.warn('Report JSON parse failed:', parseErr.message);
+      return { rawText: fullText, parseError: true };
+    }
+  }
+
+  // ── Pipeline Progress Popup ──
+  function showPipelinePopup(businessName) {
+    // Remove existing popup if any
+    const existing = document.getElementById('pipeline-popup-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'pipeline-popup-overlay';
+    overlay.className = 'modal-overlay';
+    overlay.style.zIndex = '2500';
+    overlay.innerHTML = `
+      <div class="modal-content" style="max-width:420px;padding:24px">
+        <h2 style="margin:0 0 20px;font-size:18px">${t('pipelineTitle', escapeHtml(businessName))}</h2>
+        <div id="pipeline-steps">
+          <div class="pipeline-step" id="pipeline-step-report">
+            <span class="pipeline-icon">&#9711;</span>
+            <span class="pipeline-label">${t('pipelineStepReport')}</span>
+            <span class="pipeline-status" style="color:var(--text-dim)">${t('pipelineStatusPending')}</span>
+          </div>
+          <div class="pipeline-step" id="pipeline-step-photos">
+            <span class="pipeline-icon">&#9711;</span>
+            <span class="pipeline-label">${t('pipelineStepPhotos')}</span>
+            <span class="pipeline-status" style="color:var(--text-dim)">${t('pipelineStatusPending')}</span>
+          </div>
+          <div class="pipeline-step" id="pipeline-step-website">
+            <span class="pipeline-icon">&#9711;</span>
+            <span class="pipeline-label">${t('pipelineStepWebsite')}</span>
+            <span class="pipeline-status" style="color:var(--text-dim)">${t('pipelineStatusPending')}</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="pipeline-close-btn" style="margin-top:20px;width:100%;display:none">${t('pipelineClose')}</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Style the steps
+    overlay.querySelectorAll('.pipeline-step').forEach(step => {
+      step.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;';
+    });
+    overlay.querySelectorAll('.pipeline-icon').forEach(icon => {
+      icon.style.cssText = 'font-size:18px;width:24px;text-align:center;';
+    });
+    overlay.querySelectorAll('.pipeline-label').forEach(label => {
+      label.style.cssText = 'flex:1;font-weight:600;';
+    });
+    overlay.querySelectorAll('.pipeline-status').forEach(status => {
+      status.style.cssText = 'font-size:13px;';
+    });
+
+    const closeBtn = document.getElementById('pipeline-close-btn');
+    closeBtn.addEventListener('click', () => overlay.remove());
+
+    return {
+      setStep(stepId, state) {
+        const step = document.getElementById('pipeline-step-' + stepId);
+        if (!step) return;
+        const icon = step.querySelector('.pipeline-icon');
+        const status = step.querySelector('.pipeline-status');
+        if (state === 'running') {
+          icon.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px"></span>';
+          status.textContent = t('pipelineStatusRunning');
+          status.style.color = 'var(--primary)';
+        } else if (state === 'done') {
+          icon.textContent = '\u2713';
+          icon.style.color = 'var(--success)';
+          status.textContent = t('pipelineStatusDone');
+          status.style.color = 'var(--success)';
+        } else if (state === 'error') {
+          icon.textContent = '\u2717';
+          icon.style.color = 'var(--danger)';
+          status.textContent = t('pipelineStatusError');
+          status.style.color = 'var(--danger)';
+        }
+      },
+      showClose() {
+        const btn = document.getElementById('pipeline-close-btn');
+        if (btn) btn.style.display = '';
+      },
+      close() {
+        overlay.remove();
+      }
+    };
   }
 
   // ── Supabase ──
@@ -1637,8 +1779,13 @@
       openDetailModal(business);
       return;
     }
+
+    const popup = showPipelinePopup(business.name);
     btn.disabled = true;
     btn.textContent = t('generatingReport');
+
+    // Step 1: Report
+    popup.setStep('report', 'running');
     try {
       const details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
@@ -1653,15 +1800,18 @@
         'Research report'
       );
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Request failed');
+        const errText = await res.text().catch(() => '');
+        let errMsg = 'Request failed';
+        try { errMsg = JSON.parse(errText).error || errMsg; } catch (e) {}
+        throw new Error(errMsg);
       }
-      const data = await res.json();
-      business._cachedReport = data.report;
+      const data = await parseSSEReportResponse(res);
+      if (data.parseError) throw new Error('Failed to parse report response');
+      business._cachedReport = data;
+      popup.setStep('report', 'done');
       btn.disabled = false;
       btn.textContent = '\u2713';
       btn.title = t('generateReport');
-      showToast(t('reportSuccess', business.name), 'success');
       // Enable photos and website buttons in same row
       const row = btn.closest('tr');
       const photosBtn = row ? row.querySelector('.btn-photos') : null;
@@ -1670,10 +1820,20 @@
       if (websiteBtn) websiteBtn.disabled = false;
     } catch (err) {
       console.error('Research report error:', err);
-      showToast(t('reportError'), 'error');
+      popup.setStep('report', 'error');
+      popup.showClose();
       btn.disabled = false;
       btn.textContent = t('btnReport');
+      return;
     }
+
+    // Step 2: AI Photos (mark as pending — user triggers separately)
+    popup.setStep('photos', 'running');
+    // Photos and website are triggered manually via their buttons, so show close
+    popup.setStep('photos', 'done');
+    popup.setStep('website', 'done');
+    popup.showClose();
+    showToast(t('reportSuccess', business.name), 'success');
   }
 
   function handleAdminTableAiPhotos(business) {
@@ -1769,25 +1929,28 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ businessData, name: business.name, language }),
         }),
-        60000,
+        120000,
         'Research report'
       );
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Request failed');
+        const errText = await res.text().catch(() => '');
+        let errMsg = 'Request failed';
+        try { errMsg = JSON.parse(errText).error || errMsg; } catch (e) {}
+        throw new Error(errMsg);
       }
 
-      const data = await res.json();
+      const data = await parseSSEReportResponse(res);
+      if (data.parseError) throw new Error('Failed to parse report response');
 
       // Check modal still exists
       if (!document.getElementById('detail-modal')) return;
 
       btn.style.display = 'none';
-      renderResearchReport(modal, data.report);
+      renderResearchReport(modal, data);
 
       // Store report on the business's website config for caching
-      business._cachedReport = data.report;
+      business._cachedReport = data;
 
       // Show website generation section
       const websiteSection = modal.querySelector('#website-generation-section');
@@ -3564,13 +3727,17 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Save failed');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Product save error:', res.status, errData);
+        throw new Error(errData.detail || errData.error || 'Save failed');
+      }
       showToast(t('productSaved'), 'success');
       closeProductEditor();
       loadProducts();
     } catch (err) {
       console.error('Product save error:', err);
-      showToast('Failed to save product', 'error');
+      showToast('Failed to save product: ' + err.message, 'error');
     }
   }
 
