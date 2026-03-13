@@ -5,113 +5,105 @@
   var translations = {
     es: {
       nav_problem: 'El Problema',
-      nav_how: 'Como Funciona',
+      nav_how: 'Cómo Funciona',
       nav_features: 'Funciones',
       nav_pricing: 'Precios',
-      nav_cta: 'Crea Tu Pagina Gratis',
+      nav_cta: 'Empieza gratis',
 
       hero_title: 'Tus clientes ya te buscan.<br><span>Dales lo que necesitan.</span>',
-      hero_sub: 'Tu negocio aparece en Google, pero sin pagina web tus clientes no encuentran precios, horarios ni como contactarte. Nosotros lo resolvemos en 72 horas.',
-      hero_cta: 'Crea Tu Pagina Gratis',
-      hero_how: 'Ver Como Funciona',
+      hero_sub: 'Tu negocio aparece en Google, pero sin página web tus clientes no encuentran precios, horarios ni cómo contactarte. Nosotros lo resolvemos en 72 horas.',
+      hero_cta: 'Empieza gratis — página lista en 72 horas',
+      hero_how: 'Ver Cómo Funciona',
 
       proof_businesses: 'Negocios atendidos',
       proof_delivery: 'Tiempo de entrega',
-      proof_cancel: 'Costo de cancelacion',
-      proof_support: 'Soporte en espanol',
+      proof_cancel: 'Costo de cancelación',
+      proof_support: 'Soporte en español',
 
       problem_tag: 'El Problema',
-      problem_title: 'Tus clientes te encuentran en Google. Pero se van porque no tienes pagina.',
-      problem_desc: 'Tu negocio ya aparece en Google Maps y en redes sociales. Pero cuando un cliente quiere saber mas — tus precios, horarios o como contactarte — no encuentra nada. Y se va con quien si tiene esa informacion.',
+      problem_title: 'Tus clientes te encuentran en Google. Pero se van porque no tienes página.',
+      problem_desc: 'Tu negocio ya aparece en Google Maps y en redes sociales. Pero cuando un cliente quiere saber más — tus precios, horarios o cómo contactarte — no encuentra nada. Y se va con quien sí tiene esa información.',
       problem_li1: 'Tus clientes te encuentran en Google pero no pueden ver tus servicios ni precios',
-      problem_li2: 'Pierdes credibilidad frente a competidores que si tienen pagina',
-      problem_li3: 'No tienes un lugar donde mostrar tu menu, catalogo o portafolio',
-      problem_li4: 'Tus clientes no pueden agendar citas ni contactarte facilmente',
-      problem_li5: 'Estas dejando dinero en la mesa cada dia que pasa sin pagina',
+      problem_li2: 'Pierdes credibilidad frente a competidores que sí tienen página',
+      problem_li3: 'No tienes un lugar donde mostrar tu menú, catálogo o portafolio',
+      problem_li4: 'Tus clientes no pueden agendar citas ni contactarte fácilmente',
+      problem_li5: 'Estás dejando dinero en la mesa cada día que pasa sin página',
 
-      solution_tag: 'Como Funciona',
-      solution_title: 'Tu pagina web en 3 pasos simples',
-      solution_sub: 'Nos encargamos de todo. Tu solo revisas y apruebas.',
-      step1_title: 'Ingresa tu informacion',
-      step1_desc: 'Danos el nombre de tu negocio, tu pagina de Facebook y tu perfil de Google. Con eso recopilamos fotos, resenas, horarios y todo lo necesario.',
-      step2_title: 'Tu la revisas',
-      step2_desc: 'Te enviamos una vista previa de tu pagina web. Tu la revisas, nos dices si quieres cambios, y la ajustamos hasta que quede perfecta.',
+      solution_tag: 'Cómo Funciona',
+      solution_title: 'Tu página web en 3 pasos simples',
+      solution_sub: 'Nos encargamos de todo. Tú solo revisas y apruebas.',
+      step1_title: 'Ingresa tu información',
+      step1_desc: 'Danos el nombre de tu negocio, tu página de Facebook y tu perfil de Google. Con eso recopilamos fotos, reseñas, horarios y todo lo necesario.',
+      step2_title: 'Tú la revisas',
+      step2_desc: 'Te enviamos una vista previa de tu página web. Tú la revisas, nos dices si quieres cambios, y la ajustamos hasta que quede perfecta.',
       step3_title: 'La lanzamos al mundo',
-      step3_desc: 'Publicamos tu pagina, la conectamos a Google y la optimizamos para que tus clientes te encuentren. Lista para recibir visitas y clientes.',
+      step3_desc: 'Publicamos tu página, la conectamos a Google y la optimizamos para que tus clientes te encuentren. Lista para recibir visitas y clientes.',
 
-      case_tag: 'Caso de Exito',
-      case_title: 'Maria aumento sus citas un 40% en el primer mes',
-      case_desc: 'Maria tiene un salon de unas en Bogota. Sus clientes la encontraban en Google pero no podian ver sus servicios ni agendar citas. Con su nueva pagina web, ahora recibe reservas directas y sus clientes tienen toda la informacion que necesitan.',
-      case_stat1: 'Mas clientes',
-      case_stat2: 'Mas visitas',
+      case_tag: 'Caso de Éxito',
+      case_title: 'María aumentó sus citas un 40% en el primer mes',
+      case_desc: 'María tiene un salón de uñas en Bogotá. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+      case_stat1: 'Más clientes',
+      case_stat2: 'Más visitas',
       case_stat3: 'Citas perdidas',
 
       features_tag: 'Funciones',
-      features_title: 'Todo lo que tu pagina necesita',
-      features_sub: 'Cada pagina viene con todo lo necesario para que tu negocio brille en internet.',
-      feat1_title: 'Pagina web profesional',
-      feat1_desc: 'Diseno moderno y profesional que refleja la calidad de tu negocio. Personalizada con tus fotos, colores y estilo.',
+      features_title: 'Todo lo que tu página necesita',
+      features_sub: 'Cada página viene con todo lo necesario para que tu negocio brille en internet.',
+      feat1_title: 'Página web profesional',
+      feat1_desc: 'Diseño moderno y profesional que refleja la calidad de tu negocio. Personalizada con tus fotos, colores y estilo.',
       feat2_title: 'Optimizada para celular',
-      feat2_desc: 'Tu pagina se ve perfecta en cualquier dispositivo. El 80% de tus clientes te buscaran desde su celular.',
+      feat2_desc: 'Tu página se ve perfecta en cualquier dispositivo. El 80% de tus clientes te buscarán desde su celular.',
       feat3_title: 'Conectada a Google',
-      feat3_desc: 'Vinculamos tu pagina web con tu perfil de Google para que cuando tus clientes te encuentren, vean toda tu informacion completa.',
+      feat3_desc: 'Vinculamos tu página web con tu perfil de Google para que cuando tus clientes te encuentren, vean toda tu información completa.',
       feat4_title: 'Sistema de citas',
-      feat4_desc: 'Tus clientes pueden agendar citas directamente desde tu pagina. Sin llamadas, sin mensajes, sin complicaciones.',
+      feat4_desc: 'Tus clientes pueden agendar citas directamente desde tu página. Sin llamadas, sin mensajes, sin complicaciones.',
       feat5_title: 'Redes sociales integradas',
-      feat5_desc: 'Conectamos tu Instagram, Facebook y WhatsApp para que tus clientes te sigan y te contacten facilmente.',
+      feat5_desc: 'Conectamos tu Instagram, Facebook y WhatsApp para que tus clientes te sigan y te contacten fácilmente.',
       feat6_title: 'Seguimiento de visitas',
-      feat6_desc: 'Panel de control donde ves cuantas personas visitan tu pagina, de donde vienen y que hacen. Datos reales, sin adivinar.',
+      feat6_desc: 'Panel de control donde ves cuántas personas visitan tu página, de dónde vienen y qué hacen. Datos reales, sin adivinar.',
 
       pricing_tag: 'Precios',
       pricing_title: 'Simple y transparente',
       pricing_sub: 'Sin sorpresas, sin costos ocultos. Cancela cuando quieras.',
-      pricing_note: 'Sin costo de instalacion. Sin contratos.',
-      pricing_f1: 'Pagina web profesional personalizada',
+      pricing_note: 'Sin costo de instalación. Sin contratos.',
+      pricing_f1: 'Página web profesional personalizada',
       pricing_f2: 'Optimizada para celular y Google',
       pricing_f3: 'Dominio personalizado incluido',
       pricing_f4: 'Hosting y SSL incluidos',
       pricing_f5: 'Cambios y actualizaciones ilimitados',
-      pricing_f6: 'Soporte en espanol por WhatsApp',
-      pricing_f7: 'Panel de analiticas incluido',
+      pricing_f6: 'Soporte en español por WhatsApp',
+      pricing_f7: 'Panel de analíticas incluido',
       pricing_cta: 'Comenzar Ahora',
 
       faq_tag: 'Preguntas Frecuentes',
       faq_title: 'Resolvemos tus dudas',
-      faq_q1: 'Necesito saber de tecnologia para tener mi pagina?',
-      faq_a1: 'No, para nada. Nosotros nos encargamos de todo: diseno, contenido, publicacion y mantenimiento. Tu solo nos dices que quieres y nosotros lo hacemos realidad.',
-      faq_q2: 'Cuanto tiempo toma tener mi pagina lista?',
-      faq_a2: 'Tu pagina estara lista en 72 horas o menos. Recopilamos la informacion de tu negocio, creamos tu pagina y te la enviamos para que la revises antes de publicarla.',
+      faq_q1: 'Necesito saber de tecnología para tener mi página?',
+      faq_a1: 'No, para nada. Nosotros nos encargamos de todo: diseño, contenido, publicación y mantenimiento. Tú solo nos dices qué quieres y nosotros lo hacemos realidad.',
+      faq_q2: 'Cuánto tiempo toma tener mi página lista?',
+      faq_a2: 'Tu página estará lista en 72 horas o menos. Recopilamos la información de tu negocio, creamos tu página y te la enviamos para que la revises antes de publicarla.',
       faq_q3: 'Puedo cancelar en cualquier momento?',
-      faq_a3: 'Si, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu pagina se desactiva al final del periodo pagado.',
-      faq_q4: 'Que pasa si quiero hacer cambios en mi pagina?',
-      faq_a4: 'Cambios ilimitados estan incluidos en tu plan. Solo envias un mensaje por WhatsApp con lo que quieres cambiar y nosotros lo actualizamos, generalmente en menos de 24 horas.',
-      faq_q5: 'Mi negocio es muy pequeno, vale la pena tener pagina web?',
-      faq_a5: 'Absolutamente. Los negocios pequenos son los que mas se benefician. Tus clientes ya te buscan en Google — una pagina web les da la informacion que necesitan para elegirte a ti en vez de a la competencia.',
+      faq_a3: 'Sí, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu página se desactiva al final del período pagado.',
+      faq_q4: 'Qué pasa si quiero hacer cambios en mi página?',
+      faq_a4: 'Cambios ilimitados están incluidos en tu plan. Solo envías un mensaje por WhatsApp con lo que quieres cambiar y nosotros lo actualizamos, generalmente en menos de 24 horas.',
+      faq_q5: 'Mi negocio es muy pequeño, vale la pena tener página web?',
+      faq_a5: 'Absolutamente. Los negocios pequeños son los que más se benefician. Tus clientes ya te buscan en Google — una página web les da la información que necesitan para elegirte a ti en vez de a la competencia.',
 
-      cta_title: 'Tus clientes ya te estan buscando. Dales una razon para quedarse.',
-      cta_desc: 'Cada dia sin pagina web es dinero que pierdes. Empieza hoy y tenla lista en 72 horas.',
-      cta_btn: 'Crea Tu Pagina Gratis',
+      cta_title: 'Tus clientes ya te están buscando. Dales una razón para quedarse.',
+      cta_desc: 'Cada día sin página web es dinero que pierdes. Empieza hoy y tenla lista en 72 horas.',
+      cta_btn: 'Empieza gratis — página lista en 72 horas',
+      sticky_cta: 'Empieza gratis — página lista en 72 horas',
 
-      footer_desc: 'Creamos paginas web profesionales para negocios locales en Latinoamerica. Simple, rapido y sin complicaciones.',
+      footer_desc: 'Creamos páginas web profesionales para negocios locales en Latinoamérica. Simple, rápido y sin complicaciones.',
       footer_links: 'Enlaces',
       footer_contact: 'Contacto',
       footer_copy: '&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.',
 
-      modal_title: 'Crea tu pagina gratis',
-      modal_sub: 'Solo necesitamos estos datos para armar tu pagina web.',
+      modal_title: 'Crea tu página gratis',
       modal_business_label: 'Nombre de tu negocio',
-      modal_business_ph: 'Ej: Salon de Unas Maria',
-      modal_address_label: 'Direccion de tu negocio',
-      modal_address_ph: 'Ej: Calle 5 #12-34, Bogota',
-      modal_type_label: 'Tipo de negocio',
-      modal_type_ph: 'Ej: Restaurante, Salon de belleza, Taller mecanico',
-      modal_whatsapp_label: 'Tu numero de WhatsApp',
-      modal_whatsapp_ph: 'Ej: +52 55 1234 5678',
-      modal_submit: 'Habla Con Mi Disenador',
-      modal_success_title: 'Estamos creando tu pagina!',
-      modal_success_desc: 'Recibimos tu informacion. Te avisaremos cuando tu pagina este lista para que la revises.',
+      modal_business_ph: 'Ej: Salón de Uñas María',
+      modal_disclaimer: 'Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 72 horas.',
+      modal_submit: 'Hablar con mi diseñador \u2192',
       modal_sending: 'Enviando...',
-      modal_error: 'Error. Intentar de nuevo.',
 
     },
     en: {
@@ -119,11 +111,11 @@
       nav_how: 'How It Works',
       nav_features: 'Features',
       nav_pricing: 'Pricing',
-      nav_cta: 'Create Your Free Page',
+      nav_cta: 'Start free',
 
       hero_title: 'Your customers are already looking.<br><span>Give them what they need.</span>',
       hero_sub: 'Your business shows up on Google, but without a website your customers can\'t find prices, hours, or how to reach you. We fix that in 72 hours.',
-      hero_cta: 'Create Your Free Page',
+      hero_cta: 'Start free — website ready in 72 hours',
       hero_how: 'See How It Works',
 
       proof_businesses: 'Businesses served',
@@ -201,7 +193,8 @@
 
       cta_title: 'Your customers are already searching for you. Give them a reason to stay.',
       cta_desc: 'Every day without a website is money you\'re losing. Start today and have it ready in 72 hours.',
-      cta_btn: 'Create Your Free Page',
+      cta_btn: 'Start free — website ready in 72 hours',
+      sticky_cta: 'Start free — website ready in 72 hours',
 
       footer_desc: 'We create professional websites for local businesses in Latin America. Simple, fast, and hassle-free.',
       footer_links: 'Links',
@@ -209,20 +202,11 @@
       footer_copy: '&copy; 2026 AhoraTengoPagina. All rights reserved.',
 
       modal_title: 'Create your free page',
-      modal_sub: 'We just need this info to build your website.',
       modal_business_label: 'Your business name',
       modal_business_ph: 'E.g.: Maria\'s Nail Salon',
-      modal_address_label: 'Your business address',
-      modal_address_ph: 'E.g.: 123 Main St, Mexico City',
-      modal_type_label: 'Type of business',
-      modal_type_ph: 'E.g.: Restaurant, Beauty salon, Auto shop',
-      modal_whatsapp_label: 'Your WhatsApp number',
-      modal_whatsapp_ph: 'E.g.: +52 55 1234 5678',
-      modal_submit: 'Talk To My Designer',
-      modal_success_title: 'We\'re building your page!',
-      modal_success_desc: 'We received your info. We\'ll let you know when your page is ready for review.',
+      modal_disclaimer: 'When you click, we\'ll contact you via WhatsApp. Tell us a bit about your business and your personal designer will have a page ready for you to review in 72 hours.',
+      modal_submit: 'Talk to my designer \u2192',
       modal_sending: 'Sending...',
-      modal_error: 'Error. Try again.',
 
     }
   };
@@ -395,24 +379,18 @@
     e.preventDefault();
 
     var businessName = document.getElementById('lead-business').value.trim();
-    var businessAddress = document.getElementById('lead-address').value.trim();
-    var businessType = document.getElementById('lead-type').value.trim();
-    var whatsappNumber = document.getElementById('lead-whatsapp').value.trim();
 
-    if (!businessName || !businessAddress || !businessType || !whatsappNumber) return;
+    if (!businessName) return;
 
     formSubmitBtn.disabled = true;
     formSubmitBtn.textContent = t('modal_sending');
 
-    // Save lead to DB + auto-send WhatsApp template (non-blocking)
+    // Save lead to DB (non-blocking)
     fetch('/api/leads/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         business_name: businessName,
-        business_address: businessAddress,
-        business_type: businessType,
-        whatsapp_number: whatsappNumber,
       }),
     }).catch(function(err) {
       console.warn('Lead capture error (non-blocking):', err);
@@ -422,11 +400,7 @@
     });
 
     // Open WhatsApp conversation immediately (don't wait for API)
-    var message = 'Hola! Quiero crear mi pagina web.\n\n'
-      + 'Negocio: ' + businessName + '\n'
-      + 'Direccion: ' + businessAddress + '\n'
-      + 'Tipo: ' + businessType + '\n'
-      + 'WhatsApp: ' + whatsappNumber;
+    var message = 'Hola! Quiero crear mi página web para mi negocio: ' + businessName;
 
     var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
     window.open(waUrl, '_blank');
@@ -467,7 +441,7 @@
 
   if (waFloatBtn) {
     waFloatBtn.addEventListener('click', function() {
-      var defaultMsg = encodeURIComponent('Hola! Quiero mas informacion sobre sus servicios de paginas web');
+      var defaultMsg = encodeURIComponent('Hola! Quiero más información sobre sus servicios de páginas web');
       window.open('https://wa.me/' + WHATSAPP_WIDGET_NUMBER + '?text=' + defaultMsg, '_blank');
     });
 
@@ -483,6 +457,43 @@
         { threshold: 0.1 }
       );
       footerObserver.observe(footer);
+    }
+  }
+
+  // ── Sticky CTA ──
+  var stickyCta = document.getElementById('m-sticky-cta');
+  if (stickyCta) {
+    var stickyBtn = stickyCta.querySelector('[data-open-modal]');
+    if (stickyBtn) {
+      stickyBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal();
+      });
+    }
+    // Show sticky CTA after scrolling past hero
+    var heroEl = document.querySelector('.m-hero');
+    var footerEl = document.querySelector('.m-footer');
+    if (heroEl) {
+      var stickyObserver = new IntersectionObserver(
+        function(entries) {
+          var pastHero = !entries[0].isIntersecting;
+          stickyCta.classList.toggle('m-visible', pastHero);
+        },
+        { threshold: 0 }
+      );
+      stickyObserver.observe(heroEl);
+    }
+    // Hide near footer
+    if (footerEl) {
+      var stickyFooterObserver = new IntersectionObserver(
+        function(entries) {
+          if (entries[0].isIntersecting) {
+            stickyCta.classList.remove('m-visible');
+          }
+        },
+        { threshold: 0.1 }
+      );
+      stickyFooterObserver.observe(footerEl);
     }
   }
 
@@ -534,7 +545,7 @@
     var features = product.features || [];
     var featuredClass = isFeatured ? ' m-pricing-featured' : '';
     var badgeHtml = isFeatured ? '<span class="m-pricing-badge">Popular</span>' : '';
-    var noteKey = currentLang === 'en' ? 'No setup fee. No contracts.' : 'Sin costo de instalacion. Sin contratos.';
+    var noteKey = currentLang === 'en' ? 'No setup fee. No contracts.' : 'Sin costo de instalación. Sin contratos.';
 
     var featuresHtml = features.map(function(f) {
       return '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + escapeHtml(f) + '</span></div>';
