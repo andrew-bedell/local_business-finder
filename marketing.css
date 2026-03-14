@@ -705,6 +705,7 @@ ul, ol { list-style: none; }
   font-weight: 700;
 }
 .m-pricing-cta {
+  display: block;
   width: 100%;
   padding: 14px;
   font-size: 16px;
@@ -715,6 +716,9 @@ ul, ol { list-style: none; }
   border-radius: var(--m-radius);
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
+  text-decoration: none;
+  text-align: center;
+  font-family: inherit;
 }
 .m-pricing-cta:hover { background: var(--m-green-dark); }
 .m-pricing-cta:active { transform: scale(0.97); }

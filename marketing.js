@@ -561,7 +561,7 @@
       (product.name ? '<p style="font-size:16px;font-weight:700;margin-bottom:16px;color:#0c1b33">' + escapeHtml(product.name) + '</p>' : '') +
       descHtml +
       '<div class="m-pricing-features">' + featuresHtml + '</div>' +
-      '<button class="m-pricing-cta" data-open-modal>' + ctaText + '</button>' +
+      (price > 0 && product.id ? '<a href="/checkout/' + encodeURIComponent(product.id) + '" class="m-pricing-cta">' + ctaText + '</a>' : '<button class="m-pricing-cta" data-open-modal>' + ctaText + '</button>') +
     '</div>';
   }
 
