@@ -30,10 +30,12 @@
       countryUS: 'United States',
       countryMX: 'Mexico',
       countryCO: 'Colombia',
+      countryEC: 'Ecuador',
       locationLabel: 'Location',
       locationPlaceholder: 'City, zip code, or address (e.g., Austin TX, 90210, 123 Main St)',
       locationPlaceholderMX: 'City, zip code, or address (e.g., Ciudad de México, Guadalajara, Cancún)',
       locationPlaceholderCO: 'City, zip code, or address (e.g., Bogotá, Medellín, Cartagena)',
+      locationPlaceholderEC: 'City, zip code, or address (e.g., Quito, Guayaquil, Cuenca)',
       businessTypeLabel: 'Business Type',
       selectType: 'Select a business type...',
       // Business type groups
@@ -366,10 +368,12 @@
       countryUS: 'Estados Unidos',
       countryMX: 'México',
       countryCO: 'Colombia',
+      countryEC: 'Ecuador',
       locationLabel: 'Ubicación',
       locationPlaceholder: 'Ciudad, código postal o dirección (ej., Austin TX, 90210, 123 Main St)',
       locationPlaceholderMX: 'Ciudad, código postal o dirección (ej., Ciudad de México, Guadalajara, Cancún)',
       locationPlaceholderCO: 'Ciudad, código postal o dirección (ej., Bogotá, Medellín, Cartagena)',
+      locationPlaceholderEC: 'Ciudad, código postal o dirección (ej., Quito, Guayaquil, Cuenca)',
       businessTypeLabel: 'Tipo de Negocio',
       selectType: 'Selecciona un tipo de negocio...',
       // Business type groups
@@ -954,7 +958,7 @@
 
   function getSearchLanguage() {
     const country = countrySelect.value;
-    const langMap = { us: 'en', mx: 'es', co: 'es' };
+    const langMap = { us: 'en', mx: 'es', co: 'es', ec: 'es' };
     return langMap[country] || 'en';
   }
 
@@ -1235,12 +1239,14 @@
   // ── Country Selection ──
   function onCountryChange() {
     const country = countrySelect.value;
-    const useKm = country === 'mx' || country === 'co';
+    const useKm = country === 'mx' || country === 'co' || country === 'ec';
 
     if (country === 'mx') {
       locationInput.placeholder = t('locationPlaceholderMX');
     } else if (country === 'co') {
       locationInput.placeholder = t('locationPlaceholderCO');
+    } else if (country === 'ec') {
+      locationInput.placeholder = t('locationPlaceholderEC');
     } else {
       locationInput.placeholder = t('locationPlaceholder');
     }
