@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout — AhoraTengoPagina</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&family=Inter:wght@800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,7 +30,7 @@
     body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
-    .logo { font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--brand); text-decoration: none; }
+    .logo { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 20px; font-weight: 800; color: #1A56DB; letter-spacing: -0.5px; text-decoration: none; }
     .secure-badge { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); }
     .secure-badge svg { color: var(--green); }
 
@@ -219,11 +219,17 @@
     var urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('redirect_status')) { handleRedirectReturn(); } else { init(); }
 
-    function handleRedirectReturn() {
+    async function handleRedirectReturn() {
       var s = urlParams.get('redirect_status');
       document.getElementById('page-loading').style.display = 'none';
-      if (s === 'succeeded') { showSuccess('\u00a1Pago exitoso!', 'Tu dise\u00f1ador te contactar\u00e1 por WhatsApp en las pr\u00f3ximas horas para comenzar con tu p\u00e1gina web.'); }
-      else if (s === 'processing') { showSuccess('\u00a1Pago en proceso!', 'Tu pago est\u00e1 siendo procesado. Te avisaremos por WhatsApp cuando se confirme.'); }
+      if (s === 'succeeded' || s === 'processing') {
+        try {
+          var res = await fetch('/api/products/list');
+          var data = await res.json();
+          selectedProduct = (data.products || []).find(function(p) { return p.id === productId; }) || null;
+        } catch (e) { /* redirect without product details */ }
+        redirectToConfirmation();
+      }
       else { showPageError('El pago no se complet\u00f3. Intenta de nuevo.'); }
     }
 
@@ -289,8 +295,19 @@
           redirect: 'if_required'
         });
         if (confirmResult.error) throw new Error(confirmResult.error.message);
-        showSuccess('\u00a1Pago exitoso!', 'Tu dise\u00f1ador te contactar\u00e1 por WhatsApp en las pr\u00f3ximas horas para comenzar con tu p\u00e1gina web.');
+        redirectToConfirmation();
       } catch (err) { messageEl.textContent = err.message; messageEl.classList.add('visible'); submitBtn.disabled = false; submitBtn.classList.remove('loading'); }
+    }
+
+    function redirectToConfirmation() {
+      var params = new URLSearchParams();
+      if (selectedProduct) {
+        params.set('product_name', selectedProduct.name || '');
+        params.set('product_price', selectedProduct.price || '');
+        params.set('currency', selectedProduct.currency || 'USD');
+        params.set('interval', selectedProduct.billing_interval || '');
+      }
+      window.location.href = '/checkout/confirmacion?' + params.toString();
     }
 
     function showSuccess(title, text) { document.getElementById('success-title').textContent = title; document.getElementById('success-text').textContent = text; document.getElementById('success-overlay').style.display = ''; }
