@@ -3,458 +3,208 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f5f5">
   <title>Checkout — AhoraTengoPagina</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f5f5f5;
-      color: #1f2937;
-      min-height: 100vh;
-      font-size: 14px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
+    :root {
+      --brand: #1a1a2e;
+      --accent: #4f46e5;
+      --accent-hover: #4338ca;
+      --accent-light: #ede9fe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f9fafb;
+      --white: #ffffff;
+      --red: #ef4444;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
     }
 
-    /* Header */
-    .ch-header {
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 16px 24px;
-      text-align: center;
-    }
-    .ch-header-logo {
-      font-size: 20px;
-      font-weight: 800;
-      color: #6366f1;
-      letter-spacing: -0.5px;
-    }
-    .ch-header-sub {
-      font-size: 13px;
-      color: #6b7280;
-      margin-top: 2px;
-    }
+    html { font-size: 16px; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* Main layout */
-    .ch-main {
-      max-width: 960px;
-      margin: 32px auto;
-      padding: 0 20px;
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 24px;
-      align-items: start;
-    }
+    header { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--brand); text-decoration: none; }
+    .secure-badge { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--muted); }
+    .secure-badge svg { color: var(--green); }
 
-    /* Cards */
-    .ch-card {
-      background: #fff;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-      padding: 28px;
-    }
-    .ch-card-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: #111;
-      margin-bottom: 20px;
-    }
+    .checkout-grid { max-width: 960px; margin: 40px auto; padding: 0 20px 80px; display: grid; grid-template-columns: 1fr 420px; gap: 28px; align-items: start; }
 
-    /* Form */
-    .ch-form-group {
-      margin-bottom: 16px;
-    }
-    .ch-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 6px;
-    }
-    .ch-input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      color: #1f2937;
-      background: #fff;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .ch-input:focus {
-      outline: none;
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-    .ch-input::placeholder {
-      color: #9ca3af;
-    }
+    .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .card-section { padding: 24px 28px; border-bottom: 1px solid var(--border); }
+    .card-section:last-child { border-bottom: none; }
+    .section-label { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
 
-    /* Stripe Elements container */
-    .ch-stripe-element {
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: #fff;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .ch-stripe-element.StripeElement--focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-    .ch-stripe-element.StripeElement--invalid {
-      border-color: #ef4444;
-    }
+    .product-row { display: flex; align-items: flex-start; gap: 14px; }
+    .product-icon { width: 52px; height: 52px; border-radius: 10px; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.4rem; }
+    .product-name { font-weight: 600; font-size: 1rem; line-height: 1.3; }
+    .product-desc { font-size: .83rem; color: var(--muted); margin-top: 3px; }
+    .product-price { margin-left: auto; font-weight: 600; font-size: 1rem; white-space: nowrap; }
+    .divider { height: 1px; background: var(--border); margin: 18px 0; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; }
+    .total-label { font-size: .85rem; color: var(--muted); }
+    .total-amount { font-size: 1.35rem; font-weight: 600; }
 
-    /* Divider */
-    .ch-divider {
-      height: 1px;
-      background: #e5e7eb;
-      margin: 24px 0;
-    }
+    .step { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+    .step:last-child { margin-bottom: 0; }
+    .step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: .72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .step-text { font-size: .875rem; line-height: 1.5; color: var(--text); }
+    .step-text strong { font-weight: 600; display: block; margin-bottom: 1px; }
+    .step-text span { color: var(--muted); font-size: .82rem; }
 
-    /* Submit button */
-    .ch-submit {
-      width: 100%;
-      padding: 14px;
-      background: #6366f1;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .ch-submit:hover:not(:disabled) {
-      background: #4f46e5;
-    }
-    .ch-submit:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-    .ch-submit:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .ch-submit-spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: ch-spin 0.6s linear infinite;
-      display: none;
-    }
-    .ch-submit.ch-loading .ch-submit-spinner {
-      display: block;
-    }
+    .trust-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .trust-item { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--muted); }
+    .trust-item svg { color: var(--green); flex-shrink: 0; }
 
-    /* Order summary */
-    .ch-summary-card {
-      position: sticky;
-      top: 24px;
-    }
-    .ch-product-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: #111;
-      margin-bottom: 4px;
-    }
-    .ch-product-desc {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 16px;
-    }
-    .ch-features {
-      list-style: none;
-      margin-bottom: 20px;
-    }
-    .ch-features li {
-      font-size: 13px;
-      color: #374151;
-      padding: 6px 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .ch-features li::before {
-      content: '✓';
-      color: #22c55e;
-      font-weight: 700;
-      font-size: 14px;
-    }
-    .ch-summary-divider {
-      height: 1px;
-      background: #e5e7eb;
-      margin: 16px 0;
-    }
-    .ch-total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-    .ch-total-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-    }
-    .ch-total-price {
-      font-size: 24px;
-      font-weight: 800;
-      color: #111;
-    }
-    .ch-total-interval {
-      font-size: 13px;
-      font-weight: 400;
-      color: #6b7280;
-    }
+    .left-panel-title { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 6px; }
+    .left-panel-sub { font-size: .9rem; color: var(--muted); margin-bottom: 24px; }
 
-    /* Secure badge */
-    .ch-secure {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 16px;
-      font-size: 12px;
-      color: #9ca3af;
-    }
-    .ch-secure svg {
-      width: 14px;
-      height: 14px;
-    }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: .8rem; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    input[type=text], input[type=email], input[type=tel] { width: 100%; height: 44px; border: 1.5px solid var(--border); border-radius: 8px; padding: 0 14px; font-size: .9rem; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--white); transition: border-color .15s; outline: none; }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: #9ca3af; }
 
-    /* Error */
-    .ch-error {
-      background: rgba(239, 68, 68, 0.08);
-      color: #ef4444;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .ch-error.ch-visible {
-      display: block;
-    }
+    #payment-element { min-height: 80px; }
+    .payment-message { color: var(--red); font-size: .83rem; margin-top: 12px; display: none; }
+    .payment-message.visible { display: block; }
 
-    /* Success overlay */
-    .ch-success-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      display: none;
-    }
-    .ch-success-overlay.ch-visible {
-      display: flex;
-    }
-    .ch-success-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 40px;
-      text-align: center;
-      max-width: 420px;
-      width: 90%;
-      animation: ch-slideUp 0.3s ease;
-    }
-    .ch-success-icon {
-      width: 64px;
-      height: 64px;
-      background: rgba(34, 197, 94, 0.12);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-size: 28px;
-    }
-    .ch-success-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #111;
-      margin-bottom: 8px;
-    }
-    .ch-success-text {
-      font-size: 14px;
-      color: #6b7280;
-      margin-bottom: 24px;
-    }
-    .ch-success-btn {
-      padding: 12px 32px;
-      background: #6366f1;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .ch-success-btn:hover {
-      background: #4f46e5;
-    }
+    .submit-btn { width: 100%; height: 52px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .1s; margin-top: 20px; }
+    .submit-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .submit-btn:active:not(:disabled) { transform: scale(.99); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .submit-spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: none; }
+    .submit-btn.loading .submit-spinner { display: block; }
+    .submit-btn.loading .submit-lock { display: none; }
+    .stripe-note { text-align: center; font-size: .75rem; color: var(--muted); margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
-    /* Loading state */
-    .ch-page-loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      color: #6b7280;
-      gap: 16px;
-    }
-    .ch-page-spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #6366f1;
-      border-radius: 50%;
-      animation: ch-spin 0.6s linear infinite;
-    }
+    .wa-notice { background: var(--green-light); border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 20px; }
+    .wa-notice-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .wa-notice-text { font-size: .83rem; line-height: 1.5; color: #166534; }
+    .wa-notice-text strong { font-weight: 600; display: block; margin-bottom: 2px; }
 
-    .ch-page-error {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 60vh;
-      color: #ef4444;
-      gap: 8px;
-      font-size: 15px;
-    }
+    .powered-by { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: .72rem; color: var(--muted); margin-top: 8px; }
+    .powered-by span { font-weight: 600; color: #635bff; }
 
-    @keyframes ch-spin {
-      to { transform: rotate(360deg); }
-    }
-    @keyframes ch-slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .page-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; color: var(--muted); gap: 16px; }
+    .page-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+    .page-error { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 12px; text-align: center; padding: 0 20px; }
+    .page-error-msg { font-size: 1rem; color: var(--red); }
+    .back-link { font-size: .9rem; color: var(--accent); text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .ch-main {
-        grid-template-columns: 1fr;
-        margin: 20px auto;
-      }
-      .ch-summary-card {
-        position: static;
-        order: -1;
-      }
-      .ch-card {
-        padding: 20px;
-      }
-    }
+    .success-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+    .success-card { background: var(--white); border-radius: 16px; padding: 40px; text-align: center; max-width: 440px; width: 90%; animation: slideUp 0.3s ease; }
+    .success-icon { width: 64px; height: 64px; background: rgba(34, 197, 94, 0.12); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; }
+    .success-title { font-family: 'DM Serif Display', serif; font-size: 1.35rem; color: var(--text); margin-bottom: 8px; }
+    .success-text { font-size: .9rem; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+    .success-btn { padding: 12px 32px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: .95rem; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background .15s; }
+    .success-btn:hover { background: var(--accent-hover); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 720px) { .checkout-grid { grid-template-columns: 1fr; margin: 20px auto; } .order-summary { order: -1; } .card-section { padding: 20px; } .left-panel-title { font-size: 1.3rem; } }
+    @media (max-width: 480px) { header { padding: 0 16px; } .checkout-grid { padding: 0 16px 60px; } }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="ch-header">
-    <div class="ch-header-logo">AhoraTengoPagina</div>
-    <div class="ch-header-sub">Checkout seguro</div>
+  <header>
+    <a href="/" class="logo">AhoraTengoPagina</a>
+    <div class="secure-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Pago seguro
+    </div>
   </header>
 
-  <!-- Loading state -->
-  <div id="ch-loading" class="ch-page-loading">
-    <div class="ch-page-spinner"></div>
-    <span>Cargando...</span>
-  </div>
+  <div id="page-loading" class="page-loading"><div class="page-spinner"></div><span>Cargando...</span></div>
+  <div id="page-error" class="page-error" style="display:none"><span class="page-error-msg" id="page-error-msg"></span><a href="/" class="back-link">&larr; Volver al inicio</a></div>
 
-  <!-- Error state -->
-  <div id="ch-page-error" class="ch-page-error" style="display:none">
-    <span id="ch-page-error-msg">No se pudo cargar el checkout.</span>
-  </div>
-
-  <!-- Main checkout -->
-  <main class="ch-main" id="ch-main" style="display:none">
-    <!-- Left: Form -->
-    <div>
-      <div class="ch-card">
-        <h2 class="ch-card-title">Información de contacto</h2>
-
-        <div id="ch-error" class="ch-error"></div>
-
-        <form id="ch-form" autocomplete="on">
-          <div class="ch-form-group">
-            <label class="ch-label" for="ch-name">Nombre completo</label>
-            <input class="ch-input" type="text" id="ch-name" name="name" placeholder="Tu nombre" required autocomplete="name">
-          </div>
-
-          <div class="ch-form-group">
-            <label class="ch-label" for="ch-email">Correo electrónico</label>
-            <input class="ch-input" type="email" id="ch-email" name="email" placeholder="tu@email.com" required autocomplete="email">
-          </div>
-
-          <div class="ch-form-group">
-            <label class="ch-label" for="ch-phone">WhatsApp</label>
-            <input class="ch-input" type="tel" id="ch-phone" name="phone" placeholder="+52 1 999 123 4567" autocomplete="tel">
-          </div>
-
-          <div class="ch-divider"></div>
-
-          <h2 class="ch-card-title">Método de pago</h2>
-
-          <div class="ch-form-group">
-            <label class="ch-label">Tarjeta de crédito o débito</label>
-            <div class="ch-stripe-element" id="ch-card-element"></div>
-          </div>
-
-          <button class="ch-submit" type="submit" id="ch-submit-btn" disabled>
-            <span class="ch-submit-spinner"></span>
-            <span id="ch-submit-text">Activar mi página web</span>
-          </button>
-
-          <div class="ch-secure">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            Pago seguro con Stripe
-          </div>
-        </form>
+  <div class="checkout-grid" id="checkout-content" style="display:none">
+    <div class="left-col">
+      <h1 class="left-panel-title">Completa tu compra</h1>
+      <p class="left-panel-sub">Rellena tus datos y tu dise&ntilde;ador se pondr&aacute; en contacto contigo en breve.</p>
+      <div class="wa-notice">
+        <div class="wa-notice-icon">&#128172;</div>
+        <div class="wa-notice-text"><strong>Tu dise&ntilde;ador te contactar&aacute; por WhatsApp</strong>Confirma que el n&uacute;mero que registras aqu&iacute; es el mismo de WhatsApp.</div>
       </div>
+      <form id="checkout-form" autocomplete="on">
+        <div class="card">
+          <div class="card-section">
+            <div class="section-label">Informaci&oacute;n de contacto</div>
+            <div class="form-group"><label for="field-name">Nombre completo</label><input type="text" id="field-name" name="name" placeholder="Mar&iacute;a Garc&iacute;a" required autocomplete="name"></div>
+            <div class="form-group"><label for="field-email">Correo electr&oacute;nico</label><input type="email" id="field-email" name="email" placeholder="maria@ejemplo.com" required autocomplete="email"></div>
+            <div class="form-group"><label for="field-phone">N&uacute;mero de WhatsApp</label><input type="tel" id="field-phone" name="phone" placeholder="+52 999 123 4567" autocomplete="tel"></div>
+            <div class="form-group"><label for="field-business">Nombre de tu negocio</label><input type="text" id="field-business" name="business_name" placeholder="Sal&oacute;n de U&ntilde;as Mar&iacute;a" required></div>
+          </div>
+          <div class="card-section">
+            <div class="section-label">M&eacute;todo de pago</div>
+            <div id="payment-element"></div>
+            <div id="payment-message" class="payment-message"></div>
+          </div>
+          <div class="card-section">
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>
+              <svg class="submit-lock" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span id="submit-text">Pagar ahora</span>
+              <div class="submit-spinner" id="submit-spinner"></div>
+            </button>
+            <div class="stripe-note"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Pago cifrado y seguro</div>
+            <div class="powered-by">Con tecnolog&iacute;a de <span>stripe</span></div>
+          </div>
+        </div>
+      </form>
     </div>
 
-    <!-- Right: Order summary -->
-    <div>
-      <div class="ch-card ch-summary-card">
-        <h2 class="ch-card-title">Resumen del pedido</h2>
-        <div class="ch-product-name" id="ch-product-name">—</div>
-        <div class="ch-product-desc" id="ch-product-desc"></div>
-        <ul class="ch-features" id="ch-features"></ul>
-        <div class="ch-summary-divider"></div>
-        <div class="ch-total-row">
-          <span class="ch-total-label">Total</span>
-          <span>
-            <span class="ch-total-price" id="ch-total-price">—</span>
-            <span class="ch-total-interval" id="ch-total-interval"></span>
-          </span>
+    <div class="order-summary">
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-section">
+          <div class="section-label">Tu pedido</div>
+          <div class="product-row">
+            <div class="product-icon">&#127760;</div>
+            <div><div class="product-name" id="summary-name">&mdash;</div><div class="product-desc" id="summary-desc"></div></div>
+            <div class="product-price" id="summary-price">&mdash;</div>
+          </div>
+          <div class="divider"></div>
+          <div class="total-row"><div class="total-label">Total hoy</div><div class="total-amount" id="summary-total">&mdash;</div></div>
+          <div style="font-size:.75rem; color:var(--muted); margin-top:6px; text-align:right;">Cancela cuando quieras. Sin contratos.</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-section">
+          <div class="section-label">Qu&eacute; pasa despu&eacute;s de tu compra</div>
+          <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Tu dise&ntilde;ador te escribe por WhatsApp</strong><span>Si a&uacute;n no has visto tu sitio de muestra, te lo enviaremos en este mensaje.</span></div></div>
+          <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Trabajamos juntos en los cambios</strong><span>Tu dise&ntilde;ador aplica todas las ediciones que necesites hasta que quede perfecto.</span></div></div>
+          <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Compramos tu dominio</strong><span>Tu negocio tendr&aacute; su propio dominio personalizado.</span></div></div>
+          <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Publicamos tu sitio al mundo</strong><span>Una vez que apruebes todo, tu p&aacute;gina queda activa en 72 horas.</span></div></div>
+          <div class="step"><div class="step-num">5</div><div class="step-text"><strong>Conectamos tu sitio a Google</strong><span>Para que tus clientes te encuentren f&aacute;cilmente en b&uacute;squedas.</span></div></div>
+          <div class="step"><div class="step-num">6</div><div class="step-text"><strong>Capacitamos a tu equipo</strong><span>Te ense&ntilde;amos c&oacute;mo usar todos nuestros sistemas sin complicaciones.</span></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-section">
+          <div class="trust-grid">
+            <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cancela cuando quieras</div>
+            <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Soporte en espa&ntilde;ol</div>
+            <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cambios ilimitados</div>
+            <div class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Pago 100% seguro</div>
+          </div>
         </div>
       </div>
     </div>
-  </main>
+  </div>
 
-  <!-- Success overlay -->
-  <div class="ch-success-overlay" id="ch-success">
-    <div class="ch-success-card">
-      <div class="ch-success-icon">🎉</div>
-      <h2 class="ch-success-title">¡Tu página web está activa!</h2>
-      <p class="ch-success-text">Recibirás un correo de confirmación con los detalles de tu suscripción y un enlace para administrar tu página.</p>
-      <button class="ch-success-btn" id="ch-success-btn">Entendido</button>
+  <div class="success-overlay" id="success-overlay" style="display:none">
+    <div class="success-card">
+      <div class="success-icon">&#127881;</div>
+      <h2 class="success-title" id="success-title">&iexcl;Pago exitoso!</h2>
+      <p class="success-text" id="success-text">Tu dise&ntilde;ador te contactar&aacute; por WhatsApp en las pr&oacute;ximas horas para comenzar con tu p&aacute;gina web.</p>
+      <button class="success-btn" id="success-btn">Volver al inicio</button>
     </div>
   </div>
 
@@ -462,178 +212,89 @@
   <script>
   (function() {
     'use strict';
+    var pathParts = window.location.pathname.split('/');
+    var productId = pathParts[pathParts.length - 1];
+    if (!productId || productId === 'checkout') { showPageError('Enlace de checkout inv\u00e1lido.'); return; }
+    var stripe = null, elements = null, selectedProduct = null;
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('redirect_status')) { handleRedirectReturn(); } else { init(); }
 
-    // Extract website ID from URL path: /checkout/:id
-    const pathParts = window.location.pathname.split('/');
-    const websiteId = pathParts[pathParts.length - 1];
-
-    if (!websiteId || websiteId === 'checkout') {
-      showPageError('URL inválida. No se encontró el ID del sitio web.');
-      return;
+    function handleRedirectReturn() {
+      var s = urlParams.get('redirect_status');
+      document.getElementById('page-loading').style.display = 'none';
+      if (s === 'succeeded') { showSuccess('\u00a1Pago exitoso!', 'Tu dise\u00f1ador te contactar\u00e1 por WhatsApp en las pr\u00f3ximas horas para comenzar con tu p\u00e1gina web.'); }
+      else if (s === 'processing') { showSuccess('\u00a1Pago en proceso!', 'Tu pago est\u00e1 siendo procesado. Te avisaremos por WhatsApp cuando se confirme.'); }
+      else { showPageError('El pago no se complet\u00f3. Intenta de nuevo.'); }
     }
-
-    let selectedProduct = null;
-    let stripe = null;
-    let cardElement = null;
-
-    init();
 
     async function init() {
       try {
-        // Fetch config to get Stripe publishable key
-        const configRes = await fetch('/api/config');
-        const config = await configRes.json();
+        var responses = await Promise.all([fetch('/api/config'), fetch('/api/products/list')]);
+        var config = await responses[0].json();
+        var productsData = await responses[1].json();
+        if (!config.stripePublishableKey) throw new Error('Stripe no est\u00e1 configurado.');
+        var products = productsData.products || [];
+        selectedProduct = products.find(function(p) { return p.id === productId; });
+        if (!selectedProduct) throw new Error('Producto no encontrado.');
+        if (!selectedProduct.stripe_price_id) throw new Error('Este producto no tiene un precio configurado.');
 
-        if (!config.stripePublishableKey) {
-          throw new Error('Stripe no está configurado.');
-        }
-
-        // Initialize Stripe
         stripe = Stripe(config.stripePublishableKey);
-        const elements = stripe.elements();
-        cardElement = elements.create('card', {
-          style: {
-            base: {
-              fontSize: '14px',
-              color: '#1f2937',
-              fontFamily: "'Inter', sans-serif",
-              '::placeholder': { color: '#9ca3af' },
-            },
-            invalid: { color: '#ef4444' },
-          },
+        var amountInCents = Math.round(parseFloat(selectedProduct.price) * 100);
+        var currency = (selectedProduct.currency || 'usd').toLowerCase();
+        elements = stripe.elements({
+          mode: 'subscription', amount: amountInCents, currency: currency,
+          appearance: { theme: 'stripe', variables: { fontFamily: "'DM Sans', sans-serif", colorPrimary: '#4f46e5', borderRadius: '8px' }, rules: { '.Input': { border: '1.5px solid #e5e7eb', boxShadow: 'none' }, '.Input:focus': { border: '1.5px solid #4f46e5', boxShadow: 'none' } } }
         });
-        cardElement.mount('#ch-card-element');
-        cardElement.on('change', function(event) {
-          document.getElementById('ch-submit-btn').disabled = !event.complete;
-        });
-
-        // Fetch products
-        const productsRes = await fetch('/api/products/list');
-        const productsData = await productsRes.json();
-        const products = productsData.products || [];
-
-        if (products.length === 0) {
-          throw new Error('No hay productos disponibles.');
-        }
-
-        // Use the first active product
-        selectedProduct = products[0];
+        var paymentElement = elements.create('payment');
+        paymentElement.mount('#payment-element');
+        paymentElement.on('ready', function() { document.getElementById('submit-btn').disabled = false; });
         renderOrderSummary(selectedProduct);
-
-        // Show main content
-        document.getElementById('ch-loading').style.display = 'none';
-        document.getElementById('ch-main').style.display = '';
-
-        // Form submit
-        document.getElementById('ch-form').addEventListener('submit', handleSubmit);
-
-        // Success button
-        document.getElementById('ch-success-btn').addEventListener('click', function() {
-          window.location.href = '/';
-        });
-
-      } catch (err) {
-        showPageError(err.message);
-      }
+        document.getElementById('page-loading').style.display = 'none';
+        document.getElementById('checkout-content').style.display = '';
+        document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
+        document.getElementById('success-btn').addEventListener('click', function() { window.location.href = '/'; });
+      } catch (err) { showPageError(err.message); }
     }
 
     function renderOrderSummary(product) {
-      document.getElementById('ch-product-name').textContent = product.name;
-      document.getElementById('ch-product-desc').textContent = product.description || '';
-
-      const featuresList = document.getElementById('ch-features');
-      const features = product.features || [];
-      featuresList.innerHTML = features.map(function(f) {
-        return '<li>' + escapeHtml(f) + '</li>';
-      }).join('');
-
-      const currencySymbols = { MXN: '$', USD: '$', COP: '$' };
-      const symbol = currencySymbols[product.currency] || '$';
-      const formattedPrice = symbol + parseFloat(product.price).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-
-      document.getElementById('ch-total-price').textContent = formattedPrice + ' ' + product.currency;
-
-      const intervals = { monthly: '/mes', yearly: '/año', one_time: '' };
-      document.getElementById('ch-total-interval').textContent = intervals[product.billing_interval] || '';
+      var price = parseFloat(product.price), symbol = '$';
+      var formatted = symbol + price.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      var intervalLabels = { monthly: '/mes', yearly: '/a\u00f1o', one_time: '' };
+      var interval = intervalLabels[product.billing_interval] || '';
+      var curr = product.currency || 'USD';
+      document.getElementById('summary-name').textContent = product.name || 'Plan';
+      document.getElementById('summary-desc').textContent = product.description || '';
+      document.getElementById('summary-price').textContent = formatted + interval;
+      document.getElementById('summary-total').textContent = formatted + ' ' + curr;
+      document.getElementById('submit-text').textContent = 'Pagar ahora \u2014 ' + formatted + ' ' + curr + interval;
     }
 
     async function handleSubmit(e) {
       e.preventDefault();
-
-      const submitBtn = document.getElementById('ch-submit-btn');
-      const errorEl = document.getElementById('ch-error');
-
-      submitBtn.disabled = true;
-      submitBtn.classList.add('ch-loading');
-      document.getElementById('ch-submit-text').textContent = 'Procesando...';
-      errorEl.classList.remove('ch-visible');
-
+      var submitBtn = document.getElementById('submit-btn');
+      var messageEl = document.getElementById('payment-message');
+      submitBtn.disabled = true; submitBtn.classList.add('loading'); messageEl.classList.remove('visible');
       try {
-        // Create payment method
-        const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
-          type: 'card',
-          card: cardElement,
-          billing_details: {
-            name: document.getElementById('ch-name').value,
-            email: document.getElementById('ch-email').value,
-          },
+        var submitResult = await elements.submit();
+        if (submitResult.error) throw new Error(submitResult.error.message);
+        var res = await fetch('/api/stripe/create-subscription', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: document.getElementById('field-email').value.trim(), customerPhone: document.getElementById('field-phone').value.trim() || null, businessName: document.getElementById('field-business').value.trim() || null })
         });
-
-        if (pmError) {
-          throw new Error(pmError.message);
-        }
-
-        // Create subscription
-        const res = await fetch('/api/stripe/create-subscription', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            websiteId: websiteId,
-            productId: selectedProduct.id,
-            customerName: document.getElementById('ch-name').value,
-            customerEmail: document.getElementById('ch-email').value,
-            customerPhone: document.getElementById('ch-phone').value || null,
-            paymentMethodId: paymentMethod.id,
-          }),
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || data.detail || 'Error al procesar el pago.');
+        var confirmResult = await stripe.confirmPayment({
+          elements: elements, clientSecret: data.clientSecret,
+          confirmParams: { return_url: window.location.origin + '/checkout/' + productId + '?redirect_status=succeeded', payment_method_data: { billing_details: { name: document.getElementById('field-name').value.trim(), email: document.getElementById('field-email').value.trim() } } },
+          redirect: 'if_required'
         });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || data.detail || 'Error al procesar el pago.');
-        }
-
-        // Handle 3D Secure
-        if (data.requiresAction && data.clientSecret) {
-          const { error: confirmError } = await stripe.confirmCardPayment(data.clientSecret);
-          if (confirmError) {
-            throw new Error(confirmError.message);
-          }
-        }
-
-        // Show success
-        document.getElementById('ch-success').classList.add('ch-visible');
-
-      } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.classList.add('ch-visible');
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('ch-loading');
-        document.getElementById('ch-submit-text').textContent = 'Activar mi página web';
-      }
+        if (confirmResult.error) throw new Error(confirmResult.error.message);
+        showSuccess('\u00a1Pago exitoso!', 'Tu dise\u00f1ador te contactar\u00e1 por WhatsApp en las pr\u00f3ximas horas para comenzar con tu p\u00e1gina web.');
+      } catch (err) { messageEl.textContent = err.message; messageEl.classList.add('visible'); submitBtn.disabled = false; submitBtn.classList.remove('loading'); }
     }
 
-    function showPageError(msg) {
-      document.getElementById('ch-loading').style.display = 'none';
-      document.getElementById('ch-page-error').style.display = '';
-      document.getElementById('ch-page-error-msg').textContent = msg;
-    }
-
-    function escapeHtml(str) {
-      var div = document.createElement('div');
-      div.appendChild(document.createTextNode(str));
-      return div.innerHTML;
-    }
+    function showSuccess(title, text) { document.getElementById('success-title').textContent = title; document.getElementById('success-text').textContent = text; document.getElementById('success-overlay').style.display = ''; }
+    function showPageError(msg) { document.getElementById('page-loading').style.display = 'none'; document.getElementById('page-error').style.display = ''; document.getElementById('page-error-msg').textContent = msg; }
   })();
   </script>
 </body>
