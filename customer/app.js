@@ -608,15 +608,15 @@
       if (displayUrl) {
         websiteUrlEl.innerHTML = '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escapeHtml(displayUrl) + '</a>';
       } else {
-        websiteUrlEl.textContent = 'Tu sitio web esta en construccion';
+        websiteUrlEl.textContent = 'Tu sitio web está en construcción';
       }
     }
 
     if (websiteSubEl) {
       if (displayUrl) {
-        websiteSubEl.textContent = 'Tu pagina web esta activa y lista para recibir clientes.';
+        websiteSubEl.textContent = 'Tu página web está activa y lista para recibir clientes.';
       } else {
-        websiteSubEl.textContent = 'Estamos construyendo tu presencia en linea. Pronto tus clientes podran encontrarte.';
+        websiteSubEl.textContent = 'Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.';
       }
     }
 
@@ -1049,16 +1049,16 @@
     }
 
     if (subscriptionData.cancel_at_period_end) {
-      showToast('La cancelación ya está programada para el final de tu periodo actual.', 'warning');
+      showToast('La cancelación ya está programada para el final de tu período actual.', 'warning');
       return;
     }
 
     // Multi-step confirmation
     var confirmed = window.confirm(
       '¿Estás seguro de que deseas cancelar tu suscripción?\n\n' +
-      '• Tu sitio web se suspenderá al final del periodo de facturación actual.\n' +
+      '• Tu sitio web se suspenderá al final del período de facturación actual.\n' +
       '• Tus datos se conservarán por 90 días.\n' +
-      '• Puedes reactivar tu suscripción antes de que termine el periodo.'
+      '• Puedes reactivar tu suscripción antes de que termine el período.'
     );
 
     if (!confirmed) return;
@@ -1390,7 +1390,7 @@
         // Update hero URL
         renderDashboard(businessData, website, subscriptionData);
       } else {
-        showToast('El dominio aun no esta verificado. Revisa tu configuracion DNS.', 'warning');
+        showToast('El dominio aún no está verificado. Revisa tu configuración DNS.', 'warning');
       }
       renderDomainCard(website);
     } catch (err) {

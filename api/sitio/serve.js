@@ -145,7 +145,7 @@ function notFoundPage() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pagina no encontrada — AhoraTengoPagina</title>
+  <title>Página no encontrada — AhoraTengoPagina</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0a0f; color: #f0f0f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
     .wrap { max-width: 420px; padding: 40px 24px; }
@@ -159,8 +159,8 @@ function notFoundPage() {
 <body>
   <div class="wrap">
     <h1>404</h1>
-    <h2>Pagina no encontrada</h2>
-    <p>Lo sentimos, esta pagina no existe o ya no esta disponible.</p>
+    <h2>Página no encontrada</h2>
+    <p>Lo sentimos, esta página no existe o ya no está disponible.</p>
     <a href="https://ahoratengopagina.com">Ir a AhoraTengoPagina</a>
   </div>
 </body>
@@ -188,7 +188,7 @@ function suspendedPage(businessName) {
   <div class="wrap">
     <div class="icon">🔒</div>
     <h2>Sitio temporalmente no disponible</h2>
-    <p>Esta pagina web esta temporalmente suspendida. Si eres el dueno del negocio, contacta a tu proveedor de servicio.</p>
+    <p>Esta página web está temporalmente suspendida. Si eres el dueño del negocio, contacta a tu proveedor de servicio.</p>
     <a href="https://ahoratengopagina.com">AhoraTengoPagina</a>
   </div>
 </body>
