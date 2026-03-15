@@ -344,6 +344,11 @@
       enrichmentSavingDone: 'All data saved to database',
       enrichmentComplete: 'Enrichment complete!',
       enrichmentBizProgress: '{0} of {1} businesses',
+      // Enrichment status bar
+      enrichmentBarProgress: 'Enriching {0} of {1} businesses',
+      enrichmentBarComplete: 'Enrichment complete — {0} businesses enriched',
+      enrichmentBarEnrichMore: 'Enrich remaining {0} businesses',
+      enrichmentBarStopped: 'Enriched first {0} of {1} businesses',
     },
     es: {
       // Header
@@ -682,6 +687,11 @@
       enrichmentSavingDone: 'Todos los datos guardados en la base de datos',
       enrichmentComplete: '¡Enriquecimiento completado!',
       enrichmentBizProgress: '{0} de {1} negocios',
+      // Enrichment status bar
+      enrichmentBarProgress: 'Enriqueciendo {0} de {1} negocios',
+      enrichmentBarComplete: 'Enriquecimiento completado — {0} negocios enriquecidos',
+      enrichmentBarEnrichMore: 'Enriquecer los {0} negocios restantes',
+      enrichmentBarStopped: 'Enriquecidos los primeros {0} de {1} negocios',
     },
   };
 
@@ -1969,7 +1979,8 @@
     }
   }
 
-  // ── Enrichment Modal ──
+  // ── Enrichment Status Bar ──
+  // Non-blocking bottom bar that shows enrichment progress while user can interact with results.
   const ENRICHMENT_STEPS = [
     { id: 'social-profiles', labelKey: 'enrichmentSocialProfiles', doneKey: 'enrichmentSocialProfilesDone' },
     { id: 'google-reviews', labelKey: 'enrichmentGoogleReviews', doneKey: 'enrichmentGoogleReviewsDone' },
@@ -1981,76 +1992,130 @@
     { id: 'saving', labelKey: 'enrichmentSaving', doneKey: 'enrichmentSavingDone' },
   ];
 
-  function showEnrichmentModal(totalCount) {
-    const existing = document.getElementById('enrichment-modal');
-    if (existing) existing.remove();
+  let enrichmentBarCurrentStep = '';
 
-    const stepsHtml = ENRICHMENT_STEPS.map((step) => `
-      <div class="enrichment-step" id="enrichment-step-${step.id}" data-status="pending">
-        <span class="enrichment-step-icon">&#9675;</span>
-        <span class="enrichment-step-label">${t(step.labelKey)}</span>
-      </div>
-    `).join('');
-
-    const modal = document.createElement('div');
-    modal.id = 'enrichment-modal';
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-      <div class="modal-content" style="max-width:480px">
-        <div class="modal-header">
-          <h2>${t('enrichmentModalTitle')}</h2>
+  function showEnrichmentBar(totalCount) {
+    let bar = document.getElementById('enrichment-bar');
+    if (bar) bar.remove();
+    bar = document.createElement('div');
+    bar.id = 'enrichment-bar';
+    bar.className = 'enrichment-bar';
+    bar.innerHTML = `
+      <div class="enrichment-bar-inner">
+        <div class="enrichment-bar-left">
+          <span class="spinner-sm"></span>
+          <span class="enrichment-bar-step" id="enrichment-bar-step"></span>
         </div>
-        <div class="modal-body">
-          <div class="enrichment-biz-progress" id="enrichment-biz-progress"></div>
-          <div class="enrichment-steps">
-            ${stepsHtml}
+        <div class="enrichment-bar-center">
+          <span class="enrichment-bar-biz" id="enrichment-bar-biz"></span>
+        </div>
+        <div class="enrichment-bar-right">
+          <div class="enrichment-bar-progress-track">
+            <div class="enrichment-bar-progress-fill" id="enrichment-bar-fill" style="width:0%"></div>
           </div>
         </div>
       </div>
     `;
-    document.body.appendChild(modal);
+    document.body.appendChild(bar);
   }
 
   function updateEnrichmentStep(stepId, status, customLabel) {
-    const stepEl = document.getElementById('enrichment-step-' + stepId);
-    if (!stepEl) return;
     const step = ENRICHMENT_STEPS.find(s => s.id === stepId);
-    stepEl.setAttribute('data-status', status);
-    const iconEl = stepEl.querySelector('.enrichment-step-icon');
-    const labelEl = stepEl.querySelector('.enrichment-step-label');
+    if (!step) return;
     if (status === 'active') {
-      iconEl.innerHTML = '<span class="spinner-sm"></span>';
-      labelEl.textContent = customLabel || t(step.labelKey);
-    } else if (status === 'done') {
-      iconEl.innerHTML = '&#10003;';
-      labelEl.textContent = customLabel || t(step.doneKey);
-    } else if (status === 'skipped') {
-      iconEl.innerHTML = '&#8211;';
-      labelEl.textContent = customLabel || t(step.doneKey);
-      stepEl.setAttribute('data-status', 'skipped');
+      enrichmentBarCurrentStep = customLabel || t(step.labelKey);
+      const stepEl = document.getElementById('enrichment-bar-step');
+      if (stepEl) stepEl.textContent = enrichmentBarCurrentStep;
+    }
+    // Update progress bar fill based on which step we're on
+    if (status === 'done' || status === 'skipped') {
+      const idx = ENRICHMENT_STEPS.findIndex(s => s.id === stepId);
+      const pct = Math.round(((idx + 1) / ENRICHMENT_STEPS.length) * 100);
+      const fill = document.getElementById('enrichment-bar-fill');
+      if (fill) fill.style.width = pct + '%';
     }
   }
 
   function updateEnrichmentBizProgress(current, total) {
-    const el = document.getElementById('enrichment-biz-progress');
-    if (el) el.textContent = t('enrichmentBizProgress', current, total);
+    const el = document.getElementById('enrichment-bar-biz');
+    if (el) el.textContent = t('enrichmentBarProgress', current, total);
   }
 
-  function closeEnrichmentModal() {
-    const modal = document.getElementById('enrichment-modal');
-    if (modal) modal.remove();
+  function showEnrichmentBarComplete(enrichedCount) {
+    const bar = document.getElementById('enrichment-bar');
+    if (!bar) return;
+    bar.classList.add('enrichment-bar-done');
+    bar.innerHTML = `
+      <div class="enrichment-bar-inner">
+        <div class="enrichment-bar-left">
+          <span class="enrichment-bar-check">&#10003;</span>
+          <span class="enrichment-bar-step">${t('enrichmentBarComplete', enrichedCount)}</span>
+        </div>
+        <div class="enrichment-bar-right">
+          <button class="enrichment-bar-dismiss" onclick="document.getElementById('enrichment-bar').remove()">&times;</button>
+        </div>
+      </div>
+    `;
+    setTimeout(() => {
+      const b = document.getElementById('enrichment-bar');
+      if (b && b.classList.contains('enrichment-bar-done')) b.remove();
+    }, 8000);
+  }
+
+  function showEnrichmentBarStopped(enrichedCount, totalCount, remainingResults) {
+    const bar = document.getElementById('enrichment-bar');
+    if (!bar) return;
+    const remainingCount = remainingResults.length;
+    bar.classList.add('enrichment-bar-paused');
+    bar.classList.remove('enrichment-bar-done');
+    bar.innerHTML = `
+      <div class="enrichment-bar-inner">
+        <div class="enrichment-bar-left">
+          <span class="enrichment-bar-check" style="color:var(--warning)">&#9679;</span>
+          <span class="enrichment-bar-step">${t('enrichmentBarStopped', enrichedCount, totalCount)}</span>
+        </div>
+        <div class="enrichment-bar-right">
+          <button class="btn btn-primary enrichment-bar-enrich-more" id="enrichment-bar-enrich-more">
+            ${t('enrichmentBarEnrichMore', remainingCount)}
+          </button>
+          <button class="enrichment-bar-dismiss" onclick="document.getElementById('enrichment-bar').remove()">&times;</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('enrichment-bar-enrich-more').addEventListener('click', function() {
+      runEnrichmentPipeline(remainingResults, remainingResults.length);
+    });
+  }
+
+  function closeEnrichmentBar() {
+    const bar = document.getElementById('enrichment-bar');
+    if (bar) bar.remove();
   }
 
   // ── Enrichment Pipeline ──
-  // Runs after search results are displayed. Shows modal with live progress.
-  // Saves to database only after all enrichment is complete.
-  async function runEnrichmentPipeline(results) {
-    showEnrichmentModal(results.length);
+  // Runs after search results are displayed. Shows non-blocking bottom status bar.
+  // Only enriches businesses without websites. Auto-enriches first 50, then offers button for the rest.
+  const ENRICHMENT_BATCH_LIMIT = 50;
+
+  async function runEnrichmentPipeline(results, limit) {
+    // Filter to only businesses without websites (our actual leads)
+    const noWebsiteResults = results.filter(p => !p.website || p.website.toLowerCase().includes('facebook.com') || p.website.toLowerCase().includes('instagram.com'));
+    // Skip already-enriched businesses
+    const unenriched = noWebsiteResults.filter(p => !p._enriched);
+
+    if (unenriched.length === 0) return;
+
+    const batchLimit = limit || ENRICHMENT_BATCH_LIMIT;
+    const batch = unenriched.slice(0, batchLimit);
+    const remaining = unenriched.slice(batchLimit);
+
+    showEnrichmentBar(batch.length);
+    updateEnrichmentBizProgress(0, batch.length);
 
     // Phase 1: Social discovery (Yelp, Facebook/Instagram search, Knowledge Graph)
     updateEnrichmentStep('social-profiles', 'active');
     try {
-      await enrichWithSocialProfiles(results);
+      await enrichWithSocialProfiles(batch);
       renderTable();
     } catch (err) {
       console.warn('Social enrichment error:', err);
@@ -2060,7 +2125,7 @@
     // Phase 2: Fetch reviews via Google Places JS API
     if (mapsLoaded) {
       updateEnrichmentStep('google-reviews', 'active');
-      await enrichWithGoogleReviews(results);
+      await enrichWithGoogleReviews(batch);
       renderTable();
       updateEnrichmentStep('google-reviews', 'done');
     } else {
@@ -2069,26 +2134,26 @@
 
     // Phase 3: Enrich with SearchAPI.io place details
     updateEnrichmentStep('place-details', 'active');
-    await enrichWithPlaceDetails(results);
+    await enrichWithPlaceDetails(batch);
     renderTable();
     updateEnrichmentStep('place-details', 'done');
 
     // Phase 4: Fetch additional reviews
     updateEnrichmentStep('additional-reviews', 'active');
-    await enrichWithSearchAPIReviews(results);
+    await enrichWithSearchAPIReviews(batch);
     renderTable();
     updateEnrichmentStep('additional-reviews', 'done');
 
     // Phase 5: Fetch additional photos
     updateEnrichmentStep('photos', 'active');
-    await enrichWithSearchAPIPhotos(results);
+    await enrichWithSearchAPIPhotos(batch);
     renderTable();
     updateEnrichmentStep('photos', 'done');
 
     // Phase 6: Facebook enrichment
     updateEnrichmentStep('facebook', 'active');
     try {
-      await enrichWithSocialDataByPlatform(results, 'facebook');
+      await enrichWithSocialDataByPlatform(batch, 'facebook');
       renderTable();
     } catch (err) {
       console.warn('Facebook enrichment error:', err);
@@ -2098,7 +2163,7 @@
     // Phase 7: Instagram enrichment
     updateEnrichmentStep('instagram', 'active');
     try {
-      await enrichWithSocialDataByPlatform(results, 'instagram');
+      await enrichWithSocialDataByPlatform(batch, 'instagram');
       renderTable();
     } catch (err) {
       console.warn('Instagram enrichment error:', err);
@@ -2108,7 +2173,7 @@
     // Phase 8: Save everything to database (after ALL enrichment is done)
     if (supabaseClient) {
       updateEnrichmentStep('saving', 'active');
-      const toSave = results.filter((p) => !savedPlaceIds.has(p.placeId));
+      const toSave = batch.filter((p) => !savedPlaceIds.has(p.placeId));
       let savedCount = 0;
       for (let i = 0; i < toSave.length; i++) {
         updateEnrichmentBizProgress(i + 1, toSave.length);
@@ -2124,13 +2189,18 @@
       updateEnrichmentStep('saving', 'skipped', 'Database not connected');
     }
 
+    // Mark batch as enriched so they won't be re-enriched
+    batch.forEach(p => { p._enriched = true; });
+
     updateProgress(100, t('searchComplete'));
     renderTable();
 
-    // Brief pause to show completion state, then close
-    setTimeout(() => {
-      closeEnrichmentModal();
-    }, 1500);
+    // Show completion or "enrich more" button
+    if (remaining.length > 0) {
+      showEnrichmentBarStopped(batch.length, batch.length + remaining.length, remaining);
+    } else {
+      showEnrichmentBarComplete(batch.length);
+    }
   }
 
   // Enrich businesses with SearchAPI.io place details
@@ -2488,6 +2558,7 @@
   // Enrich all search results with social profiles (called after search completes)
   async function enrichWithSocialProfiles(results) {
     let foundCount = 0;
+    let processed = 0;
     const batchSize = 5;
     for (let i = 0; i < results.length; i += batchSize) {
       const batch = results.slice(i, i + batchSize);
@@ -2503,6 +2574,8 @@
           updateSocialCell(place.placeId, 'done', place.socialProfiles);
         }
         if (place.socialProfiles && place.socialProfiles.length > 0) foundCount++;
+        processed++;
+        updateEnrichmentBizProgress(processed, results.length);
       }));
     }
     if (results.length > 0) {
