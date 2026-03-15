@@ -28,7 +28,10 @@ export default async function handler(req, res) {
     // GET — list or get by id
     if (req.method === 'GET') {
       const id = req.query.id;
-      let url = `${supabaseUrl}/rest/v1/whatsapp_audiences?select=*&order=created_at.desc`;
+      const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+      const offset = parseInt(req.query.offset, 10) || 0;
+
+      let url = `${supabaseUrl}/rest/v1/whatsapp_audiences?select=*&order=created_at.desc&limit=${limit}&offset=${offset}`;
       if (id) url = `${supabaseUrl}/rest/v1/whatsapp_audiences?id=eq.${id}&select=*`;
 
       const resp = await fetch(url, { headers });
@@ -118,20 +121,20 @@ export default async function handler(req, res) {
 
 async function computeAudienceCount(supabaseUrl, supabaseKey, filters) {
   try {
-    const resp = await fetch(`${supabaseUrl}/rest/v1/rpc/get_audience_businesses`, {
+    const resp = await fetch(`${supabaseUrl}/rest/v1/rpc/count_audience_businesses`, {
       method: 'POST',
       headers: {
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ p_filters: filters, p_limit: 1, p_offset: 0 }),
+      body: JSON.stringify({ p_filters: filters }),
     });
 
     const data = await resp.json();
-    if (data && data.length > 0 && data[0].total_count !== undefined) {
-      return parseInt(data[0].total_count, 10);
-    }
+    // RPC returning a scalar comes back as the value directly
+    if (typeof data === 'number') return data;
+    if (data && typeof data === 'string') return parseInt(data, 10) || 0;
     return 0;
   } catch {
     return 0;

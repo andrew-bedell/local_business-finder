@@ -788,7 +788,7 @@
   async function loadSavedIds() {
     if (!supabaseClient) return;
     try {
-      const { data } = await supabaseClient.from('businesses').select('place_id');
+      const { data } = await supabaseClient.from('businesses').select('place_id').limit(10000);
       if (data) data.forEach((row) => savedPlaceIds.add(row.place_id));
     } catch (e) {
       console.warn('Could not load saved IDs:', e);
@@ -844,8 +844,11 @@
         return false;
       }
 
-      // Save reviews to business_reviews table
+      // Save related data in parallel (all depend on businessId from upsert above)
       const businessId = data && data[0] && data[0].id;
+      const parallelOps = [];
+
+      // Save reviews to business_reviews table
       if (businessId && place.reviewData && place.reviewData.length > 0) {
         const reviewRows = place.reviewData.map((r) => {
           const authorName = r.authorAttribution?.displayName || null;
@@ -865,18 +868,19 @@
           };
         });
 
-        const { error: reviewError } = await supabaseClient
-          .from('business_reviews')
-          .upsert(reviewRows, { onConflict: 'business_id,review_hash' });
-
-        if (reviewError) {
-          console.warn('Review save error (non-fatal):', reviewError);
-        }
+        parallelOps.push(
+          supabaseClient
+            .from('business_reviews')
+            .upsert(reviewRows, { onConflict: 'business_id,review_hash' })
+            .then(({ error }) => { if (error) console.warn('Review save error (non-fatal):', error); })
+        );
       }
 
       // Save discovered social profiles if available
       if (businessId && place.socialProfiles && place.socialProfiles.length > 0) {
-        await saveDiscoveredProfiles(businessId, place.socialProfiles);
+        parallelOps.push(
+          saveDiscoveredProfiles(businessId, place.socialProfiles)
+        );
       }
 
       // Save photos to business_photos table
@@ -893,36 +897,43 @@
           }));
 
         if (photoRows.length > 0) {
-          const { error: photoError } = await supabaseClient
-            .from('business_photos')
-            .insert(photoRows);
-
-          if (photoError) {
-            console.warn('Photo save error (non-fatal):', photoError);
-          }
+          parallelOps.push(
+            supabaseClient
+              .from('business_photos')
+              .insert(photoRows)
+              .then(({ error }) => { if (error) console.warn('Photo save error (non-fatal):', error); })
+          );
         }
       }
 
-      savedPlaceIds.add(place.placeId);
-
       // Save Facebook enrichment data (photos, reviews, follower counts)
       if (place.facebookData) {
-        await saveFacebookData(place).catch(err =>
-          console.warn('Failed to save Facebook data:', err)
+        parallelOps.push(
+          saveFacebookData(place, businessId).catch(err =>
+            console.warn('Failed to save Facebook data:', err)
+          )
         );
       }
 
       // Save Instagram enrichment data (photos, follower/post counts)
       if (place.instagramData) {
-        await saveInstagramData(place).catch(err =>
-          console.warn('Failed to save Instagram data:', err)
+        parallelOps.push(
+          saveInstagramData(place, businessId).catch(err =>
+            console.warn('Failed to save Instagram data:', err)
+          )
         );
       }
 
       // Update enriched place details in DB
-      await updateBusinessEnrichedData(place).catch(err =>
-        console.warn('Failed to update enriched data:', err)
+      parallelOps.push(
+        updateBusinessEnrichedData(place).catch(err =>
+          console.warn('Failed to update enriched data:', err)
+        )
       );
+
+      await Promise.all(parallelOps);
+
+      savedPlaceIds.add(place.placeId);
 
       return true;
     } catch (err) {
@@ -1823,10 +1834,10 @@
   }
 
   // Save Facebook data (photos + reviews) to Supabase
-  async function saveFacebookData(place) {
+  async function saveFacebookData(place, knownBusinessId) {
     if (!supabaseClient || !place.placeId || !place.facebookData) return;
 
-    const businessId = await getBusinessId(place.placeId);
+    const businessId = knownBusinessId || await getBusinessId(place.placeId);
     if (!businessId) return;
 
     const fb = place.facebookData;
@@ -1908,10 +1919,10 @@
   }
 
   // Save Instagram data (photos from posts) to Supabase
-  async function saveInstagramData(place) {
+  async function saveInstagramData(place, knownBusinessId) {
     if (!supabaseClient || !place.placeId || !place.instagramData) return;
 
-    const businessId = await getBusinessId(place.placeId);
+    const businessId = knownBusinessId || await getBusinessId(place.placeId);
     if (!businessId) return;
 
     const ig = place.instagramData;
