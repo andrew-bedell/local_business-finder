@@ -3792,7 +3792,7 @@
             language,
           }),
         }),
-        90000,
+        130000,
         'Website generation'
       );
       if (!res.ok) {
@@ -4058,7 +4058,7 @@
             language,
           }),
         }),
-        90000,
+        130000,
         'Website generation'
       );
 

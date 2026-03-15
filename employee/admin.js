@@ -1335,7 +1335,7 @@
       btn.addEventListener('click', () => {
         const businessId = btn.getAttribute('data-id');
         const business = currentResults.find(b => String(b.id) === businessId);
-        if (business) handleAdminTableAiPhotos(business);
+        if (business) handleAdminTableAiPhotos(business, btn);
       });
     });
 
@@ -1837,22 +1837,100 @@
       return;
     }
 
-    // Step 2: AI Photos (mark as pending — user triggers separately)
-    popup.setStep('photos', 'running');
-    // Photos and website are triggered manually via their buttons, so show close
-    popup.setStep('photos', 'done');
-    popup.setStep('website', 'done');
+    // Photos and website are triggered manually via their own buttons
     popup.showClose();
     showToast(t('reportSuccess', business.name), 'success');
   }
 
-  function handleAdminTableAiPhotos(business) {
-    const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
-    if (!hasReport) {
+  async function handleAdminTableAiPhotos(business, btn) {
+    // If already generated, open detail modal to view them
+    if (business._cachedGeneratedPhotos) {
+      openDetailModal(business);
+      return;
+    }
+
+    const report = business._cachedReport ||
+      ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+    if (!report) {
       showToast(t('needsReport'), 'warning');
       return;
     }
-    openDetailModal(business);
+
+    const plan = report.photoAssetPlan || [];
+    const aiItems = plan.filter(item => item.recommendation === 'generate_ai' && item.aiPrompt);
+
+    // If no AI photos needed, mark as complete
+    if (aiItems.length === 0) {
+      business._cachedGeneratedPhotos = [];
+      if (btn) { btn.textContent = '\u2713'; }
+      showToast(t('photosNoneNeeded'), 'success');
+      const row = btn ? btn.closest('tr') : null;
+      const websiteBtn = row ? row.querySelector('.btn-website') : null;
+      if (websiteBtn) websiteBtn.disabled = false;
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = t('generatingPhotos');
+    }
+    const generated = [];
+
+    try {
+      for (let i = 0; i < aiItems.length; i++) {
+        const item = aiItems[i];
+        if (btn) btn.textContent = `${i + 1}/${aiItems.length}...`;
+
+        const res = await withTimeout(
+          fetch('/api/ai/generate-photos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: item.aiPrompt,
+              section: item.section,
+              slot: item.slot,
+            }),
+          }),
+          90000,
+          'Photo generation'
+        );
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn(`Photo generation failed for ${item.section}/${item.slot}:`, errData.error);
+          continue;
+        }
+
+        const data = await res.json();
+        generated.push({
+          id: `ai_${(item.section || 'photo').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${i}`,
+          section: item.section,
+          slot: item.slot,
+          url: data.url,
+          source: 'ai_generated',
+          type: 'ai_generated',
+        });
+      }
+
+      business._cachedGeneratedPhotos = generated;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '\u2713';
+      }
+      showToast(t('photosSuccess', business.name), 'success');
+
+      // Enable website button
+      const row = btn ? btn.closest('tr') : null;
+      const websiteBtn = row ? row.querySelector('.btn-website') : null;
+      if (websiteBtn) websiteBtn.disabled = false;
+    } catch (err) {
+      console.error('Photo generation error:', err);
+      showToast(t('photosError'), 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = t('btnPhotos');
+      }
+    }
   }
 
   async function handleAdminTableWebsite(business, btn) {
@@ -1872,6 +1950,10 @@
       const details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
       const photoInventory = buildPhotoInventory(details);
+      // Append AI-generated photos to inventory
+      if (business._cachedGeneratedPhotos) {
+        photoInventory.push(...business._cachedGeneratedPhotos);
+      }
       const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
       const report = business._cachedReport ||
         ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
@@ -1887,7 +1969,7 @@
             language,
           }),
         }),
-        90000,
+        130000,
         'Website generation'
       );
       if (!res.ok) {
@@ -2120,7 +2202,7 @@
             language,
           }),
         }),
-        90000,
+        130000,
         'Website generation'
       );
 
