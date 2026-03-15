@@ -28,8 +28,10 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const id = req.query.id;
       const status = req.query.status;
+      const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+      const offset = parseInt(req.query.offset, 10) || 0;
 
-      let url = `${supabaseUrl}/rest/v1/whatsapp_campaigns?select=*,whatsapp_audiences(name),whatsapp_templates(template_name,body_text,language)&order=created_at.desc`;
+      let url = `${supabaseUrl}/rest/v1/whatsapp_campaigns?select=*,whatsapp_audiences(name),whatsapp_templates(template_name,body_text,language)&order=created_at.desc&limit=${limit}&offset=${offset}`;
       if (id) url = `${supabaseUrl}/rest/v1/whatsapp_campaigns?id=eq.${id}&select=*,whatsapp_audiences(name),whatsapp_templates(template_name,body_text,language)`;
       else if (status) url += `&status=eq.${status}`;
 

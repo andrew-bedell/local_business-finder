@@ -92,6 +92,12 @@ CREATE INDEX IF NOT EXISTS idx_businesses_status ON businesses (business_status)
 CREATE INDEX IF NOT EXISTS idx_businesses_completeness ON businesses (data_completeness_score);
 CREATE INDEX IF NOT EXISTS idx_businesses_slug ON businesses (slug) WHERE slug IS NOT NULL;
 
+-- Composite: category + city search filter
+CREATE INDEX IF NOT EXISTS idx_businesses_category_city ON businesses (category, address_city);
+
+-- Functional: case-insensitive city filtering (used by get_audience_businesses RPC)
+CREATE INDEX IF NOT EXISTS idx_businesses_city_lower ON businesses (LOWER(address_city));
+
 
 -- ============================================================================
 -- 2. BUSINESS_SOCIAL_PROFILES — Social media & platform links
@@ -233,6 +239,12 @@ CREATE TABLE IF NOT EXISTS business_reviews (
 CREATE INDEX IF NOT EXISTS idx_reviews_business ON business_reviews (business_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_sentiment ON business_reviews (sentiment_label);
 CREATE INDEX IF NOT EXISTS idx_reviews_curated ON business_reviews (is_curated) WHERE is_curated = TRUE;
+
+-- Composite: curated reviews per business
+CREATE INDEX IF NOT EXISTS idx_reviews_business_curated ON business_reviews (business_id, is_curated) WHERE is_curated = TRUE;
+
+-- Composite: sentiment filtering per business
+CREATE INDEX IF NOT EXISTS idx_reviews_business_sentiment ON business_reviews (business_id, sentiment_label);
 
 
 -- ============================================================================
@@ -402,6 +414,9 @@ CREATE INDEX IF NOT EXISTS idx_wa_msg_conv ON whatsapp_messages (conversation_id
 CREATE INDEX IF NOT EXISTS idx_wa_msg_business ON whatsapp_messages (business_id);
 CREATE INDEX IF NOT EXISTS idx_wa_msg_wamid ON whatsapp_messages (wamid);
 CREATE INDEX IF NOT EXISTS idx_wa_msg_status ON whatsapp_messages (status) WHERE status NOT IN ('delivered', 'read');
+
+-- Composite: recent messages per business
+CREATE INDEX IF NOT EXISTS idx_wa_msg_business_created ON whatsapp_messages (business_id, created_at DESC);
 
 
 -- ============================================================================
@@ -623,6 +638,51 @@ BEGIN
   ORDER BY bs.name
   LIMIT p_limit
   OFFSET p_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- ============================================================================
+-- RPC: count_audience_businesses — lightweight count-only version
+-- ============================================================================
+-- Returns just the count of matching businesses. No window functions, no
+-- ordering, no pagination overhead. Used by audience create/update to get
+-- the business_count without the full query cost.
+
+CREATE OR REPLACE FUNCTION count_audience_businesses(p_filters JSONB)
+RETURNS BIGINT AS $$
+DECLARE
+  result BIGINT;
+BEGIN
+  SELECT COUNT(*)
+  INTO result
+  FROM businesses b
+  LEFT JOIN (
+    SELECT
+      wm.business_id,
+      COUNT(*) FILTER (WHERE wm.direction = 'outbound') AS sent_count,
+      COUNT(*) FILTER (WHERE wm.direction = 'inbound') AS reply_count,
+      MAX(wm.created_at) FILTER (WHERE wm.direction = 'outbound') AS last_sent
+    FROM whatsapp_messages wm
+    GROUP BY wm.business_id
+  ) ms ON ms.business_id = b.id
+  WHERE
+    b.phone IS NOT NULL AND b.phone != ''
+    AND (p_filters->>'address_city' IS NULL OR b.address_city ILIKE '%' || (p_filters->>'address_city') || '%')
+    AND (p_filters->>'address_state' IS NULL OR b.address_state ILIKE '%' || (p_filters->>'address_state') || '%')
+    AND (p_filters->>'address_country' IS NULL OR b.address_country = p_filters->>'address_country')
+    AND (p_filters->>'category' IS NULL OR b.category ILIKE '%' || (p_filters->>'category') || '%')
+    AND (p_filters->>'rating_min' IS NULL OR b.rating >= (p_filters->>'rating_min')::DECIMAL)
+    AND (p_filters->>'rating_max' IS NULL OR b.rating <= (p_filters->>'rating_max')::DECIMAL)
+    AND (p_filters->>'messages_sent_min' IS NULL OR COALESCE(ms.sent_count, 0) >= (p_filters->>'messages_sent_min')::INT)
+    AND (p_filters->>'messages_sent_max' IS NULL OR COALESCE(ms.sent_count, 0) <= (p_filters->>'messages_sent_max')::INT)
+    AND (p_filters->>'replies_min' IS NULL OR COALESCE(ms.reply_count, 0) >= (p_filters->>'replies_min')::INT)
+    AND (p_filters->>'replies_max' IS NULL OR COALESCE(ms.reply_count, 0) <= (p_filters->>'replies_max')::INT)
+    AND (p_filters->>'last_contacted_after' IS NULL OR ms.last_sent >= (p_filters->>'last_contacted_after')::TIMESTAMPTZ)
+    AND (p_filters->>'last_contacted_before' IS NULL OR ms.last_sent <= (p_filters->>'last_contacted_before')::TIMESTAMPTZ)
+    AND (p_filters->>'never_contacted' IS NULL OR (p_filters->>'never_contacted')::BOOLEAN = FALSE OR ms.last_sent IS NULL);
+
+  RETURN result;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -568,7 +568,7 @@
       var editRequests = results[3];
 
       // Step 3: Render everything
-      renderDashboard(businessData, websiteData, subscriptionData);
+      renderDashboard(businessData, websiteData, subscriptionData, editRequests);
       renderBusinessInfo(businessData);
       renderBilling(subscriptionData, customer);
       renderEditRequests(editRequests);
@@ -591,7 +591,7 @@
   }
 
   // ── Rendering ──
-  function renderDashboard(business, website, subscription) {
+  function renderDashboard(business, website, subscription, editRequests) {
     // Website URL — show actual published_url or custom domain
     var websiteUrlEl = $('#website-url');
     var websiteSubEl = $('#website-sub');
@@ -674,17 +674,15 @@
       statVisitors.textContent = '—';
     }
 
-    // Stats — open requests
+    // Stats — open requests (use already-fetched edit requests passed in)
     var statRequests = $('#stat-requests');
-    if (statRequests && customerData && customerData.customers) {
-      loadEditRequests(customerData.customers.id).then(function (requests) {
-        var openCount = requests.filter(function (r) {
-          return r.status !== 'completed' && r.status !== 'rejected';
-        }).length;
-        statRequests.textContent = String(openCount);
-      }).catch(function () {
-        statRequests.textContent = '0';
-      });
+    if (statRequests && editRequests) {
+      var openCount = editRequests.filter(function (r) {
+        return r.status !== 'completed' && r.status !== 'rejected';
+      }).length;
+      statRequests.textContent = String(openCount);
+    } else if (statRequests) {
+      statRequests.textContent = '0';
     }
   }
 
