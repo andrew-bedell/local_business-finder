@@ -1,7 +1,7 @@
 // Vercel serverless function: Claude API website generation
 // Receives research report + business data + photo URLs, returns complete HTML website
 
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 120 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
