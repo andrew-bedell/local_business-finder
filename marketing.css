@@ -1178,7 +1178,15 @@ ul, ol { list-style: none; }
 
   .m-features-grid { grid-template-columns: 1fr; }
 
-  .m-pricing-grid[data-cols="3"] { grid-template-columns: 1fr 1fr !important; max-width: 760px !important; }
+  .m-pricing-grid[data-cols="3"] { grid-template-columns: 1fr !important; max-width: 480px !important; }
+  .m-pricing-desc { display: none; }
+  .m-pricing-feature:nth-child(n+5) { display: none; }
+  .m-pricing-card { padding: 24px; }
+  .m-pricing-card.m-pricing-featured { transform: none; }
+  .m-pricing-price { font-size: 36px; }
+  .m-pricing-price span { font-size: 16px; }
+  .m-pricing-features { gap: 8px; margin-bottom: 24px; }
+  .m-pricing-note { margin-bottom: 16px; }
 
   .m-footer-inner { grid-template-columns: 1fr; gap: 32px; }
 
@@ -1197,11 +1205,6 @@ ul, ol { list-style: none; }
   .m-problem h2, .m-solution h2, .m-features h2, .m-faq h2, .m-pricing h2 { font-size: 28px; }
 
   .m-case-stats { grid-template-columns: 1fr; }
-
-  .m-pricing-grid { grid-template-columns: 1fr !important; max-width: 480px !important; }
-  .m-pricing-card { padding: 24px; }
-  .m-pricing-card.m-pricing-featured { transform: none; }
-  .m-pricing-price { font-size: 36px; }
 
   .m-modal { width: 95%; }
 }
