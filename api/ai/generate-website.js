@@ -37,11 +37,10 @@ Requirements:
 - Responsive design with media queries for mobile (max-width: 768px) and tablet
 - Modern, clean design that reflects the business personality described in the research report
 - Use the photo URLs from the PHOTO INVENTORY — embed them directly as <img> src attributes or CSS background-image
+- The inventory includes both original photos (google, facebook, instagram) AND AI-generated photos (source: ai_generated)
 - For the photoAssetPlan items with recommendation "use_existing", use the corresponding URL from the inventory
-- For items with recommendation "generate_ai", create a placeholder div with:
-  - A CSS gradient background that matches the site color scheme
-  - A data-ai-prompt attribute containing the AI prompt from the photoAssetPlan
-  - Centered text showing "Image Coming Soon" (or equivalent in ${langName})
+- For items with recommendation "generate_ai", look for matching AI-generated photos in the inventory (IDs starting with "ai_") and use their URLs
+- If an AI-generated photo URL is not available for a slot, use a CSS gradient background placeholder
 - Include ALL real business data: name, address, phone, hours, curated reviews, services
 - Follow the research report's tone, suggested sections, and content recommendations
 - Include a call-to-action section with clickable phone (tel:) and directions (Google Maps) links

@@ -306,7 +306,12 @@
       thAiPhotos: 'AI Photos',
       thWebsite: 'Website',
       btnReport: 'Report',
-      btnPhotos: 'Photos',
+      btnPhotos: 'Generate Photos',
+      generatingPhotos: 'Generating...',
+      photosSuccess: 'AI photos generated for {0}',
+      photosError: 'Failed to generate photos. Please try again.',
+      photosNoneNeeded: 'All photos are existing — no AI generation needed',
+      needsPhotos: 'Generate photos first',
       btnWebsite: 'Website',
       reportSuccess: 'Research report generated for {0}',
       websiteSuccess: 'Website generated for {0}',
@@ -649,7 +654,12 @@
       thAiPhotos: 'Fotos IA',
       thWebsite: 'Sitio Web',
       btnReport: 'Informe',
-      btnPhotos: 'Fotos',
+      btnPhotos: 'Generar Fotos',
+      generatingPhotos: 'Generando...',
+      photosSuccess: 'Fotos IA generadas para {0}',
+      photosError: 'Error al generar fotos. Por favor intente de nuevo.',
+      photosNoneNeeded: 'Todas las fotos son existentes — no se necesita generación IA',
+      needsPhotos: 'Genera las fotos primero',
       btnWebsite: 'Sitio',
       reportSuccess: 'Informe generado para {0}',
       websiteSuccess: 'Sitio web generado para {0}',
@@ -1407,8 +1417,8 @@
         <td><span class="badge badge-no-site">${t('noWebsite')}</span></td>
         <td class="td-center" data-social-place="${escapeHtml(place.placeId)}">${socialCellHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-report" data-idx="${idx}">${place.researchReport ? '✓' : t('btnReport')}</button></td>
-        <td class="td-center"><button class="btn btn-view btn-photos" data-idx="${idx}" ${place.researchReport ? '' : 'disabled'}>${t('btnPhotos')}</button></td>
-        <td class="td-center"><button class="btn btn-view btn-website" data-idx="${idx}" ${place.researchReport ? '' : 'disabled'}>${place.generatedWebsiteHtml ? '✓' : t('btnWebsite')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-photos" data-idx="${idx}" ${place.researchReport ? '' : 'disabled'}>${place.generatedPhotos ? '✓' : t('btnPhotos')}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-website" data-idx="${idx}" ${place.generatedPhotos ? '' : 'disabled'}>${place.generatedWebsiteHtml ? '✓' : t('btnWebsite')}</button></td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${saveBtnHtml}</td>
@@ -1423,7 +1433,7 @@
       // Attach click handler for AI Photos button
       const photosBtn = tr.querySelector('.btn-photos');
       if (photosBtn) {
-        photosBtn.addEventListener('click', () => handleTableAiPhotos(place));
+        photosBtn.addEventListener('click', () => handleTableAiPhotos(place, photosBtn));
       }
 
       // Attach click handler for Website button
@@ -3654,12 +3664,10 @@
       btn.textContent = '\u2713';
       btn.title = t('generateReport');
       showToast(t('reportSuccess', place.name), 'success');
-      // Enable AI photos and website buttons in same row
+      // Enable AI photos button (website requires photos first)
       const row = btn.closest('tr');
       const photosBtn = row ? row.querySelector('.btn-photos') : null;
       if (photosBtn) photosBtn.disabled = false;
-      const websiteBtn = row ? row.querySelector('.btn-website') : null;
-      if (websiteBtn) websiteBtn.disabled = false;
     } catch (err) {
       console.error('Research report error:', err);
       showToast(t('reportError'), 'error');
@@ -3668,12 +3676,87 @@
     }
   }
 
-  function handleTableAiPhotos(place) {
+  async function handleTableAiPhotos(place, btn) {
+    // If already generated, open detail modal to view them
+    if (place.generatedPhotos) {
+      openDetailModal(place);
+      return;
+    }
     if (!place.researchReport) {
       showToast(t('needsReport'), 'warning');
       return;
     }
-    openDetailModal(place);
+
+    const report = place.researchReport;
+    const plan = report.photoAssetPlan || [];
+    const aiItems = plan.filter(item => item.recommendation === 'generate_ai' && item.aiPrompt);
+
+    // If no AI photos needed, mark as complete immediately
+    if (aiItems.length === 0) {
+      place.generatedPhotos = [];
+      btn.textContent = '\u2713';
+      showToast(t('photosNoneNeeded'), 'success');
+      const row = btn.closest('tr');
+      const websiteBtn = row ? row.querySelector('.btn-website') : null;
+      if (websiteBtn) websiteBtn.disabled = false;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = t('generatingPhotos');
+    const generated = [];
+
+    try {
+      for (let i = 0; i < aiItems.length; i++) {
+        const item = aiItems[i];
+        btn.textContent = `${i + 1}/${aiItems.length}...`;
+
+        const res = await withTimeout(
+          fetch('/api/ai/generate-photos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: item.aiPrompt,
+              section: item.section,
+              slot: item.slot,
+            }),
+          }),
+          90000,
+          'Photo generation'
+        );
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.warn(`Photo generation failed for ${item.section}/${item.slot}:`, errData.error);
+          continue;
+        }
+
+        const data = await res.json();
+        generated.push({
+          id: `ai_${(item.section || 'photo').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${i}`,
+          section: item.section,
+          slot: item.slot,
+          url: data.url,
+          source: 'ai_generated',
+          type: 'ai_generated',
+        });
+      }
+
+      place.generatedPhotos = generated;
+      btn.disabled = false;
+      btn.textContent = '\u2713';
+      showToast(t('photosSuccess', place.name), 'success');
+
+      // Enable website button
+      const row = btn.closest('tr');
+      const websiteBtn = row ? row.querySelector('.btn-website') : null;
+      if (websiteBtn) websiteBtn.disabled = false;
+    } catch (err) {
+      console.error('Photo generation error:', err);
+      showToast(t('photosError'), 'error');
+      btn.disabled = false;
+      btn.textContent = t('btnPhotos');
+    }
   }
 
   async function handleTableWebsite(place, btn) {
@@ -3685,11 +3768,17 @@
       showToast(t('needsReport'), 'warning');
       return;
     }
+    if (!place.generatedPhotos) {
+      showToast(t('needsPhotos'), 'warning');
+      return;
+    }
     btn.disabled = true;
     btn.textContent = t('generatingWebsite');
     try {
       const businessData = compileBusinessDataForPrompt(place);
-      const photoInventory = place._photoInventory || buildPhotoInventoryMap(place);
+      const baseInventory = place._photoInventory || buildPhotoInventoryMap(place);
+      // Include AI-generated photos in the inventory
+      const photoInventory = [...baseInventory, ...(place.generatedPhotos || [])];
       const language = getSearchLanguage();
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
