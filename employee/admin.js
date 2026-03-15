@@ -1172,9 +1172,9 @@
 
       const reportFilter = filterReport.value;
       if (reportFilter === 'yes') {
-        filtered = filtered.filter(b => hasGeneratedWebsite(b));
+        filtered = filtered.filter(b => hasResearchReport(b));
       } else if (reportFilter === 'no') {
-        filtered = filtered.filter(b => !hasGeneratedWebsite(b));
+        filtered = filtered.filter(b => !hasResearchReport(b));
       }
 
       const websiteFilter = filterWebsite.value;
@@ -1205,8 +1205,12 @@
     return profiles.find(p => p.platform === platform);
   }
 
+  function hasResearchReport(business) {
+    return (business.generated_websites || []).some(w => w.config && w.config.researchReport) || !!business._cachedReport;
+  }
+
   function hasGeneratedWebsite(business) {
-    return business.generated_websites && business.generated_websites.length > 0;
+    return (business.generated_websites || []).some(w => w.config && w.config.html);
   }
 
   function getWebsiteStatus(business) {
@@ -1828,6 +1832,10 @@
       if (photosBtn) photosBtn.disabled = false;
       const websiteBtn = row ? row.querySelector('.btn-website') : null;
       if (websiteBtn) websiteBtn.disabled = false;
+      // Persist report to database
+      saveResearchReport(business, data).catch(err =>
+        console.warn('Failed to save research report:', err)
+      );
     } catch (err) {
       console.error('Research report error:', err);
       popup.setStep('report', 'error');
@@ -2043,6 +2051,11 @@
 
       // Store report on the business's website config for caching
       business._cachedReport = data;
+
+      // Persist report to database
+      saveResearchReport(business, data).catch(err =>
+        console.warn('Failed to save research report:', err)
+      );
 
       // Show website generation section
       const websiteSection = modal.querySelector('#website-generation-section');
@@ -2421,6 +2434,39 @@
   }
 
   // ── Save Generated Website ──
+  async function saveResearchReport(business, report) {
+    if (!supabaseClient) return;
+
+    try {
+      // Check if a generated_websites row with a report already exists
+      const existing = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+      if (existing) return; // Already saved
+
+      const { data, error } = await supabaseClient
+        .from('generated_websites')
+        .insert({
+          business_id: business.id,
+          template_name: 'ai_research_report',
+          status: 'draft',
+          config: {
+            researchReport: report,
+            generatedAt: new Date().toISOString(),
+          },
+        })
+        .select('id, status, config');
+
+      if (error) {
+        console.warn('Report save error:', error);
+      } else {
+        // Update local business object so filters work immediately
+        if (!business.generated_websites) business.generated_websites = [];
+        if (data && data[0]) business.generated_websites.push(data[0]);
+      }
+    } catch (e) {
+      console.warn('Report save exception:', e);
+    }
+  }
+
   async function saveGeneratedWebsite(business, html, report) {
     if (!supabaseClient) return;
 
