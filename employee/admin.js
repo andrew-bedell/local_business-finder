@@ -1121,7 +1121,7 @@
       }
       const type = filterType.value;
       if (type) {
-        query = query.contains('types', [type]);
+        query = query.filter('types', 'cs', `{${type}}`);
       }
       const minRating = filterRating.value;
       if (minRating) {

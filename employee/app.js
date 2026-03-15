@@ -807,10 +807,13 @@
       // Validate business_status against CHECK constraint
       const status = VALID_BUSINESS_STATUSES.includes(place.status) ? place.status : 'UNKNOWN';
 
+      const country = countrySelect ? countrySelect.value.toUpperCase() : null;
+
       const row = {
         place_id: place.placeId,
         name: place.name,
         address_full: place.address,
+        address_country: country,
         phone: place.phone,
         website: place.website || '',
         rating: place.rating || null,
