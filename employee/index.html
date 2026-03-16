@@ -196,6 +196,22 @@
             </span>
           </button>
         </div>
+
+        <!-- URL Lookup -->
+        <div class="lookup-section">
+          <div class="lookup-divider">
+            <span data-i18n="lookupDivider">or add a specific business</span>
+          </div>
+          <div class="lookup-row">
+            <input type="text" id="lookup-input" class="input" data-i18n-placeholder="lookupPlaceholder" placeholder="Paste a Google Maps URL or Place ID...">
+            <button class="btn btn-primary" id="btn-lookup">
+              <span class="btn-text" data-i18n="lookupBtn">Look Up</span>
+              <span class="btn-loading" style="display:none;">
+                <span class="spinner"></span> <span data-i18n="lookingUp">Looking up...</span>
+              </span>
+            </button>
+          </div>
+        </div>
       </section>
 
       <!-- Progress -->
