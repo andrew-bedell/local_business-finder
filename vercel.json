@@ -8,6 +8,7 @@
     { "source": "/mipagina", "destination": "/customer/index.html" },
     { "source": "/mipagina/:nombre", "destination": "/customer/index.html" },
     { "source": "/ver/:id", "destination": "/preview/index.html" },
+    { "source": "/planes/:id", "destination": "/planes/index.html" },
     { "source": "/checkout/confirmacion", "destination": "/checkout/confirmacion.html" },
     { "source": "/checkout/:id", "destination": "/checkout/index.html" },
     { "source": "/sitio/:slug", "destination": "/api/sitio/serve?slug=:slug" },

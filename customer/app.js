@@ -40,7 +40,7 @@
 
     // Detect recovery mode from URL hash (before Supabase processes the token)
     var hash = window.location.hash;
-    if (hash && hash.indexOf('type=recovery') !== -1) {
+    if (hash && (hash.indexOf('type=recovery') !== -1 || hash.indexOf('type=invite') !== -1)) {
       isRecoveryMode = true;
     }
 
