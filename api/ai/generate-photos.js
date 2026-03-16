@@ -1,4 +1,4 @@
-// Vercel serverless function: Generate AI photos via Imagen 3 API
+// Vercel serverless function: Generate AI photos via Imagen 4 API
 // Takes a prompt from the photoAssetPlan, generates image, uploads to Supabase Storage, returns URL
 
 export const config = { maxDuration: 30 };
@@ -25,8 +25,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Generate image via Imagen 3
-    const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`;
+    // 1. Generate image via Imagen 4
+    const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiKey}`;
     const imagenRes = await fetch(imagenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,13 +39,14 @@ export default async function handler(req, res) {
     if (!imagenRes.ok) {
       const errText = await imagenRes.text();
       console.error('Imagen API error:', imagenRes.status, errText);
-      return res.status(502).json({ error: 'Image generation failed' });
+      return res.status(502).json({ error: 'Image generation failed', detail: errText.substring(0, 200) });
     }
 
     const imagenData = await imagenRes.json();
     const prediction = imagenData.predictions?.[0];
 
     if (!prediction || !prediction.bytesBase64Encoded) {
+      console.error('No image data in response:', JSON.stringify(imagenData).substring(0, 500));
       return res.status(502).json({ error: 'No image data returned from Imagen' });
     }
 

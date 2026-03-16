@@ -2013,7 +2013,7 @@
           ).then(async (res) => {
             if (!res.ok) {
               const errData = await res.json().catch(() => ({}));
-              console.warn(`Photo generation failed for ${item.section}/${item.slot}:`, errData.error);
+              console.warn(`Photo generation failed for ${item.section}/${item.slot}:`, errData.error, errData.detail || '');
               return null;
             }
             const data = await res.json();
@@ -2036,14 +2036,19 @@
       business._cachedGeneratedPhotos = generated;
       if (btn) {
         btn.disabled = false;
-        btn.textContent = '\u2713';
+        btn.textContent = generated.length > 0 ? '\u2713' : t('btnPhotos');
       }
-      showToast(t('photosSuccess', business.name), 'success');
 
-      // Enable website button
-      const row = btn ? btn.closest('tr') : null;
-      const websiteBtn = row ? row.querySelector('.btn-website') : null;
-      if (websiteBtn) websiteBtn.disabled = false;
+      if (generated.length > 0) {
+        showToast(t('photosSuccess', business.name), 'success');
+        // Enable website button
+        const row = btn ? btn.closest('tr') : null;
+        const websiteBtn = row ? row.querySelector('.btn-website') : null;
+        if (websiteBtn) websiteBtn.disabled = false;
+      } else {
+        business._cachedGeneratedPhotos = null; // Reset so user can retry
+        showToast(t('photosError'), 'error');
+      }
     } catch (err) {
       console.error('Photo generation error:', err);
       showToast(t('photosError'), 'error');
