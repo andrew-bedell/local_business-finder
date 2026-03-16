@@ -920,6 +920,7 @@
   let pageSize = 25;
   let totalCount = 0;
   let currentResults = [];
+  let allFiltered = []; // Full filtered dataset for client-side pagination
   // Cache for detail modal data (keyed by business ID)
   const detailCache = {};
 
@@ -993,20 +994,20 @@
     btnPrev.addEventListener('click', () => {
       if (currentPage > 0) {
         currentPage--;
-        loadBusinesses();
+        renderCurrentPage();
       }
     });
     btnNext.addEventListener('click', () => {
       const totalPages = Math.ceil(totalCount / pageSize);
       if (currentPage < totalPages - 1) {
         currentPage++;
-        loadBusinesses();
+        renderCurrentPage();
       }
     });
     pageSizeSelect.addEventListener('change', () => {
       pageSize = parseInt(pageSizeSelect.value, 10);
       currentPage = 0;
-      loadBusinesses();
+      renderCurrentPage();
     });
 
     // Enter key on location filter
@@ -1108,7 +1109,7 @@
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), generated_websites(id, status, config)', { count: 'exact' });
+        .select('*, business_social_profiles(*), generated_websites(id, status, config)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -1132,21 +1133,15 @@
         query = query.gte('review_count', parseInt(minReviews, 10));
       }
 
-      // Order and paginate
+      // Order (no server-side pagination — fetch all, paginate client-side)
       query = query.order('created_at', { ascending: false });
-      const from = currentPage * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
 
-      const { data, count, error } = await query;
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      totalCount = count || 0;
-      currentResults = data || [];
-
       // Client-side filtering for social profile filters (Supabase doesn't easily filter on nested joins)
-      let filtered = currentResults;
+      let filtered = data || [];
 
       const igFilter = filterInstagram.value;
       if (igFilter === 'yes') {
@@ -1184,9 +1179,9 @@
         filtered = filtered.filter(b => !hasGeneratedWebsite(b));
       }
 
-      currentResults = filtered;
-      renderTable();
-      updatePagination();
+      allFiltered = filtered;
+      totalCount = allFiltered.length;
+      renderCurrentPage();
     } catch (err) {
       console.error('Load businesses error:', err);
       showToast(t('errorLoading'), 'error');
@@ -1276,6 +1271,15 @@
     }).join('');
     const extra = profiles.length > maxShow ? `<span class="social-cell-more">+${profiles.length - maxShow}</span>` : '';
     return `<span class="social-cell">${icons}${extra}</span>`;
+  }
+
+  // ── Paginate from cached filtered results ──
+  function renderCurrentPage() {
+    const from = currentPage * pageSize;
+    const to = from + pageSize;
+    currentResults = allFiltered.slice(from, to);
+    renderTable();
+    updatePagination();
   }
 
   // ── Render Table ──
