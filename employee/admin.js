@@ -52,6 +52,7 @@
       thReport: 'Report',
       thAiPhotos: 'AI Photos',
       thWebsite: 'Website',
+      thWebsiteUrl: 'URL',
       thActions: 'Actions',
       viewBtn: 'View',
       badgeYes: 'Yes',
@@ -415,6 +416,7 @@
       thReport: 'Informe',
       thAiPhotos: 'Fotos IA',
       thWebsite: 'Sitio Web',
+      thWebsiteUrl: 'URL',
       thActions: 'Acciones',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
@@ -1113,7 +1115,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -1313,9 +1315,18 @@
 
       const hasReport = (b.generated_websites || []).some(w => w.config && w.config.researchReport);
       const reportBtnLabel = hasReport ? '\u2713' : t('btnReport');
-      const websiteBtnLabel = websiteStatus ? '\u2713' : t('btnWebsite');
+      const existingWebsiteRecord = (b.generated_websites || []).find(w => w.config && w.config.html);
+      const websiteBtnLabel = existingWebsiteRecord ? '\u2713' : t('btnWebsite');
       const photosDisabled = hasReport ? '' : 'disabled';
       const websiteDisabled = hasReport ? '' : 'disabled';
+
+      // Website URL column
+      let websiteUrlHtml = '<span style="color:var(--text-dim)">—</span>';
+      if (existingWebsiteRecord) {
+        const wUrl = existingWebsiteRecord.published_url || '/ver/' + existingWebsiteRecord.id;
+        websiteUrlHtml = `<a href="${escapeHtml(wUrl)}" target="_blank" rel="noopener" class="website-url-link" style="color:var(--primary);font-size:12px;text-decoration:underline;cursor:pointer" title="${escapeHtml(wUrl)}">${existingWebsiteRecord.published_url ? 'Live' : 'Preview'}</a>
+          <button class="btn-copy-url" data-url="${escapeHtml(wUrl)}" title="Copy URL" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:2px 4px">📋</button>`;
+      }
 
       const mapsLink = b.maps_url
         ? `<a href="${escapeHtml(b.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
@@ -1333,6 +1344,7 @@
         <td class="td-center"><button class="btn btn-view btn-report" data-id="${b.id}">${reportBtnLabel}</button></td>
         <td class="td-center"><button class="btn btn-view btn-photos" data-id="${b.id}" ${photosDisabled}>${t('btnPhotos')}</button></td>
         <td class="td-center"><button class="btn btn-view btn-website" data-id="${b.id}" ${websiteDisabled}>${websiteBtnLabel}</button></td>
+        <td class="td-center">${websiteUrlHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
@@ -1372,6 +1384,17 @@
         const businessId = btn.getAttribute('data-id');
         const business = currentResults.find(b => String(b.id) === businessId);
         if (business) openDetailModal(business);
+      });
+    });
+
+    // Bind copy URL buttons
+    resultsBody.querySelectorAll('.btn-copy-url').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const url = btn.getAttribute('data-url');
+        const fullUrl = url.startsWith('/') ? window.location.origin + url : url;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+          showToast('URL copied', 'success');
+        });
       });
     });
 
@@ -2041,6 +2064,10 @@
 
       if (generated.length > 0) {
         showToast(t('photosSuccess', business.name), 'success');
+        // Save to database
+        saveAiPhotosToDb(business, generated).catch(err =>
+          console.warn('Failed to save AI photos:', err)
+        );
         // Enable website button
         const row = btn ? btn.closest('tr') : null;
         const websiteBtn = row ? row.querySelector('.btn-website') : null;
@@ -2112,13 +2139,12 @@
         throw new Error(errData.error || 'Request failed');
       }
       const data = await res.json();
+      // Save to DB and wait for it to complete before showing ✓
+      await saveGeneratedWebsite(business, data.html, report);
       btn.disabled = false;
       btn.textContent = '\u2713';
       btn.title = t('generateWebsite');
       showToast(t('websiteSuccess', business.name), 'success');
-      saveGeneratedWebsite(business, data.html, report).catch(err =>
-        console.warn('Failed to save generated website:', err)
-      );
     } catch (err) {
       clearInterval(timerInterval);
       console.error('Website generation error:', err);
@@ -2625,6 +2651,32 @@
       }
     } catch (e) {
       console.warn('Website save exception:', e);
+    }
+  }
+
+  // ── Save AI Photos to DB ──
+  async function saveAiPhotosToDb(business, photos) {
+    if (!supabaseClient || !photos || photos.length === 0) return;
+
+    try {
+      const rows = photos.map(p => ({
+        business_id: business.id,
+        source: 'ai_generated',
+        photo_type: 'ai_generated',
+        url: p.url,
+        is_primary: false,
+        caption: (p.section || '') + ' — ' + (p.slot || ''),
+      }));
+
+      const { error } = await supabaseClient
+        .from('business_photos')
+        .insert(rows);
+
+      if (error) {
+        console.warn('AI photos save error:', error);
+      }
+    } catch (e) {
+      console.warn('AI photos save exception:', e);
     }
   }
 
