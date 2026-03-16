@@ -36,7 +36,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="app">
+  <div id="auth-loading" class="auth-loading">
+    <span class="spinner"></span>
+    <span class="auth-loading-text">Checking access…</span>
+  </div>
+  <div id="app" style="display:none">
     <!-- Header -->
     <header class="header">
       <div class="header-inner">
@@ -53,6 +57,10 @@
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
               <button class="lang-btn" data-lang="es">ES</button>
+            </div>
+            <div class="header-user-info" id="header-user-info" style="display:none">
+              <span class="header-user-name" id="header-user-name"></span>
+              <button class="btn-logout" id="btn-logout">Logout</button>
             </div>
           </div>
         </div>
@@ -287,6 +295,7 @@
 
   <div class="toast-container" id="toast-container"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/employee/auth.js"></script>
   <script src="/employee/app.js"></script>
 </body>
 </html>

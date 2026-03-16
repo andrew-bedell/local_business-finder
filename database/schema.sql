@@ -828,6 +828,39 @@ CREATE TRIGGER edit_requests_updated_at
 
 
 -- ============================================================================
+-- 16. EMPLOYEES — Internal team members with app access
+-- ============================================================================
+-- Links Supabase Auth users to employee roles. Used for login gating and
+-- future per-employee lead tracking.
+
+CREATE TABLE IF NOT EXISTS employees (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  auth_user_id            UUID NOT NULL UNIQUE,      -- Supabase Auth user UUID
+  email                   TEXT NOT NULL,              -- denormalized for display
+  display_name            TEXT,
+  role                    TEXT DEFAULT 'employee'
+                            CHECK (role IN ('admin', 'employee')),
+  is_active               BOOLEAN DEFAULT TRUE,
+  invited_at              TIMESTAMPTZ,
+  joined_at               TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_employees_auth ON employees (auth_user_id);
+CREATE INDEX IF NOT EXISTS idx_employees_email ON employees (email);
+CREATE INDEX IF NOT EXISTS idx_employees_active ON employees (is_active) WHERE is_active = TRUE;
+
+CREATE TRIGGER employees_updated_at
+  BEFORE UPDATE ON employees
+  FOR EACH ROW
+  EXECUTE FUNCTION update_last_updated_at();
+
+ALTER TABLE employees ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON employees FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
 -- CUSTOMER PORTAL RLS POLICIES
 -- ============================================================================
 -- Open policies for operator access. Customer-scoped policies use auth.uid().

@@ -14,7 +14,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="app">
+  <div id="auth-loading" class="auth-loading">
+    <span class="spinner"></span>
+    <span class="auth-loading-text">Checking access…</span>
+  </div>
+  <div id="app" style="display:none">
     <header class="header">
       <div class="header-inner">
         <div class="header-top">
@@ -31,10 +35,15 @@
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
               <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
               <a href="#" class="nav-tab" id="nav-customers" data-i18n="navCustomers">Customers</a>
+              <a href="#" class="nav-tab" id="nav-team" data-i18n="navTeam" style="display:none">Team</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
               <button class="lang-btn" data-lang="es">ES</button>
+            </div>
+            <div class="header-user-info" id="header-user-info" style="display:none">
+              <span class="header-user-name" id="header-user-name"></span>
+              <button class="btn-logout" id="btn-logout">Logout</button>
             </div>
           </div>
         </div>
@@ -525,6 +534,39 @@
           </div>
         </div>
       </section>
+
+      <!-- Team Management (admin only) -->
+      <section id="team-section" class="card" style="display:none">
+        <div class="card-header">
+          <h2 data-i18n="navTeam">Team</h2>
+        </div>
+        <div class="team-invite-form" id="team-invite-form">
+          <div class="form-group">
+            <label data-i18n="teamEmail">Email</label>
+            <input type="email" class="input" id="invite-email" placeholder="employee@example.com" style="width:260px">
+          </div>
+          <div class="form-group">
+            <label data-i18n="teamName">Name</label>
+            <input type="text" class="input" id="invite-name" placeholder="John Doe" style="width:200px">
+          </div>
+          <button class="btn btn-primary" id="btn-invite-employee" data-i18n="teamInvite">Invite Employee</button>
+        </div>
+        <div class="results-table-wrapper">
+          <table class="team-table" id="team-table">
+            <thead>
+              <tr>
+                <th data-i18n="teamName">Name</th>
+                <th data-i18n="teamEmail">Email</th>
+                <th data-i18n="teamRole">Role</th>
+                <th data-i18n="teamStatus">Status</th>
+                <th data-i18n="teamJoined">Joined</th>
+                <th data-i18n="teamActions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="team-table-body"></tbody>
+          </table>
+        </div>
+      </section>
     </main>
 
     <footer class="footer">
@@ -534,6 +576,7 @@
 
   <div class="toast-container" id="toast-container"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/employee/auth.js"></script>
   <script src="/employee/admin.js"></script>
 </body>
 </html>

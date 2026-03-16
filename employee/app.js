@@ -4610,5 +4610,30 @@
   }
 
   // ── Start ──
-  init();
+  // Wait for auth guard (auth.js) to verify employee before initializing
+  function startApp() {
+    // Show the app container (hidden until auth passes)
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.style.display = '';
+    // Show user info in header
+    if (window.__employeeAuth) {
+      const nameEl = document.getElementById('header-user-name');
+      const infoEl = document.getElementById('header-user-info');
+      if (nameEl && window.__employeeAuth.employee.display_name) {
+        nameEl.textContent = window.__employeeAuth.employee.display_name;
+      } else if (nameEl) {
+        nameEl.textContent = window.__employeeAuth.employee.email;
+      }
+      if (infoEl) infoEl.style.display = '';
+      const logoutBtn = document.getElementById('btn-logout');
+      if (logoutBtn) logoutBtn.addEventListener('click', () => window.__employeeAuth.signOut());
+    }
+    init();
+  }
+
+  if (window.__employeeAuth) {
+    startApp();
+  } else {
+    document.addEventListener('employee-auth-ready', startApp);
+  }
 })();
