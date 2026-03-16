@@ -364,6 +364,11 @@
       custPipeline: 'Pipeline',
       custStripeId: 'Stripe ID',
       custBillingPeriod: 'Billing Period',
+      // Report & AI Photos modals
+      reportModalTitle: 'Research Report',
+      aiPhotosModalTitle: 'AI Generated Photos',
+      aiPhotosEmpty: 'No AI photos generated yet',
+      aiPhotosSection: 'Section',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -718,6 +723,11 @@
       custPipeline: 'Pipeline',
       custStripeId: 'Stripe ID',
       custBillingPeriod: 'Periodo de Cobro',
+      // Report & AI Photos modals
+      reportModalTitle: 'Informe de Investigación',
+      aiPhotosModalTitle: 'Fotos Generadas con IA',
+      aiPhotosEmpty: 'Aún no se han generado fotos con IA',
+      aiPhotosSection: 'Sección',
     },
   };
 
@@ -1109,7 +1119,7 @@
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), generated_websites(id, status, config)');
+        .select('*, business_social_profiles(*), generated_websites(id, status, site_status, published_url, config)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -1584,7 +1594,8 @@
 
     // Check if there's already a generated website
     const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
-    const hasReport = existingWebsite && existingWebsite.config && existingWebsite.config.researchReport;
+    const reportRecord = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    const hasReport = !!reportRecord || !!business._cachedReport;
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -1676,7 +1687,8 @@
 
     // If report already exists, auto-render it
     if (hasReport) {
-      renderResearchReport(modal, existingWebsite.config.researchReport);
+      const reportData = business._cachedReport || (reportRecord && reportRecord.config.researchReport);
+      if (reportData) renderResearchReport(modal, reportData);
       reportBtn.style.display = 'none';
     }
 
@@ -1791,10 +1803,105 @@
     return details;
   }
 
+  // ── Report Modal (lightweight) ──
+  function openReportModal(business) {
+    const reportRecord = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    const report = business._cachedReport || (reportRecord && reportRecord.config.researchReport);
+    if (!report) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'report-modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h2>${t('reportModalTitle')}</h2>
+            <p class="modal-address">${escapeHtml(business.name)}</p>
+          </div>
+          <button class="modal-close" id="report-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="report-modal-container"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="report-modal-close-footer">${t('closeBtn')}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Render report content reusing existing renderer
+    renderResearchReport(modal, report, '#report-modal-container');
+
+    modal.querySelector('#report-modal-close').addEventListener('click', () => modal.remove());
+    modal.querySelector('#report-modal-close-footer').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    document.addEventListener('keydown', function handler(e) {
+      if (e.key === 'Escape') {
+        const m = document.getElementById('report-modal');
+        if (m) m.remove();
+        document.removeEventListener('keydown', handler);
+      }
+    });
+  }
+
+  // ── AI Photos Modal (lightweight) ──
+  function openAiPhotosModal(business) {
+    const photos = business._cachedGeneratedPhotos || [];
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'ai-photos-modal';
+
+    let photosHtml = '';
+    if (photos.length === 0) {
+      photosHtml = `<p style="color:var(--text-muted);text-align:center;padding:24px">${t('aiPhotosEmpty')}</p>`;
+    } else {
+      const items = photos.map(p => `
+        <div class="ai-photo-item">
+          <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(p.url)}" alt="${escapeHtml((p.section || '') + ' — ' + (p.slot || ''))}" loading="lazy" style="width:100%;border-radius:var(--radius);cursor:pointer"></a>
+          <p style="margin:6px 0 0;font-size:12px;color:var(--text-muted)"><strong>${t('aiPhotosSection')}:</strong> ${escapeHtml(p.section || '—')} — ${escapeHtml(p.slot || '—')}</p>
+        </div>
+      `).join('');
+      photosHtml = `<div class="photo-gallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">${items}</div>`;
+    }
+
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h2>${t('aiPhotosModalTitle')}</h2>
+            <p class="modal-address">${escapeHtml(business.name)}</p>
+          </div>
+          <button class="modal-close" id="ai-photos-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          ${photosHtml}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" id="ai-photos-modal-close-footer">${t('closeBtn')}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#ai-photos-modal-close').addEventListener('click', () => modal.remove());
+    modal.querySelector('#ai-photos-modal-close-footer').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    document.addEventListener('keydown', function handler(e) {
+      if (e.key === 'Escape') {
+        const m = document.getElementById('ai-photos-modal');
+        if (m) m.remove();
+        document.removeEventListener('keydown', handler);
+      }
+    });
+  }
+
   async function handleAdminTableReport(business, btn) {
     const existingReport = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
     if (existingReport || business._cachedReport) {
-      openDetailModal(business);
+      openReportModal(business);
       return;
     }
 
@@ -1855,9 +1962,9 @@
   }
 
   async function handleAdminTableAiPhotos(business, btn) {
-    // If already generated, open detail modal to view them
+    // If already generated, open AI photos modal to view them
     if (business._cachedGeneratedPhotos) {
-      openDetailModal(business);
+      openAiPhotosModal(business);
       return;
     }
 
@@ -1948,7 +2055,9 @@
   async function handleAdminTableWebsite(business, btn) {
     const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
     if (existingWebsite) {
-      openDetailModal(business);
+      const publishedUrl = existingWebsite.published_url;
+      const previewUrl = '/ver/' + existingWebsite.id;
+      window.open(publishedUrl || previewUrl, '_blank');
       return;
     }
     const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
@@ -2074,8 +2183,8 @@
   }
 
   // ── Render Research Report ──
-  function renderResearchReport(modal, report) {
-    const container = modal.querySelector('#research-report-container');
+  function renderResearchReport(modal, report, containerSelector) {
+    const container = modal.querySelector(containerSelector || '#research-report-container');
     if (!container) return;
 
     if (report.parseError && report.rawText) {
@@ -2475,7 +2584,7 @@
     if (!supabaseClient) return;
 
     try {
-      const { error } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('generated_websites')
         .insert({
           business_id: business.id,
@@ -2486,12 +2595,16 @@
             researchReport: report || null,
             generatedAt: new Date().toISOString(),
           },
-        });
+        })
+        .select('id, status, site_status, published_url, config');
 
       if (error) {
         console.warn('Website save error:', error);
       } else {
         showToast(t('websiteSaved'), 'success');
+        // Update local business object so the ✓ button works immediately
+        if (!business.generated_websites) business.generated_websites = [];
+        if (data && data[0]) business.generated_websites.push(data[0]);
         // Refresh stats
         loadStats();
       }
