@@ -1,5 +1,5 @@
-// Vercel serverless function: Claude API website generation
-// Receives research report + business data + photo URLs, returns complete HTML website
+// Vercel serverless function: Claude API website generation (streaming)
+// Receives research report + business data + photo URLs, streams HTML response to avoid timeout
 
 export const config = { maxDuration: 120 };
 
@@ -52,15 +52,16 @@ Requirements:
 
 CRITICAL: Output ONLY the complete HTML document. No markdown fences, no explanation text, no comments before or after. Start with <!DOCTYPE html> and end with </html>.`;
 
-  // Build the photo URL lookup for the user message
+  // Build the photo URL lookup — compact format
   const photoLines = (photoInventory || []).map(p =>
-    `ID: ${p.id} | Type: ${p.type} | URL: ${p.url}`
+    `${p.id}|${p.type}|${p.url}`
   ).join('\n');
 
+  // Compact the research report (no pretty-printing)
   const userMessage = `=== RESEARCH REPORT ===
-${JSON.stringify(researchReport, null, 2)}
+${JSON.stringify(researchReport)}
 
-=== PHOTO INVENTORY WITH URLS ===
+=== PHOTO INVENTORY (id|type|url) ===
 ${photoLines || 'No photos available'}
 
 === BUSINESS DATA ===
@@ -69,6 +70,7 @@ ${businessData}
 Generate the website HTML now.`;
 
   try {
+    // Use streaming to keep the connection alive and avoid Vercel gateway timeout
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -78,7 +80,8 @@ Generate the website HTML now.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 16384,
+        max_tokens: 12000,
+        stream: true,
         system: systemPrompt,
         messages: [
           { role: 'user', content: userMessage },
@@ -96,11 +99,38 @@ Generate the website HTML now.`;
       return res.status(502).json({ error: 'Claude API request failed' });
     }
 
-    const data = await response.json();
-    const rawText = data.content && data.content[0] ? data.content[0].text : '';
+    // Collect streamed text chunks into full HTML
+    let fullText = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6);
+        if (jsonStr === '[DONE]') continue;
+
+        try {
+          const event = JSON.parse(jsonStr);
+          if (event.type === 'content_block_delta' && event.delta?.text) {
+            fullText += event.delta.text;
+          }
+        } catch (e) {
+          // Skip non-JSON lines
+        }
+      }
+    }
 
     // Strip markdown code fences if present
-    let html = rawText.trim();
+    let html = fullText.trim();
     if (html.startsWith('```')) {
       html = html.replace(/^```(?:html)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
@@ -112,10 +142,7 @@ Generate the website HTML now.`;
     }
 
     res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).json({
-      html,
-      usage: data.usage || null,
-    });
+    return res.status(200).json({ html });
   } catch (err) {
     console.error('Website generation error:', err);
     return res.status(500).json({ error: 'Internal server error' });
