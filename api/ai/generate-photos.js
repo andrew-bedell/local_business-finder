@@ -1,7 +1,7 @@
-// Vercel serverless function: Generate AI photos via Gemini API
+// Vercel serverless function: Generate AI photos via Imagen 3 API
 // Takes a prompt from the photoAssetPlan, generates image, uploads to Supabase Storage, returns URL
 
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 30 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,39 +25,32 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Generate image via Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${geminiKey}`;
-    const geminiRes = await fetch(geminiUrl, {
+    // 1. Generate image via Imagen 3
+    const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`;
+    const imagenRes = await fetch(imagenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
+        instances: [{ prompt }],
+        parameters: { sampleCount: 1 },
       }),
     });
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error('Gemini API error:', geminiRes.status, errText);
+    if (!imagenRes.ok) {
+      const errText = await imagenRes.text();
+      console.error('Imagen API error:', imagenRes.status, errText);
       return res.status(502).json({ error: 'Image generation failed' });
     }
 
-    const geminiData = await geminiRes.json();
-    const parts = geminiData.candidates?.[0]?.content?.parts || [];
+    const imagenData = await imagenRes.json();
+    const prediction = imagenData.predictions?.[0];
 
-    let imageBase64 = null;
-    let mimeType = 'image/png';
-    for (const part of parts) {
-      if (part.inlineData) {
-        imageBase64 = part.inlineData.data;
-        mimeType = part.inlineData.mimeType || 'image/png';
-        break;
-      }
+    if (!prediction || !prediction.bytesBase64Encoded) {
+      return res.status(502).json({ error: 'No image data returned from Imagen' });
     }
 
-    if (!imageBase64) {
-      return res.status(502).json({ error: 'No image data returned from Gemini' });
-    }
+    const imageBase64 = prediction.bytesBase64Encoded;
+    const mimeType = prediction.mimeType || 'image/png';
 
     // 2. Try to upload to Supabase Storage for a proper URL
     if (supabaseUrl && supabaseKey) {

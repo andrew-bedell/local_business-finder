@@ -1993,43 +1993,45 @@
       btn.disabled = true;
       btn.textContent = t('generatingPhotos');
     }
-    const generated = [];
 
     try {
-      for (let i = 0; i < aiItems.length; i++) {
-        const item = aiItems[i];
-        if (btn) btn.textContent = `${i + 1}/${aiItems.length}...`;
-
-        const res = await withTimeout(
-          fetch('/api/ai/generate-photos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              prompt: item.aiPrompt,
+      // Fire all photo generation requests in parallel
+      const results = await Promise.allSettled(
+        aiItems.map((item, i) =>
+          withTimeout(
+            fetch('/api/ai/generate-photos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                prompt: item.aiPrompt,
+                section: item.section,
+                slot: item.slot,
+              }),
+            }),
+            30000,
+            'Photo generation'
+          ).then(async (res) => {
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              console.warn(`Photo generation failed for ${item.section}/${item.slot}:`, errData.error);
+              return null;
+            }
+            const data = await res.json();
+            return {
+              id: `ai_${(item.section || 'photo').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${i}`,
               section: item.section,
               slot: item.slot,
-            }),
-          }),
-          90000,
-          'Photo generation'
-        );
+              url: data.url,
+              source: 'ai_generated',
+              type: 'ai_generated',
+            };
+          })
+        )
+      );
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          console.warn(`Photo generation failed for ${item.section}/${item.slot}:`, errData.error);
-          continue;
-        }
-
-        const data = await res.json();
-        generated.push({
-          id: `ai_${(item.section || 'photo').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${i}`,
-          section: item.section,
-          slot: item.slot,
-          url: data.url,
-          source: 'ai_generated',
-          type: 'ai_generated',
-        });
-      }
+      const generated = results
+        .filter(r => r.status === 'fulfilled' && r.value)
+        .map(r => r.value);
 
       business._cachedGeneratedPhotos = generated;
       if (btn) {
