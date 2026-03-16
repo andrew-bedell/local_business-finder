@@ -2074,6 +2074,12 @@
     }
     btn.disabled = true;
     btn.textContent = t('generatingWebsite');
+    // Show elapsed time so user knows it's still working
+    const startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      btn.textContent = `${t('generatingWebsite')} ${elapsed}s`;
+    }, 1000);
     try {
       const details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
@@ -2100,6 +2106,7 @@
         130000,
         'Website generation'
       );
+      clearInterval(timerInterval);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.error || 'Request failed');
@@ -2113,6 +2120,7 @@
         console.warn('Failed to save generated website:', err)
       );
     } catch (err) {
+      clearInterval(timerInterval);
       console.error('Website generation error:', err);
       showToast(t('websiteError'), 'error');
       btn.disabled = false;
