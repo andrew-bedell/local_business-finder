@@ -217,6 +217,7 @@
     if (!productId || productId === 'checkout') { showPageError('Enlace de checkout inv\u00e1lido.'); return; }
     var stripe = null, elements = null, selectedProduct = null;
     var urlParams = new URLSearchParams(window.location.search);
+    var websiteId = urlParams.get('website') || null;
     if (urlParams.get('redirect_status')) { handleRedirectReturn(); } else { init(); }
 
     async function handleRedirectReturn() {
@@ -285,13 +286,13 @@
         if (submitResult.error) throw new Error(submitResult.error.message);
         var res = await fetch('/api/stripe/create-subscription', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: document.getElementById('field-email').value.trim(), customerPhone: document.getElementById('field-phone').value.trim() || null, businessName: document.getElementById('field-business').value.trim() || null })
+          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: document.getElementById('field-email').value.trim(), customerPhone: document.getElementById('field-phone').value.trim() || null, businessName: document.getElementById('field-business').value.trim() || null, websiteId: websiteId })
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || data.detail || 'Error al procesar el pago.');
         var confirmResult = await stripe.confirmPayment({
           elements: elements, clientSecret: data.clientSecret,
-          confirmParams: { return_url: window.location.origin + '/checkout/' + productId + '?redirect_status=succeeded', payment_method_data: { billing_details: { name: document.getElementById('field-name').value.trim(), email: document.getElementById('field-email').value.trim() } } },
+          confirmParams: { return_url: window.location.origin + '/checkout/' + productId + '?redirect_status=succeeded' + (websiteId ? '&website=' + encodeURIComponent(websiteId) : ''), payment_method_data: { billing_details: { name: document.getElementById('field-name').value.trim(), email: document.getElementById('field-email').value.trim() } } },
           redirect: 'if_required'
         });
         if (confirmResult.error) throw new Error(confirmResult.error.message);

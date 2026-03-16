@@ -112,6 +112,16 @@ export default async function handler(req, res) {
               }
             );
           }
+
+          // Create customer auth user (non-blocking)
+          try {
+            const customer = await getCustomerFromSubscription(subscriptionId, supabaseUrl, supabaseHeaders);
+            if (customer) {
+              await createCustomerAuthUser(customer, supabaseUrl, supabaseKey);
+            }
+          } catch (authErr) {
+            console.error('Customer auth user creation error (non-blocking):', authErr);
+          }
         }
         break;
       }
@@ -193,6 +203,136 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Webhook error:', err);
     return res.status(400).json({ error: 'Webhook processing failed', detail: err.message });
+  }
+}
+
+// Helper: look up customer record from a Stripe subscription ID
+async function getCustomerFromSubscription(stripeSubscriptionId, supabaseUrl, supabaseHeaders) {
+  try {
+    const subRes = await fetch(
+      `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${encodeURIComponent(stripeSubscriptionId)}&select=customer_id`,
+      { headers: supabaseHeaders }
+    );
+    const subs = await subRes.json();
+    if (!subs || subs.length === 0) return null;
+
+    const custRes = await fetch(
+      `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(subs[0].customer_id)}&select=id,email,contact_name`,
+      { headers: supabaseHeaders }
+    );
+    const custs = await custRes.json();
+    if (!custs || custs.length === 0) return null;
+
+    return custs[0];
+  } catch (err) {
+    console.error('getCustomerFromSubscription error:', err);
+    return null;
+  }
+}
+
+// Helper: invite customer via Supabase Auth and create customer_users link
+async function createCustomerAuthUser(customer, supabaseUrl, supabaseKey) {
+  if (!customer.email) return;
+
+  const supabaseHeaders = {
+    'apikey': supabaseKey,
+    'Authorization': `Bearer ${supabaseKey}`,
+    'Content-Type': 'application/json',
+  };
+
+  // Check if customer_users link already exists for this customer
+  const existingLinkRes = await fetch(
+    `${supabaseUrl}/rest/v1/customer_users?customer_id=eq.${encodeURIComponent(customer.id)}&select=id`,
+    { headers: supabaseHeaders }
+  );
+  const existingLinks = await existingLinkRes.json();
+  if (existingLinks && existingLinks.length > 0) {
+    console.log('Customer already has auth user link, skipping:', customer.id);
+    return;
+  }
+
+  // Try to invite the user via Supabase Admin API
+  let authUserId = null;
+
+  const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+    method: 'POST',
+    headers: supabaseHeaders,
+    body: JSON.stringify({
+      email: customer.email,
+      data: { contact_name: customer.contact_name || '' },
+    }),
+  });
+
+  if (inviteRes.ok) {
+    const inviteData = await inviteRes.json();
+    authUserId = inviteData.id;
+  } else if (inviteRes.status === 422) {
+    // Email already has a Supabase Auth account — look up existing user
+    console.log('User already exists in auth, looking up:', customer.email);
+    const lookupRes = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users?filter=${encodeURIComponent(customer.email)}`,
+      { headers: supabaseHeaders }
+    );
+    if (lookupRes.ok) {
+      const lookupData = await lookupRes.json();
+      const users = lookupData.users || lookupData || [];
+      const matchedUser = Array.isArray(users)
+        ? users.find(u => u.email === customer.email)
+        : null;
+      if (matchedUser) {
+        authUserId = matchedUser.id;
+      }
+    }
+  } else {
+    const errText = await inviteRes.text().catch(() => '');
+    console.error('Supabase invite error:', inviteRes.status, errText);
+    return;
+  }
+
+  if (!authUserId) {
+    console.error('Could not resolve auth user ID for customer:', customer.id);
+    return;
+  }
+
+  // Create customer_users link
+  await linkCustomerUser(authUserId, customer.id, supabaseUrl, supabaseKey);
+}
+
+// Helper: insert customer_users record with idempotency check
+async function linkCustomerUser(authUserId, customerId, supabaseUrl, supabaseKey) {
+  const supabaseHeaders = {
+    'apikey': supabaseKey,
+    'Authorization': `Bearer ${supabaseKey}`,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal',
+  };
+
+  // Check if link already exists
+  const checkRes = await fetch(
+    `${supabaseUrl}/rest/v1/customer_users?auth_user_id=eq.${encodeURIComponent(authUserId)}&customer_id=eq.${encodeURIComponent(customerId)}&select=id`,
+    { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+  );
+  const existing = await checkRes.json();
+  if (existing && existing.length > 0) {
+    console.log('customer_users link already exists, skipping');
+    return;
+  }
+
+  const linkRes = await fetch(`${supabaseUrl}/rest/v1/customer_users`, {
+    method: 'POST',
+    headers: supabaseHeaders,
+    body: JSON.stringify({
+      auth_user_id: authUserId,
+      customer_id: customerId,
+      role: 'owner',
+    }),
+  });
+
+  if (!linkRes.ok) {
+    const errText = await linkRes.text().catch(() => '');
+    console.error('Failed to create customer_users link:', linkRes.status, errText);
+  } else {
+    console.log('Created customer_users link:', authUserId, customerId);
   }
 }
 
