@@ -83,7 +83,7 @@ export default async function handler(req, res) {
 async function resolveUrl(url) {
   try {
     // Handle shortened URLs by following redirects
-    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl')) {
+    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl') || url.includes('share.google')) {
       const resolved = await fetch(url, { redirect: 'follow' });
       url = resolved.url;
     }
