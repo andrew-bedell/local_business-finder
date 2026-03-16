@@ -1944,13 +1944,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ businessData, name: business.name, language }),
         }),
-        120000,
+        310000,
         'Research report'
       );
       if (!res.ok) {
         const errText = await res.text().catch(() => '');
         let errMsg = 'Request failed';
         try { errMsg = JSON.parse(errText).error || errMsg; } catch (e) {}
+        console.error('Research report API error:', res.status, errMsg);
         throw new Error(errMsg);
       }
       const data = await parseSSEReportResponse(res);
@@ -2183,7 +2184,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ businessData, name: business.name, language }),
         }),
-        120000,
+        310000,
         'Research report'
       );
 
