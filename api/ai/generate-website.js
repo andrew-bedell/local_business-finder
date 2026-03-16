@@ -1,7 +1,7 @@
 // Vercel serverless function: Claude API website generation (streaming)
 // Receives research report + business data + photo URLs, streams HTML response to avoid timeout
 
-export const config = { maxDuration: 120 };
+export const config = { maxDuration: 300 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -79,7 +79,7 @@ Generate the website HTML now.`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 12000,
         stream: true,
         system: systemPrompt,
