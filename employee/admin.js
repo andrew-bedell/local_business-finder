@@ -2103,7 +2103,7 @@
             language,
           }),
         }),
-        130000,
+        310000,
         'Website generation'
       );
       clearInterval(timerInterval);
@@ -2343,7 +2343,7 @@
             language,
           }),
         }),
-        130000,
+        310000,
         'Website generation'
       );
 
