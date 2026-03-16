@@ -1,7 +1,7 @@
 // Vercel serverless function: Claude API research report generation
 // Receives compiled business data, returns structured JSON report for website content planning
 
-export const config = { maxDuration: 120 };
+export const config = { maxDuration: 300 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -105,7 +105,12 @@ Examine the PHOTO INVENTORY section in the business data. For each website secti
       if (response.status === 429) {
         return res.status(429).json({ error: 'Rate limit exceeded. Please try again in a moment.' });
       }
-      return res.status(502).json({ error: 'Claude API request failed' });
+      if (response.status === 529) {
+        return res.status(529).json({ error: 'Claude API is temporarily overloaded. Please try again in a moment.' });
+      }
+      let detail = '';
+      try { detail = JSON.parse(errorText).error?.message || errorText.substring(0, 200); } catch (e) { detail = errorText.substring(0, 200); }
+      return res.status(502).json({ error: 'Claude API request failed: ' + detail });
     }
 
     // Forward the SSE stream to the client to keep the Vercel connection alive
