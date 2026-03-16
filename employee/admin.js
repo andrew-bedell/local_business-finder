@@ -2141,7 +2141,7 @@
     }
   }
 
-  async function generateWebsite(business, btn) {
+  async function generateWebsiteFromTable(business, btn) {
     const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
     if (!hasReport) {
       showToast(t('needsReport'), 'warning');
@@ -2229,11 +2229,11 @@
           business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.html));
         }
         btn.textContent = t('btnWebsite');
-        generateWebsite(business, btn);
+        generateWebsiteFromTable(business, btn);
       });
       return;
     }
-    generateWebsite(business, btn);
+    generateWebsiteFromTable(business, btn);
   }
 
   // ── Research Report (Modal) ──
