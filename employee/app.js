@@ -808,6 +808,7 @@
       const status = VALID_BUSINESS_STATUSES.includes(place.status) ? place.status : 'UNKNOWN';
 
       const country = countrySelect ? countrySelect.value.toUpperCase() : null;
+      const mapped = mapTypesToCategory(place.types, place.searchType || type);
 
       const row = {
         place_id: place.placeId,
@@ -825,7 +826,8 @@
         longitude: place.longitude || null,
         hours: place.hours || [],
         search_location: location,
-        category: place.searchType || type,
+        category: mapped.category,
+        subcategory: mapped.subcategory,
         search_type: place.searchType || type,
         description: place.description || null,
         thumbnail: place.thumbnail || null,
@@ -1415,11 +1417,11 @@
 
       const socialCellHtml = buildSocialCellHtml(place.socialProfiles);
 
-      const typeLabel = getTypeLabel(place.searchType || businessType.value);
+      const categoryDisplay = formatCategory(place) || getTypeLabel(place.searchType || businessType.value);
 
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
-        <td>${escapeHtml(typeLabel)}</td>
+        <td>${escapeHtml(categoryDisplay)}</td>
         <td><strong>${escapeHtml(place.name)}</strong></td>
         <td>${escapeHtml(place.address)}</td>
         <td>${escapeHtml(place.phone) || '<span style="color:var(--text-dim)">N/A</span>'}</td>
@@ -1541,6 +1543,117 @@
     progressSection.style.display = 'none';
     filterInput.value = '';
     resultsBody.innerHTML = '';
+  }
+
+  // ── Category Mapping ──
+  // Maps Google Places type strings to clean category/subcategory pairs.
+  // Used for website template selection, audience filtering, and display.
+  const CATEGORY_MAP = {
+    // Food & Drink — specific cuisine types first
+    'mexican_restaurant':    { category: 'Restaurant', subcategory: 'Mexican Cuisine' },
+    'italian_restaurant':    { category: 'Restaurant', subcategory: 'Italian Cuisine' },
+    'chinese_restaurant':    { category: 'Restaurant', subcategory: 'Chinese Cuisine' },
+    'japanese_restaurant':   { category: 'Restaurant', subcategory: 'Japanese Cuisine' },
+    'indian_restaurant':     { category: 'Restaurant', subcategory: 'Indian Cuisine' },
+    'thai_restaurant':       { category: 'Restaurant', subcategory: 'Thai Cuisine' },
+    'korean_restaurant':     { category: 'Restaurant', subcategory: 'Korean Cuisine' },
+    'vietnamese_restaurant': { category: 'Restaurant', subcategory: 'Vietnamese Cuisine' },
+    'french_restaurant':     { category: 'Restaurant', subcategory: 'French Cuisine' },
+    'greek_restaurant':      { category: 'Restaurant', subcategory: 'Greek Cuisine' },
+    'mediterranean_restaurant': { category: 'Restaurant', subcategory: 'Mediterranean Cuisine' },
+    'middle_eastern_restaurant': { category: 'Restaurant', subcategory: 'Middle Eastern Cuisine' },
+    'latin_american_restaurant': { category: 'Restaurant', subcategory: 'Latin American Cuisine' },
+    'brazilian_restaurant':  { category: 'Restaurant', subcategory: 'Brazilian Cuisine' },
+    'peruvian_restaurant':   { category: 'Restaurant', subcategory: 'Peruvian Cuisine' },
+    'colombian_restaurant':  { category: 'Restaurant', subcategory: 'Colombian Cuisine' },
+    'argentinian_restaurant': { category: 'Restaurant', subcategory: 'Argentinian Cuisine' },
+    'sushi_restaurant':      { category: 'Restaurant', subcategory: 'Sushi' },
+    'pizza_restaurant':      { category: 'Restaurant', subcategory: 'Pizza' },
+    'seafood_restaurant':    { category: 'Restaurant', subcategory: 'Seafood' },
+    'steak_house':           { category: 'Restaurant', subcategory: 'Steakhouse' },
+    'hamburger_restaurant':  { category: 'Restaurant', subcategory: 'Burgers' },
+    'sandwich_shop':         { category: 'Restaurant', subcategory: 'Sandwiches' },
+    'ice_cream_shop':        { category: 'Restaurant', subcategory: 'Ice Cream' },
+    'bakery':                { category: 'Restaurant', subcategory: 'Bakery' },
+    'cafe':                  { category: 'Restaurant', subcategory: 'Cafe' },
+    'coffee_shop':           { category: 'Restaurant', subcategory: 'Coffee Shop' },
+    'bar':                   { category: 'Restaurant', subcategory: 'Bar' },
+    'meal_delivery':         { category: 'Restaurant', subcategory: 'Delivery' },
+    'meal_takeaway':         { category: 'Restaurant', subcategory: 'Fast Food' },
+    'restaurant':            { category: 'Restaurant', subcategory: null },
+    'food':                  { category: 'Restaurant', subcategory: null },
+    // Beauty & Personal Care
+    'hair_care':             { category: 'Salon', subcategory: 'Hair Salon' },
+    'beauty_salon':          { category: 'Salon', subcategory: 'Beauty Salon' },
+    'nail_salon':            { category: 'Salon', subcategory: 'Nail Salon' },
+    'spa':                   { category: 'Salon', subcategory: 'Spa' },
+    // Health & Fitness
+    'dentist':               { category: 'Healthcare', subcategory: 'Dentist' },
+    'doctor':                { category: 'Healthcare', subcategory: 'Doctor' },
+    'pharmacy':              { category: 'Healthcare', subcategory: 'Pharmacy' },
+    'physiotherapist':       { category: 'Healthcare', subcategory: 'Physiotherapy' },
+    'veterinary_care':       { category: 'Healthcare', subcategory: 'Veterinary' },
+    'gym':                   { category: 'Healthcare', subcategory: 'Gym' },
+    'hospital':              { category: 'Healthcare', subcategory: 'Hospital' },
+    // Home Services
+    'plumber':               { category: 'Contractor', subcategory: 'Plumber' },
+    'electrician':           { category: 'Contractor', subcategory: 'Electrician' },
+    'locksmith':             { category: 'Contractor', subcategory: 'Locksmith' },
+    'painter':               { category: 'Contractor', subcategory: 'Painter' },
+    'roofing_contractor':    { category: 'Contractor', subcategory: 'Roofing' },
+    'moving_company':        { category: 'Contractor', subcategory: 'Moving' },
+    'general_contractor':    { category: 'Contractor', subcategory: null },
+    // Automotive
+    'car_repair':            { category: 'Automotive', subcategory: 'Auto Repair' },
+    'car_wash':              { category: 'Automotive', subcategory: 'Car Wash' },
+    'car_dealer':            { category: 'Automotive', subcategory: 'Car Dealer' },
+    'gas_station':           { category: 'Automotive', subcategory: 'Gas Station' },
+    // Shopping / Retail
+    'clothing_store':        { category: 'Retail', subcategory: 'Clothing' },
+    'jewelry_store':         { category: 'Retail', subcategory: 'Jewelry' },
+    'florist':               { category: 'Retail', subcategory: 'Florist' },
+    'pet_store':             { category: 'Retail', subcategory: 'Pet Store' },
+    'furniture_store':       { category: 'Retail', subcategory: 'Furniture' },
+    'hardware_store':        { category: 'Retail', subcategory: 'Hardware' },
+    // Professional Services
+    'lawyer':                { category: 'Professional Services', subcategory: 'Legal' },
+    'accounting':            { category: 'Professional Services', subcategory: 'Accounting' },
+    'real_estate_agency':    { category: 'Professional Services', subcategory: 'Real Estate' },
+    'insurance_agency':      { category: 'Professional Services', subcategory: 'Insurance' },
+    // Other Services
+    'laundry':               { category: 'Services', subcategory: 'Laundry' },
+    'storage':               { category: 'Services', subcategory: 'Storage' },
+    'travel_agency':         { category: 'Services', subcategory: 'Travel' },
+    'lodging':               { category: 'Hospitality', subcategory: 'Hotel' },
+  };
+
+  // Derive category/subcategory from Google Places types array.
+  // Prefers the most specific match (one with a subcategory).
+  // Falls back to the search type if no types match.
+  function mapTypesToCategory(types, fallback) {
+    if (!types || types.length === 0) {
+      if (fallback && CATEGORY_MAP[fallback]) return CATEGORY_MAP[fallback];
+      return { category: fallback || null, subcategory: null };
+    }
+    var withSub = null;
+    var withoutSub = null;
+    for (var i = 0; i < types.length; i++) {
+      var match = CATEGORY_MAP[types[i]];
+      if (match && match.subcategory && !withSub) withSub = match;
+      if (match && !withoutSub) withoutSub = match;
+    }
+    if (withSub) return withSub;
+    if (withoutSub) return withoutSub;
+    if (fallback && CATEGORY_MAP[fallback]) return CATEGORY_MAP[fallback];
+    return { category: fallback || null, subcategory: null };
+  }
+
+  // Format category + subcategory for display (e.g., "Restaurant > Mexican Cuisine")
+  function formatCategory(place) {
+    var mapped = mapTypesToCategory(place.types, place.searchType || '');
+    if (mapped.category && mapped.subcategory) return mapped.category + ' > ' + mapped.subcategory;
+    if (mapped.category) return mapped.category;
+    return getTypeLabel(place.searchType || '') || '';
   }
 
   // ── Utility ──
@@ -3104,6 +3217,7 @@
             <h2>${escapeHtml(place.name)}</h2>
             <p class="modal-address">${escapeHtml(place.address)}</p>
             <div class="modal-meta">
+              ${formatCategory(place) ? `<span>${escapeHtml(formatCategory(place))}</span><span class="meta-sep">|</span>` : ''}
               <span class="stars">${starsHtml}</span>
               <span>${place.rating > 0 ? place.rating.toFixed(1) : 'N/A'}</span>
               <span class="meta-sep">|</span>
@@ -3485,7 +3599,9 @@
     sections.push(`Name: ${place.name}`);
     sections.push(`Address: ${place.address}`);
     if (place.phone) sections.push(`Phone: ${place.phone}`);
-    if (place.types && place.types.length > 0) sections.push(`Categories: ${place.types.join(', ')}`);
+    const catDisplay = formatCategory(place);
+    if (catDisplay) sections.push(`Category: ${catDisplay}`);
+    if (place.types && place.types.length > 0) sections.push(`Google Types: ${place.types.join(', ')}`);
     if (place.status) sections.push(`Status: ${place.status}`);
     if (place.description) sections.push(`Description: ${place.description}`);
 
