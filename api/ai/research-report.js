@@ -21,11 +21,14 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Anthropic API key not configured' });
   }
 
-  const { businessData, name, language } = req.body || {};
+  const { businessData: rawBusinessData, name, language } = req.body || {};
 
-  if (!businessData || !name) {
+  if (!rawBusinessData || !name) {
     return res.status(400).json({ error: 'Missing required fields: businessData, name' });
   }
+
+  // Strip unpaired Unicode surrogates that break JSON serialization
+  const businessData = rawBusinessData.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 
   const langName = language === 'es' ? 'Spanish' : 'English';
 
