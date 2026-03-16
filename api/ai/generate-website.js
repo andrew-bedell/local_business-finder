@@ -34,24 +34,39 @@ export default async function handler(req, res) {
 
   const systemPrompt = `You are an expert web developer who creates beautiful, modern, single-page business websites. Given a research report and business data, generate a COMPLETE, self-contained HTML file.
 
-Requirements:
+DESIGN REQUIREMENTS:
 - Output a single HTML file starting with <!DOCTYPE html> and ending with </html>
 - All CSS must be in a single <style> tag in the <head> — no external stylesheets
 - Responsive design with media queries for mobile (max-width: 768px) and tablet
 - Modern, clean design that reflects the business personality described in the research report
-- Use the photo URLs from the PHOTO INVENTORY — embed them directly as <img> src attributes or CSS background-image
-- The inventory includes both original photos (google, facebook, instagram) AND AI-generated photos (source: ai_generated)
-- For the photoAssetPlan items with recommendation "use_existing", use the corresponding URL from the inventory
-- For items with recommendation "generate_ai", look for matching AI-generated photos in the inventory (IDs starting with "ai_") and use their URLs
-- If an AI-generated photo URL is not available for a slot, use a CSS gradient background placeholder
-- Include ALL real business data: name, address, phone, hours, curated reviews, services
-- Follow the research report's tone, suggested sections, and content recommendations
-- Include a call-to-action section with clickable phone (tel:) and directions (Google Maps) links
 - Use semantic HTML5 elements (header, nav, main, section, footer)
 - Include <meta name="viewport" content="width=device-width, initial-scale=1.0">
 - Use Google Fonts (Inter or a font that matches the tone) via @import in the style tag
 - All text content must be in ${langName}
 - Keep the HTML under 15KB — be concise with CSS, avoid repetition
+
+LOGO & HEADER:
+- NEVER use a small circular profile photo as the logo — it looks unprofessional
+- Use a text-based logo: the business name in a distinctive, well-styled font (large, bold, with appropriate letter-spacing)
+- The header should have: text logo on the left, simple navigation links on the right
+- Hero section below the header: full-width background image with a dark overlay and the business tagline/summary text on top
+
+PHOTO USAGE — CRITICAL:
+- Use the photo URLs from the PHOTO INVENTORY — embed them directly as <img> src attributes or CSS background-image
+- The inventory includes original photos (google, facebook, instagram) AND AI-generated photos (source: ai_generated, IDs starting with "ai_")
+- For photoAssetPlan items with "use_existing", use the corresponding URL from the inventory
+- For items with "generate_ai", look for matching AI-generated photos in the inventory (IDs starting with "ai_")
+- NEVER use solid color blocks, CSS gradients, or colored rectangles as image placeholders — they look broken and unprofessional
+- If a planned AI photo is not in the inventory, REUSE another suitable photo from the inventory instead — any real photo is better than a colored block
+- Every <img> tag must use object-fit: cover and have proper aspect ratios
+- Add a dedicated PHOTO GALLERY section with a CSS grid showing 4-6 photos from the inventory
+
+CONTENT:
+- Include ALL real business data: name, address, phone, hours, curated reviews, services
+- Follow the research report's tone, suggested sections, and content recommendations
+- Include a call-to-action section with clickable phone (tel:) and directions (Google Maps) links
+- For businesses with multiple locations, use a clean list/table format — do NOT create individual cards with image slots for each location
+- Feature 2-3 customer reviews with star ratings in a testimonials section
 
 CRITICAL: Output ONLY the complete HTML document. No markdown fences, no explanation text, no comments before or after. Start with <!DOCTYPE html> and end with </html>.`;
 
