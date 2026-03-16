@@ -370,6 +370,12 @@
       aiPhotosModalTitle: 'AI Generated Photos',
       aiPhotosEmpty: 'No AI photos generated yet',
       aiPhotosSection: 'Section',
+      regenerateReport: 'Regenerate Report',
+      regeneratePhotos: 'Regenerate Photos',
+      regenerateWebsite: 'Regenerate Website',
+      regeneratingReport: 'Regenerating…',
+      regeneratingPhotos: 'Regenerating…',
+      openWebsite: 'Open Website',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -730,6 +736,12 @@
       aiPhotosModalTitle: 'Fotos Generadas con IA',
       aiPhotosEmpty: 'Aún no se han generado fotos con IA',
       aiPhotosSection: 'Sección',
+      regenerateReport: 'Regenerar Informe',
+      regeneratePhotos: 'Regenerar Fotos',
+      regenerateWebsite: 'Regenerar Página Web',
+      regeneratingReport: 'Regenerando…',
+      regeneratingPhotos: 'Regenerando…',
+      openWebsite: 'Abrir Página Web',
     },
   };
 
@@ -1848,6 +1860,7 @@
           <div id="report-modal-container"></div>
         </div>
         <div class="modal-footer">
+          <button class="btn btn-secondary" id="report-modal-regenerate">${t('regenerateReport')}</button>
           <button class="btn btn-primary" id="report-modal-close-footer">${t('closeBtn')}</button>
         </div>
       </div>
@@ -1859,6 +1872,28 @@
 
     modal.querySelector('#report-modal-close').addEventListener('click', () => modal.remove());
     modal.querySelector('#report-modal-close-footer').addEventListener('click', () => modal.remove());
+    modal.querySelector('#report-modal-regenerate').addEventListener('click', () => {
+      modal.remove();
+      // Clear cached report so handleAdminTableReport runs the generation flow
+      business._cachedReport = null;
+      // Also clear the report from generated_websites so it doesn't short-circuit
+      if (business.generated_websites) {
+        business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.researchReport));
+      }
+      // Find the report button in the table row and trigger generation
+      const rows = document.querySelectorAll('.results-table tbody tr');
+      for (const row of rows) {
+        const nameCell = row.querySelector('td:nth-child(2)');
+        if (nameCell && nameCell.textContent.trim() === business.name) {
+          const reportBtn = row.querySelector('.btn-report');
+          if (reportBtn) {
+            reportBtn.textContent = t('btnReport');
+            handleAdminTableReport(business, reportBtn);
+          }
+          break;
+        }
+      }
+    });
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     document.addEventListener('keydown', function handler(e) {
       if (e.key === 'Escape') {
@@ -1903,6 +1938,7 @@
           ${photosHtml}
         </div>
         <div class="modal-footer">
+          <button class="btn btn-secondary" id="ai-photos-modal-regenerate">${t('regeneratePhotos')}</button>
           <button class="btn btn-primary" id="ai-photos-modal-close-footer">${t('closeBtn')}</button>
         </div>
       </div>
@@ -1911,6 +1947,24 @@
 
     modal.querySelector('#ai-photos-modal-close').addEventListener('click', () => modal.remove());
     modal.querySelector('#ai-photos-modal-close-footer').addEventListener('click', () => modal.remove());
+    modal.querySelector('#ai-photos-modal-regenerate').addEventListener('click', () => {
+      modal.remove();
+      // Clear cached photos so handleAdminTableAiPhotos runs the generation flow
+      business._cachedGeneratedPhotos = null;
+      // Find the photos button in the table row and trigger generation
+      const rows = document.querySelectorAll('.results-table tbody tr');
+      for (const row of rows) {
+        const nameCell = row.querySelector('td:nth-child(2)');
+        if (nameCell && nameCell.textContent.trim() === business.name) {
+          const photosBtn = row.querySelector('.btn-photos');
+          if (photosBtn) {
+            photosBtn.textContent = t('btnPhotos');
+            handleAdminTableAiPhotos(business, photosBtn);
+          }
+          break;
+        }
+      }
+    });
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
     document.addEventListener('keydown', function handler(e) {
       if (e.key === 'Escape') {
@@ -2087,14 +2141,7 @@
     }
   }
 
-  async function handleAdminTableWebsite(business, btn) {
-    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
-    if (existingWebsite) {
-      const publishedUrl = existingWebsite.published_url;
-      const previewUrl = '/ver/' + existingWebsite.id;
-      window.open(publishedUrl || previewUrl, '_blank');
-      return;
-    }
+  async function generateWebsite(business, btn) {
     const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
     if (!hasReport) {
       showToast(t('needsReport'), 'warning');
@@ -2153,6 +2200,40 @@
       btn.disabled = false;
       btn.textContent = t('btnWebsite');
     }
+  }
+
+  async function handleAdminTableWebsite(business, btn) {
+    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
+    if (existingWebsite) {
+      // Show a small popup with Open and Regenerate options
+      const popup = document.createElement('div');
+      popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:1500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
+      const publishedUrl = existingWebsite.published_url;
+      const previewUrl = '/ver/' + existingWebsite.id;
+      const url = publishedUrl || previewUrl;
+      popup.innerHTML = `
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:340px;width:90%;text-align:center">
+          <h3 style="margin:0 0 16px;color:var(--text);font-size:16px">${escapeHtml(business.name)}</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <a href="${escapeHtml(url)}" target="_blank" class="btn btn-primary" style="text-decoration:none;text-align:center">${t('openWebsite')}</a>
+            <button class="btn btn-secondary" id="website-popup-regenerate">${t('regenerateWebsite')}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(popup);
+      popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
+      popup.querySelector('#website-popup-regenerate').addEventListener('click', () => {
+        popup.remove();
+        // Clear existing website so generateWebsite runs fresh
+        if (business.generated_websites) {
+          business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.html));
+        }
+        btn.textContent = t('btnWebsite');
+        generateWebsite(business, btn);
+      });
+      return;
+    }
+    generateWebsite(business, btn);
   }
 
   // ── Research Report (Modal) ──
