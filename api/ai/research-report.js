@@ -76,8 +76,16 @@ IMPORTANT — Photo Asset Plan instructions:
 Examine the PHOTO INVENTORY section in the business data. For each website section that needs an image:
 1. If a suitable existing photo exists, set recommendation to "use_existing" and reference it by its ID (e.g., "google_photo_2", "fb_cover", "ig_post_5")
 2. If no suitable photo exists, set recommendation to "generate_ai" and write a detailed prompt for AI image generation — be specific about style, composition, lighting, mood, and subject matter
-3. Cover at minimum: hero/header image, about section image, and any section-specific images (menu photos for restaurants, service photos for service businesses, etc.)
-4. Use Instagram post captions to infer what's in unclassified photos`;
+3. Use Instagram post captions to infer what's in unclassified photos
+
+BE GENEROUS WITH PHOTOS — every visual slot on the website MUST have a photo. Plan at minimum:
+- Hero/header image (wide, atmospheric shot of the business or its products)
+- About section image
+- 4-6 gallery photos showing the business, products, services, interior, exterior, team
+- Any section-specific images (menu items for restaurants, service photos for service businesses, before/after for contractors, etc.)
+- If the business has fewer than 6 usable existing photos, generate AI photos to fill the gaps
+- NEVER leave a visual slot without a photo — every slot must have either use_existing or generate_ai
+- It is better to generate too many AI photos than too few — aim for 8-12 total photo slots`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
