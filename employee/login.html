@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f1117">
+  <title>Employee Login — Local Business Finder</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/employee/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .auth-wrapper { width: 100%; max-width: 400px; }
+    .auth-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+    }
+    .auth-logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      text-align: center;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .auth-subtitle {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .auth-field { display: flex; flex-direction: column; gap: 6px; }
+    .auth-field label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .auth-actions { margin-top: 4px; }
+    .auth-actions .btn { width: 100%; padding: 12px 20px; font-size: 15px; }
+    .auth-footer { text-align: center; margin-top: 16px; }
+    .auth-footer a { font-size: 13px; color: var(--primary); cursor: pointer; }
+    .auth-footer a:hover { color: var(--primary-hover); text-decoration: underline; }
+    .auth-error {
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      display: none;
+    }
+    .auth-error.visible { display: block; }
+    .auth-screen { display: none; }
+    .auth-screen.active { display: block; }
+    .auth-success {
+      background: var(--success-bg);
+      color: var(--success);
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      display: none;
+    }
+    .auth-success.visible { display: block; }
+    @media (max-width: 480px) {
+      body { padding: 16px; }
+      .auth-card { padding: 24px 20px; }
+      .auth-logo { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="auth-loading" class="auth-loading" style="display:none">
+    <span class="spinner"></span>
+    <span class="auth-loading-text">Checking access…</span>
+  </div>
+
+  <div class="auth-wrapper">
+    <!-- Login Screen -->
+    <div class="auth-screen active" id="login-screen">
+      <div class="auth-card">
+        <div class="auth-logo">Local Business Finder</div>
+        <div class="auth-subtitle">Employee Login</div>
+        <form class="auth-form" id="login-form" autocomplete="on">
+          <div class="auth-error" id="login-error"></div>
+          <div class="auth-field">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" class="input" placeholder="you@company.com" required autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="input" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
+          <div class="auth-actions">
+            <button type="submit" class="btn btn-primary" id="login-btn">Log In</button>
+          </div>
+        </form>
+        <div class="auth-footer">
+          <a id="show-reset">Forgot password?</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Password Screen -->
+    <div class="auth-screen" id="reset-screen">
+      <div class="auth-card">
+        <div class="auth-logo">Local Business Finder</div>
+        <div class="auth-subtitle">Reset Password</div>
+        <form class="auth-form" id="reset-form" autocomplete="on">
+          <div class="auth-error" id="reset-error"></div>
+          <div class="auth-success" id="reset-success"></div>
+          <div class="auth-field">
+            <label for="reset-email">Email</label>
+            <input type="email" id="reset-email" class="input" placeholder="you@company.com" required autocomplete="email">
+          </div>
+          <div class="auth-actions">
+            <button type="submit" class="btn btn-primary" id="reset-btn">Send Reset Link</button>
+          </div>
+        </form>
+        <div class="auth-footer">
+          <a id="show-login-from-reset">Back to login</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Set New Password Screen -->
+    <div class="auth-screen" id="new-password-screen">
+      <div class="auth-card">
+        <div class="auth-logo">Local Business Finder</div>
+        <div class="auth-subtitle">Set New Password</div>
+        <form class="auth-form" id="new-password-form" autocomplete="off">
+          <div class="auth-error" id="new-password-error"></div>
+          <div class="auth-field">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" class="input" placeholder="Enter new password" required autocomplete="new-password" minlength="6">
+          </div>
+          <div class="auth-field">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" class="input" placeholder="Confirm new password" required autocomplete="new-password">
+          </div>
+          <div class="auth-actions">
+            <button type="submit" class="btn btn-primary" id="set-password-btn">Set Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/employee/auth.js"></script>
+</body>
+</html>

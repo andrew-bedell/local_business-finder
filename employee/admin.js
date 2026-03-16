@@ -376,6 +376,29 @@
       regeneratingReport: 'Regenerating…',
       regeneratingPhotos: 'Regenerating…',
       openWebsite: 'Open Website',
+      // Team management
+      navTeam: 'Team',
+      teamEmail: 'Email',
+      teamName: 'Name',
+      teamRole: 'Role',
+      teamStatus: 'Status',
+      teamJoined: 'Joined',
+      teamActions: 'Actions',
+      teamInvite: 'Invite Employee',
+      teamInviting: 'Sending…',
+      teamInviteSuccess: 'Invitation sent to {0}',
+      teamInviteError: 'Failed to send invitation',
+      teamDeactivate: 'Deactivate',
+      teamActivate: 'Activate',
+      teamRoleAdmin: 'Admin',
+      teamRoleEmployee: 'Employee',
+      teamStatusActive: 'Active',
+      teamStatusInactive: 'Inactive',
+      teamStatusPending: 'Pending',
+      teamNoEmployees: 'No team members yet. Invite your first employee above.',
+      teamLoadError: 'Failed to load team members',
+      teamUpdateSuccess: 'Employee updated',
+      teamUpdateError: 'Failed to update employee',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -742,6 +765,29 @@
       regeneratingReport: 'Regenerando…',
       regeneratingPhotos: 'Regenerando…',
       openWebsite: 'Abrir Página Web',
+      // Team management
+      navTeam: 'Equipo',
+      teamEmail: 'Correo',
+      teamName: 'Nombre',
+      teamRole: 'Rol',
+      teamStatus: 'Estado',
+      teamJoined: 'Incorporación',
+      teamActions: 'Acciones',
+      teamInvite: 'Invitar Empleado',
+      teamInviting: 'Enviando…',
+      teamInviteSuccess: 'Invitación enviada a {0}',
+      teamInviteError: 'Error al enviar invitación',
+      teamDeactivate: 'Desactivar',
+      teamActivate: 'Activar',
+      teamRoleAdmin: 'Admin',
+      teamRoleEmployee: 'Empleado',
+      teamStatusActive: 'Activo',
+      teamStatusInactive: 'Inactivo',
+      teamStatusPending: 'Pendiente',
+      teamNoEmployees: 'No hay miembros del equipo. Invita a tu primer empleado arriba.',
+      teamLoadError: 'Error al cargar miembros del equipo',
+      teamUpdateSuccess: 'Empleado actualizado',
+      teamUpdateError: 'Error al actualizar empleado',
     },
   };
 
@@ -2787,10 +2833,11 @@
       messages: ['messaging-section'],
       products: ['products-section'],
       customers: ['customers-section'],
+      team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section', 'customers-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section', 'customers-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2802,11 +2849,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products', 'nav-customers'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products', 'nav-customers', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products', customers: 'nav-customers' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products', customers: 'nav-customers', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -2816,6 +2863,7 @@
     if (tab === 'messages') loadConversations();
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
+    if (tab === 'team') loadTeamEmployees();
   }
 
   async function loadConversations() {
@@ -4624,12 +4672,194 @@
   const custStatusFilter = document.getElementById('customers-status-filter');
   if (custStatusFilter) custStatusFilter.addEventListener('change', applyCustomerFilters);
 
+  // ── Team Management ──
+  let teamEmployees = [];
 
+  async function loadTeamEmployees() {
+    const auth = window.__employeeAuth;
+    if (!auth || auth.employee.role !== 'admin') return;
+    const tbody = document.getElementById('team-table-body');
+    if (!tbody) return;
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch('/api/employees/list', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      if (!res.ok) throw new Error('Failed to load');
+      teamEmployees = await res.json();
+      renderTeamTable();
+    } catch (err) {
+      console.error('Load team error:', err);
+      showToast(t('teamLoadError'), 'error');
+    }
+  }
+
+  function renderTeamTable() {
+    const tbody = document.getElementById('team-table-body');
+    if (!tbody) return;
+
+    if (teamEmployees.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">${t('teamNoEmployees')}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = teamEmployees.map(emp => {
+      const roleBadge = emp.role === 'admin'
+        ? `<span class="team-badge team-badge-admin">${t('teamRoleAdmin')}</span>`
+        : `<span class="team-badge team-badge-employee">${t('teamRoleEmployee')}</span>`;
+      const statusBadge = emp.is_active
+        ? `<span class="team-badge team-badge-active">${emp.joined_at ? t('teamStatusActive') : t('teamStatusPending')}</span>`
+        : `<span class="team-badge team-badge-inactive">${t('teamStatusInactive')}</span>`;
+      const joinedDate = emp.joined_at ? new Date(emp.joined_at).toLocaleDateString() : '—';
+      const isCurrentUser = window.__employeeAuth && emp.auth_user_id === window.__employeeAuth.user.id;
+      const actionBtn = isCurrentUser ? '<span style="color:var(--text-dim);font-size:12px">You</span>'
+        : emp.is_active
+        ? `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="deactivate" style="font-size:11px;padding:3px 10px">${t('teamDeactivate')}</button>`
+        : `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="activate" style="font-size:11px;padding:3px 10px">${t('teamActivate')}</button>`;
+      return `<tr>
+        <td>${escapeHtml(emp.display_name || '—')}</td>
+        <td>${escapeHtml(emp.email)}</td>
+        <td>${roleBadge}</td>
+        <td>${statusBadge}</td>
+        <td>${joinedDate}</td>
+        <td>${actionBtn}</td>
+      </tr>`;
+    }).join('');
+
+    // Bind action buttons
+    tbody.querySelectorAll('[data-emp-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const empId = btn.dataset.empId;
+        const action = btn.dataset.action;
+        toggleEmployeeActive(empId, action === 'activate');
+      });
+    });
+  }
+
+  async function inviteEmployee() {
+    const auth = window.__employeeAuth;
+    if (!auth || auth.employee.role !== 'admin') return;
+
+    const emailInput = document.getElementById('invite-email');
+    const nameInput = document.getElementById('invite-name');
+    const btn = document.getElementById('btn-invite-employee');
+    const email = (emailInput.value || '').trim();
+    const displayName = (nameInput.value || '').trim();
+
+    if (!email) {
+      emailInput.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = t('teamInviting');
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch('/api/employees/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ email, display_name: displayName }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Invite failed');
+      }
+      const newEmployee = await res.json();
+      teamEmployees.push(newEmployee);
+      renderTeamTable();
+      emailInput.value = '';
+      nameInput.value = '';
+      showToast(t('teamInviteSuccess', email), 'success');
+    } catch (err) {
+      console.error('Invite error:', err);
+      showToast(t('teamInviteError') + ': ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = t('teamInvite');
+    }
+  }
+
+  async function toggleEmployeeActive(empId, activate) {
+    const auth = window.__employeeAuth;
+    if (!auth || auth.employee.role !== 'admin') return;
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch('/api/employees/list', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ id: empId, is_active: activate }),
+      });
+      if (!res.ok) throw new Error('Update failed');
+      const updated = await res.json();
+      const idx = teamEmployees.findIndex(e => e.id === empId);
+      if (idx >= 0 && updated.length > 0) teamEmployees[idx] = updated[0];
+      renderTeamTable();
+      showToast(t('teamUpdateSuccess'), 'success');
+    } catch (err) {
+      console.error('Toggle employee error:', err);
+      showToast(t('teamUpdateError'), 'error');
+    }
+  }
+
+  // Team event listeners
+  const btnInvite = document.getElementById('btn-invite-employee');
+  if (btnInvite) btnInvite.addEventListener('click', inviteEmployee);
+
+  // Team nav tab handler (integrated into switchTab system)
+  const navTeam = document.getElementById('nav-team');
+  if (navTeam) {
+    navTeam.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchTab('team');
+    });
+  }
 
   // ── Start ──
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+  // Wait for auth guard (auth.js) to verify employee before initializing
+  function startApp() {
+    // Show the app container (hidden until auth passes)
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.style.display = '';
+    // Show user info in header
+    if (window.__employeeAuth) {
+      const nameEl = document.getElementById('header-user-name');
+      const infoEl = document.getElementById('header-user-info');
+      if (nameEl && window.__employeeAuth.employee.display_name) {
+        nameEl.textContent = window.__employeeAuth.employee.display_name;
+      } else if (nameEl) {
+        nameEl.textContent = window.__employeeAuth.employee.email;
+      }
+      if (infoEl) infoEl.style.display = '';
+      const logoutBtn = document.getElementById('btn-logout');
+      if (logoutBtn) logoutBtn.addEventListener('click', () => window.__employeeAuth.signOut());
+      // Show Team tab for admins
+      if (window.__employeeAuth.employee.role === 'admin') {
+        const teamTab = document.getElementById('nav-team');
+        if (teamTab) teamTab.style.display = '';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  }
+
+  if (window.__employeeAuth) {
+    startApp();
   } else {
-    init();
+    document.addEventListener('employee-auth-ready', startApp);
   }
 })();
