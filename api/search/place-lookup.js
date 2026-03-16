@@ -1,0 +1,223 @@
+// Vercel serverless function: SearchAPI.io Google Maps Place lookup
+// Fetches a single business by place_id, data_id, or Google Maps URL.
+// Returns a full normalized business object (same shape as maps.js) plus enrichment fields.
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const apiKey = process.env.SEARCHAPI_KEY;
+  if (!apiKey) return res.status(503).json({ error: 'SearchAPI key not configured' });
+
+  let { place_id, data_id, url, hl } = req.query;
+
+  // If a URL is provided, resolve it to extract place_id or data_id
+  if (url && !place_id && !data_id) {
+    const parsed = await resolveUrl(url);
+    if (parsed.error) return res.status(400).json({ error: parsed.error });
+    if (parsed.place_id) place_id = parsed.place_id;
+    if (parsed.data_id) data_id = parsed.data_id;
+  }
+
+  if (!place_id && !data_id) {
+    return res.status(400).json({ error: 'Missing required parameter: place_id, data_id, or url' });
+  }
+
+  try {
+    const params = new URLSearchParams({
+      engine: 'google_maps_place',
+      api_key: apiKey,
+    });
+
+    if (place_id) params.set('place_id', place_id);
+    if (data_id) params.set('data_id', data_id);
+    if (hl) params.set('hl', hl);
+
+    const response = await fetch(
+      'https://www.searchapi.io/api/v1/search?' + params.toString()
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('SearchAPI.io place-lookup error:', response.status, errorText);
+      return res.status(502).json({ error: 'SearchAPI.io request failed' });
+    }
+
+    const data = await response.json();
+    const place = data.place_result || {};
+
+    if (!place.title) {
+      return res.status(404).json({ error: 'Place not found' });
+    }
+
+    // Normalize to the same shape as maps.js normalizeResult()
+    const normalized = normalizePlaceResult(place);
+
+    // Add enrichment fields
+    const reviews = normalizeReviews(data.review_results || place.reviews || []);
+    const webReviews = (data.web_reviews || []).map(wr => ({
+      source: (wr.source || '').toLowerCase(),
+      rating: wr.rating || null,
+      reviewCount: wr.reviews || 0,
+      url: wr.link || '',
+    }));
+
+    normalized.reviewData = reviews;
+    normalized.webReviews = webReviews;
+    normalized.reviewsHistogram = place.reviews_histogram || null;
+    normalized.popularTimes = parsePopularTimes(place.popular_times || {});
+
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    return res.status(200).json(normalized);
+  } catch (err) {
+    console.error('SearchAPI.io place-lookup error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// Resolve a Google Maps URL to extract place_id or data_id
+async function resolveUrl(url) {
+  try {
+    // Handle shortened URLs by following redirects
+    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl')) {
+      const resolved = await fetch(url, { redirect: 'follow' });
+      url = resolved.url;
+    }
+
+    // Extract data_id from full Maps URL (hex format after !1s)
+    const dataIdMatch = url.match(/!1s(0x[a-fA-F0-9]+:0x[a-fA-F0-9]+)/);
+    if (dataIdMatch) return { data_id: dataIdMatch[1] };
+
+    // Extract ChIJ-format place_id from URL
+    const chijMatch = url.match(/!1s(ChIJ[A-Za-z0-9_-]+)/);
+    if (chijMatch) return { place_id: chijMatch[1] };
+
+    // Extract from ftid parameter
+    const ftidMatch = url.match(/ftid=(0x[a-fA-F0-9]+:0x[a-fA-F0-9]+)/);
+    if (ftidMatch) return { data_id: ftidMatch[1] };
+
+    // Extract CID from ?cid= parameter
+    const cidMatch = url.match(/[?&]cid=(\d+)/);
+    if (cidMatch) {
+      // CID is the decimal representation of the hex place identifier
+      return { data_id: '0x0:0x' + BigInt(cidMatch[1]).toString(16) };
+    }
+
+    return { error: 'Could not extract place identifier from URL' };
+  } catch (err) {
+    return { error: 'Failed to resolve URL: ' + err.message };
+  }
+}
+
+// Normalize SearchAPI.io place_result to the app's internal format (same shape as maps.js)
+function normalizePlaceResult(place) {
+  const hours = [];
+  if (place.open_hours) {
+    const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    for (const day of dayOrder) {
+      if (place.open_hours[day]) {
+        const capitalized = day.charAt(0).toUpperCase() + day.slice(1);
+        hours.push(`${capitalized}: ${place.open_hours[day]}`);
+      }
+    }
+  }
+
+  const extensions = parseExtensions(place.extensions || []);
+
+  // reviewCount: place.reviews may be a number (count) or array (review data)
+  const reviewCount = typeof place.reviews === 'number' ? place.reviews
+    : Array.isArray(place.reviews) ? place.reviews.length : 0;
+
+  return {
+    name: place.title || '',
+    address: place.address || '',
+    phone: place.phone || '',
+    website: place.website || '',
+    rating: place.rating || 0,
+    reviewCount: reviewCount,
+    status: place.open_state === 'Closed permanently' ? 'CLOSED_PERMANENTLY'
+      : place.open_state === 'Temporarily closed' ? 'CLOSED_TEMPORARILY'
+      : 'OPERATIONAL',
+    mapsUrl: place.link || '',
+    types: place.types || (place.type ? [place.type] : []),
+    placeId: place.place_id || '',
+    dataId: place.data_id || '',
+    reviewData: [],
+    photos: (place.images || []).map(url => ({ url })),
+    hours: hours,
+    latitude: place.gps_coordinates ? place.gps_coordinates.latitude : null,
+    longitude: place.gps_coordinates ? place.gps_coordinates.longitude : null,
+    description: place.description || '',
+    thumbnail: place.thumbnail || '',
+    priceLevel: place.price || '',
+    priceDescription: place.price_description || '',
+    serviceOptions: extensions.serviceOptions,
+    amenities: extensions.amenities,
+    highlights: extensions.highlights,
+    accessibility: extensions.accessibility,
+    source: 'searchapi',
+  };
+}
+
+// Parse SearchAPI.io extensions array into categorized arrays
+function parseExtensions(extensions) {
+  const result = { serviceOptions: [], amenities: [], highlights: [], accessibility: [] };
+
+  for (const group of extensions) {
+    const title = (group.title || '').toLowerCase();
+    const items = (group.items || []).map(item => item.title || item.value || '');
+
+    if (title.includes('service')) {
+      result.serviceOptions.push(...items);
+    } else if (title.includes('accessibility')) {
+      result.accessibility.push(...items);
+    } else if (title.includes('highlight')) {
+      result.highlights.push(...items);
+    } else if (title.includes('amenit') || title.includes('offering') || title.includes('planning') || title.includes('dining') || title.includes('atmosphere') || title.includes('crowd') || title.includes('payment')) {
+      result.amenities.push(...items);
+    } else {
+      result.amenities.push(...items);
+    }
+  }
+
+  return result;
+}
+
+// Normalize review objects from SearchAPI.io response
+function normalizeReviews(reviews) {
+  if (!Array.isArray(reviews)) return [];
+  return reviews.map(r => ({
+    authorName: r.user ? r.user.name || '' : '',
+    authorPhoto: r.user ? r.user.thumbnail || '' : '',
+    rating: r.rating || 0,
+    text: r.original_snippet || r.snippet || r.text || '',
+    date: r.date || '',
+    isoDate: r.iso_date || r.extracted_date || '',
+    isLocalGuide: r.user ? r.user.is_local_guide || false : false,
+    source: 'google',
+  }));
+}
+
+// Parse popular times data
+function parsePopularTimes(popularTimes) {
+  if (!popularTimes.chart) return null;
+
+  const result = { typicalTimeSpent: null, days: {} };
+
+  if (popularTimes.live && popularTimes.live.typical_time_spent) {
+    result.typicalTimeSpent = popularTimes.live.typical_time_spent;
+  }
+
+  for (const [day, hours] of Object.entries(popularTimes.chart)) {
+    const peak = hours.reduce((max, h) => h.busyness_score > max.score
+      ? { score: h.busyness_score, time: h.time, info: h.info || '' }
+      : max, { score: 0, time: '', info: '' });
+    result.days[day] = peak;
+  }
+
+  return result;
+}

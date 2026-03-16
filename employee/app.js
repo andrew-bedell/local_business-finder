@@ -354,6 +354,15 @@
       enrichmentBarComplete: 'Enrichment complete — {0} businesses enriched',
       enrichmentBarEnrichMore: 'Enrich remaining {0} businesses',
       enrichmentBarStopped: 'Enriched first {0} of {1} businesses',
+      // URL Lookup
+      lookupDivider: 'or add a specific business',
+      lookupPlaceholder: 'Paste a Google Maps URL or Place ID...',
+      lookupBtn: 'Look Up',
+      lookingUp: 'Looking up...',
+      lookupInvalidInput: 'Please paste a valid Google Maps URL or Place ID (starts with ChIJ).',
+      lookupNotFound: 'Place not found. Check the URL or Place ID and try again.',
+      lookupError: 'Failed to look up business. Please try again.',
+      lookupSuccess: '"{0}" added to results.',
     },
     es: {
       // Header
@@ -702,6 +711,15 @@
       enrichmentBarComplete: 'Enriquecimiento completado — {0} negocios enriquecidos',
       enrichmentBarEnrichMore: 'Enriquecer los {0} negocios restantes',
       enrichmentBarStopped: 'Enriquecidos los primeros {0} de {1} negocios',
+      // URL Lookup
+      lookupDivider: 'o agregar un negocio específico',
+      lookupPlaceholder: 'Pega una URL de Google Maps o Place ID...',
+      lookupBtn: 'Buscar',
+      lookingUp: 'Buscando...',
+      lookupInvalidInput: 'Pega una URL válida de Google Maps o un Place ID (comienza con ChIJ).',
+      lookupNotFound: 'Negocio no encontrado. Verifica la URL o Place ID e intenta de nuevo.',
+      lookupError: 'Error al buscar el negocio. Por favor intenta de nuevo.',
+      lookupSuccess: '"{0}" agregado a los resultados.',
     },
   };
 
@@ -1023,6 +1041,8 @@
   const sortSelect = $('#sort-select');
   const btnExportCsv = $('#btn-export-csv');
   const btnClear = $('#btn-clear');
+  const lookupInput = $('#lookup-input');
+  const btnLookup = $('#btn-lookup');
 
   // ── Initialize ──
   function init() {
@@ -1040,6 +1060,10 @@
     btnClear.addEventListener('click', clearResults);
     document.getElementById('btn-save-all').addEventListener('click', saveAllBusinesses);
     countrySelect.addEventListener('change', onCountryChange);
+    btnLookup.addEventListener('click', lookupByUrl);
+    lookupInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') lookupByUrl();
+    });
 
     // Language switcher
     document.querySelectorAll('.lang-btn').forEach((btn) => {
@@ -1781,6 +1805,103 @@
     if (photo.url) return photo.url;
     if (typeof photo === 'string') return photo;
     return null;
+  }
+
+  // ── URL Lookup ──
+  function parseGoogleMapsInput(input) {
+    input = input.trim();
+
+    // Raw place ID (starts with ChIJ)
+    if (/^ChIJ[A-Za-z0-9_-]+$/.test(input)) {
+      return { place_id: input };
+    }
+
+    // Raw hex data_id (0x format)
+    if (/^0x[a-fA-F0-9]+:0x[a-fA-F0-9]+$/.test(input)) {
+      return { data_id: input };
+    }
+
+    // URL — try to parse client-side, fall back to server resolution
+    if (input.startsWith('http')) {
+      // Extract data_id from full Maps URL (hex format after !1s)
+      const dataIdMatch = input.match(/!1s(0x[a-fA-F0-9]+:0x[a-fA-F0-9]+)/);
+      if (dataIdMatch) return { data_id: dataIdMatch[1] };
+
+      // Extract ChIJ-format place_id
+      const chijMatch = input.match(/!1s(ChIJ[A-Za-z0-9_-]+)/);
+      if (chijMatch) return { place_id: chijMatch[1] };
+
+      // Extract from ftid parameter
+      const ftidMatch = input.match(/ftid=(0x[a-fA-F0-9]+:0x[a-fA-F0-9]+)/);
+      if (ftidMatch) return { data_id: ftidMatch[1] };
+
+      // Shortened URLs, CID URLs, or anything else — send to server
+      return { url: input };
+    }
+
+    return { error: true };
+  }
+
+  async function lookupByUrl() {
+    const input = lookupInput.value.trim();
+    if (!input) return;
+
+    const parsed = parseGoogleMapsInput(input);
+    if (parsed.error) {
+      showToast(t('lookupInvalidInput'), 'error');
+      return;
+    }
+
+    // Show loading state
+    btnLookup.disabled = true;
+    btnLookup.querySelector('.btn-text').style.display = 'none';
+    btnLookup.querySelector('.btn-loading').style.display = 'inline-flex';
+
+    try {
+      const params = new URLSearchParams();
+      if (parsed.place_id) params.set('place_id', parsed.place_id);
+      if (parsed.data_id) params.set('data_id', parsed.data_id);
+      if (parsed.url) params.set('url', parsed.url);
+      params.set('hl', getSearchLanguage());
+
+      const res = await withTimeout(
+        fetch('/api/search/place-lookup?' + params.toString()),
+        20000,
+        'Place lookup'
+      );
+
+      if (res.status === 404) {
+        showToast(t('lookupNotFound'), 'error');
+        resetLookupButton();
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || t('lookupError'), 'error');
+        resetLookupButton();
+        return;
+      }
+
+      const business = await res.json();
+
+      // Add to front of results
+      allResults.unshift(business);
+      showResults();
+      showToast(t('lookupSuccess', business.name), 'success');
+      lookupInput.value = '';
+    } catch (err) {
+      console.error('Place lookup error:', err);
+      showToast(t('lookupError'), 'error');
+    }
+
+    resetLookupButton();
+  }
+
+  function resetLookupButton() {
+    btnLookup.disabled = false;
+    btnLookup.querySelector('.btn-text').style.display = 'inline';
+    btnLookup.querySelector('.btn-loading').style.display = 'none';
   }
 
   // ── SearchAPI.io Search ──
