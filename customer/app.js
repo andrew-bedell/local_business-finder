@@ -461,6 +461,11 @@
       return null;
     }
 
+    // Store role at top level for easy access
+    if (result.data) {
+      result.data.role = result.data.role || 'owner';
+    }
+
     return result.data;
   }
 
@@ -559,13 +564,15 @@
         loadBusinessInfo(businessId),
         loadWebsiteInfo(businessId),
         loadSubscription(customerId),
-        loadEditRequests(customerId)
+        loadEditRequests(customerId),
+        loadTeamMembers()
       ]);
 
       businessData = results[0];
       websiteData = results[1];
       subscriptionData = results[2];
       var editRequests = results[3];
+      var team = results[4];
 
       // Step 3: Render everything
       renderDashboard(businessData, websiteData, subscriptionData, editRequests);
@@ -573,6 +580,8 @@
       renderBilling(subscriptionData, customer);
       renderEditRequests(editRequests);
       renderInvoiceHistory();
+      setupTeamSection();
+      renderTeamTable(team);
 
       // Update header
       var businessNameEl = $('#business-name');
@@ -1421,6 +1430,195 @@
     } catch (err) {
       console.error('Remove domain error:', err);
       showToast('Error al desconectar el dominio.', 'error');
+    }
+  }
+
+  // ── Team Management ──
+  var teamMembers = [];
+
+  async function loadTeamMembers() {
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      if (!token) return [];
+
+      var response = await fetch('/api/customers/team', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!response.ok) {
+        console.error('Load team failed:', response.status);
+        return [];
+      }
+      return await response.json();
+    } catch (err) {
+      console.error('Load team error:', err);
+      return [];
+    }
+  }
+
+  function renderTeamTable(members) {
+    var tbody = $('#team-table-body');
+    if (!tbody) return;
+
+    teamMembers = members;
+
+    if (!members || members.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="c-table-empty">No hay miembros en tu equipo.</td></tr>';
+      return;
+    }
+
+    var roleLabels = { owner: 'Propietario', manager: 'Gerente', employee: 'Empleado' };
+    var roleClasses = { owner: 'c-badge--owner', manager: 'c-badge--manager', employee: 'c-badge--employee' };
+    var isOwner = customerData && customerData.role === 'owner';
+
+    var html = '';
+    members.forEach(function (m) {
+      var roleLabel = roleLabels[m.role] || m.role;
+      var roleClass = roleClasses[m.role] || '';
+      var statusLabel = m.is_active === false ? 'Inactivo' : (m.joined_at ? 'Activo' : 'Pendiente');
+      var statusClass = m.is_active === false ? 'c-badge--inactive' : (m.joined_at ? 'c-badge--active' : 'c-badge--incomplete');
+
+      html += '<tr>';
+      html += '<td>' + escapeHtml(m.display_name || '—') + '</td>';
+      html += '<td>' + escapeHtml(m.email || '—') + '</td>';
+      html += '<td><span class="c-badge ' + roleClass + '">' + escapeHtml(roleLabel) + '</span></td>';
+      html += '<td><span class="c-badge ' + statusClass + '">' + escapeHtml(statusLabel) + '</span></td>';
+      html += '<td>';
+      if (isOwner && m.role !== 'owner') {
+        if (m.is_active === false) {
+          html += '<button class="c-btn-toggle" data-member-id="' + escapeHtml(m.id) + '" data-action="activate">Activar</button>';
+        } else {
+          html += '<button class="c-btn-toggle" data-member-id="' + escapeHtml(m.id) + '" data-action="deactivate">Desactivar</button>';
+        }
+      } else {
+        html += '<span style="color:var(--c-text-dim);font-size:12px;">—</span>';
+      }
+      html += '</td>';
+      html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+
+    // Bind toggle buttons
+    tbody.querySelectorAll('.c-btn-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var memberId = btn.getAttribute('data-member-id');
+        var action = btn.getAttribute('data-action');
+        toggleTeamMember(memberId, action === 'activate');
+      });
+    });
+  }
+
+  async function inviteTeamMember(email, displayName, role) {
+    if (!email) {
+      showToast('Ingresa un correo electrónico.', 'warning');
+      return;
+    }
+
+    var btnInvite = $('#btn-invite-team');
+    if (btnInvite) {
+      btnInvite.disabled = true;
+      btnInvite.textContent = 'Enviando...';
+    }
+
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      if (!token) throw new Error('No session');
+
+      var response = await fetch('/api/customers/invite-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          display_name: displayName ? displayName.trim() : null,
+          role: role || 'employee',
+        }),
+      });
+
+      var data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al enviar invitación');
+      }
+
+      showToast('Invitación enviada a ' + escapeHtml(email) + '.', 'success');
+
+      // Clear form
+      var emailField = $('#team-invite-email');
+      var nameField = $('#team-invite-name');
+      var roleField = $('#team-invite-role');
+      if (emailField) emailField.value = '';
+      if (nameField) nameField.value = '';
+      if (roleField) roleField.value = 'employee';
+
+      // Reload team
+      var members = await loadTeamMembers();
+      renderTeamTable(members);
+    } catch (err) {
+      console.error('Invite team member error:', err);
+      showToast(err.message || 'Error al enviar la invitación.', 'error');
+    } finally {
+      if (btnInvite) {
+        btnInvite.disabled = false;
+        btnInvite.textContent = 'Enviar Invitación';
+      }
+    }
+  }
+
+  async function toggleTeamMember(memberId, activate) {
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      if (!token) throw new Error('No session');
+
+      var response = await fetch('/api/customers/team', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          member_id: memberId,
+          is_active: activate,
+        }),
+      });
+
+      var data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al actualizar');
+      }
+
+      showToast(activate ? 'Miembro activado.' : 'Miembro desactivado.', 'success');
+
+      // Reload team
+      var members = await loadTeamMembers();
+      renderTeamTable(members);
+    } catch (err) {
+      console.error('Toggle team member error:', err);
+      showToast(err.message || 'Error al actualizar miembro.', 'error');
+    }
+  }
+
+  function setupTeamSection() {
+    // Show invite panel only for owners
+    var invitePanel = $('#team-invite-panel');
+    if (invitePanel && customerData && customerData.role === 'owner') {
+      invitePanel.style.display = '';
+    }
+
+    // Bind invite form
+    var teamForm = $('#team-invite-form');
+    if (teamForm) {
+      teamForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = ($('#team-invite-email') || {}).value || '';
+        var name = ($('#team-invite-name') || {}).value || '';
+        var role = ($('#team-invite-role') || {}).value || 'employee';
+        inviteTeamMember(email, name, role);
+      });
     }
   }
 

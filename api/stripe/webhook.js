@@ -1,6 +1,9 @@
 // Vercel serverless function: Handle Stripe webhook events
 // POST — receives Stripe webhook events and updates database
 
+import { sendEmail } from '../_lib/sendgrid.js';
+import { customerWelcomeEmail } from '../_lib/email-templates.js';
+
 // Disable body parsing so we can verify the raw signature
 export const config = {
   api: {
@@ -113,11 +116,29 @@ export default async function handler(req, res) {
             );
           }
 
-          // Create customer auth user (non-blocking)
+          // Create customer auth user and send welcome email (non-blocking)
           try {
             const customer = await getCustomerFromSubscription(subscriptionId, supabaseUrl, supabaseHeaders);
             if (customer) {
               await createCustomerAuthUser(customer, supabaseUrl, supabaseKey);
+
+              // Send branded welcome email via SendGrid
+              try {
+                const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
+                const origin = req.headers.origin || 'https://ahoratengopagina.com';
+                const loginUrl = origin + '/mipagina';
+                const emailContent = customerWelcomeEmail({
+                  contactName: customer.contact_name || '',
+                  businessName: businessName || '',
+                  loginUrl,
+                });
+                const emailResult = await sendEmail({ to: customer.email, ...emailContent });
+                if (!emailResult.success) {
+                  console.warn('Customer welcome email failed (non-blocking):', emailResult.error);
+                }
+              } catch (emailErr) {
+                console.warn('Customer welcome email error (non-blocking):', emailErr);
+              }
             }
           } catch (authErr) {
             console.error('Customer auth user creation error (non-blocking):', authErr);
@@ -217,7 +238,7 @@ async function getCustomerFromSubscription(stripeSubscriptionId, supabaseUrl, su
     if (!subs || subs.length === 0) return null;
 
     const custRes = await fetch(
-      `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(subs[0].customer_id)}&select=id,email,contact_name`,
+      `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(subs[0].customer_id)}&select=id,email,contact_name,business_id`,
       { headers: supabaseHeaders }
     );
     const custs = await custRes.json();
@@ -333,6 +354,34 @@ async function linkCustomerUser(authUserId, customerId, supabaseUrl, supabaseKey
     console.error('Failed to create customer_users link:', linkRes.status, errText);
   } else {
     console.log('Created customer_users link:', authUserId, customerId);
+  }
+}
+
+// Helper: look up business name from a customer record
+async function getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders) {
+  try {
+    if (!customer.business_id) {
+      // Need to look up the full customer record to get business_id
+      const custRes = await fetch(
+        `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(customer.id)}&select=business_id`,
+        { headers: supabaseHeaders }
+      );
+      const custs = await custRes.json();
+      if (!custs || custs.length === 0) return null;
+      customer.business_id = custs[0].business_id;
+    }
+
+    const bizRes = await fetch(
+      `${supabaseUrl}/rest/v1/businesses?id=eq.${customer.business_id}&select=name`,
+      { headers: supabaseHeaders }
+    );
+    const biz = await bizRes.json();
+    if (!biz || biz.length === 0) return null;
+
+    return biz[0].name;
+  } catch (err) {
+    console.error('getBusinessNameFromCustomer error:', err);
+    return null;
   }
 }
 

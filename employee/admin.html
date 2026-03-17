@@ -33,6 +33,7 @@
               <a href="#" class="nav-tab" id="nav-audiences" data-i18n="navAudiences">Audiences</a>
               <a href="#" class="nav-tab" id="nav-campaigns" data-i18n="navCampaigns">Campaigns</a>
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
+              <a href="#" class="nav-tab" id="nav-email" data-i18n="navEmail">Email</a>
               <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
               <a href="#" class="nav-tab" id="nav-customers" data-i18n="navCustomers">Customers</a>
               <a href="#" class="nav-tab" id="nav-team" data-i18n="navTeam" style="display:none">Team</a>
@@ -401,6 +402,56 @@
           </div>
         </div>
       </section>
+
+      <!-- Email Section -->
+      <section id="email-section" style="display:none">
+        <div class="email-view-toggle">
+          <div class="email-toggle-group">
+            <button class="email-toggle-btn active" id="email-toggle-customers" data-i18n="emailCustomerEmails">Customer Emails</button>
+            <button class="email-toggle-btn" id="email-toggle-inbox" data-i18n="emailInbox">Inbox</button>
+          </div>
+          <button class="btn btn-primary" id="btn-compose-email" data-i18n="emailCompose">Compose</button>
+        </div>
+        <div class="messaging-layout">
+          <div class="conversations-panel">
+            <div class="conversations-search">
+              <input type="text" class="input" id="email-conv-search" data-i18n-placeholder="emailSearchPlaceholder" placeholder="Search emails...">
+            </div>
+            <div class="conversations-list" id="email-conversations-list"></div>
+          </div>
+          <div class="chat-panel" id="email-chat-panel">
+            <div class="chat-empty" id="email-chat-empty" data-i18n="emailSelectConversation">Select a conversation to view emails</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Compose Email Modal -->
+      <div class="modal-overlay" id="compose-email-modal" style="display:none">
+        <div class="modal-content" style="max-width:600px">
+          <div class="modal-header">
+            <h2 data-i18n="emailComposeTitle">New Email</h2>
+            <button class="modal-close" id="compose-email-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="emailTo">To</label>
+              <input type="email" class="input" id="compose-email-to" placeholder="email@example.com">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="emailSubject">Subject</label>
+              <input type="text" class="input" id="compose-email-subject" placeholder="">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="emailBody">Body</label>
+              <textarea class="input" id="compose-email-body" rows="8" placeholder="" style="resize:vertical;min-height:120px"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" id="compose-email-cancel" data-i18n="cancel">Cancel</button>
+            <button class="btn btn-primary" id="compose-email-send" data-i18n="emailSendBtn">Send Email</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Customers Section -->
       <section id="customers-section" style="display:none">
