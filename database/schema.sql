@@ -784,7 +784,12 @@ CREATE TABLE IF NOT EXISTS customer_users (
   auth_user_id            UUID NOT NULL UNIQUE,      -- Supabase Auth user UUID
   customer_id             UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   role                    TEXT DEFAULT 'owner'
-                            CHECK (role IN ('owner', 'manager')),
+                            CHECK (role IN ('owner', 'manager', 'employee')),
+  display_name            TEXT,
+  email                   TEXT,
+  is_active               BOOLEAN DEFAULT TRUE,
+  invited_at              TIMESTAMPTZ,
+  joined_at               TIMESTAMPTZ,
   created_at              TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -893,6 +898,11 @@ CREATE POLICY "Customers read own subscriptions" ON subscriptions
 CREATE POLICY "Customers read own user record" ON customer_users
   FOR SELECT USING (auth_user_id = auth.uid());
 
+CREATE POLICY "Customers read own team" ON customer_users
+  FOR SELECT USING (
+    customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
+  );
+
 CREATE POLICY "Customers read own edit requests" ON edit_requests
   FOR SELECT USING (
     customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
@@ -902,3 +912,70 @@ CREATE POLICY "Customers insert edit requests" ON edit_requests
   FOR INSERT WITH CHECK (
     customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
   );
+
+
+-- ============================================================================
+-- 17. EMAIL_CONVERSATIONS — One per unique sender email
+-- ============================================================================
+-- Mirrors whatsapp_conversations. Groups email threads by sender address.
+
+CREATE TABLE IF NOT EXISTS email_conversations (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  sender_email            TEXT NOT NULL UNIQUE,           -- unique sender address
+  sender_name             TEXT,                           -- display name from email header
+  customer_id             UUID REFERENCES customers(id) ON DELETE SET NULL,
+  business_id             BIGINT REFERENCES businesses(id) ON DELETE SET NULL,
+  unread_count            INTEGER DEFAULT 0,
+  last_message_subject    TEXT,
+  last_message_text       TEXT,                           -- plain-text preview (first 200 chars)
+  last_message_at         TIMESTAMPTZ,
+  status                  TEXT DEFAULT 'active'
+                            CHECK (status IN ('active', 'archived')),
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_conversations_customer ON email_conversations (customer_id);
+CREATE INDEX IF NOT EXISTS idx_email_conversations_business ON email_conversations (business_id);
+CREATE INDEX IF NOT EXISTS idx_email_conversations_last_msg ON email_conversations (last_message_at DESC);
+
+ALTER TABLE email_conversations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON email_conversations FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER email_conversations_updated_at
+  BEFORE UPDATE ON email_conversations
+  FOR EACH ROW
+  EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 18. EMAIL_MESSAGES — Individual email messages in both directions
+-- ============================================================================
+-- Mirrors whatsapp_messages. Stores inbound and outbound emails.
+
+CREATE TABLE IF NOT EXISTS email_messages (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  conversation_id         UUID NOT NULL REFERENCES email_conversations(id) ON DELETE CASCADE,
+  resend_email_id         TEXT,                           -- Resend email ID (from webhook or send response)
+  direction               TEXT NOT NULL
+                            CHECK (direction IN ('inbound', 'outbound')),
+  from_address            TEXT,
+  to_addresses            TEXT[],                         -- array of recipient addresses
+  cc_addresses            TEXT[],                         -- array of CC addresses
+  subject                 TEXT,
+  body_html               TEXT,
+  body_text               TEXT,
+  has_attachments         BOOLEAN DEFAULT FALSE,
+  attachment_metadata     JSONB,                          -- array of { filename, content_type, size }
+  status                  TEXT DEFAULT 'received'
+                            CHECK (status IN ('received', 'sent', 'failed')),
+  sent_at                 TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_messages_conversation ON email_messages (conversation_id);
+CREATE INDEX IF NOT EXISTS idx_email_messages_resend_id ON email_messages (resend_email_id);
+CREATE INDEX IF NOT EXISTS idx_email_messages_created ON email_messages (created_at);
+
+ALTER TABLE email_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON email_messages FOR ALL USING (true) WITH CHECK (true);

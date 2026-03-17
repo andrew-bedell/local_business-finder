@@ -1040,6 +1040,27 @@ body.c-body a { text-decoration: none; color: inherit; }
 .c-badge--high { background: rgba(240,192,64,0.15); color: var(--c-gold); border: 1px solid rgba(240,192,64,0.2); }
 .c-badge--urgent { background: rgba(255,107,107,0.15); color: var(--c-accent3); border: 1px solid rgba(255,107,107,0.2); }
 
+/* Team role badges */
+.c-badge--owner { background: rgba(240,192,64,0.15); color: var(--c-gold); border: 1px solid rgba(240,192,64,0.2); }
+.c-badge--manager { background: rgba(108,92,231,0.15); color: var(--c-accent); border: 1px solid rgba(108,92,231,0.2); }
+.c-badge--employee { background: rgba(0,212,170,0.15); color: var(--c-accent2); border: 1px solid rgba(0,212,170,0.2); }
+.c-badge--inactive { background: rgba(107,107,130,0.15); color: var(--c-text-muted); border: 1px solid rgba(107,107,130,0.2); }
+
+/* Team toggle button */
+.c-btn-toggle {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--c-radius);
+  cursor: pointer;
+  border: 1px solid var(--c-border);
+  background: var(--c-surface2);
+  color: var(--c-text-muted);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.c-btn-toggle:hover { border-color: var(--c-accent); color: var(--c-text); }
+
 
 /* ============================================================================
    16. PLAN SUMMARY (Billing)

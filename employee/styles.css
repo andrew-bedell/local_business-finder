@@ -3072,3 +3072,140 @@ select.input {
     width: 100% !important;
   }
 }
+
+/* === Email Section === */
+.email-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.email-toggle-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.email-toggle-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.email-toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.email-toggle-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.email-view-toggle .btn {
+  margin-left: auto;
+}
+
+.email-msg-subject {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  opacity: 0.85;
+}
+
+.msg-outbound .email-msg-subject {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.email-msg-body {
+  font-size: 13px;
+  line-height: 1.6;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.email-msg-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.email-msg-body a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.msg-outbound .email-msg-body a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.email-attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 6px;
+  color: var(--text-muted);
+}
+
+.msg-outbound .email-attachment-chip {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.email-reply-area {
+  border-top: 1px solid var(--border);
+  padding: 12px 20px;
+}
+
+.email-reply-area .form-group {
+  margin-bottom: 10px;
+}
+
+.email-reply-area label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.email-reply-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.email-reply-actions textarea {
+  flex: 1;
+  resize: none;
+  min-height: 40px;
+  max-height: 100px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: border-color 0.15s;
+}
+
+.email-reply-actions textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}

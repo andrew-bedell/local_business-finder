@@ -159,6 +159,10 @@
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
           <span>Solicitudes</span>
         </button>
+        <button class="c-nav-item" data-section="team">
+          <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span>Equipo</span>
+        </button>
         <button class="c-nav-item" data-section="account">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
           <span>Mi Cuenta</span>
@@ -190,6 +194,7 @@
       <button class="c-tab" data-section="business">Negocio</button>
       <button class="c-tab" data-section="billing">Pago</button>
       <button class="c-tab" data-section="requests">Solicitudes</button>
+      <button class="c-tab" data-section="team">Equipo</button>
       <button class="c-tab" data-section="account">Cuenta</button>
     </nav>
 
@@ -575,6 +580,60 @@
             <p class="c-warning-text">Si cancelas tu suscripción, tu página web se desactivará al final del período de facturación actual.</p>
           </div>
           <button type="button" class="c-btn c-btn-danger" id="btn-cancel-subscription">Cancelar Mi Suscripción</button>
+        </div>
+      </div>
+
+      <!-- ── Section: Equipo ── -->
+      <div id="section-team" class="c-section" data-section="team">
+        <div class="c-topbar">
+          <div class="c-page-title">Mi <span>Equipo</span></div>
+        </div>
+        <p class="c-section-desc">Administra quién tiene acceso al portal de tu negocio.</p>
+
+        <!-- Invite form (visible to owner only) -->
+        <div class="c-panel" id="team-invite-panel" style="display:none;">
+          <div class="c-panel-title" style="margin-bottom:20px">Invitar Miembro</div>
+          <form id="team-invite-form" class="c-form" novalidate>
+            <div class="c-form-row" style="grid-template-columns: 1fr 1fr 140px;">
+              <div class="c-form-group">
+                <label class="c-label">Correo electrónico</label>
+                <input type="email" id="team-invite-email" class="c-input" placeholder="empleado@correo.com" required>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label">Nombre</label>
+                <input type="text" id="team-invite-name" class="c-input" placeholder="Nombre del empleado">
+              </div>
+              <div class="c-form-group">
+                <label class="c-label">Rol</label>
+                <select id="team-invite-role" class="c-input c-select">
+                  <option value="employee">Empleado</option>
+                  <option value="manager">Gerente</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="c-btn c-btn-primary" id="btn-invite-team">Enviar Invitación</button>
+          </form>
+        </div>
+
+        <!-- Team table -->
+        <div class="c-panel">
+          <div class="c-panel-title" style="margin-bottom:20px">Miembros del Equipo</div>
+          <div class="c-table-wrapper">
+            <table class="c-table" id="team-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="team-table-body">
+                <tr><td colspan="5" class="c-table-empty">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

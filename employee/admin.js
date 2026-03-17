@@ -399,6 +399,26 @@
       teamLoadError: 'Failed to load team members',
       teamUpdateSuccess: 'Employee updated',
       teamUpdateError: 'Failed to update employee',
+      // Email
+      navEmail: 'Email',
+      emailCustomerEmails: 'Customer Emails',
+      emailInbox: 'Inbox',
+      emailCompose: 'Compose',
+      emailSearchPlaceholder: 'Search emails...',
+      emailSelectConversation: 'Select a conversation to view emails',
+      emailNoConversations: 'No email conversations yet',
+      emailComposeTitle: 'New Email',
+      emailTo: 'To',
+      emailSubject: 'Subject',
+      emailBody: 'Body',
+      emailSendBtn: 'Send Email',
+      emailSending: 'Sending...',
+      emailSent: 'Email sent',
+      emailSendError: 'Failed to send email',
+      emailReplyPlaceholder: 'Write a reply...',
+      emailReplySubjectPh: 'Subject',
+      emailReply: 'Reply',
+      emailAttachments: '{0} attachment(s)',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -788,6 +808,26 @@
       teamLoadError: 'Error al cargar miembros del equipo',
       teamUpdateSuccess: 'Empleado actualizado',
       teamUpdateError: 'Error al actualizar empleado',
+      // Email
+      navEmail: 'Correo',
+      emailCustomerEmails: 'Correos de Clientes',
+      emailInbox: 'Bandeja',
+      emailCompose: 'Redactar',
+      emailSearchPlaceholder: 'Buscar correos...',
+      emailSelectConversation: 'Seleccione una conversación para ver correos',
+      emailNoConversations: 'No hay conversaciones de correo aún',
+      emailComposeTitle: 'Nuevo Correo',
+      emailTo: 'Para',
+      emailSubject: 'Asunto',
+      emailBody: 'Cuerpo',
+      emailSendBtn: 'Enviar Correo',
+      emailSending: 'Enviando...',
+      emailSent: 'Correo enviado',
+      emailSendError: 'Error al enviar correo',
+      emailReplyPlaceholder: 'Escribe una respuesta...',
+      emailReplySubjectPh: 'Asunto',
+      emailReply: 'Responder',
+      emailAttachments: '{0} archivo(s) adjunto(s)',
     },
   };
 
@@ -1139,6 +1179,7 @@
     // Load templates and start realtime
     loadTemplates();
     setupRealtimeSubscription();
+    setupEmailRealtimeSubscription();
 
     // Initial load
     loadStats();
@@ -2816,7 +2857,13 @@
   let currentMessages = [];
   let templates = [];
   let realtimeChannel = null;
-  let activeTab = 'saved'; // 'saved' | 'audiences' | 'campaigns' | 'messages' | 'products'
+  let activeTab = 'saved'; // 'saved' | 'audiences' | 'campaigns' | 'messages' | 'email' | 'products'
+
+  // Email state
+  let emailConversations = [];
+  let currentEmailMessages = [];
+  let activeEmailConversationId = null;
+  let emailView = 'customers'; // 'customers' | 'inbox'
 
   // Audiences & Campaigns state
   let audiences = [];
@@ -2831,13 +2878,14 @@
       audiences: ['audiences-section'],
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
+      email: ['email-section'],
       products: ['products-section'],
       customers: ['customers-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'products-section', 'customers-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'products-section', 'customers-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2849,11 +2897,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-products', 'nav-customers', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-products', 'nav-customers', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', products: 'nav-products', customers: 'nav-customers', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', products: 'nav-products', customers: 'nav-customers', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -2861,6 +2909,7 @@
     if (tab === 'audiences') loadAudiences();
     if (tab === 'campaigns') loadCampaigns();
     if (tab === 'messages') loadConversations();
+    if (tab === 'email') loadEmailConversations();
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
     if (tab === 'team') loadTeamEmployees();
@@ -4671,6 +4720,497 @@
 
   const custStatusFilter = document.getElementById('customers-status-filter');
   if (custStatusFilter) custStatusFilter.addEventListener('change', applyCustomerFilters);
+
+  // ── Email ──
+
+  async function loadEmailConversations() {
+    if (!supabaseClient) return;
+    try {
+      let query = supabaseClient
+        .from('email_conversations')
+        .select('*, customers(id, contact_name, email, businesses(name))')
+        .order('last_message_at', { ascending: false });
+
+      if (emailView === 'customers') {
+        query = query.not('customer_id', 'is', null);
+      } else {
+        query = query.is('customer_id', null);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('Error loading email conversations:', error);
+        return;
+      }
+      emailConversations = data || [];
+      renderEmailConversationsList();
+    } catch (err) {
+      console.error('Load email conversations error:', err);
+    }
+  }
+
+  function renderEmailConversationsList() {
+    const container = document.getElementById('email-conversations-list');
+    if (!container) return;
+    const searchTerm = (document.getElementById('email-conv-search')?.value || '').toLowerCase();
+
+    const filtered = searchTerm
+      ? emailConversations.filter(c => {
+          const name = c.sender_name || c.sender_email || '';
+          const custName = c.customers?.contact_name || c.customers?.businesses?.name || '';
+          return name.toLowerCase().includes(searchTerm) || custName.toLowerCase().includes(searchTerm) || (c.sender_email || '').toLowerCase().includes(searchTerm);
+        })
+      : emailConversations;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">${t('emailNoConversations')}</div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(c => {
+      const displayName = escapeHtml(c.customers?.contact_name || c.customers?.businesses?.name || c.sender_name || c.sender_email || 'Unknown');
+      const preview = escapeHtml(c.last_message_text || c.last_message_subject || '');
+      const time = c.last_message_at ? formatMessageTime(c.last_message_at) : '';
+      const isActive = c.id === activeEmailConversationId;
+      const unread = c.unread_count > 0
+        ? `<span class="unread-badge">${c.unread_count}</span>`
+        : '';
+      const initial = (displayName[0] || '?').toUpperCase();
+
+      return `<div class="conversation-item${isActive ? ' active' : ''}" data-email-conv-id="${c.id}">
+        <div class="conversation-avatar">${initial}</div>
+        <div class="conversation-info">
+          <div class="conversation-name">${displayName}</div>
+          <div class="conversation-preview">${preview}</div>
+        </div>
+        <div class="conversation-meta">
+          <span class="conversation-time">${time}</span>
+          ${unread}
+        </div>
+      </div>`;
+    }).join('');
+
+    container.querySelectorAll('.conversation-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const convId = el.getAttribute('data-email-conv-id');
+        openEmailConversation(convId);
+      });
+    });
+  }
+
+  async function openEmailConversation(convId) {
+    activeEmailConversationId = convId;
+    const conv = emailConversations.find(c => c.id === convId);
+    if (!conv) return;
+
+    // Reset unread count
+    if (conv.unread_count > 0) {
+      conv.unread_count = 0;
+      if (supabaseClient) {
+        supabaseClient
+          .from('email_conversations')
+          .update({ unread_count: 0 })
+          .eq('id', convId)
+          .then(() => {});
+      }
+    }
+
+    renderEmailConversationsList();
+    await loadEmailMessages(convId);
+    renderEmailChatView(conv);
+  }
+
+  async function loadEmailMessages(conversationId) {
+    if (!supabaseClient) return;
+    try {
+      const { data, error } = await supabaseClient
+        .from('email_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading email messages:', error);
+        return;
+      }
+      currentEmailMessages = data || [];
+    } catch (err) {
+      console.error('Load email messages error:', err);
+    }
+  }
+
+  function renderEmailChatView(conv) {
+    const chatPanel = document.getElementById('email-chat-panel');
+    if (!chatPanel) return;
+    const displayName = escapeHtml(conv.customers?.contact_name || conv.customers?.businesses?.name || conv.sender_name || conv.sender_email || 'Unknown');
+    const emailAddr = escapeHtml(conv.sender_email || '');
+
+    chatPanel.innerHTML = `
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <h3>${displayName}</h3>
+          <div class="chat-header-phone">${emailAddr}</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="email-chat-messages"></div>
+      <div class="email-reply-area">
+        <div class="form-group">
+          <label>${t('emailSubject')}</label>
+          <input type="text" class="input" id="email-reply-subject" placeholder="${t('emailReplySubjectPh')}" value="${escapeHtml(conv.last_message_subject ? 'Re: ' + conv.last_message_subject.replace(/^Re:\s*/i, '') : '')}">
+        </div>
+        <div class="email-reply-actions">
+          <textarea id="email-reply-input" rows="1" placeholder="${t('emailReplyPlaceholder')}"></textarea>
+          <button class="btn-send" id="btn-send-email-reply">${t('emailReply')}</button>
+        </div>
+      </div>
+    `;
+
+    renderEmailMessages();
+    bindEmailChatEvents(conv);
+
+    const messagesContainer = document.getElementById('email-chat-messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
+
+  function renderEmailMessages() {
+    const container = document.getElementById('email-chat-messages');
+    if (!container) return;
+
+    let lastDate = '';
+    container.innerHTML = currentEmailMessages.map(msg => {
+      const msgDate = new Date(msg.created_at).toLocaleDateString();
+      let dateDivider = '';
+      if (msgDate !== lastDate) {
+        lastDate = msgDate;
+        dateDivider = `<div class="msg-date-divider">${formatDateLabel(msg.created_at)}</div>`;
+      }
+
+      const isOutbound = msg.direction === 'outbound';
+      const bubbleClass = isOutbound ? 'msg-outbound' : 'msg-inbound';
+      const time = formatMessageTime(msg.created_at, true);
+
+      const subjectHtml = msg.subject
+        ? `<div class="email-msg-subject">${escapeHtml(msg.subject)}</div>`
+        : '';
+
+      let bodyHtml = '';
+      if (msg.body_html) {
+        bodyHtml = `<div class="email-msg-body">${sanitizeEmailHtml(msg.body_html)}</div>`;
+      } else if (msg.body_text) {
+        bodyHtml = `<div class="email-msg-body">${escapeHtml(msg.body_text)}</div>`;
+      }
+
+      let attachmentHtml = '';
+      if (msg.has_attachments && msg.attachment_metadata) {
+        try {
+          const attachments = typeof msg.attachment_metadata === 'string' ? JSON.parse(msg.attachment_metadata) : msg.attachment_metadata;
+          if (Array.isArray(attachments) && attachments.length > 0) {
+            attachmentHtml = attachments.map(a =>
+              `<span class="email-attachment-chip">&#128206; ${escapeHtml(a.filename || a.name || 'attachment')}</span>`
+            ).join(' ');
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+
+      return `${dateDivider}<div class="msg-bubble ${bubbleClass}" data-email-msg-id="${msg.id}">
+        ${subjectHtml}
+        ${bodyHtml}
+        ${attachmentHtml}
+        <div class="msg-time">${time}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function bindEmailChatEvents(conv) {
+    const replyInput = document.getElementById('email-reply-input');
+    const sendBtn = document.getElementById('btn-send-email-reply');
+
+    if (replyInput) {
+      replyInput.addEventListener('input', () => {
+        replyInput.style.height = 'auto';
+        replyInput.style.height = Math.min(replyInput.scrollHeight, 100) + 'px';
+      });
+
+      replyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendEmailReply(conv);
+        }
+      });
+    }
+
+    if (sendBtn) {
+      sendBtn.addEventListener('click', () => sendEmailReply(conv));
+    }
+  }
+
+  async function sendEmailReply(conv) {
+    const replyInput = document.getElementById('email-reply-input');
+    const subjectInput = document.getElementById('email-reply-subject');
+    const text = replyInput?.value?.trim();
+    const subject = subjectInput?.value?.trim();
+    if (!text) return;
+
+    const sendBtn = document.getElementById('btn-send-email-reply');
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.textContent = t('emailSending');
+    }
+    replyInput.value = '';
+    replyInput.style.height = 'auto';
+
+    // Optimistic UI
+    const optimisticMsg = {
+      id: 'temp-' + Date.now(),
+      conversation_id: conv.id,
+      direction: 'outbound',
+      from_address: 'andres@ahoratengopagina.com',
+      to_addresses: [conv.sender_email],
+      subject: subject || '',
+      body_text: text,
+      body_html: null,
+      has_attachments: false,
+      status: 'sent',
+      created_at: new Date().toISOString(),
+    };
+    currentEmailMessages.push(optimisticMsg);
+    renderEmailMessages();
+    const messagesContainer = document.getElementById('email-chat-messages');
+    if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: conv.id,
+            subject: subject || '(no subject)',
+            text: text,
+          }),
+        }),
+        15000,
+        'Email send'
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Send failed');
+      }
+
+      // Update optimistic message
+      const idx = currentEmailMessages.findIndex(m => m.id === optimisticMsg.id);
+      if (idx >= 0) {
+        currentEmailMessages[idx].id = data.messageId;
+        currentEmailMessages[idx].status = 'sent';
+      }
+      renderEmailMessages();
+
+      // Update conversation preview
+      conv.last_message_text = text.substring(0, 200);
+      conv.last_message_subject = subject;
+      conv.last_message_at = new Date().toISOString();
+      renderEmailConversationsList();
+    } catch (err) {
+      console.error('Send email reply error:', err);
+      showToast(t('emailSendError'), 'error');
+      const idx = currentEmailMessages.findIndex(m => m.id === optimisticMsg.id);
+      if (idx >= 0) {
+        currentEmailMessages[idx].status = 'failed';
+      }
+      renderEmailMessages();
+    } finally {
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = t('emailReply');
+      }
+    }
+  }
+
+  function openComposeModal() {
+    const modal = document.getElementById('compose-email-modal');
+    if (modal) modal.style.display = '';
+    const toInput = document.getElementById('compose-email-to');
+    if (toInput) { toInput.value = ''; toInput.focus(); }
+    const subjectInput = document.getElementById('compose-email-subject');
+    if (subjectInput) subjectInput.value = '';
+    const bodyInput = document.getElementById('compose-email-body');
+    if (bodyInput) bodyInput.value = '';
+  }
+
+  function closeComposeModal() {
+    const modal = document.getElementById('compose-email-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function sendComposedEmail() {
+    const toInput = document.getElementById('compose-email-to');
+    const subjectInput = document.getElementById('compose-email-subject');
+    const bodyInput = document.getElementById('compose-email-body');
+    const sendBtn = document.getElementById('compose-email-send');
+
+    const to = toInput?.value?.trim();
+    const subject = subjectInput?.value?.trim();
+    const text = bodyInput?.value?.trim();
+
+    if (!to || !subject || !text) return;
+
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.textContent = t('emailSending');
+    }
+
+    try {
+      const res = await withTimeout(
+        fetch('/api/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to, subject, text }),
+        }),
+        15000,
+        'Email compose'
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Send failed');
+      }
+
+      showToast(t('emailSent'), 'success');
+      closeComposeModal();
+
+      // Reload conversations to show the new one
+      await loadEmailConversations();
+      if (data.conversationId) {
+        openEmailConversation(data.conversationId);
+      }
+    } catch (err) {
+      console.error('Compose email error:', err);
+      showToast(t('emailSendError'), 'error');
+    } finally {
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = t('emailSendBtn');
+      }
+    }
+  }
+
+  function toggleEmailView(view) {
+    emailView = view;
+    activeEmailConversationId = null;
+
+    // Update toggle button active states
+    const custBtn = document.getElementById('email-toggle-customers');
+    const inboxBtn = document.getElementById('email-toggle-inbox');
+    if (custBtn) custBtn.classList.toggle('active', view === 'customers');
+    if (inboxBtn) inboxBtn.classList.toggle('active', view === 'inbox');
+
+    // Reset chat panel
+    const chatPanel = document.getElementById('email-chat-panel');
+    if (chatPanel) {
+      chatPanel.innerHTML = `<div class="chat-empty" id="email-chat-empty">${t('emailSelectConversation')}</div>`;
+    }
+
+    loadEmailConversations();
+  }
+
+  function sanitizeEmailHtml(html) {
+    if (!html) return '';
+    // Remove script, style, iframe, object, embed tags
+    let safe = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+      .replace(/<object[\s\S]*?<\/object>/gi, '')
+      .replace(/<embed[\s\S]*?>/gi, '')
+      .replace(/<link[\s\S]*?>/gi, '');
+    // Remove on* event attributes
+    safe = safe.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+    // Remove javascript: URLs
+    safe = safe.replace(/href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'href="#"');
+    return safe;
+  }
+
+  function setupEmailRealtimeSubscription() {
+    if (!supabaseClient) return;
+
+    supabaseClient
+      .channel('email-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'email_messages' },
+        (payload) => {
+          const msg = payload.new;
+          if (msg.direction === 'inbound') {
+            handleNewInboundEmail(msg);
+          }
+        }
+      )
+      .subscribe();
+  }
+
+  function handleNewInboundEmail(msg) {
+    // If viewing this conversation, append message
+    if (msg.conversation_id === activeEmailConversationId) {
+      currentEmailMessages.push(msg);
+      renderEmailMessages();
+      const messagesContainer = document.getElementById('email-chat-messages');
+      if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      // Reset unread since we're viewing
+      if (supabaseClient) {
+        supabaseClient
+          .from('email_conversations')
+          .update({ unread_count: 0 })
+          .eq('id', msg.conversation_id)
+          .then(() => {});
+      }
+    }
+
+    // Refresh the conversations list
+    loadEmailConversations();
+  }
+
+  // Email nav tab
+  const navEmail = document.getElementById('nav-email');
+  if (navEmail) {
+    navEmail.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchTab('email');
+    });
+  }
+
+  // Email toggle buttons
+  const emailToggleCust = document.getElementById('email-toggle-customers');
+  if (emailToggleCust) emailToggleCust.addEventListener('click', () => toggleEmailView('customers'));
+  const emailToggleInbox = document.getElementById('email-toggle-inbox');
+  if (emailToggleInbox) emailToggleInbox.addEventListener('click', () => toggleEmailView('inbox'));
+
+  // Email search
+  const emailConvSearch = document.getElementById('email-conv-search');
+  if (emailConvSearch) emailConvSearch.addEventListener('input', renderEmailConversationsList);
+
+  // Compose email modal
+  const btnComposeEmail = document.getElementById('btn-compose-email');
+  if (btnComposeEmail) btnComposeEmail.addEventListener('click', openComposeModal);
+  const composeClose = document.getElementById('compose-email-close');
+  if (composeClose) composeClose.addEventListener('click', closeComposeModal);
+  const composeCancel = document.getElementById('compose-email-cancel');
+  if (composeCancel) composeCancel.addEventListener('click', closeComposeModal);
+  const composeSend = document.getElementById('compose-email-send');
+  if (composeSend) composeSend.addEventListener('click', sendComposedEmail);
+
+  // Close compose modal on overlay click
+  const composeModal = document.getElementById('compose-email-modal');
+  if (composeModal) {
+    composeModal.addEventListener('click', (e) => {
+      if (e.target === composeModal) closeComposeModal();
+    });
+  }
 
   // ── Team Management ──
   let teamEmployees = [];
