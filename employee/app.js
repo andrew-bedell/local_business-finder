@@ -1890,6 +1890,11 @@
       showResults();
       showToast(t('lookupSuccess', business.name), 'success');
       lookupInput.value = '';
+
+      // Run enrichment pipeline on the looked-up business (non-blocking)
+      runEnrichmentPipeline([business]).catch(function(err) {
+        console.warn('Lookup enrichment error:', err);
+      });
     } catch (err) {
       console.error('Place lookup error:', err);
       showToast(t('lookupError'), 'error');
