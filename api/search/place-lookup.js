@@ -21,6 +21,26 @@ export default async function handler(req, res) {
     if (parsed.error) return res.status(400).json({ error: parsed.error });
     if (parsed.place_id) place_id = parsed.place_id;
     if (parsed.data_id) data_id = parsed.data_id;
+
+    // share.google URLs resolve to a search query — find the place by name
+    if (!place_id && !data_id && parsed.search_query) {
+      const searchParams = new URLSearchParams({
+        engine: 'google_maps',
+        q: parsed.search_query,
+        api_key: apiKey,
+      });
+      if (hl) searchParams.set('hl', hl);
+
+      const searchRes = await fetch('https://www.searchapi.io/api/v1/search?' + searchParams.toString());
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        const firstResult = (searchData.local_results || [])[0];
+        if (firstResult) {
+          data_id = firstResult.data_id || null;
+          if (!data_id) place_id = firstResult.place_id || null;
+        }
+      }
+    }
   }
 
   if (!place_id && !data_id) {
@@ -106,6 +126,15 @@ async function resolveUrl(url) {
       // CID is the decimal representation of the hex place identifier
       return { data_id: '0x0:0x' + BigInt(cidMatch[1]).toString(16) };
     }
+
+    // Fallback: extract search query from Google Search redirect (share.google URLs)
+    try {
+      const searchUrl = new URL(url);
+      const searchQuery = searchUrl.searchParams.get('q');
+      if (searchQuery) {
+        return { search_query: searchQuery };
+      }
+    } catch (_) { /* not a valid URL, fall through */ }
 
     return { error: 'Could not extract place identifier from URL' };
   } catch (err) {
