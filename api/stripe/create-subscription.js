@@ -76,7 +76,7 @@ export default async function handler(req, res) {
         name: businessName,
         phone: customerPhone || null,
         email: customerEmail,
-        pipeline_status: 'interested',
+        pipeline_status: 'saved',
       };
 
       const bizRes = await fetch(`${supabaseUrl}/rest/v1/businesses`, {
@@ -245,7 +245,10 @@ export default async function handler(req, res) {
         {
           method: 'PATCH',
           headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ pipeline_status: 'customer' }),
+          body: JSON.stringify({
+            pipeline_status: 'active_customer',
+            pipeline_status_changed_at: new Date().toISOString(),
+          }),
         }
       );
     }

@@ -12,9 +12,32 @@
       adminTagline: 'View and manage all businesses saved to the database',
       navSearch: 'Search',
       navSaved: 'Saved',
+      navPipeline: 'Pipeline',
+      pipelineAll: 'All',
+      pipelineSaved: 'Saved',
+      pipelineLead: 'Leads',
+      pipelineDemo: 'Demo',
+      pipelineActive: 'Active',
+      pipelineInactive: 'Inactive',
+      thStage: 'Stage',
+      thContact: 'Contact',
+      contactName: 'Contact Name',
+      contactPhone: 'Contact Phone',
+      contactEmail: 'Contact Email',
+      pipelineStage: 'Pipeline Stage',
+      pipelineContactSection: 'Contact & Pipeline',
+      pipelineChangeSuccess: 'Pipeline updated successfully',
+      pipelineChangeError: 'Failed to update pipeline',
+      pipelineSaving: 'Saving...',
+      pipelineSaveBtn: 'Save Contact Info',
+      stageSaved: 'Saved',
+      stageLead: 'Lead',
+      stageDemo: 'Demo',
+      stageActiveCustomer: 'Active',
+      stageInactiveCustomer: 'Inactive',
       statTotal: 'Total Businesses',
-      statWithReviews: 'With Reviews',
-      statWithInstagram: 'With Instagram',
+      statLeads: 'Leads',
+      statActiveCustomers: 'Active Customers',
       statWithWebsites: 'With Websites',
       filtersTitle: 'Filters',
       clearFilters: 'Clear Filters',
@@ -466,9 +489,32 @@
       adminTagline: 'Ver y gestionar todos los negocios guardados en la base de datos',
       navSearch: 'Buscar',
       navSaved: 'Guardados',
+      navPipeline: 'Pipeline',
+      pipelineAll: 'Todos',
+      pipelineSaved: 'Guardados',
+      pipelineLead: 'Leads',
+      pipelineDemo: 'Demo',
+      pipelineActive: 'Activos',
+      pipelineInactive: 'Inactivos',
+      thStage: 'Etapa',
+      thContact: 'Contacto',
+      contactName: 'Nombre de Contacto',
+      contactPhone: 'Teléfono de Contacto',
+      contactEmail: 'Correo de Contacto',
+      pipelineStage: 'Etapa del Pipeline',
+      pipelineContactSection: 'Contacto y Pipeline',
+      pipelineChangeSuccess: 'Pipeline actualizado exitosamente',
+      pipelineChangeError: 'Error al actualizar pipeline',
+      pipelineSaving: 'Guardando...',
+      pipelineSaveBtn: 'Guardar Contacto',
+      stageSaved: 'Guardado',
+      stageLead: 'Lead',
+      stageDemo: 'Demo',
+      stageActiveCustomer: 'Activo',
+      stageInactiveCustomer: 'Inactivo',
       statTotal: 'Total Negocios',
-      statWithReviews: 'Con Reseñas',
-      statWithInstagram: 'Con Instagram',
+      statLeads: 'Leads',
+      statActiveCustomers: 'Clientes Activos',
       statWithWebsites: 'Con Sitios Web',
       filtersTitle: 'Filtros',
       clearFilters: 'Limpiar Filtros',
@@ -1113,6 +1159,8 @@
   let totalCount = 0;
   let currentResults = [];
   let allFiltered = []; // Full filtered dataset for client-side pagination
+  let allBusinesses = []; // Unfiltered dataset for pipeline counts
+  let pipelineStage = 'all'; // Currently selected pipeline filter
   // Cache for detail modal data (keyed by business ID)
   const detailCache = {};
 
@@ -1150,6 +1198,14 @@
         applyLanguage();
         // Re-render table with new language
         if (currentResults.length > 0) renderTable();
+      });
+    });
+
+    // Pipeline pills
+    document.querySelectorAll('.pipeline-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const stage = pill.getAttribute('data-stage');
+        applyPipelineFilter(stage);
       });
     });
 
@@ -1273,16 +1329,16 @@
     if (!supabaseClient) return;
 
     try {
-      const [totalRes, reviewsRes, igRes, websitesRes] = await Promise.all([
+      const [totalRes, leadsRes, activeRes, websitesRes] = await Promise.all([
         supabaseClient.from('businesses').select('id', { count: 'exact', head: true }),
-        supabaseClient.from('business_reviews').select('business_id', { count: 'exact', head: true }),
-        supabaseClient.from('business_social_profiles').select('id', { count: 'exact', head: true }).eq('platform', 'instagram'),
+        supabaseClient.from('businesses').select('id', { count: 'exact', head: true }).eq('pipeline_status', 'lead'),
+        supabaseClient.from('businesses').select('id', { count: 'exact', head: true }).eq('pipeline_status', 'active_customer'),
         supabaseClient.from('generated_websites').select('id', { count: 'exact', head: true }),
       ]);
 
       $('#stat-total').textContent = totalRes.count || 0;
-      $('#stat-reviews').textContent = reviewsRes.count || 0;
-      $('#stat-instagram').textContent = igRes.count || 0;
+      $('#stat-leads').textContent = leadsRes.count || 0;
+      $('#stat-active-customers').textContent = activeRes.count || 0;
       $('#stat-websites').textContent = websitesRes.count || 0;
     } catch (err) {
       console.error('Stats load error:', err);
@@ -1296,7 +1352,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -1372,6 +1428,14 @@
         filtered = filtered.filter(b => !hasGeneratedWebsite(b));
       }
 
+      // Store unfiltered-by-pipeline for counts, then apply pipeline filter
+      allBusinesses = filtered;
+      updatePipelineCounts(allBusinesses);
+
+      if (pipelineStage !== 'all') {
+        filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
+      }
+
       allFiltered = filtered;
       totalCount = allFiltered.length;
       renderCurrentPage();
@@ -1380,6 +1444,40 @@
       showToast(t('errorLoading'), 'error');
       resultsBody.innerHTML = '';
     }
+  }
+
+  // ── Pipeline Counts ──
+  function updatePipelineCounts(businesses) {
+    const counts = { all: businesses.length, saved: 0, lead: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
+    businesses.forEach(b => {
+      const status = b.pipeline_status || 'saved';
+      if (counts[status] !== undefined) counts[status]++;
+    });
+    const el = (id) => document.getElementById(id);
+    el('pill-count-all').textContent = counts.all;
+    el('pill-count-saved').textContent = counts.saved;
+    el('pill-count-lead').textContent = counts.lead;
+    el('pill-count-demo').textContent = counts.demo;
+    el('pill-count-active').textContent = counts.active_customer;
+    el('pill-count-inactive').textContent = counts.inactive_customer;
+  }
+
+  // ── Pipeline Filter (client-side re-filter from allBusinesses) ──
+  function applyPipelineFilter(stage) {
+    pipelineStage = stage;
+    // Update active pill
+    document.querySelectorAll('.pipeline-pill').forEach(pill => {
+      pill.classList.toggle('active', pill.getAttribute('data-stage') === stage);
+    });
+    // Re-filter from allBusinesses
+    let filtered = allBusinesses;
+    if (stage !== 'all') {
+      filtered = allBusinesses.filter(b => (b.pipeline_status || 'saved') === stage);
+    }
+    allFiltered = filtered;
+    totalCount = allFiltered.length;
+    currentPage = 0;
+    renderCurrentPage();
   }
 
   // ── Helpers ──
@@ -1404,6 +1502,27 @@
   function getWebsiteStatus(business) {
     if (!business.generated_websites || business.generated_websites.length === 0) return null;
     return business.generated_websites[0].status || 'draft';
+  }
+
+  function getStageBadgeHtml(status) {
+    const s = status || 'saved';
+    const classMap = {
+      saved: 'badge-saved',
+      lead: 'badge-lead',
+      demo: 'badge-demo',
+      active_customer: 'badge-active-customer',
+      inactive_customer: 'badge-inactive-customer',
+    };
+    const labelMap = {
+      saved: 'stageSaved',
+      lead: 'stageLead',
+      demo: 'stageDemo',
+      active_customer: 'stageActiveCustomer',
+      inactive_customer: 'stageInactiveCustomer',
+    };
+    const cls = classMap[s] || 'badge-saved';
+    const label = t(labelMap[s] || 'stageSaved');
+    return `<span class="badge-stage ${cls}">${escapeHtml(label)}</span>`;
   }
 
   function extractCity(addressFull) {
@@ -1518,6 +1637,8 @@
         <td><strong>${escapeHtml(b.name)}</strong></td>
         <td>${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
+        <td class="td-center">${getStageBadgeHtml(b.pipeline_status)}</td>
+        <td>${b.contact_name ? escapeHtml(b.contact_name) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td>${b.phone ? escapeHtml(b.phone) : '<span style="color:var(--text-dim)">N/A</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
@@ -1822,6 +1943,37 @@
           <button class="modal-close" id="modal-close-btn">&times;</button>
         </div>
         <div class="modal-body">
+          <div class="contact-edit-section">
+            <h3>${t('pipelineContactSection')}</h3>
+            <div class="contact-edit-grid">
+              <div class="form-group">
+                <label>${t('contactName')}</label>
+                <input type="text" class="input" id="modal-contact-name" value="${escapeHtml(business.contact_name || '')}" placeholder="${t('contactName')}">
+              </div>
+              <div class="form-group">
+                <label>${t('contactPhone')}</label>
+                <input type="text" class="input" id="modal-contact-phone" value="${escapeHtml(business.contact_phone || '')}" placeholder="${t('contactPhone')}">
+              </div>
+              <div class="form-group">
+                <label>${t('contactEmail')}</label>
+                <input type="email" class="input" id="modal-contact-email" value="${escapeHtml(business.contact_email || '')}" placeholder="${t('contactEmail')}">
+              </div>
+              <div class="form-group">
+                <label>${t('pipelineStage')}</label>
+                <select class="input" id="modal-pipeline-status">
+                  <option value="saved" ${(business.pipeline_status || 'saved') === 'saved' ? 'selected' : ''}>${t('stageSaved')}</option>
+                  <option value="lead" ${business.pipeline_status === 'lead' ? 'selected' : ''}>${t('stageLead')}</option>
+                  <option value="demo" ${business.pipeline_status === 'demo' ? 'selected' : ''}>${t('stageDemo')}</option>
+                  <option value="active_customer" ${business.pipeline_status === 'active_customer' ? 'selected' : ''}>${t('stageActiveCustomer')}</option>
+                  <option value="inactive_customer" ${business.pipeline_status === 'inactive_customer' ? 'selected' : ''}>${t('stageInactiveCustomer')}</option>
+                </select>
+              </div>
+            </div>
+            <div class="contact-edit-actions">
+              <button class="btn btn-primary btn-sm" id="modal-save-pipeline">${t('pipelineSaveBtn')}</button>
+            </div>
+          </div>
+
           ${descriptionHtml}
           ${photosHtml}
           ${serviceOptionsHtml}
@@ -1868,6 +2020,61 @@
         const m = document.getElementById('detail-modal');
         if (m) m.remove();
         document.removeEventListener('keydown', handler);
+      }
+    });
+
+    // Save contact info + pipeline status
+    modal.querySelector('#modal-save-pipeline').addEventListener('click', async () => {
+      const btn = modal.querySelector('#modal-save-pipeline');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('pipelineSaving');
+
+      const payload = {
+        businessId: business.id,
+        pipeline_status: modal.querySelector('#modal-pipeline-status').value,
+        contact_name: modal.querySelector('#modal-contact-name').value.trim(),
+        contact_phone: modal.querySelector('#modal-contact-phone').value.trim(),
+        contact_email: modal.querySelector('#modal-contact-email').value.trim(),
+      };
+
+      try {
+        const res = await fetch('/api/businesses/update-pipeline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error('Failed');
+
+        const data = await res.json();
+
+        // Update local business object so table re-renders correctly
+        business.pipeline_status = payload.pipeline_status;
+        business.contact_name = payload.contact_name;
+        business.contact_phone = payload.contact_phone;
+        business.contact_email = payload.contact_email;
+
+        // Update allBusinesses too
+        const idx = allBusinesses.findIndex(b => b.id === business.id);
+        if (idx >= 0) {
+          allBusinesses[idx].pipeline_status = payload.pipeline_status;
+          allBusinesses[idx].contact_name = payload.contact_name;
+          allBusinesses[idx].contact_phone = payload.contact_phone;
+          allBusinesses[idx].contact_email = payload.contact_email;
+        }
+
+        // Re-apply pipeline counts and filter
+        updatePipelineCounts(allBusinesses);
+        applyPipelineFilter(pipelineStage);
+
+        showToast(t('pipelineChangeSuccess'), 'success');
+      } catch (err) {
+        console.error('Pipeline update error:', err);
+        showToast(t('pipelineChangeError'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
       }
     });
 

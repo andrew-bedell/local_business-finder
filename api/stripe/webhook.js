@@ -114,6 +114,19 @@ export default async function handler(req, res) {
                 body: JSON.stringify({ site_status: 'active' }),
               }
             );
+
+            // Update pipeline status to active_customer
+            await fetch(
+              `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`,
+              {
+                method: 'PATCH',
+                headers: supabaseHeaders,
+                body: JSON.stringify({
+                  pipeline_status: 'active_customer',
+                  pipeline_status_changed_at: new Date().toISOString(),
+                }),
+              }
+            );
           }
 
           // Create customer auth user and send welcome email (non-blocking)
@@ -275,7 +288,7 @@ export default async function handler(req, res) {
           }
         );
 
-        // Suspend the website
+        // Suspend the website and set pipeline to inactive_customer
         const businessId = await getBusinessIdFromSubscription(sub.id, supabaseUrl, supabaseHeaders);
         if (businessId) {
           await fetch(
@@ -284,6 +297,19 @@ export default async function handler(req, res) {
               method: 'PATCH',
               headers: supabaseHeaders,
               body: JSON.stringify({ site_status: 'suspended' }),
+            }
+          );
+
+          // Update pipeline status to inactive_customer
+          await fetch(
+            `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`,
+            {
+              method: 'PATCH',
+              headers: supabaseHeaders,
+              body: JSON.stringify({
+                pipeline_status: 'inactive_customer',
+                pipeline_status_changed_at: new Date().toISOString(),
+              }),
             }
           );
         }

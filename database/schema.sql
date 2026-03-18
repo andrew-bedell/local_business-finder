@@ -71,10 +71,12 @@ CREATE TABLE IF NOT EXISTS businesses (
   search_type             TEXT,
 
   -- Pipeline
-  pipeline_status         TEXT DEFAULT 'prospect'
+  pipeline_status         TEXT DEFAULT 'saved'
                             CHECK (pipeline_status IN (
-                              'prospect', 'contacted', 'interested', 'customer', 'churned'
+                              'saved', 'lead', 'demo', 'active_customer', 'inactive_customer'
                             )),
+  contact_phone           TEXT,
+  contact_email           TEXT,
   pipeline_status_changed_at TIMESTAMPTZ,
 
   -- Tracking
