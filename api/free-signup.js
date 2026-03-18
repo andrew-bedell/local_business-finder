@@ -1,8 +1,10 @@
 // Vercel serverless function: Handle free Pagina Basica signup (no Stripe)
 // POST — creates customer + subscription records with price=0, invites to auth
+// Supports both businessId (employee flow) and businessName (marketing flow with matching)
 
 import { sendEmail } from './_lib/sendgrid.js';
 import { getTemplateForTrigger } from './_lib/email-templates.js';
+import { matchOrCreateBusiness } from './_lib/match-business.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -24,10 +26,14 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId, customerEmail, customerName, productId } = req.body || {};
+  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, productId } = req.body || {};
 
-  if (!businessId || !customerEmail || !customerName) {
-    return res.status(400).json({ error: 'Missing required fields: businessId, customerEmail, customerName' });
+  // Require either businessId (employee flow) or businessName (marketing flow)
+  if (!providedBusinessId && !businessName) {
+    return res.status(400).json({ error: 'Missing required field: businessId or businessName' });
+  }
+  if (!customerEmail || !customerName) {
+    return res.status(400).json({ error: 'Missing required fields: customerEmail, customerName' });
   }
 
   const supabaseHeaders = {
@@ -37,6 +43,30 @@ export default async function handler(req, res) {
   };
 
   try {
+    // Resolve businessId — use provided ID or match/create from businessName
+    let businessId = providedBusinessId;
+
+    if (!businessId && businessName) {
+      const matchResult = await matchOrCreateBusiness({
+        businessName,
+        email: customerEmail,
+        phone: customerPhone,
+        supabaseUrl,
+        supabaseKey,
+      });
+      businessId = matchResult.businessId;
+    }
+
+    // Duplicate customer guard: check if customer already exists for this business + email
+    const dupCheckRes = await fetch(
+      `${supabaseUrl}/rest/v1/customers?business_id=eq.${encodeURIComponent(businessId)}&email=eq.${encodeURIComponent(customerEmail)}&select=id`,
+      { headers: supabaseHeaders }
+    );
+    const dupRecords = dupCheckRes.ok ? await dupCheckRes.json() : [];
+    if (dupRecords && dupRecords.length > 0) {
+      return res.status(409).json({ error: 'Customer already exists for this business', alreadyExists: true });
+    }
+
     // Determine currency from product if provided, else default MXN
     let currency = 'MXN';
     if (productId) {
@@ -160,20 +190,23 @@ export default async function handler(req, res) {
 
     // 5. Send welcome email (non-blocking)
     try {
-      // Look up business name
-      const bizRes = await fetch(
-        `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}&select=name`,
-        { headers: supabaseHeaders }
-      );
-      const bizRecords = await bizRes.json();
-      const businessName = bizRecords?.[0]?.name || '';
+      // Look up business name (use provided or fetch from DB)
+      let resolvedBusinessName = businessName;
+      if (!resolvedBusinessName) {
+        const bizRes = await fetch(
+          `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}&select=name`,
+          { headers: supabaseHeaders }
+        );
+        const bizRecords = await bizRes.json();
+        resolvedBusinessName = bizRecords?.[0]?.name || '';
+      }
 
       const origin = 'https://ahoratengopagina.com';
       const portalUrl = origin + '/mipagina';
 
       const welcomeContent = await getTemplateForTrigger('customer_welcome', {
         contactName: customerName,
-        businessName,
+        businessName: resolvedBusinessName,
         loginUrl: portalUrl,
       });
       await sendEmail({

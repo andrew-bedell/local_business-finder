@@ -337,10 +337,23 @@
       <div class="m-modal-body">
         <form id="m-lead-form">
           <div class="m-form-group">
+            <label class="m-form-label" for="lead-name" data-i18n="modal_name_label">Tu nombre</label>
+            <input class="m-form-input" type="text" id="lead-name" name="name" data-i18n-placeholder="modal_name_ph" placeholder="Ej: María García" required>
+          </div>
+          <div class="m-form-group">
             <label class="m-form-label" for="lead-business" data-i18n="modal_business_label">Nombre de tu negocio</label>
             <input class="m-form-input" type="text" id="lead-business" name="business_name" data-i18n-placeholder="modal_business_ph" placeholder="Ej: Salón de Uñas María" required>
           </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-whatsapp" data-i18n="modal_whatsapp_label">Tu WhatsApp</label>
+            <input class="m-form-input" type="tel" id="lead-whatsapp" name="whatsapp" data-i18n-placeholder="modal_whatsapp_ph" placeholder="Ej: +52 999 123 4567" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-email" data-i18n="modal_email_label">Tu email</label>
+            <input class="m-form-input" type="email" id="lead-email" name="email" data-i18n-placeholder="modal_email_ph" placeholder="Ej: maria@gmail.com" required>
+          </div>
           <p class="m-form-disclaimer" data-i18n="modal_disclaimer">Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 72 horas.</p>
+          <p class="m-form-error" id="m-form-error" style="display:none"></p>
           <button type="submit" class="m-form-submit" id="m-form-submit" data-i18n="modal_submit">Hablar con mi diseñador &rarr;</button>
         </form>
       </div>

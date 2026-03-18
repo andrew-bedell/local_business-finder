@@ -1,6 +1,8 @@
 // Vercel serverless function: Create Stripe customer + subscription (Payment Element flow)
 // POST — receives customer info, creates incomplete subscription, returns clientSecret
 
+import { matchOrCreateBusiness } from '../_lib/match-business.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -69,29 +71,18 @@ export default async function handler(req, res) {
     }
 
     if (!businessId && businessName) {
-      // Marketing flow: create a new business record
-      const syntheticPlaceId = 'marketing-' + crypto.randomUUID();
-      const bizPayload = {
-        place_id: syntheticPlaceId,
-        name: businessName,
-        phone: customerPhone || null,
-        email: customerEmail,
-        pipeline_status: 'saved',
-      };
-
-      const bizRes = await fetch(`${supabaseUrl}/rest/v1/businesses`, {
-        method: 'POST',
-        headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-        body: JSON.stringify(bizPayload),
-      });
-
-      if (bizRes.ok) {
-        const bizRecords = await bizRes.json();
-        if (bizRecords && bizRecords.length > 0) {
-          businessId = bizRecords[0].id;
-        }
-      } else {
-        console.error('Business creation error:', await bizRes.text());
+      // Marketing flow: match existing business or create new one
+      try {
+        const matchResult = await matchOrCreateBusiness({
+          businessName,
+          email: customerEmail,
+          phone: customerPhone,
+          supabaseUrl,
+          supabaseKey,
+        });
+        businessId = matchResult.businessId;
+      } catch (matchErr) {
+        console.error('Business match/create error:', matchErr);
       }
     }
 
@@ -161,6 +152,9 @@ export default async function handler(req, res) {
       });
 
       // 6. Save subscription record (as incomplete — webhook will update to active)
+      if (!custRes.ok) {
+        console.error('Customer insert error:', await custRes.text().catch(() => ''));
+      }
       if (custRes.ok) {
         const custRecords = await custRes.json();
         if (custRecords && custRecords.length > 0) {
@@ -173,11 +167,14 @@ export default async function handler(req, res) {
             current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
           };
 
-          await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
+          const subInsertRes = await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
             method: 'POST',
             headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
             body: JSON.stringify(subscriptionPayload),
           });
+          if (!subInsertRes.ok) {
+            console.error('Subscription insert error:', await subInsertRes.text().catch(() => ''));
+          }
         }
       }
     }

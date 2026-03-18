@@ -99,11 +99,18 @@
       footer_copy: '&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.',
 
       modal_title: 'Crea tu página gratis',
+      modal_name_label: 'Tu nombre',
+      modal_name_ph: 'Ej: María García',
       modal_business_label: 'Nombre de tu negocio',
       modal_business_ph: 'Ej: Salón de Uñas María',
+      modal_whatsapp_label: 'Tu WhatsApp',
+      modal_whatsapp_ph: 'Ej: +52 999 123 4567',
+      modal_email_label: 'Tu email',
+      modal_email_ph: 'Ej: maria@gmail.com',
       modal_disclaimer: 'Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 72 horas.',
       modal_submit: 'Hablar con mi diseñador \u2192',
       modal_sending: 'Enviando...',
+      modal_error: 'Hubo un error. Por favor intenta de nuevo.',
 
     },
     en: {
@@ -202,11 +209,18 @@
       footer_copy: '&copy; 2026 AhoraTengoPagina. All rights reserved.',
 
       modal_title: 'Create your free page',
+      modal_name_label: 'Your name',
+      modal_name_ph: 'E.g.: Maria Garcia',
       modal_business_label: 'Your business name',
       modal_business_ph: 'E.g.: Maria\'s Nail Salon',
+      modal_whatsapp_label: 'Your WhatsApp',
+      modal_whatsapp_ph: 'E.g.: +52 999 123 4567',
+      modal_email_label: 'Your email',
+      modal_email_ph: 'E.g.: maria@gmail.com',
       modal_disclaimer: 'When you click, we\'ll contact you via WhatsApp. Tell us a bit about your business and your personal designer will have a page ready for you to review in 72 hours.',
       modal_submit: 'Talk to my designer \u2192',
       modal_sending: 'Sending...',
+      modal_error: 'There was an error. Please try again.',
 
     }
   };
@@ -375,36 +389,70 @@
   // ── Lead Form Submission ──
   var WHATSAPP_NUMBER = '529991095806'; // Our business WhatsApp number
 
+  var formError = document.getElementById('m-form-error');
+
   leadForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
+    var customerName = document.getElementById('lead-name').value.trim();
     var businessName = document.getElementById('lead-business').value.trim();
+    var whatsappNumber = document.getElementById('lead-whatsapp').value.trim();
+    var customerEmail = document.getElementById('lead-email').value.trim();
 
-    if (!businessName) return;
+    if (!customerName || !businessName || !whatsappNumber || !customerEmail) return;
 
     formSubmitBtn.disabled = true;
     formSubmitBtn.textContent = t('modal_sending');
+    if (formError) formError.style.display = 'none';
 
-    // Save lead to DB (non-blocking)
-    fetch('/api/leads/capture', {
+    // Call free-signup API to create customer record with matching
+    fetch('/api/free-signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        business_name: businessName,
+        businessName: businessName,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: whatsappNumber,
       }),
+    }).then(function(res) {
+      if (res.ok || res.status === 409) {
+        // Success or already exists — save lead (non-blocking) and open WhatsApp
+        fetch('/api/leads/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            business_name: businessName,
+            whatsapp_number: whatsappNumber,
+            email: customerEmail,
+            name: customerName,
+          }),
+        }).catch(function(err) {
+          console.warn('Lead capture error (non-blocking):', err);
+        });
+
+        var message = 'Hola! Soy ' + customerName + '. Quiero crear mi página web para mi negocio: ' + businessName;
+        var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
+        window.open(waUrl, '_blank');
+        closeModal();
+        leadForm.reset();
+      } else {
+        // Show error
+        if (formError) {
+          formError.textContent = t('modal_error');
+          formError.style.display = 'block';
+        }
+      }
     }).catch(function(err) {
-      console.warn('Lead capture error (non-blocking):', err);
+      console.error('Free signup error:', err);
+      if (formError) {
+        formError.textContent = t('modal_error');
+        formError.style.display = 'block';
+      }
     }).finally(function() {
       formSubmitBtn.disabled = false;
       formSubmitBtn.textContent = t('modal_submit');
     });
-
-    // Open WhatsApp conversation immediately (don't wait for API)
-    var message = 'Hola! Quiero crear mi página web para mi negocio: ' + businessName;
-
-    var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
-    window.open(waUrl, '_blank');
-    closeModal();
   });
 
   // ── YouTube Lite Embed ──

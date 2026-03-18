@@ -466,6 +466,7 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   google_listing_url      TEXT,
   name                    TEXT,
   phone                   TEXT,
+  email                   TEXT,
   city                    TEXT,
   source                  TEXT DEFAULT 'website',
   status                  TEXT DEFAULT 'new'

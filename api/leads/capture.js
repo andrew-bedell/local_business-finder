@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { business_name, business_address, business_type, whatsapp_number } = req.body || {};
+  const { business_name, business_address, business_type, whatsapp_number, email, name } = req.body || {};
 
   if (!business_name) {
     return res.status(400).json({ error: 'Missing required field: business_name' });
@@ -34,6 +34,8 @@ export default async function handler(req, res) {
       business_name: business_name.trim(),
       city: business_address ? business_address.trim() : null,
       phone: whatsapp_number ? whatsapp_number.trim() : null,
+      email: email ? email.trim() : null,
+      name: name ? name.trim() : null,
       source: 'website',
       notes: business_type ? ('Tipo: ' + business_type.trim()) : null,
     };

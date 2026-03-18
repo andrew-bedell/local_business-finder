@@ -995,6 +995,12 @@ ul, ol { list-style: none; }
   margin-bottom: 20px;
 }
 
+.m-form-error {
+  font-size: 14px;
+  color: #dc2626;
+  margin-bottom: 12px;
+}
+
 .m-form-submit {
   width: 100%;
   padding: 14px;
