@@ -32,6 +32,32 @@ export default async function handler(req, res) {
   let finalStripePriceId = stripe_price_id || null;
 
   try {
+    // When updating an existing product, check if price/currency changed
+    // Stripe Prices are immutable — a new Price must be created for any amount change
+    let needsNewStripePrice = false;
+    if (id && stripeSecretKey && finalStripePriceId) {
+      const existingRes = await fetch(
+        `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(id)}&select=price,currency`,
+        {
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+        }
+      );
+      const existing = await existingRes.json();
+      if (existing && existing.length > 0) {
+        const oldPrice = parseFloat(existing[0].price);
+        const oldCurrency = (existing[0].currency || 'MXN').toLowerCase();
+        const newPrice = parseFloat(price);
+        const newCurrency = (currency || 'MXN').toLowerCase();
+        if (oldPrice !== newPrice || oldCurrency !== newCurrency) {
+          needsNewStripePrice = true;
+          finalStripePriceId = null; // Force new Stripe Price creation
+        }
+      }
+    }
+
     // Auto-create in Stripe if no Stripe IDs provided and Stripe is configured
     if (stripeSecretKey && !finalStripePriceId) {
       // Create or reuse Stripe Product
@@ -82,6 +108,18 @@ export default async function handler(req, res) {
         return res.status(502).json({ error: 'Failed to create Stripe price', detail: stripePrice.error?.message });
       }
       finalStripePriceId = stripePrice.id;
+
+      // Archive the old Stripe Price if we created a replacement
+      if (needsNewStripePrice && stripe_price_id) {
+        await fetch(`https://api.stripe.com/v1/prices/${stripe_price_id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${stripeSecretKey}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'active=false',
+        }).catch(err => console.warn('Failed to archive old Stripe price:', err));
+      }
     }
 
     const payload = {
