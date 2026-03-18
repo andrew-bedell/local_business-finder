@@ -3584,6 +3584,14 @@ select.input {
 }
 
 /* === Pipeline Pills === */
+.pipeline-search-row {
+  margin-bottom: 16px;
+}
+.pipeline-search-row .input {
+  max-width: 360px;
+  width: 100%;
+}
+
 .pipeline-pills {
   display: flex;
   gap: 8px;

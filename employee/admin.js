@@ -19,6 +19,7 @@
       pipelineDemo: 'Demo',
       pipelineActive: 'Active',
       pipelineInactive: 'Inactive',
+      pipelineSearchPlaceholder: 'Search by name, email, phone...',
       thStage: 'Stage',
       thContact: 'Contact',
       contactName: 'Contact Name',
@@ -537,6 +538,7 @@
       pipelineDemo: 'Demo',
       pipelineActive: 'Activos',
       pipelineInactive: 'Inactivos',
+      pipelineSearchPlaceholder: 'Buscar por nombre, email, teléfono...',
       thStage: 'Etapa',
       thContact: 'Contacto',
       contactName: 'Nombre de Contacto',
@@ -1267,6 +1269,7 @@
   const filterFacebook = $('#filter-facebook');
   const filterReport = $('#filter-report');
   const filterWebsite = $('#filter-website');
+  const pipelineSearch = document.getElementById('pipeline-search');
 
   // ── Initialize ──
   function init() {
@@ -1290,6 +1293,11 @@
         applyPipelineFilter(stage);
       });
     });
+
+    // Pipeline search
+    if (pipelineSearch) {
+      pipelineSearch.addEventListener('input', () => applyPipelineFilter());
+    }
 
     // Enable/disable IG posts filter based on Has Instagram
     filterInstagram.addEventListener('change', () => {
@@ -1316,6 +1324,7 @@
       filterFacebook.value = '';
       filterReport.value = '';
       filterWebsite.value = '';
+      if (pipelineSearch) pipelineSearch.value = '';
       currentPage = 0;
       loadBusinesses();
     });
@@ -1554,15 +1563,25 @@
 
   // ── Pipeline Filter (client-side re-filter from allBusinesses) ──
   function applyPipelineFilter(stage) {
-    pipelineStage = stage;
+    if (stage !== undefined) pipelineStage = stage;
     // Update active pill
     document.querySelectorAll('.pipeline-pill').forEach(pill => {
-      pill.classList.toggle('active', pill.getAttribute('data-stage') === stage);
+      pill.classList.toggle('active', pill.getAttribute('data-stage') === pipelineStage);
     });
     // Re-filter from allBusinesses
     let filtered = allBusinesses;
-    if (stage !== 'all') {
-      filtered = allBusinesses.filter(b => (b.pipeline_status || 'saved') === stage);
+    if (pipelineStage !== 'all') {
+      filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
+    }
+    // Apply search
+    const search = (pipelineSearch ? pipelineSearch.value : '').toLowerCase().trim();
+    if (search) {
+      filtered = filtered.filter(b => {
+        const haystack = [
+          b.name, b.phone, b.email, b.contact_name, b.contact_email, b.contact_phone, b.address_full, b.whatsapp
+        ].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(search);
+      });
     }
     allFiltered = filtered;
     totalCount = allFiltered.length;
