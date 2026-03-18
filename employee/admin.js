@@ -4728,7 +4728,7 @@
     try {
       let query = supabaseClient
         .from('email_conversations')
-        .select('*, customers(id, contact_name, email, businesses(name))')
+        .select('*')
         .order('last_message_at', { ascending: false });
 
       if (emailView === 'customers') {
@@ -4757,8 +4757,7 @@
     const filtered = searchTerm
       ? emailConversations.filter(c => {
           const name = c.sender_name || c.sender_email || '';
-          const custName = c.customers?.contact_name || c.customers?.businesses?.name || '';
-          return name.toLowerCase().includes(searchTerm) || custName.toLowerCase().includes(searchTerm) || (c.sender_email || '').toLowerCase().includes(searchTerm);
+          return name.toLowerCase().includes(searchTerm) || (c.sender_email || '').toLowerCase().includes(searchTerm);
         })
       : emailConversations;
 
@@ -4768,7 +4767,7 @@
     }
 
     container.innerHTML = filtered.map(c => {
-      const displayName = escapeHtml(c.customers?.contact_name || c.customers?.businesses?.name || c.sender_name || c.sender_email || 'Unknown');
+      const displayName = escapeHtml(c.sender_name || c.sender_email || 'Unknown');
       const preview = escapeHtml(c.last_message_text || c.last_message_subject || '');
       const time = c.last_message_at ? formatMessageTime(c.last_message_at) : '';
       const isActive = c.id === activeEmailConversationId;
@@ -4842,7 +4841,7 @@
   function renderEmailChatView(conv) {
     const chatPanel = document.getElementById('email-chat-panel');
     if (!chatPanel) return;
-    const displayName = escapeHtml(conv.customers?.contact_name || conv.customers?.businesses?.name || conv.sender_name || conv.sender_email || 'Unknown');
+    const displayName = escapeHtml(conv.sender_name || conv.sender_email || 'Unknown');
     const emailAddr = escapeHtml(conv.sender_email || '');
 
     chatPanel.innerHTML = `
