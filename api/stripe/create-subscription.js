@@ -250,6 +250,21 @@ export default async function handler(req, res) {
       );
     }
 
+    // 8. Update pipeline status to active_customer (if not already done by websiteId flow above)
+    if (businessId && !(websiteId && stripeSub.status === 'active')) {
+      await fetch(
+        `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`,
+        {
+          method: 'PATCH',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            pipeline_status: 'active_customer',
+            pipeline_status_changed_at: new Date().toISOString(),
+          }),
+        }
+      );
+    }
+
     // Return clientSecret for Payment Element confirmation
     const clientSecret = stripeSub.latest_invoice?.payment_intent?.client_secret;
 
