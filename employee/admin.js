@@ -5194,6 +5194,10 @@
   const emailConvSearch = document.getElementById('email-conv-search');
   if (emailConvSearch) emailConvSearch.addEventListener('input', renderEmailConversationsList);
 
+  // Refresh email
+  const btnRefreshEmail = document.getElementById('btn-refresh-email');
+  if (btnRefreshEmail) btnRefreshEmail.addEventListener('click', loadEmailConversations);
+
   // Compose email modal
   const btnComposeEmail = document.getElementById('btn-compose-email');
   if (btnComposeEmail) btnComposeEmail.addEventListener('click', openComposeModal);
