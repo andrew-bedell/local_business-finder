@@ -175,14 +175,14 @@ export default async function handler(req, res) {
       console.warn('Auth invite error (non-blocking):', authErr);
     }
 
-    // 4. Update business pipeline_status to 'active_customer'
+    // 4. Update business pipeline_status to 'demo' (free signup, not paying yet)
     await fetch(
       `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}`,
       {
         method: 'PATCH',
         headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
         body: JSON.stringify({
-          pipeline_status: 'active_customer',
+          pipeline_status: 'demo',
           pipeline_status_changed_at: new Date().toISOString(),
         }),
       }
