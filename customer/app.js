@@ -965,15 +965,17 @@
         request_type: type,
         description: description.trim(),
         priority: priority || 'normal',
-        status: 'submitted'
       };
 
-      var result = await supabase
-        .from('edit_requests')
-        .insert(requestData);
+      var response = await fetch('/api/edit-requests/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData),
+      });
 
-      if (result.error) {
-        throw result.error;
+      var result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to create edit request');
       }
 
       showToast('Solicitud enviada correctamente. Te notificaremos cuando esté lista.', 'success');
