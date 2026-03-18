@@ -419,6 +419,47 @@
       emailReplySubjectPh: 'Subject',
       emailReply: 'Reply',
       emailAttachments: '{0} attachment(s)',
+      // Templates
+      navTemplates: 'Templates',
+      templatesTitle: 'Email Templates',
+      templatesNew: 'New Template',
+      templatesEmpty: 'No email templates yet.',
+      templatesSeed: 'Seed Default Templates',
+      templatesFlowsTitle: 'Automation Flows',
+      templatesBack: '\u2190 Back',
+      templatesNamePh: 'Template name...',
+      templatesVisual: 'Visual',
+      templatesHtml: 'HTML',
+      templatesPreview: 'Preview',
+      templatesTest: 'Send Test',
+      templatesSave: 'Save',
+      templatesSubject: 'Subject Line',
+      templatesCategory: 'Category',
+      templatesCatTransactional: 'Transactional',
+      templatesCatMarketing: 'Marketing',
+      templatesCatCustom: 'Custom',
+      templatesTrigger: 'Trigger Event',
+      templatesDescription: 'Description',
+      templatesMergeTags: 'Merge Tags',
+      templatesPreviewTitle: 'Template Preview',
+      templatesDesktop: 'Desktop',
+      templatesMobile: 'Mobile',
+      templatesSendTest: 'Send Test Email',
+      templatesSendTestBtn: 'Send Test',
+      templatesSaved: 'Template saved',
+      templatesSaveError: 'Failed to save template',
+      templatesDeleted: 'Template deleted',
+      templatesDeleteError: 'Failed to delete template',
+      templatesDuplicated: 'Template duplicated',
+      templatesDuplicateError: 'Failed to duplicate template',
+      templatesSeeded: 'Default templates created',
+      templatesSeedError: 'Failed to seed templates',
+      templatesTestSent: 'Test email sent',
+      templatesTestError: 'Failed to send test email',
+      templatesConfirmDelete: 'Delete this template?',
+      templatesFlowLinked: 'Linked: {0}',
+      templatesFlowNotLinked: 'Not linked',
+      templatesTriggerNone: 'None',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -828,6 +869,47 @@
       emailReplySubjectPh: 'Asunto',
       emailReply: 'Responder',
       emailAttachments: '{0} archivo(s) adjunto(s)',
+      // Templates
+      navTemplates: 'Plantillas',
+      templatesTitle: 'Plantillas de Email',
+      templatesNew: 'Nueva Plantilla',
+      templatesEmpty: 'No hay plantillas de email aún.',
+      templatesSeed: 'Crear Plantillas Predeterminadas',
+      templatesFlowsTitle: 'Flujos de Automatización',
+      templatesBack: '\u2190 Volver',
+      templatesNamePh: 'Nombre de plantilla...',
+      templatesVisual: 'Visual',
+      templatesHtml: 'HTML',
+      templatesPreview: 'Vista Previa',
+      templatesTest: 'Enviar Prueba',
+      templatesSave: 'Guardar',
+      templatesSubject: 'Línea de Asunto',
+      templatesCategory: 'Categoría',
+      templatesCatTransactional: 'Transaccional',
+      templatesCatMarketing: 'Marketing',
+      templatesCatCustom: 'Personalizada',
+      templatesTrigger: 'Evento Disparador',
+      templatesDescription: 'Descripción',
+      templatesMergeTags: 'Variables de Combinación',
+      templatesPreviewTitle: 'Vista Previa de Plantilla',
+      templatesDesktop: 'Escritorio',
+      templatesMobile: 'Móvil',
+      templatesSendTest: 'Enviar Email de Prueba',
+      templatesSendTestBtn: 'Enviar Prueba',
+      templatesSaved: 'Plantilla guardada',
+      templatesSaveError: 'Error al guardar plantilla',
+      templatesDeleted: 'Plantilla eliminada',
+      templatesDeleteError: 'Error al eliminar plantilla',
+      templatesDuplicated: 'Plantilla duplicada',
+      templatesDuplicateError: 'Error al duplicar plantilla',
+      templatesSeeded: 'Plantillas predeterminadas creadas',
+      templatesSeedError: 'Error al crear plantillas',
+      templatesTestSent: 'Email de prueba enviado',
+      templatesTestError: 'Error al enviar email de prueba',
+      templatesConfirmDelete: '¿Eliminar esta plantilla?',
+      templatesFlowLinked: 'Vinculado: {0}',
+      templatesFlowNotLinked: 'No vinculado',
+      templatesTriggerNone: 'Ninguno',
     },
   };
 
@@ -2879,13 +2961,14 @@
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
       email: ['email-section'],
+      templates: ['templates-section'],
       products: ['products-section'],
       customers: ['customers-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'products-section', 'customers-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -2897,11 +2980,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-products', 'nav-customers', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', products: 'nav-products', customers: 'nav-customers', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -2910,6 +2993,7 @@
     if (tab === 'campaigns') loadCampaigns();
     if (tab === 'messages') loadConversations();
     if (tab === 'email') loadEmailConversations();
+    if (tab === 'templates') loadTemplates();
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
     if (tab === 'team') loadTeamEmployees();
@@ -5214,6 +5298,657 @@
       if (e.target === composeModal) closeComposeModal();
     });
   }
+
+  // ── Email Template Editor ──
+
+  let emailTemplates = [];
+  let editingTemplateId = null;
+  let gjsEditor = null;
+  let editorMode = 'visual'; // 'visual' | 'html'
+
+  const TRIGGER_REGISTRY = {
+    employee_invite: {
+      en: 'Employee Invite',
+      es: 'Invitación de Empleado',
+      mergeTags: ['displayName', 'email', 'inviteUrl'],
+    },
+    customer_welcome: {
+      en: 'Customer Welcome',
+      es: 'Bienvenida al Cliente',
+      mergeTags: ['contactName', 'businessName', 'loginUrl'],
+    },
+    customer_team_invite: {
+      en: 'Customer Team Invite',
+      es: 'Invitación de Equipo',
+      mergeTags: ['inviterName', 'businessName', 'email', 'inviteUrl'],
+    },
+    website_published: {
+      en: 'Website Published',
+      es: 'Sitio Web Publicado',
+      mergeTags: ['contactName', 'businessName', 'publishedUrl', 'portalUrl'],
+    },
+    payment_confirmed: {
+      en: 'Payment Confirmed',
+      es: 'Pago Confirmado',
+      mergeTags: ['contactName', 'businessName', 'amount', 'currency', 'periodEnd'],
+    },
+    payment_failed: {
+      en: 'Payment Failed',
+      es: 'Pago Fallido',
+      mergeTags: ['contactName', 'businessName', 'amount', 'currency', 'portalUrl'],
+    },
+    subscription_cancelled: {
+      en: 'Subscription Cancelled',
+      es: 'Suscripción Cancelada',
+      mergeTags: ['contactName', 'businessName', 'portalUrl'],
+    },
+    website_suspended: {
+      en: 'Website Suspended',
+      es: 'Sitio Web Suspendido',
+      mergeTags: ['contactName', 'businessName', 'portalUrl'],
+    },
+    website_reactivated: {
+      en: 'Website Reactivated',
+      es: 'Sitio Web Reactivado',
+      mergeTags: ['contactName', 'businessName', 'publishedUrl', 'portalUrl'],
+    },
+    edit_request_received: {
+      en: 'Edit Request Received',
+      es: 'Solicitud de Edición Recibida',
+      mergeTags: ['contactName', 'businessName', 'requestType', 'description'],
+    },
+    edit_request_completed: {
+      en: 'Edit Request Completed',
+      es: 'Solicitud de Edición Completada',
+      mergeTags: ['contactName', 'businessName', 'requestType', 'publishedUrl', 'portalUrl'],
+    },
+    edit_request_rejected: {
+      en: 'Edit Request Rejected',
+      es: 'Solicitud de Edición Rechazada',
+      mergeTags: ['contactName', 'businessName', 'requestType', 'rejectionReason', 'portalUrl'],
+    },
+    plan_changed: {
+      en: 'Plan Changed',
+      es: 'Plan Cambiado',
+      mergeTags: ['contactName', 'businessName', 'oldPlan', 'newPlan', 'newAmount', 'currency', 'portalUrl'],
+    },
+  };
+
+  const COMMON_MERGE_TAGS = ['contactName', 'businessName', 'portalUrl', 'publishedUrl', 'email'];
+
+  function getTriggerLabel(key) {
+    const entry = TRIGGER_REGISTRY[key];
+    if (!entry) return key;
+    return currentLang === 'es' ? entry.es : entry.en;
+  }
+
+  function getMergeTagsForTrigger(triggerKey) {
+    if (triggerKey && TRIGGER_REGISTRY[triggerKey]) {
+      return TRIGGER_REGISTRY[triggerKey].mergeTags;
+    }
+    return COMMON_MERGE_TAGS;
+  }
+
+  async function loadTemplates() {
+    try {
+      const categoryFilter = document.getElementById('templates-category-filter')?.value || '';
+      let url = '/api/email-templates/list';
+      if (categoryFilter) url += '?category=' + encodeURIComponent(categoryFilter);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to load templates');
+      emailTemplates = await res.json();
+      renderTemplatesList();
+      renderFlowsList();
+    } catch (err) {
+      console.error('Load templates error:', err);
+    }
+  }
+
+  function renderTemplatesList() {
+    const container = document.getElementById('templates-list');
+    const noResults = document.getElementById('no-templates');
+    if (!container) return;
+
+    if (emailTemplates.length === 0) {
+      container.innerHTML = '';
+      if (noResults) noResults.style.display = '';
+      return;
+    }
+    if (noResults) noResults.style.display = 'none';
+
+    container.innerHTML = emailTemplates.map(tpl => {
+      const catClass = 'template-badge-' + (tpl.category || 'custom');
+      const catLabel = t('templatesCat' + capitalize(tpl.category || 'custom'));
+      const triggerBadge = tpl.trigger_key
+        ? `<span class="template-badge-trigger">${escapeHtml(getTriggerLabel(tpl.trigger_key))}</span>`
+        : '';
+      const inactiveBadge = tpl.is_active === false
+        ? '<span class="template-badge-inactive">Inactive</span>'
+        : '';
+      return `<div class="template-card" data-template-id="${tpl.id}" onclick="document.dispatchEvent(new CustomEvent('open-template',{detail:'${tpl.id}'}))">
+        <div class="template-card-name">${escapeHtml(tpl.name)}</div>
+        <div class="template-card-subject">${escapeHtml(tpl.subject || '')}</div>
+        <div class="template-card-badges">
+          <span class="template-badge-category ${catClass}">${catLabel}</span>
+          ${triggerBadge}${inactiveBadge}
+        </div>
+        <div class="template-card-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-view" style="font-size:11px;padding:3px 10px" onclick="document.dispatchEvent(new CustomEvent('duplicate-template',{detail:'${tpl.id}'}))">Duplicate</button>
+          <button class="btn btn-view" style="font-size:11px;padding:3px 10px;color:var(--danger)" onclick="document.dispatchEvent(new CustomEvent('delete-template',{detail:'${tpl.id}'}))">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  function renderFlowsList() {
+    const container = document.getElementById('flows-list');
+    if (!container) return;
+
+    container.innerHTML = Object.entries(TRIGGER_REGISTRY).map(([key, entry]) => {
+      const linked = emailTemplates.find(tpl => tpl.trigger_key === key && tpl.is_active);
+      const label = currentLang === 'es' ? entry.es : entry.en;
+      const templateInfo = linked
+        ? `<span class="flow-item-template flow-item-linked">${escapeHtml(linked.name)}</span>`
+        : `<span class="flow-item-template flow-item-unlinked">${t('templatesFlowNotLinked')}</span>`;
+      return `<div class="flow-item">
+        <span class="flow-item-trigger">${escapeHtml(label)}</span>
+        ${templateInfo}
+      </div>`;
+    }).join('');
+  }
+
+  function openTemplateEditor(templateId) {
+    editingTemplateId = templateId || null;
+    editorMode = 'visual';
+    const overlay = document.getElementById('template-editor-overlay');
+    if (!overlay) return;
+
+    // Reset fields
+    document.getElementById('template-editor-name').value = '';
+    document.getElementById('template-editor-subject').value = '';
+    document.getElementById('template-editor-category').value = 'custom';
+    document.getElementById('template-editor-trigger').value = '';
+    document.getElementById('template-editor-description').value = '';
+
+    // Populate trigger dropdown
+    const triggerSelect = document.getElementById('template-editor-trigger');
+    triggerSelect.innerHTML = '<option value="">' + t('templatesTriggerNone') + '</option>';
+    Object.entries(TRIGGER_REGISTRY).forEach(([key, entry]) => {
+      const label = currentLang === 'es' ? entry.es : entry.en;
+      // Check if another template already uses this trigger
+      const usedBy = emailTemplates.find(tpl => tpl.trigger_key === key && tpl.id !== editingTemplateId);
+      const suffix = usedBy ? ' (in use)' : '';
+      triggerSelect.innerHTML += `<option value="${key}"${usedBy ? ' disabled' : ''}>${escapeHtml(label)}${suffix}</option>`;
+    });
+
+    let initialHtml = '';
+
+    if (templateId) {
+      const tpl = emailTemplates.find(tp => tp.id === templateId);
+      if (tpl) {
+        document.getElementById('template-editor-name').value = tpl.name || '';
+        document.getElementById('template-editor-subject').value = tpl.subject || '';
+        document.getElementById('template-editor-category').value = tpl.category || 'custom';
+        document.getElementById('template-editor-trigger').value = tpl.trigger_key || '';
+        document.getElementById('template-editor-description').value = tpl.description || '';
+        initialHtml = tpl.gjs_html || tpl.body_html || '';
+      }
+    }
+
+    // Show overlay
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // Show visual mode
+    document.getElementById('gjs-editor').style.display = 'block';
+    document.getElementById('template-html-editor').style.display = 'none';
+    document.getElementById('template-view-visual').classList.add('active');
+    document.getElementById('template-view-html').classList.remove('active');
+
+    // Render merge tags
+    updateMergeTagChips();
+
+    // Init GrapesJS (defer to let DOM settle)
+    setTimeout(() => initGrapesJS(initialHtml, templateId), 100);
+  }
+
+  function initGrapesJS(html, templateId) {
+    // Destroy previous instance
+    if (gjsEditor) {
+      gjsEditor.destroy();
+      gjsEditor = null;
+    }
+
+    const container = document.getElementById('gjs-editor');
+    if (!container) return;
+
+    gjsEditor = grapesjs.init({
+      container: '#gjs-editor',
+      fromElement: false,
+      height: '100%',
+      width: 'auto',
+      storageManager: false,
+      plugins: ['grapesjs-preset-newsletter'],
+      pluginsOpts: {
+        'grapesjs-preset-newsletter': {},
+      },
+      canvas: {
+        styles: [],
+      },
+      panels: { defaults: [] },
+    });
+
+    // Load template content
+    if (templateId) {
+      const tpl = emailTemplates.find(tp => tp.id === templateId);
+      if (tpl && tpl.gjs_components) {
+        try {
+          gjsEditor.loadProjectData({
+            pages: [{ component: tpl.gjs_components, styles: tpl.gjs_styles || [] }],
+          });
+        } catch (e) {
+          console.warn('Failed to load GrapesJS project data, falling back to HTML:', e);
+          gjsEditor.setComponents(html);
+        }
+      } else {
+        gjsEditor.setComponents(html);
+      }
+    } else if (html) {
+      gjsEditor.setComponents(html);
+    }
+  }
+
+  function toggleEditorMode(mode) {
+    if (mode === editorMode) return;
+    editorMode = mode;
+
+    const gjsEl = document.getElementById('gjs-editor');
+    const htmlEl = document.getElementById('template-html-editor');
+    const visualBtn = document.getElementById('template-view-visual');
+    const htmlBtn = document.getElementById('template-view-html');
+
+    if (mode === 'html') {
+      // Sync GrapesJS HTML to textarea
+      if (gjsEditor) {
+        htmlEl.value = gjsEditor.getHtml() + '\n<style>\n' + gjsEditor.getCss() + '\n</style>';
+      }
+      gjsEl.style.display = 'none';
+      htmlEl.style.display = 'block';
+      visualBtn.classList.remove('active');
+      htmlBtn.classList.add('active');
+    } else {
+      // Sync textarea back to GrapesJS
+      if (gjsEditor && htmlEl.value) {
+        gjsEditor.setComponents(htmlEl.value);
+      }
+      htmlEl.style.display = 'none';
+      gjsEl.style.display = 'block';
+      htmlBtn.classList.remove('active');
+      visualBtn.classList.add('active');
+    }
+  }
+
+  function updateMergeTagChips() {
+    const container = document.getElementById('merge-tags-container');
+    if (!container) return;
+    const triggerKey = document.getElementById('template-editor-trigger')?.value || '';
+    const tags = getMergeTagsForTrigger(triggerKey);
+    container.innerHTML = tags.map(tag =>
+      `<span class="merge-tag-chip" onclick="document.dispatchEvent(new CustomEvent('insert-merge-tag',{detail:'${tag}'}))">\u007B\u007B${tag}\u007D\u007D</span>`
+    ).join('');
+  }
+
+  function insertMergeTag(tag) {
+    const tagStr = '{{' + tag + '}}';
+    if (editorMode === 'html') {
+      const textarea = document.getElementById('template-html-editor');
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + tagStr + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + tagStr.length;
+        textarea.focus();
+      }
+    } else if (gjsEditor) {
+      // Try inserting into the active RTE editor
+      const rte = gjsEditor.RichTextEditor;
+      if (rte && rte.getContent) {
+        try {
+          const sel = gjsEditor.Canvas.getDocument().getSelection();
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(gjsEditor.Canvas.getDocument().createTextNode(tagStr));
+            range.collapse(false);
+            return;
+          }
+        } catch (e) {
+          // fallback
+        }
+      }
+      // Fallback: append to selected component
+      const selected = gjsEditor.getSelected();
+      if (selected) {
+        const content = selected.get('content') || '';
+        selected.set('content', content + tagStr);
+      }
+    }
+  }
+
+  function stripHtmlToText(html) {
+    if (!html) return '';
+    return html
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/p>/gi, '\n\n')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<\/tr>/gi, '\n')
+      .replace(/<\/li>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n))
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  async function saveTemplate() {
+    const name = document.getElementById('template-editor-name')?.value?.trim();
+    const subject = document.getElementById('template-editor-subject')?.value?.trim();
+    if (!name || !subject) {
+      showToast('Name and subject are required', 'error');
+      return;
+    }
+
+    // Get HTML from active editor mode
+    let bodyHtml = '';
+    let gjsComponents = null;
+    let gjsStyles = null;
+    let gjsHtml = '';
+
+    if (editorMode === 'html') {
+      bodyHtml = document.getElementById('template-html-editor')?.value || '';
+      gjsHtml = bodyHtml;
+    } else if (gjsEditor) {
+      bodyHtml = gjsEditor.getHtml() + '\n<style>\n' + gjsEditor.getCss() + '\n</style>';
+      gjsHtml = bodyHtml;
+      try {
+        const projectData = gjsEditor.getProjectData();
+        if (projectData.pages && projectData.pages[0]) {
+          gjsComponents = projectData.pages[0].frames?.[0]?.component || projectData.pages[0].component || null;
+          gjsStyles = projectData.pages[0].frames?.[0]?.styles || projectData.pages[0].styles || null;
+        }
+      } catch (e) {
+        console.warn('Could not extract GrapesJS project data:', e);
+      }
+    }
+
+    const triggerKey = document.getElementById('template-editor-trigger')?.value || null;
+
+    const payload = {
+      name,
+      subject,
+      body_html: bodyHtml,
+      body_text: stripHtmlToText(bodyHtml),
+      category: document.getElementById('template-editor-category')?.value || 'custom',
+      trigger_key: triggerKey || null,
+      description: document.getElementById('template-editor-description')?.value || '',
+      gjs_components: gjsComponents,
+      gjs_styles: gjsStyles,
+      gjs_html: gjsHtml,
+      merge_tags: getMergeTagsForTrigger(triggerKey),
+      is_active: true,
+    };
+
+    if (editingTemplateId) {
+      payload.id = editingTemplateId;
+    }
+
+    try {
+      const res = await fetch('/api/email-templates/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Save failed');
+      const saved = await res.json();
+      editingTemplateId = saved.id;
+      showToast(t('templatesSaved'), 'success');
+      // Refresh list in background
+      loadTemplates();
+    } catch (err) {
+      console.error('Save template error:', err);
+      showToast(t('templatesSaveError'), 'error');
+    }
+  }
+
+  function closeTemplateEditor() {
+    const overlay = document.getElementById('template-editor-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    if (gjsEditor) {
+      gjsEditor.destroy();
+      gjsEditor = null;
+    }
+    editingTemplateId = null;
+    editorMode = 'visual';
+  }
+
+  async function openPreviewModal() {
+    const subject = document.getElementById('template-editor-subject')?.value || '';
+    let html = '';
+    if (editorMode === 'html') {
+      html = document.getElementById('template-html-editor')?.value || '';
+    } else if (gjsEditor) {
+      html = gjsEditor.getHtml() + '\n<style>\n' + gjsEditor.getCss() + '\n</style>';
+    }
+
+    try {
+      const res = await fetch('/api/email-templates/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html, subject }),
+      });
+      if (!res.ok) throw new Error('Preview failed');
+      const data = await res.json();
+
+      const modal = document.getElementById('template-preview-modal');
+      const subjectEl = document.getElementById('template-preview-subject');
+      const iframe = document.getElementById('template-preview-iframe');
+      if (subjectEl) subjectEl.innerHTML = '<strong>Subject:</strong> ' + escapeHtml(data.subject || subject);
+      if (iframe) {
+        iframe.classList.remove('mobile');
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(data.html || html);
+        doc.close();
+      }
+      // Reset desktop/mobile toggle
+      document.getElementById('preview-desktop')?.classList.add('active');
+      document.getElementById('preview-mobile')?.classList.remove('active');
+      if (modal) modal.style.display = 'flex';
+    } catch (err) {
+      console.error('Preview error:', err);
+    }
+  }
+
+  async function sendTestEmail() {
+    const emailTo = document.getElementById('template-test-email')?.value?.trim();
+    if (!emailTo) {
+      showToast('Enter an email address', 'error');
+      return;
+    }
+
+    const subject = document.getElementById('template-editor-subject')?.value || '';
+    let html = '';
+    if (editorMode === 'html') {
+      html = document.getElementById('template-html-editor')?.value || '';
+    } else if (gjsEditor) {
+      html = gjsEditor.getHtml() + '\n<style>\n' + gjsEditor.getCss() + '\n</style>';
+    }
+
+    try {
+      const res = await fetch('/api/email-templates/send-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: emailTo, subject, html, text: stripHtmlToText(html) }),
+      });
+      if (!res.ok) throw new Error('Send failed');
+      showToast(t('templatesTestSent'), 'success');
+      document.getElementById('template-test-modal').style.display = 'none';
+    } catch (err) {
+      console.error('Send test error:', err);
+      showToast(t('templatesTestError'), 'error');
+    }
+  }
+
+  async function duplicateTemplate(id) {
+    try {
+      const res = await fetch('/api/email-templates/duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error('Duplicate failed');
+      showToast(t('templatesDuplicated'), 'success');
+      loadTemplates();
+    } catch (err) {
+      console.error('Duplicate template error:', err);
+      showToast(t('templatesDuplicateError'), 'error');
+    }
+  }
+
+  async function deleteTemplate(id) {
+    if (!confirm(t('templatesConfirmDelete'))) return;
+    try {
+      const res = await fetch('/api/email-templates/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      showToast(t('templatesDeleted'), 'success');
+      loadTemplates();
+    } catch (err) {
+      console.error('Delete template error:', err);
+      showToast(t('templatesDeleteError'), 'error');
+    }
+  }
+
+  async function seedTemplates() {
+    try {
+      const res = await fetch('/api/email-templates/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) throw new Error('Seed failed');
+      showToast(t('templatesSeeded'), 'success');
+      loadTemplates();
+    } catch (err) {
+      console.error('Seed templates error:', err);
+      showToast(t('templatesSeedError'), 'error');
+    }
+  }
+
+  // ── Template Editor Event Listeners ──
+
+  const navTemplates = document.getElementById('nav-templates');
+  if (navTemplates) {
+    navTemplates.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchTab('templates');
+    });
+  }
+
+  const btnNewTemplate = document.getElementById('btn-new-template');
+  if (btnNewTemplate) btnNewTemplate.addEventListener('click', () => openTemplateEditor(null));
+
+  const btnSeedTemplates = document.getElementById('btn-seed-templates');
+  if (btnSeedTemplates) btnSeedTemplates.addEventListener('click', seedTemplates);
+
+  const templatesCategoryFilter = document.getElementById('templates-category-filter');
+  if (templatesCategoryFilter) templatesCategoryFilter.addEventListener('change', loadTemplates);
+
+  // Editor topbar
+  const templateEditorBack = document.getElementById('template-editor-back');
+  if (templateEditorBack) templateEditorBack.addEventListener('click', closeTemplateEditor);
+
+  const templateViewVisual = document.getElementById('template-view-visual');
+  if (templateViewVisual) templateViewVisual.addEventListener('click', () => toggleEditorMode('visual'));
+
+  const templateViewHtml = document.getElementById('template-view-html');
+  if (templateViewHtml) templateViewHtml.addEventListener('click', () => toggleEditorMode('html'));
+
+  const templateBtnPreview = document.getElementById('template-btn-preview');
+  if (templateBtnPreview) templateBtnPreview.addEventListener('click', openPreviewModal);
+
+  const templateBtnTest = document.getElementById('template-btn-test');
+  if (templateBtnTest) templateBtnTest.addEventListener('click', () => {
+    document.getElementById('template-test-modal').style.display = 'flex';
+  });
+
+  const templateBtnSave = document.getElementById('template-btn-save');
+  if (templateBtnSave) templateBtnSave.addEventListener('click', saveTemplate);
+
+  // Trigger change updates merge tags
+  const templateEditorTrigger = document.getElementById('template-editor-trigger');
+  if (templateEditorTrigger) templateEditorTrigger.addEventListener('change', updateMergeTagChips);
+
+  // Preview modal
+  const templatePreviewClose = document.getElementById('template-preview-close');
+  if (templatePreviewClose) templatePreviewClose.addEventListener('click', () => {
+    document.getElementById('template-preview-modal').style.display = 'none';
+  });
+
+  const previewDesktop = document.getElementById('preview-desktop');
+  const previewMobile = document.getElementById('preview-mobile');
+  if (previewDesktop) previewDesktop.addEventListener('click', () => {
+    document.getElementById('template-preview-iframe')?.classList.remove('mobile');
+    previewDesktop.classList.add('active');
+    previewMobile?.classList.remove('active');
+  });
+  if (previewMobile) previewMobile.addEventListener('click', () => {
+    document.getElementById('template-preview-iframe')?.classList.add('mobile');
+    previewMobile.classList.add('active');
+    previewDesktop?.classList.remove('active');
+  });
+
+  // Close preview on overlay click
+  const previewModal = document.getElementById('template-preview-modal');
+  if (previewModal) previewModal.addEventListener('click', (e) => {
+    if (e.target === previewModal) previewModal.style.display = 'none';
+  });
+
+  // Test email modal
+  const templateTestClose = document.getElementById('template-test-close');
+  if (templateTestClose) templateTestClose.addEventListener('click', () => {
+    document.getElementById('template-test-modal').style.display = 'none';
+  });
+
+  const templateTestCancel = document.getElementById('template-test-cancel');
+  if (templateTestCancel) templateTestCancel.addEventListener('click', () => {
+    document.getElementById('template-test-modal').style.display = 'none';
+  });
+
+  const templateTestSend = document.getElementById('template-test-send');
+  if (templateTestSend) templateTestSend.addEventListener('click', sendTestEmail);
+
+  const testModal = document.getElementById('template-test-modal');
+  if (testModal) testModal.addEventListener('click', (e) => {
+    if (e.target === testModal) testModal.style.display = 'none';
+  });
+
+  // Custom event handlers for template cards (since they use innerHTML)
+  document.addEventListener('open-template', (e) => openTemplateEditor(e.detail));
+  document.addEventListener('duplicate-template', (e) => duplicateTemplate(e.detail));
+  document.addEventListener('delete-template', (e) => deleteTemplate(e.detail));
+  document.addEventListener('insert-merge-tag', (e) => insertMergeTag(e.detail));
 
   // ── Team Management ──
   let teamEmployees = [];

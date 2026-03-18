@@ -1,6 +1,9 @@
 // Vercel serverless function: Publish/unpublish/suspend/reactivate websites
 // POST — handles website lifecycle state changes
 
+import { sendEmail } from '../_lib/sendgrid.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -130,6 +133,13 @@ export default async function handler(req, res) {
 
     const updatedWebsite = patchData[0] || {};
 
+    // Send lifecycle email to customer (non-blocking)
+    if (action === 'publish' || action === 'suspend' || action === 'reactivate') {
+      sendLifecycleEmail(action, business, updatedWebsite, supabaseUrl, supabaseHeaders).catch(err => {
+        console.warn('Lifecycle email error (non-blocking):', err);
+      });
+    }
+
     return res.status(200).json({
       success: true,
       action,
@@ -145,6 +155,53 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('Publish action error:', err);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// Send lifecycle email to the customer who owns this business
+async function sendLifecycleEmail(action, business, website, supabaseUrl, supabaseHeaders) {
+  // Look up customer for this business
+  const custRes = await fetch(
+    `${supabaseUrl}/rest/v1/customers?business_id=eq.${business.id}&select=id,email,contact_name`,
+    { headers: supabaseHeaders }
+  );
+  const custs = await custRes.json();
+  if (!custs || custs.length === 0 || !custs[0].email) return;
+
+  const customer = custs[0];
+  const portalUrl = 'https://ahoratengopagina.com/mipagina';
+  const emailFrom = 'AhoraTengoPagina <andres@ahoratengopagina.com>';
+  const emailReplyTo = 'andres@ahoratengopagina.com';
+
+  let emailContent;
+
+  if (action === 'publish') {
+    emailContent = await getTemplateForTrigger('website_published', {
+      contactName: customer.contact_name || '',
+      businessName: business.name || '',
+      publishedUrl: website.published_url || '',
+      portalUrl,
+    });
+  } else if (action === 'suspend') {
+    emailContent = await getTemplateForTrigger('website_suspended', {
+      contactName: customer.contact_name || '',
+      businessName: business.name || '',
+      portalUrl,
+    });
+  } else if (action === 'reactivate') {
+    emailContent = await getTemplateForTrigger('website_reactivated', {
+      contactName: customer.contact_name || '',
+      businessName: business.name || '',
+      publishedUrl: website.published_url || '',
+      portalUrl,
+    });
+  }
+
+  if (emailContent) {
+    const result = await sendEmail({ to: customer.email, ...emailContent, from: emailFrom, replyTo: emailReplyTo });
+    if (!result.success) {
+      console.warn(`${action} email failed:`, result.error);
+    }
   }
 }
 

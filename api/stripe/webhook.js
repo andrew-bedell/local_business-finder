@@ -2,7 +2,7 @@
 // POST — receives Stripe webhook events and updates database
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { customerWelcomeEmail } from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 // Disable body parsing so we can verify the raw signature
 export const config = {
@@ -122,26 +122,40 @@ export default async function handler(req, res) {
             if (customer) {
               await createCustomerAuthUser(customer, supabaseUrl, supabaseKey);
 
-              // Send branded welcome email via SendGrid
+              const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
+              const origin = 'https://ahoratengopagina.com';
+              const portalUrl = origin + '/mipagina';
+              const emailFrom = 'AhoraTengoPagina <andres@ahoratengopagina.com>';
+              const emailReplyTo = 'andres@ahoratengopagina.com';
+
+              // Send branded welcome email (first payment only — check if auth user was just created)
               try {
-                const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
-                const origin = req.headers.origin || 'https://ahoratengopagina.com';
-                const loginUrl = origin + '/mipagina';
-                const emailContent = customerWelcomeEmail({
+                const welcomeContent = await getTemplateForTrigger('customer_welcome', {
                   contactName: customer.contact_name || '',
                   businessName: businessName || '',
-                  loginUrl,
+                  loginUrl: portalUrl,
                 });
-                const emailResult = await sendEmail({ to: customer.email, ...emailContent });
-                if (!emailResult.success) {
-                  console.warn('Customer welcome email failed (non-blocking):', emailResult.error);
-                }
+                await sendEmail({ to: customer.email, ...welcomeContent, from: emailFrom, replyTo: emailReplyTo });
               } catch (emailErr) {
-                console.warn('Customer welcome email error (non-blocking):', emailErr);
+                console.warn('Welcome email error (non-blocking):', emailErr);
+              }
+
+              // Send payment confirmation email (every successful invoice)
+              try {
+                const paymentContent = await getTemplateForTrigger('payment_confirmed', {
+                  contactName: customer.contact_name || '',
+                  businessName: businessName || '',
+                  amount: invoice.amount_paid,
+                  currency: invoice.currency,
+                  periodEnd: invoice.lines?.data?.[0]?.period?.end,
+                });
+                await sendEmail({ to: customer.email, ...paymentContent, from: emailFrom, replyTo: emailReplyTo });
+              } catch (emailErr) {
+                console.warn('Payment confirmation email error (non-blocking):', emailErr);
               }
             }
           } catch (authErr) {
-            console.error('Customer auth user creation error (non-blocking):', authErr);
+            console.error('Customer auth/email error (non-blocking):', authErr);
           }
         }
         break;
@@ -159,12 +173,37 @@ export default async function handler(req, res) {
               body: JSON.stringify({ status: 'past_due' }),
             }
           );
+
+          // Send payment failed email (non-blocking)
+          try {
+            const customer = await getCustomerFromSubscription(subscriptionId, supabaseUrl, supabaseHeaders);
+            if (customer?.email) {
+              const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
+              const portalUrl = 'https://ahoratengopagina.com/mipagina';
+              const failedContent = await getTemplateForTrigger('payment_failed', {
+                contactName: customer.contact_name || '',
+                businessName: businessName || '',
+                amount: invoice.amount_due,
+                currency: invoice.currency,
+                portalUrl,
+              });
+              await sendEmail({
+                to: customer.email,
+                ...failedContent,
+                from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
+                replyTo: 'andres@ahoratengopagina.com',
+              });
+            }
+          } catch (emailErr) {
+            console.warn('Payment failed email error (non-blocking):', emailErr);
+          }
         }
         break;
       }
 
       case 'customer.subscription.updated': {
         const sub = event.data.object;
+        const previousAttributes = event.data.previous_attributes || {};
         const updatePayload = {
           status: sub.status === 'active' ? 'active' : sub.status === 'past_due' ? 'past_due' : sub.status === 'canceled' ? 'cancelled' : sub.status,
           current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
@@ -175,6 +214,12 @@ export default async function handler(req, res) {
           updatePayload.cancelled_at = new Date(sub.canceled_at * 1000).toISOString();
         }
 
+        // Update stripe_price_id if price changed
+        const currentPriceId = sub.items?.data?.[0]?.price?.id;
+        if (currentPriceId) {
+          updatePayload.stripe_price_id = currentPriceId;
+        }
+
         await fetch(
           `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${encodeURIComponent(sub.id)}`,
           {
@@ -183,6 +228,35 @@ export default async function handler(req, res) {
             body: JSON.stringify(updatePayload),
           }
         );
+
+        // Send plan change email if price changed (non-blocking)
+        if (previousAttributes.items || previousAttributes.plan) {
+          try {
+            const customer = await getCustomerFromSubscription(sub.id, supabaseUrl, supabaseHeaders);
+            if (customer?.email) {
+              const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
+              const currentPrice = sub.items?.data?.[0]?.price;
+              const portalUrl = 'https://ahoratengopagina.com/mipagina';
+              const changeContent = await getTemplateForTrigger('plan_changed', {
+                contactName: customer.contact_name || '',
+                businessName: businessName || '',
+                oldPlan: null,
+                newPlan: currentPrice?.nickname || null,
+                newAmount: currentPrice?.unit_amount,
+                currency: currentPrice?.currency,
+                portalUrl,
+              });
+              await sendEmail({
+                to: customer.email,
+                ...changeContent,
+                from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
+                replyTo: 'andres@ahoratengopagina.com',
+              });
+            }
+          } catch (emailErr) {
+            console.warn('Plan change email error (non-blocking):', emailErr);
+          }
+        }
         break;
       }
 
@@ -212,6 +286,28 @@ export default async function handler(req, res) {
               body: JSON.stringify({ site_status: 'suspended' }),
             }
           );
+        }
+
+        // Send subscription cancelled email (non-blocking)
+        try {
+          const customer = await getCustomerFromSubscription(sub.id, supabaseUrl, supabaseHeaders);
+          if (customer?.email) {
+            const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
+            const portalUrl = 'https://ahoratengopagina.com/mipagina';
+            const cancelContent = await getTemplateForTrigger('subscription_cancelled', {
+              contactName: customer.contact_name || '',
+              businessName: businessName || '',
+              portalUrl,
+            });
+            await sendEmail({
+              to: customer.email,
+              ...cancelContent,
+              from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
+              replyTo: 'andres@ahoratengopagina.com',
+            });
+          }
+        } catch (emailErr) {
+          console.warn('Subscription cancelled email error (non-blocking):', emailErr);
         }
         break;
       }

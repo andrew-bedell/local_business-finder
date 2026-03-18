@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/employee/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css">
 </head>
 <body>
   <div id="auth-loading" class="auth-loading">
@@ -34,6 +35,7 @@
               <a href="#" class="nav-tab" id="nav-campaigns" data-i18n="navCampaigns">Campaigns</a>
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
               <a href="#" class="nav-tab" id="nav-email" data-i18n="navEmail">Email</a>
+              <a href="#" class="nav-tab" id="nav-templates" data-i18n="navTemplates">Templates</a>
               <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
               <a href="#" class="nav-tab" id="nav-customers" data-i18n="navCustomers">Customers</a>
               <a href="#" class="nav-tab" id="nav-team" data-i18n="navTeam" style="display:none">Team</a>
@@ -454,6 +456,128 @@
         </div>
       </div>
 
+      <!-- Templates Section -->
+      <section id="templates-section" style="display:none">
+        <div class="card" id="templates-list-card">
+          <div class="card-header">
+            <h2 data-i18n="templatesTitle">Email Templates</h2>
+            <div style="display:flex;gap:10px">
+              <select class="input input-sort" id="templates-category-filter">
+                <option value="" data-i18n="filterAll">All</option>
+                <option value="transactional" data-i18n="templatesCatTransactional">Transactional</option>
+                <option value="marketing" data-i18n="templatesCatMarketing">Marketing</option>
+                <option value="custom" data-i18n="templatesCatCustom">Custom</option>
+              </select>
+              <button class="btn btn-primary" id="btn-new-template" data-i18n="templatesNew">New Template</button>
+            </div>
+          </div>
+          <div id="templates-list" class="templates-list"></div>
+          <div class="no-results" id="no-templates" style="display:none">
+            <p data-i18n="templatesEmpty">No email templates yet.</p>
+            <button class="btn btn-primary" id="btn-seed-templates" style="margin-top:12px" data-i18n="templatesSeed">Seed Default Templates</button>
+          </div>
+        </div>
+
+        <!-- Automation Flows Card -->
+        <div class="card" id="flows-card" style="margin-top:20px">
+          <div class="card-header">
+            <h2 data-i18n="templatesFlowsTitle">Automation Flows</h2>
+          </div>
+          <div id="flows-list" class="flows-list"></div>
+        </div>
+      </section>
+
+      <!-- Template Editor Overlay (fullscreen) -->
+      <div class="template-editor-overlay" id="template-editor-overlay" style="display:none">
+        <div class="template-editor-topbar">
+          <div class="template-editor-topbar-left">
+            <button class="btn btn-text" id="template-editor-back" data-i18n="templatesBack">&larr; Back</button>
+            <input type="text" class="input" id="template-editor-name" data-i18n-placeholder="templatesNamePh" placeholder="Template name..." style="width:240px">
+          </div>
+          <div class="template-editor-topbar-center">
+            <button class="template-editor-view-btn active" id="template-view-visual" data-i18n="templatesVisual">Visual</button>
+            <button class="template-editor-view-btn" id="template-view-html" data-i18n="templatesHtml">HTML</button>
+          </div>
+          <div class="template-editor-topbar-right">
+            <button class="btn btn-secondary btn-sm" id="template-btn-preview" data-i18n="templatesPreview">Preview</button>
+            <button class="btn btn-secondary btn-sm" id="template-btn-test" data-i18n="templatesTest">Send Test</button>
+            <button class="btn btn-primary btn-sm" id="template-btn-save" data-i18n="templatesSave">Save</button>
+          </div>
+        </div>
+        <div class="template-editor-body">
+          <div class="template-editor-sidebar">
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="templatesSubject">Subject Line</label>
+              <input type="text" class="input" id="template-editor-subject" placeholder="">
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="templatesCategory">Category</label>
+              <select class="input" id="template-editor-category">
+                <option value="transactional" data-i18n="templatesCatTransactional">Transactional</option>
+                <option value="marketing" data-i18n="templatesCatMarketing">Marketing</option>
+                <option value="custom" data-i18n="templatesCatCustom">Custom</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="templatesTrigger">Trigger Event</label>
+              <select class="input" id="template-editor-trigger">
+                <option value="">None</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="templatesDescription">Description</label>
+              <textarea class="input" id="template-editor-description" rows="2" style="resize:vertical"></textarea>
+            </div>
+            <div class="form-group">
+              <label data-i18n="templatesMergeTags">Merge Tags</label>
+              <div class="merge-tags-container" id="merge-tags-container"></div>
+            </div>
+          </div>
+          <div class="template-editor-canvas">
+            <div id="gjs-editor" style="height:100%;display:block"></div>
+            <textarea class="template-code-textarea" id="template-html-editor" style="display:none" spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Template Preview Modal -->
+      <div class="modal-overlay" id="template-preview-modal" style="display:none">
+        <div class="modal-content" style="max-width:700px;height:80vh">
+          <div class="modal-header">
+            <h2 data-i18n="templatesPreviewTitle">Template Preview</h2>
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="template-editor-view-btn active" id="preview-desktop" data-i18n="templatesDesktop">Desktop</button>
+              <button class="template-editor-view-btn" id="preview-mobile" data-i18n="templatesMobile">Mobile</button>
+              <button class="modal-close" id="template-preview-close">&times;</button>
+            </div>
+          </div>
+          <div class="modal-body" style="padding:0;flex:1;overflow:hidden;background:#e5e5e5">
+            <div class="template-preview-subject" id="template-preview-subject"></div>
+            <iframe id="template-preview-iframe" class="template-preview-iframe"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- Send Test Email Modal -->
+      <div class="modal-overlay" id="template-test-modal" style="display:none">
+        <div class="modal-content" style="max-width:440px">
+          <div class="modal-header">
+            <h2 data-i18n="templatesSendTest">Send Test Email</h2>
+            <button class="modal-close" id="template-test-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group" style="margin-bottom:14px">
+              <label data-i18n="emailTo">To</label>
+              <input type="email" class="input" id="template-test-email" placeholder="email@example.com">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" id="template-test-cancel" data-i18n="cancel">Cancel</button>
+            <button class="btn btn-primary" id="template-test-send" data-i18n="templatesSendTestBtn">Send Test</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Customers Section -->
       <section id="customers-section" style="display:none">
         <div class="card" id="customers-list-card">
@@ -628,6 +752,8 @@
 
   <div class="toast-container" id="toast-container"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
+  <script src="https://unpkg.com/grapesjs-preset-newsletter@1.0.1"></script>
   <script src="/employee/auth.js"></script>
   <script src="/employee/admin.js"></script>
 </body>
