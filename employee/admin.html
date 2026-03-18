@@ -38,6 +38,7 @@
               <a href="#" class="nav-tab" id="nav-templates" data-i18n="navTemplates">Templates</a>
               <a href="#" class="nav-tab" id="nav-products" data-i18n="navProducts">Products</a>
               <a href="#" class="nav-tab" id="nav-customers" data-i18n="navCustomers">Customers</a>
+              <a href="#" class="nav-tab" id="nav-edit-requests" data-i18n="navEditRequests">Edit Requests</a>
               <a href="#" class="nav-tab" id="nav-team" data-i18n="navTeam" style="display:none">Team</a>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
@@ -720,6 +721,67 @@
               <button class="btn btn-primary" id="btn-save-product" data-i18n="productSave">Save Product</button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Edit Requests Management -->
+      <section id="edit-requests-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <h2 data-i18n="navEditRequests">Edit Requests</h2>
+          </div>
+          <!-- Filter bar -->
+          <div class="customers-filters" style="padding: 0 24px 16px;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <select id="er-status-filter" class="input input-sort">
+                <option value="" data-i18n="erAllStatuses">All Statuses</option>
+                <option value="submitted" data-i18n="erStatusSubmitted">Submitted</option>
+                <option value="in_review" data-i18n="erStatusInReview">In Review</option>
+                <option value="in_progress" data-i18n="erStatusInProgress">In Progress</option>
+                <option value="completed" data-i18n="erStatusCompleted">Completed</option>
+                <option value="rejected" data-i18n="erStatusRejected">Rejected</option>
+              </select>
+              <select id="er-priority-filter" class="input input-sort">
+                <option value="" data-i18n="erAllPriorities">All Priorities</option>
+                <option value="urgent" data-i18n="erPriorityUrgent">Urgent</option>
+                <option value="high" data-i18n="erPriorityHigh">High</option>
+                <option value="normal" data-i18n="erPriorityNormal">Normal</option>
+                <option value="low" data-i18n="erPriorityLow">Low</option>
+              </select>
+              <input type="text" id="er-search" class="input" placeholder="Search..." data-i18n-placeholder="erSearchPh" style="max-width:240px;">
+            </div>
+          </div>
+          <!-- Stats -->
+          <div id="er-stats" style="padding: 0 24px 12px; display:flex; gap:16px; font-size:13px; color:#8b8fa3;"></div>
+          <!-- Table -->
+          <div class="results-table-wrapper" id="er-list-card">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th data-i18n="erColDate">Date</th>
+                  <th data-i18n="erColBusiness">Business</th>
+                  <th data-i18n="erColType">Type</th>
+                  <th data-i18n="erColDescription">Description</th>
+                  <th data-i18n="erColPriority">Priority</th>
+                  <th data-i18n="erColStatus">Status</th>
+                  <th data-i18n="erColActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="er-table-body">
+                <tr><td colspan="8" style="text-align:center;padding:24px;color:#8b8fa3;" data-i18n="erEmpty">No edit requests yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Detail View (hidden by default) -->
+        <div id="er-detail" class="card" style="display:none; margin-top:20px;">
+          <div class="card-header">
+            <button class="btn btn-text" id="btn-back-er" data-i18n="erBack">← Back to list</button>
+            <h2 id="er-detail-title" data-i18n="erDetailTitle">Edit Request</h2>
+          </div>
+          <div id="er-detail-content" style="padding:24px;"></div>
         </div>
       </section>
 

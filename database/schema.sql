@@ -821,6 +821,12 @@ CREATE TABLE IF NOT EXISTS edit_requests (
   priority                TEXT DEFAULT 'normal'
                             CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
   rejection_reason        TEXT,
+  element_type            TEXT,                        -- visual editor: type of element (text, image, heading, button, section)
+  element_selector        TEXT,                        -- visual editor: CSS selector path to the element
+  element_screenshot_url  TEXT,                        -- visual editor: screenshot URL of the clicked element
+  current_value           TEXT,                        -- visual editor: current text/src/content of the element
+  ai_conversation         JSONB,                       -- visual editor: full AI chat conversation array
+  admin_notes             TEXT,                        -- internal notes from admin when processing
   created_at              TIMESTAMPTZ DEFAULT NOW(),
   last_updated_at         TIMESTAMPTZ DEFAULT NOW()
 );

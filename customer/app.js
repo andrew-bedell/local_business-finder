@@ -1128,6 +1128,11 @@
         item.classList.remove('active');
       }
     });
+
+    // Load visual editor when section is shown
+    if (normalizedId === 'editor') {
+      initVisualEditor();
+    }
   }
 
   function showLoginScreen() {
@@ -1622,6 +1627,618 @@
         inviteTeamMember(email, name, role);
       });
     }
+  }
+
+  // ── Visual Editor ──
+  var editorLoaded = false;
+  var selectedElement = null;
+  var chatMessages = [];
+  var pendingEditRequest = null;
+  var chatStreaming = false;
+
+  function initVisualEditor() {
+    var noWebsite = $('#editor-no-website');
+    var editorMain = $('#editor-main');
+
+    if (!websiteData || !websiteData.id) {
+      if (noWebsite) noWebsite.style.display = '';
+      if (editorMain) editorMain.style.display = 'none';
+      return;
+    }
+
+    if (noWebsite) noWebsite.style.display = 'none';
+    if (editorMain) editorMain.style.display = '';
+
+    if (!editorLoaded) {
+      editorLoaded = true;
+      bindEditorEvents();
+      loadEditorPreview();
+    }
+  }
+
+  function bindEditorEvents() {
+    // Device toggle
+    var btnDesktop = $('#btn-editor-desktop');
+    var btnMobile = $('#btn-editor-mobile');
+    if (btnDesktop) btnDesktop.addEventListener('click', function () {
+      setEditorDevice('desktop');
+    });
+    if (btnMobile) btnMobile.addEventListener('click', function () {
+      setEditorDevice('mobile');
+    });
+
+    // Reload button
+    var btnReload = $('#btn-editor-reload');
+    if (btnReload) btnReload.addEventListener('click', function () {
+      editorLoaded = false;
+      loadEditorPreview();
+      editorLoaded = true;
+    });
+
+    // Clear pin
+    var btnClearPin = $('#btn-clear-pin');
+    if (btnClearPin) btnClearPin.addEventListener('click', clearSelectedElement);
+
+    // Chat form
+    var chatForm = $('#editor-chat-form');
+    if (chatForm) chatForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = $('#editor-chat-input');
+      if (!input) return;
+      var text = input.value.trim();
+      if (!text || chatStreaming) return;
+      input.value = '';
+      sendChatMessage(text);
+    });
+
+    // Chat input — submit on Enter (Shift+Enter for newline)
+    var chatInput = $('#editor-chat-input');
+    if (chatInput) chatInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        var form = $('#editor-chat-form');
+        if (form) form.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // Chat reset
+    var btnChatReset = $('#btn-chat-reset');
+    if (btnChatReset) btnChatReset.addEventListener('click', resetChat);
+
+    // Listen for postMessage from iframe
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'element-selected') {
+        handleElementSelected(e.data);
+      }
+    });
+  }
+
+  function setEditorDevice(mode) {
+    var btnDesktop = $('#btn-editor-desktop');
+    var btnMobile = $('#btn-editor-mobile');
+    var iframeWrap = $('#editor-iframe-wrap');
+
+    if (mode === 'mobile') {
+      if (btnDesktop) btnDesktop.classList.remove('active');
+      if (btnMobile) btnMobile.classList.add('active');
+      if (iframeWrap) iframeWrap.classList.add('c-editor-mobile');
+    } else {
+      if (btnDesktop) btnDesktop.classList.add('active');
+      if (btnMobile) btnMobile.classList.remove('active');
+      if (iframeWrap) iframeWrap.classList.remove('c-editor-mobile');
+    }
+  }
+
+  function loadEditorPreview() {
+    var iframe = $('#editor-iframe');
+    var loading = $('#editor-loading');
+    if (!iframe || !websiteData) return;
+
+    if (loading) loading.style.display = 'flex';
+    clearSelectedElement();
+
+    fetch('/api/preview/website?id=' + encodeURIComponent(websiteData.id))
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data.html) {
+          if (loading) loading.innerHTML = '<span style="color:var(--c-accent3);">No se pudo cargar la página.</span>';
+          return;
+        }
+        var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(data.html);
+        iframeDoc.close();
+
+        // Wait for content to render, then inject edit bridge
+        setTimeout(function () {
+          injectEditBridge(iframeDoc);
+          if (loading) loading.style.display = 'none';
+        }, 500);
+      })
+      .catch(function (err) {
+        console.error('Editor preview load error:', err);
+        if (loading) loading.innerHTML = '<span style="color:var(--c-accent3);">Error al cargar la página.</span>';
+      });
+  }
+
+  function injectEditBridge(iframeDoc) {
+    var script = iframeDoc.createElement('script');
+    script.textContent = [
+      '(function() {',
+      '  var selectedEl = null;',
+      '  var hoverEl = null;',
+      '',
+      '  // Highlight on hover',
+      '  document.addEventListener("mouseover", function(e) {',
+      '    if (e.target === document.body || e.target === document.documentElement) return;',
+      '    if (hoverEl && hoverEl !== selectedEl) {',
+      '      hoverEl.style.outline = "";',
+      '      hoverEl.style.outlineOffset = "";',
+      '    }',
+      '    hoverEl = e.target;',
+      '    if (hoverEl !== selectedEl) {',
+      '      hoverEl.style.outline = "2px dashed rgba(108, 92, 231, 0.6)";',
+      '      hoverEl.style.outlineOffset = "2px";',
+      '    }',
+      '  }, true);',
+      '',
+      '  document.addEventListener("mouseout", function(e) {',
+      '    if (e.target !== selectedEl) {',
+      '      e.target.style.outline = "";',
+      '      e.target.style.outlineOffset = "";',
+      '    }',
+      '  }, true);',
+      '',
+      '  // Click to select',
+      '  document.addEventListener("click", function(e) {',
+      '    e.preventDefault();',
+      '    e.stopPropagation();',
+      '    var el = e.target;',
+      '    if (el === document.body || el === document.documentElement) return;',
+      '',
+      '    // Clear previous selection',
+      '    if (selectedEl) {',
+      '      selectedEl.style.outline = "";',
+      '      selectedEl.style.outlineOffset = "";',
+      '    }',
+      '',
+      '    selectedEl = el;',
+      '    selectedEl.style.outline = "2px solid #6C5CE7";',
+      '    selectedEl.style.outlineOffset = "2px";',
+      '',
+      '    var rect = el.getBoundingClientRect();',
+      '    window.parent.postMessage({',
+      '      type: "element-selected",',
+      '      tagName: el.tagName,',
+      '      text: el.textContent ? el.textContent.substring(0, 300) : "",',
+      '      src: el.src || el.getAttribute("src") || "",',
+      '      href: el.href || "",',
+      '      className: el.className || "",',
+      '      elId: el.id || "",',
+      '      selector: buildSelector(el),',
+      '      rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },',
+      '      iframeScrollY: window.scrollY || 0,',
+      '      elementType: classifyElement(el)',
+      '    }, "*");',
+      '  }, true);',
+      '',
+      '  function buildSelector(el) {',
+      '    if (el.id) return "#" + el.id;',
+      '    if (el.dataset && el.dataset.section) return "[data-section=\\"" + el.dataset.section + "\\"]";',
+      '    var path = [];',
+      '    var current = el;',
+      '    while (current && current.nodeType === 1 && current !== document.documentElement) {',
+      '      var tag = current.tagName.toLowerCase();',
+      '      if (current.id) { path.unshift("#" + current.id); break; }',
+      '      var idx = 1;',
+      '      var sib = current.previousElementSibling;',
+      '      while (sib) { if (sib.tagName === current.tagName) idx++; sib = sib.previousElementSibling; }',
+      '      path.unshift(tag + ":nth-of-type(" + idx + ")");',
+      '      current = current.parentElement;',
+      '    }',
+      '    return path.join(" > ");',
+      '  }',
+      '',
+      '  function classifyElement(el) {',
+      '    var tag = el.tagName.toLowerCase();',
+      '    if (tag === "img") return "image";',
+      '    if (tag === "a" || tag === "button") return "button";',
+      '    if (["h1","h2","h3","h4","h5","h6"].indexOf(tag) >= 0) return "heading";',
+      '    if (tag === "p" || tag === "span" || tag === "li") return "text";',
+      '    if (tag === "section" || tag === "div" || tag === "header" || tag === "footer" || tag === "nav") return "section";',
+      '    return "element";',
+      '  }',
+      '})();',
+    ].join('\n');
+    iframeDoc.body.appendChild(script);
+
+    // Also inject a style to change cursor
+    var style = iframeDoc.createElement('style');
+    style.textContent = '* { cursor: crosshair !important; } a, button { pointer-events: auto !important; }';
+    iframeDoc.head.appendChild(style);
+  }
+
+  function handleElementSelected(data) {
+    selectedElement = data;
+
+    // Show pin marker on iframe
+    showEditorPin(data);
+
+    // Show element info card
+    var pinInfo = $('#editor-pin-info');
+    var pinDetails = $('#editor-pin-details');
+    if (pinInfo) pinInfo.style.display = '';
+
+    if (pinDetails) {
+      var typeLabels = {
+        heading: 'Título', text: 'Texto', image: 'Imagen',
+        button: 'Botón', section: 'Sección', element: 'Elemento'
+      };
+      var typeLabel = typeLabels[data.elementType] || 'Elemento';
+      var contentPreview = '';
+
+      if (data.elementType === 'image' && data.src) {
+        contentPreview = '<img src="' + escapeHtml(data.src) + '" style="max-width:100%;max-height:60px;border-radius:6px;margin-top:6px;" alt="preview">';
+      } else if (data.text) {
+        contentPreview = '<div class="c-pin-content">' + escapeHtml(data.text.substring(0, 150)) + '</div>';
+      }
+
+      pinDetails.innerHTML =
+        '<div class="c-pin-type">' + escapeHtml(data.tagName) + ' — ' + typeLabel + '</div>' +
+        contentPreview;
+    }
+
+    // Focus chat input
+    var chatInput = $('#editor-chat-input');
+    if (chatInput) chatInput.focus();
+  }
+
+  function showEditorPin(data) {
+    var pin = $('#editor-pin');
+    var iframeWrap = $('#editor-iframe-wrap');
+    if (!pin || !iframeWrap || !data.rect) return;
+
+    var iframe = $('#editor-iframe');
+    if (!iframe) return;
+
+    var iframeRect = iframe.getBoundingClientRect();
+    var wrapRect = iframeWrap.getBoundingClientRect();
+
+    // Position pin relative to iframe wrapper
+    var pinLeft = (data.rect.left + data.rect.width / 2);
+    var pinTop = (data.rect.top + data.rect.height / 2) - (data.iframeScrollY || 0);
+
+    // Clamp to iframe bounds
+    pinLeft = Math.max(10, Math.min(pinLeft, iframeRect.width - 10));
+    pinTop = Math.max(10, Math.min(pinTop, iframeRect.height - 10));
+
+    pin.style.left = pinLeft + 'px';
+    pin.style.top = pinTop + 'px';
+    pin.style.display = '';
+  }
+
+  function clearSelectedElement() {
+    selectedElement = null;
+    var pin = $('#editor-pin');
+    if (pin) pin.style.display = 'none';
+    var pinInfo = $('#editor-pin-info');
+    if (pinInfo) pinInfo.style.display = 'none';
+  }
+
+  // ── AI Chat ──
+  function appendChatMessage(role, content, isHtml) {
+    var container = $('#editor-chat-messages');
+    if (!container) return;
+
+    var div = document.createElement('div');
+    div.className = 'c-chat-message c-chat-message--' + role;
+
+    var avatar = document.createElement('div');
+    avatar.className = 'c-chat-avatar';
+    avatar.textContent = role === 'ai' ? '🤖' : '👤';
+
+    var bubble = document.createElement('div');
+    bubble.className = 'c-chat-bubble';
+    if (isHtml) {
+      bubble.innerHTML = content;
+    } else {
+      bubble.textContent = content;
+    }
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+
+    return bubble;
+  }
+
+  function showTypingIndicator() {
+    var container = $('#editor-chat-messages');
+    if (!container) return null;
+
+    var div = document.createElement('div');
+    div.className = 'c-chat-message c-chat-message--ai';
+    div.id = 'chat-typing';
+
+    var avatar = document.createElement('div');
+    avatar.className = 'c-chat-avatar';
+    avatar.textContent = '🤖';
+
+    var bubble = document.createElement('div');
+    bubble.className = 'c-chat-bubble c-chat-typing';
+    bubble.innerHTML = '<div class="c-chat-typing-dot"></div><div class="c-chat-typing-dot"></div><div class="c-chat-typing-dot"></div>';
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+
+    return div;
+  }
+
+  function removeTypingIndicator() {
+    var typing = $('#chat-typing');
+    if (typing && typing.parentNode) {
+      typing.parentNode.removeChild(typing);
+    }
+  }
+
+  function sendChatMessage(text) {
+    chatMessages.push({ role: 'user', content: text });
+    appendChatMessage('user', text);
+    chatStreaming = true;
+
+    var btnSend = $('#btn-chat-send');
+    if (btnSend) btnSend.disabled = true;
+
+    var typingEl = showTypingIndicator();
+
+    var body = {
+      messages: chatMessages,
+      elementContext: selectedElement ? {
+        elementType: selectedElement.elementType,
+        selector: selectedElement.selector,
+        currentValue: selectedElement.text || selectedElement.src || '',
+        tagName: selectedElement.tagName
+      } : null,
+      businessName: businessData ? businessData.name : '',
+      websiteId: websiteData ? websiteData.id : null,
+    };
+
+    fetch('/api/ai/edit-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    .then(function (res) {
+      if (!res.ok) {
+        throw new Error('Error del servidor: ' + res.status);
+      }
+      return parseSSEStream(res);
+    })
+    .catch(function (err) {
+      console.error('Chat send error:', err);
+      removeTypingIndicator();
+      appendChatMessage('ai', 'Lo siento, hubo un error. Intenta de nuevo.');
+      chatStreaming = false;
+      if (btnSend) btnSend.disabled = false;
+    });
+  }
+
+  function parseSSEStream(response) {
+    var reader = response.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+    var assistantText = '';
+    var toolUseData = null;
+    var toolInputBuffer = '';
+    var inToolInput = false;
+    var bubble = null;
+    var btnSend = $('#btn-chat-send');
+
+    function processLine(line) {
+      if (!line.startsWith('data: ')) return;
+      var jsonStr = line.substring(6).trim();
+      if (jsonStr === '[DONE]') return;
+
+      try {
+        var event = JSON.parse(jsonStr);
+
+        if (event.type === 'content_block_start') {
+          if (event.content_block && event.content_block.type === 'tool_use') {
+            inToolInput = true;
+            toolUseData = {
+              name: event.content_block.name,
+              id: event.content_block.id,
+            };
+            toolInputBuffer = '';
+          } else if (event.content_block && event.content_block.type === 'text') {
+            // Starting text block — remove typing, create bubble
+            removeTypingIndicator();
+            bubble = appendChatMessage('ai', '');
+          }
+        }
+
+        if (event.type === 'content_block_delta') {
+          if (event.delta && event.delta.type === 'text_delta' && event.delta.text) {
+            assistantText += event.delta.text;
+            if (bubble) bubble.textContent = assistantText;
+            var container = $('#editor-chat-messages');
+            if (container) container.scrollTop = container.scrollHeight;
+          }
+          if (event.delta && event.delta.type === 'input_json_delta' && event.delta.partial_json) {
+            toolInputBuffer += event.delta.partial_json;
+          }
+        }
+
+        if (event.type === 'content_block_stop') {
+          if (inToolInput && toolUseData) {
+            inToolInput = false;
+            try {
+              var toolInput = JSON.parse(toolInputBuffer);
+              toolUseData.input = toolInput;
+              handleToolUse(toolUseData);
+            } catch (parseErr) {
+              console.error('Tool input parse error:', parseErr);
+            }
+            toolUseData = null;
+            toolInputBuffer = '';
+          }
+        }
+
+        if (event.type === 'message_stop') {
+          if (assistantText) {
+            chatMessages.push({ role: 'assistant', content: assistantText });
+          }
+          removeTypingIndicator();
+          chatStreaming = false;
+          if (btnSend) btnSend.disabled = false;
+        }
+      } catch (e) {
+        // Skip unparseable lines
+      }
+    }
+
+    function pump() {
+      return reader.read().then(function (result) {
+        if (result.done) {
+          // Process remaining buffer
+          if (buffer) {
+            buffer.split('\n').forEach(processLine);
+          }
+          removeTypingIndicator();
+          chatStreaming = false;
+          if (btnSend) btnSend.disabled = false;
+          return;
+        }
+
+        buffer += decoder.decode(result.value, { stream: true });
+        var lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep incomplete line in buffer
+
+        lines.forEach(processLine);
+        return pump();
+      });
+    }
+
+    return pump();
+  }
+
+  function handleToolUse(toolData) {
+    if (toolData.name === 'submit_edit_request' && toolData.input) {
+      pendingEditRequest = toolData.input;
+      showConfirmationCard(toolData.input);
+    }
+  }
+
+  function showConfirmationCard(data) {
+    var typeLabels = {
+      content_update: 'Actualizar contenido',
+      photo_update: 'Actualizar fotos',
+      contact_update: 'Actualizar contacto',
+      hours_update: 'Actualizar horario',
+      menu_update: 'Actualizar menú',
+      design_change: 'Cambio de diseño',
+      other: 'Otro',
+    };
+
+    var html = '<div class="c-editor-confirm-card">' +
+      '<div class="c-confirm-title">Confirmar solicitud</div>' +
+      '<div class="c-confirm-row"><span>Tipo:</span> <span>' + escapeHtml(typeLabels[data.request_type] || data.request_type) + '</span></div>' +
+      '<div class="c-confirm-row"><span>Cambio:</span> <span>' + escapeHtml(data.description || '') + '</span></div>' +
+      '<div class="c-confirm-row"><span>Prioridad:</span> <span>' + escapeHtml(data.priority || 'normal') + '</span></div>' +
+      '<div class="c-confirm-actions">' +
+        '<button type="button" class="c-btn c-btn-primary" id="btn-confirm-edit">Confirmar</button>' +
+        '<button type="button" class="c-btn c-btn-ghost" id="btn-cancel-edit">Cancelar</button>' +
+      '</div>' +
+    '</div>';
+
+    removeTypingIndicator();
+    var container = $('#editor-chat-messages');
+    if (!container) return;
+
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+
+    // Bind confirm/cancel
+    var btnConfirm = $('#btn-confirm-edit');
+    var btnCancel = $('#btn-cancel-edit');
+
+    if (btnConfirm) btnConfirm.addEventListener('click', function () {
+      confirmEditFromChat();
+    });
+    if (btnCancel) btnCancel.addEventListener('click', function () {
+      cancelEditFromChat();
+      div.parentNode.removeChild(div);
+      appendChatMessage('ai', 'Solicitud cancelada. ¿En qué más te puedo ayudar?');
+    });
+  }
+
+  function confirmEditFromChat() {
+    if (!pendingEditRequest || !customerData || !customerData.customers) {
+      showToast('Error: no se pudo enviar la solicitud.', 'error');
+      return;
+    }
+
+    var customer = customerData.customers;
+    var requestData = {
+      business_id: customer.business_id,
+      customer_id: customer.id,
+      website_id: websiteData ? websiteData.id : null,
+      request_type: pendingEditRequest.request_type || 'other',
+      description: pendingEditRequest.description || '',
+      priority: pendingEditRequest.priority || 'normal',
+      element_type: pendingEditRequest.element_type || (selectedElement ? selectedElement.elementType : null),
+      element_selector: pendingEditRequest.element_selector || (selectedElement ? selectedElement.selector : null),
+      current_value: pendingEditRequest.current_value || (selectedElement ? (selectedElement.text || selectedElement.src || '') : null),
+      ai_conversation: chatMessages.length > 0 ? chatMessages : null,
+    };
+
+    fetch('/api/edit-requests/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestData),
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (result) {
+      if (result.success) {
+        showToast('Solicitud enviada correctamente.', 'success');
+        appendChatMessage('ai', '¡Listo! Tu solicitud ha sido enviada. Nuestro equipo la revisará pronto. ¿Quieres hacer otro cambio?');
+        pendingEditRequest = null;
+        clearSelectedElement();
+      } else {
+        throw new Error(result.error || 'Error');
+      }
+    })
+    .catch(function (err) {
+      console.error('Confirm edit request error:', err);
+      showToast('Error al enviar la solicitud. Intenta de nuevo.', 'error');
+    });
+  }
+
+  function cancelEditFromChat() {
+    pendingEditRequest = null;
+  }
+
+  function resetChat() {
+    chatMessages = [];
+    selectedElement = null;
+    pendingEditRequest = null;
+    chatStreaming = false;
+
+    var container = $('#editor-chat-messages');
+    if (container) {
+      container.innerHTML = '';
+      appendChatMessage('ai', '¡Hola! Soy tu asistente de edición. Haz clic en cualquier elemento de tu página y dime qué cambio quieres hacer.');
+    }
+
+    clearSelectedElement();
+
+    var btnSend = $('#btn-chat-send');
+    if (btnSend) btnSend.disabled = false;
   }
 
   // ── Start ──

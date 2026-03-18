@@ -399,6 +399,47 @@
       regeneratingReport: 'Regenerating…',
       regeneratingPhotos: 'Regenerating…',
       openWebsite: 'Open Website',
+      // Edit Requests management
+      navEditRequests: 'Edit Requests',
+      erAllStatuses: 'All Statuses',
+      erAllPriorities: 'All Priorities',
+      erSearchPh: 'Search requests...',
+      erEmpty: 'No edit requests yet',
+      erBack: '← Back to list',
+      erDetailTitle: 'Edit Request',
+      erColDate: 'Date',
+      erColBusiness: 'Business',
+      erColType: 'Type',
+      erColDescription: 'Description',
+      erColPriority: 'Priority',
+      erColStatus: 'Status',
+      erColActions: 'Actions',
+      erStatusSubmitted: 'Submitted',
+      erStatusInReview: 'In Review',
+      erStatusInProgress: 'In Progress',
+      erStatusCompleted: 'Completed',
+      erStatusRejected: 'Rejected',
+      erPriorityLow: 'Low',
+      erPriorityNormal: 'Normal',
+      erPriorityHigh: 'High',
+      erPriorityUrgent: 'Urgent',
+      erTypeContent: 'Content Update',
+      erTypePhoto: 'Photo Update',
+      erTypeContact: 'Contact Update',
+      erTypeHours: 'Hours Update',
+      erTypeMenu: 'Menu Update',
+      erTypeDesign: 'Design Change',
+      erTypeOther: 'Other',
+      erView: 'View',
+      erUpdateStatus: 'Update Status',
+      erAdminNotes: 'Admin Notes',
+      erSaveNotes: 'Save Notes',
+      erRejectionReason: 'Rejection Reason',
+      erElementInfo: 'Element Info',
+      erAiConversation: 'AI Conversation',
+      erCustomer: 'Customer',
+      erStatsTotal: 'Total: {0}',
+      erStatsOpen: 'Open: {0}',
       // Team management
       navTeam: 'Team',
       teamEmail: 'Email',
@@ -872,6 +913,47 @@
       regeneratingReport: 'Regenerando…',
       regeneratingPhotos: 'Regenerando…',
       openWebsite: 'Abrir Página Web',
+      // Edit Requests management
+      navEditRequests: 'Solicitudes de Cambios',
+      erAllStatuses: 'Todos los estados',
+      erAllPriorities: 'Todas las prioridades',
+      erSearchPh: 'Buscar solicitudes...',
+      erEmpty: 'Aún no hay solicitudes de cambio',
+      erBack: '← Volver a la lista',
+      erDetailTitle: 'Solicitud de Cambio',
+      erColDate: 'Fecha',
+      erColBusiness: 'Negocio',
+      erColType: 'Tipo',
+      erColDescription: 'Descripción',
+      erColPriority: 'Prioridad',
+      erColStatus: 'Estado',
+      erColActions: 'Acciones',
+      erStatusSubmitted: 'Enviada',
+      erStatusInReview: 'En Revisión',
+      erStatusInProgress: 'En Progreso',
+      erStatusCompleted: 'Completada',
+      erStatusRejected: 'Rechazada',
+      erPriorityLow: 'Baja',
+      erPriorityNormal: 'Normal',
+      erPriorityHigh: 'Alta',
+      erPriorityUrgent: 'Urgente',
+      erTypeContent: 'Actualizar Contenido',
+      erTypePhoto: 'Actualizar Fotos',
+      erTypeContact: 'Actualizar Contacto',
+      erTypeHours: 'Actualizar Horario',
+      erTypeMenu: 'Actualizar Menú',
+      erTypeDesign: 'Cambio de Diseño',
+      erTypeOther: 'Otro',
+      erView: 'Ver',
+      erUpdateStatus: 'Actualizar Estado',
+      erAdminNotes: 'Notas del Admin',
+      erSaveNotes: 'Guardar Notas',
+      erRejectionReason: 'Motivo de Rechazo',
+      erElementInfo: 'Información del Elemento',
+      erAiConversation: 'Conversación con IA',
+      erCustomer: 'Cliente',
+      erStatsTotal: 'Total: {0}',
+      erStatsOpen: 'Abiertas: {0}',
       // Team management
       navTeam: 'Equipo',
       teamEmail: 'Correo',
@@ -1276,6 +1358,14 @@
         });
       }
     });
+    // Edit requests tab (hyphenated nav ID)
+    const navEditRequests = document.getElementById('nav-edit-requests');
+    if (navEditRequests) {
+      navEditRequests.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab('edit_requests');
+      });
+    }
 
     // Sync templates button
     const syncBtn = document.getElementById('btn-sync-templates');
@@ -3171,11 +3261,12 @@
       templates: ['templates-section'],
       products: ['products-section'],
       customers: ['customers-section'],
+      edit_requests: ['edit-requests-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -3187,11 +3278,11 @@
     });
 
     // Update nav active states
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -3203,6 +3294,7 @@
     if (tab === 'templates') loadTemplates();
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
+    if (tab === 'edit_requests') loadAdminEditRequests();
     if (tab === 'team') loadTeamEmployees();
   }
 
@@ -5011,6 +5103,347 @@
 
   const custStatusFilter = document.getElementById('customers-status-filter');
   if (custStatusFilter) custStatusFilter.addEventListener('change', applyCustomerFilters);
+
+  // ── Edit Requests ──
+
+  let adminEditRequestsData = [];
+  let adminEditRequestsFiltered = [];
+
+  async function loadAdminEditRequests() {
+    const statusFilter = document.getElementById('er-status-filter');
+    const priorityFilter = document.getElementById('er-priority-filter');
+
+    let url = '/api/edit-requests/list?limit=200';
+    if (statusFilter && statusFilter.value) url += '&status=' + encodeURIComponent(statusFilter.value);
+    if (priorityFilter && priorityFilter.value) url += '&priority=' + encodeURIComponent(priorityFilter.value);
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      adminEditRequestsData = data.editRequests || [];
+      applyAdminEditRequestFilters();
+    } catch (err) {
+      console.error('Load edit requests error:', err);
+      adminEditRequestsData = [];
+      applyAdminEditRequestFilters();
+    }
+  }
+
+  function applyAdminEditRequestFilters() {
+    const searchEl = document.getElementById('er-search');
+    const search = (searchEl ? searchEl.value : '').toLowerCase().trim();
+
+    adminEditRequestsFiltered = adminEditRequestsData.filter(r => {
+      if (search) {
+        const haystack = [
+          r.business_name || '',
+          r.customer_name || '',
+          r.customer_email || '',
+          r.description || '',
+          r.request_type || '',
+        ].join(' ').toLowerCase();
+        if (haystack.indexOf(search) === -1) return false;
+      }
+      return true;
+    });
+
+    renderAdminEditRequestsStats();
+    renderAdminEditRequestsList();
+  }
+
+  function renderAdminEditRequestsStats() {
+    const container = document.getElementById('er-stats');
+    if (!container) return;
+    const total = adminEditRequestsFiltered.length;
+    const open = adminEditRequestsFiltered.filter(r => r.status !== 'completed' && r.status !== 'rejected').length;
+    container.innerHTML = '<span>' + t('erStatsTotal', total) + '</span><span>' + t('erStatsOpen', open) + '</span>';
+  }
+
+  function getErStatusBadge(status) {
+    const map = {
+      submitted: 'badge-no-site',
+      in_review: 'badge-no-site',
+      in_progress: 'badge-no-site',
+      completed: 'badge-has-site',
+      rejected: 'badge-no-site',
+    };
+    return map[status] || 'badge-no-site';
+  }
+
+  function getErStatusLabel(status) {
+    const map = {
+      submitted: t('erStatusSubmitted'),
+      in_review: t('erStatusInReview'),
+      in_progress: t('erStatusInProgress'),
+      completed: t('erStatusCompleted'),
+      rejected: t('erStatusRejected'),
+    };
+    return map[status] || status;
+  }
+
+  function getErPriorityLabel(priority) {
+    const map = {
+      low: t('erPriorityLow'),
+      normal: t('erPriorityNormal'),
+      high: t('erPriorityHigh'),
+      urgent: t('erPriorityUrgent'),
+    };
+    return map[priority] || priority;
+  }
+
+  function getErTypeLabel(type) {
+    const map = {
+      content_update: t('erTypeContent'),
+      photo_update: t('erTypePhoto'),
+      contact_update: t('erTypeContact'),
+      hours_update: t('erTypeHours'),
+      menu_update: t('erTypeMenu'),
+      design_change: t('erTypeDesign'),
+      other: t('erTypeOther'),
+    };
+    return map[type] || type;
+  }
+
+  function renderAdminEditRequestsList() {
+    const tbody = document.getElementById('er-table-body');
+    if (!tbody) return;
+
+    if (!adminEditRequestsFiltered.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#8b8fa3;">' + t('erEmpty') + '</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = adminEditRequestsFiltered.map((r, idx) => {
+      const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : '—';
+      const desc = escapeHtml((r.description || '').substring(0, 80)) + (r.description && r.description.length > 80 ? '…' : '');
+      const priorityClass = r.priority === 'urgent' || r.priority === 'high' ? 'badge-no-site' : '';
+      const statusBadge = getErStatusBadge(r.status);
+      const hasAi = r.ai_conversation ? ' 🤖' : '';
+
+      return '<tr>' +
+        '<td>' + (idx + 1) + '</td>' +
+        '<td>' + dateStr + '</td>' +
+        '<td><strong>' + escapeHtml(r.business_name || '—') + '</strong></td>' +
+        '<td>' + getErTypeLabel(r.request_type) + hasAi + '</td>' +
+        '<td>' + desc + '</td>' +
+        '<td><span class="badge ' + priorityClass + '">' + getErPriorityLabel(r.priority) + '</span></td>' +
+        '<td><span class="badge ' + statusBadge + '">' + getErStatusLabel(r.status) + '</span></td>' +
+        '<td><button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent(\'view-edit-request\',{detail:\'' + r.id + '\'}))">' + t('erView') + '</button></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  async function openEditRequestDetail(requestId) {
+    const request = adminEditRequestsData.find(r => r.id === requestId);
+    if (!request) return;
+
+    const listCard = document.getElementById('er-list-card');
+    const detail = document.getElementById('er-detail');
+    if (listCard) listCard.style.display = 'none';
+    if (detail) detail.style.display = '';
+
+    const title = document.getElementById('er-detail-title');
+    if (title) title.textContent = getErTypeLabel(request.request_type) + ' — ' + (request.business_name || '');
+
+    const content = document.getElementById('er-detail-content');
+    if (!content) return;
+
+    const dateStr = request.created_at ? new Date(request.created_at).toLocaleDateString() : '—';
+
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">';
+
+    // Left column: Request info
+    html += '<div>';
+    html += '<h3 style="margin-bottom:12px;font-size:15px;font-weight:700;">' + t('erDetailTitle') + '</h3>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">';
+    html += '<div><span style="color:#8b8fa3;">' + t('erColDate') + ':</span> ' + dateStr + '</div>';
+    html += '<div><span style="color:#8b8fa3;">' + t('erColBusiness') + ':</span> ' + escapeHtml(request.business_name || '—') + '</div>';
+    html += '<div><span style="color:#8b8fa3;">' + t('erCustomer') + ':</span> ' + escapeHtml(request.customer_name || request.customer_email || '—') + '</div>';
+    html += '<div><span style="color:#8b8fa3;">' + t('erColType') + ':</span> ' + getErTypeLabel(request.request_type) + '</div>';
+    html += '<div><span style="color:#8b8fa3;">' + t('erColPriority') + ':</span> <span class="badge ' + (request.priority === 'urgent' || request.priority === 'high' ? 'badge-no-site' : '') + '">' + getErPriorityLabel(request.priority) + '</span></div>';
+    html += '<div><span style="color:#8b8fa3;">' + t('erColStatus') + ':</span> <span class="badge ' + getErStatusBadge(request.status) + '">' + getErStatusLabel(request.status) + '</span></div>';
+    html += '</div>';
+
+    // Description
+    html += '<div style="margin-top:16px;">';
+    html += '<h3 style="margin-bottom:8px;font-size:15px;font-weight:700;">' + t('erColDescription') + '</h3>';
+    html += '<div style="background:#252833;padding:14px;border-radius:8px;font-size:13px;line-height:1.6;white-space:pre-wrap;">' + escapeHtml(request.description || '—') + '</div>';
+    html += '</div>';
+
+    // Element info (if from visual editor)
+    if (request.element_type || request.element_selector) {
+      html += '<div style="margin-top:16px;">';
+      html += '<h3 style="margin-bottom:8px;font-size:15px;font-weight:700;">' + t('erElementInfo') + '</h3>';
+      html += '<div style="background:#252833;padding:14px;border-radius:8px;font-size:13px;">';
+      if (request.element_type) html += '<div><span style="color:#8b8fa3;">Type:</span> ' + escapeHtml(request.element_type) + '</div>';
+      if (request.element_selector) html += '<div style="margin-top:4px;"><span style="color:#8b8fa3;">Selector:</span> <code style="font-size:11px;background:#1a1d27;padding:2px 6px;border-radius:4px;">' + escapeHtml(request.element_selector) + '</code></div>';
+      if (request.current_value) html += '<div style="margin-top:4px;"><span style="color:#8b8fa3;">Current:</span> ' + escapeHtml((request.current_value || '').substring(0, 200)) + '</div>';
+      html += '</div>';
+      html += '</div>';
+    }
+
+    html += '</div>';
+
+    // Right column: Status management + notes
+    html += '<div>';
+
+    // Status update
+    html += '<h3 style="margin-bottom:12px;font-size:15px;font-weight:700;">' + t('erUpdateStatus') + '</h3>';
+    html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">';
+    html += '<select id="er-detail-status" class="input input-sort">';
+    ['submitted', 'in_review', 'in_progress', 'completed', 'rejected'].forEach(s => {
+      html += '<option value="' + s + '"' + (s === request.status ? ' selected' : '') + '>' + getErStatusLabel(s) + '</option>';
+    });
+    html += '</select>';
+    html += '<button class="btn btn-primary" id="btn-er-update-status">' + t('erUpdateStatus') + '</button>';
+    html += '</div>';
+
+    // Rejection reason (shown/hidden based on status)
+    html += '<div id="er-rejection-wrap" style="margin-bottom:16px;' + (request.status === 'rejected' ? '' : 'display:none;') + '">';
+    html += '<label style="font-size:13px;font-weight:600;color:#8b8fa3;margin-bottom:6px;display:block;">' + t('erRejectionReason') + '</label>';
+    html += '<textarea id="er-rejection-reason" class="input" rows="3" style="width:100%;resize:vertical;">' + escapeHtml(request.rejection_reason || '') + '</textarea>';
+    html += '</div>';
+
+    // Admin notes
+    html += '<h3 style="margin-bottom:8px;font-size:15px;font-weight:700;">' + t('erAdminNotes') + '</h3>';
+    html += '<textarea id="er-admin-notes" class="input" rows="4" style="width:100%;resize:vertical;margin-bottom:8px;">' + escapeHtml(request.admin_notes || '') + '</textarea>';
+    html += '<button class="btn btn-secondary" id="btn-er-save-notes">' + t('erSaveNotes') + '</button>';
+
+    html += '</div>';
+    html += '</div>';
+
+    // AI Conversation (if present)
+    if (request.ai_conversation && Array.isArray(request.ai_conversation) && request.ai_conversation.length > 0) {
+      html += '<div style="margin-top:24px;border-top:1px solid #2e3140;padding-top:20px;">';
+      html += '<h3 style="margin-bottom:12px;font-size:15px;font-weight:700;">🤖 ' + t('erAiConversation') + '</h3>';
+      html += '<div style="background:#252833;padding:16px;border-radius:8px;max-height:300px;overflow-y:auto;">';
+      request.ai_conversation.forEach(msg => {
+        const isUser = msg.role === 'user';
+        html += '<div style="margin-bottom:10px;padding:8px 12px;border-radius:8px;font-size:13px;line-height:1.5;' +
+          (isUser ? 'background:#6366f1;color:#fff;margin-left:40px;' : 'background:#1a1d27;color:#e8eaf0;margin-right:40px;') +
+          '">' + escapeHtml(msg.content || '') + '</div>';
+      });
+      html += '</div>';
+      html += '</div>';
+    }
+
+    content.innerHTML = html;
+
+    // Bind status update
+    const btnUpdateStatus = document.getElementById('btn-er-update-status');
+    const statusSelect = document.getElementById('er-detail-status');
+    const rejectionWrap = document.getElementById('er-rejection-wrap');
+
+    if (statusSelect) {
+      statusSelect.addEventListener('change', () => {
+        if (rejectionWrap) {
+          rejectionWrap.style.display = statusSelect.value === 'rejected' ? '' : 'none';
+        }
+      });
+    }
+
+    if (btnUpdateStatus) {
+      btnUpdateStatus.addEventListener('click', async () => {
+        const newStatus = statusSelect ? statusSelect.value : '';
+        const rejectionReason = (document.getElementById('er-rejection-reason') || {}).value || '';
+
+        if (!newStatus) return;
+
+        btnUpdateStatus.disabled = true;
+        btnUpdateStatus.textContent = '...';
+
+        try {
+          const res = await fetch('/api/edit-requests/update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              editRequestId: request.id,
+              status: newStatus,
+              rejection_reason: newStatus === 'rejected' ? rejectionReason : undefined,
+            }),
+          });
+
+          if (!res.ok) throw new Error('Update failed');
+
+          showToast(t('erUpdateStatus') + ' ✓', 'success');
+
+          // Update local data
+          request.status = newStatus;
+          if (newStatus === 'rejected') request.rejection_reason = rejectionReason;
+
+          // Refresh list
+          await loadAdminEditRequests();
+        } catch (err) {
+          console.error('Update edit request status error:', err);
+          showToast('Error updating status', 'error');
+        } finally {
+          btnUpdateStatus.disabled = false;
+          btnUpdateStatus.textContent = t('erUpdateStatus');
+        }
+      });
+    }
+
+    // Bind save notes
+    const btnSaveNotes = document.getElementById('btn-er-save-notes');
+    if (btnSaveNotes) {
+      btnSaveNotes.addEventListener('click', async () => {
+        const notes = (document.getElementById('er-admin-notes') || {}).value || '';
+        btnSaveNotes.disabled = true;
+        btnSaveNotes.textContent = '...';
+
+        try {
+          const supabaseUrl = supabaseClient.supabaseUrl;
+          const supabaseKey = supabaseClient.supabaseKey;
+
+          const res = await fetch(
+            supabaseUrl + '/rest/v1/edit_requests?id=eq.' + request.id,
+            {
+              method: 'PATCH',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': 'Bearer ' + supabaseKey,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal',
+              },
+              body: JSON.stringify({ admin_notes: notes }),
+            }
+          );
+
+          if (!res.ok) throw new Error('Save failed');
+          request.admin_notes = notes;
+          showToast(t('erSaveNotes') + ' ✓', 'success');
+        } catch (err) {
+          console.error('Save admin notes error:', err);
+          showToast('Error saving notes', 'error');
+        } finally {
+          btnSaveNotes.disabled = false;
+          btnSaveNotes.textContent = t('erSaveNotes');
+        }
+      });
+    }
+  }
+
+  function closeEditRequestDetail() {
+    const listCard = document.getElementById('er-list-card');
+    const detail = document.getElementById('er-detail');
+    if (listCard) listCard.style.display = '';
+    if (detail) detail.style.display = 'none';
+  }
+
+  // Edit request event listeners
+  document.addEventListener('view-edit-request', (e) => openEditRequestDetail(e.detail));
+
+  const btnBackEr = document.getElementById('btn-back-er');
+  if (btnBackEr) btnBackEr.addEventListener('click', closeEditRequestDetail);
+
+  const erStatusFilter = document.getElementById('er-status-filter');
+  if (erStatusFilter) erStatusFilter.addEventListener('change', loadAdminEditRequests);
+
+  const erPriorityFilter = document.getElementById('er-priority-filter');
+  if (erPriorityFilter) erPriorityFilter.addEventListener('change', loadAdminEditRequests);
+
+  const erSearch = document.getElementById('er-search');
+  if (erSearch) erSearch.addEventListener('input', applyAdminEditRequestFilters);
 
   // ── Email ──
 
