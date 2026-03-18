@@ -30,7 +30,7 @@
           <div class="header-actions">
             <nav class="header-nav">
               <a href="/employee" class="nav-tab" data-i18n="navSearch">Search</a>
-              <a href="#" class="nav-tab active" id="nav-saved" data-i18n="navSaved">Saved</a>
+              <a href="#" class="nav-tab active" id="nav-saved" data-i18n="navPipeline">Pipeline</a>
               <a href="#" class="nav-tab" id="nav-audiences" data-i18n="navAudiences">Audiences</a>
               <a href="#" class="nav-tab" id="nav-campaigns" data-i18n="navCampaigns">Campaigns</a>
               <a href="#" class="nav-tab" id="nav-messages" data-i18n="navMessages">Chats</a>
@@ -61,17 +61,27 @@
           <span class="admin-stat-label" data-i18n="statTotal">Total Businesses</span>
         </div>
         <div class="admin-stat-card">
-          <span class="admin-stat-value" id="stat-reviews">—</span>
-          <span class="admin-stat-label" data-i18n="statWithReviews">With Reviews</span>
+          <span class="admin-stat-value" id="stat-leads">—</span>
+          <span class="admin-stat-label" data-i18n="statLeads">Leads</span>
         </div>
         <div class="admin-stat-card">
-          <span class="admin-stat-value" id="stat-instagram">—</span>
-          <span class="admin-stat-label" data-i18n="statWithInstagram">With Instagram</span>
+          <span class="admin-stat-value" id="stat-active-customers">—</span>
+          <span class="admin-stat-label" data-i18n="statActiveCustomers">Active Customers</span>
         </div>
         <div class="admin-stat-card">
           <span class="admin-stat-value" id="stat-websites">—</span>
           <span class="admin-stat-label" data-i18n="statWithWebsites">With Websites</span>
         </div>
+      </section>
+
+      <!-- Pipeline Stage Pills -->
+      <section class="pipeline-pills" id="pipeline-pills">
+        <button class="pipeline-pill active" data-stage="all"><span data-i18n="pipelineAll">All</span> <span class="pill-count" id="pill-count-all">0</span></button>
+        <button class="pipeline-pill" data-stage="saved"><span data-i18n="pipelineSaved">Saved</span> <span class="pill-count" id="pill-count-saved">0</span></button>
+        <button class="pipeline-pill" data-stage="lead"><span data-i18n="pipelineLead">Leads</span> <span class="pill-count" id="pill-count-lead">0</span></button>
+        <button class="pipeline-pill" data-stage="demo"><span data-i18n="pipelineDemo">Demo</span> <span class="pill-count" id="pill-count-demo">0</span></button>
+        <button class="pipeline-pill" data-stage="active_customer"><span data-i18n="pipelineActive">Active</span> <span class="pill-count" id="pill-count-active">0</span></button>
+        <button class="pipeline-pill" data-stage="inactive_customer"><span data-i18n="pipelineInactive">Inactive</span> <span class="pill-count" id="pill-count-inactive">0</span></button>
       </section>
 
       <!-- Filters -->
@@ -191,6 +201,8 @@
                 <th class="col-name" data-i18n="thName">Business Name</th>
                 <th class="col-address" data-i18n="thLocation">Location</th>
                 <th data-i18n="thType">Type</th>
+                <th data-i18n="thStage">Stage</th>
+                <th data-i18n="thContact">Contact</th>
                 <th class="col-phone" data-i18n="thPhone">Phone</th>
                 <th class="col-rating" data-i18n="thRating">Rating</th>
                 <th class="col-reviews" data-i18n="thReviews">Reviews</th>
