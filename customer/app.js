@@ -485,11 +485,12 @@
   }
 
   async function loadWebsiteInfo(businessId) {
+    // Fetch any generated website (published or draft) — prefer published
     var result = await supabase
       .from('generated_websites')
       .select('*')
       .eq('business_id', businessId)
-      .eq('status', 'published')
+      .order('status', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
@@ -607,6 +608,8 @@
     var visitBtn = $('#website-visit-btn');
     var displayUrl = null;
 
+    var previewUrl = website ? '/ver/' + website.id : null;
+
     if (website && website.custom_domain && website.domain_status === 'verified') {
       displayUrl = 'https://' + website.custom_domain;
     } else if (website && website.published_url) {
@@ -616,6 +619,8 @@
     if (websiteUrlEl) {
       if (displayUrl) {
         websiteUrlEl.innerHTML = '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escapeHtml(displayUrl) + '</a>';
+      } else if (previewUrl) {
+        websiteUrlEl.innerHTML = 'Tu sitio web está en vista previa — <a href="' + escapeHtml(previewUrl) + '" target="_blank" rel="noopener" style="color:var(--c-primary);text-decoration:underline;">Ver demo</a>';
       } else {
         websiteUrlEl.textContent = 'Tu sitio web está en construcción';
       }
@@ -624,6 +629,8 @@
     if (websiteSubEl) {
       if (displayUrl) {
         websiteSubEl.textContent = 'Tu página web está activa y lista para recibir clientes.';
+      } else if (previewUrl) {
+        websiteSubEl.textContent = 'Tu página web está lista para revisar. Pronto será publicada.';
       } else {
         websiteSubEl.textContent = 'Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.';
       }
@@ -632,6 +639,9 @@
     if (visitBtn) {
       if (displayUrl) {
         visitBtn.href = displayUrl;
+        visitBtn.style.display = '';
+      } else if (previewUrl) {
+        visitBtn.href = previewUrl;
         visitBtn.style.display = '';
       } else {
         visitBtn.style.display = 'none';
