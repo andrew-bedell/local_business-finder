@@ -43,20 +43,20 @@
       <div class="c-auth-logo">
         <a href="/" class="c-brand">AhoraTengoPagina</a>
       </div>
-      <h1 class="c-auth-title">Iniciar Sesión</h1>
-      <p class="c-auth-subtitle">Ingresa a tu portal de cliente</p>
+      <h1 class="c-auth-title" data-i18n="login_title">Inicia sesión en tu panel</h1>
+      <p class="c-auth-subtitle" data-i18n="login_hint">Te enviaremos un enlace mágico — sin contraseña necesaria.</p>
 
       <form id="login-form" class="c-auth-form" novalidate>
         <div class="c-form-group">
-          <label for="login-email" class="c-label">Correo electrónico</label>
-          <input type="email" id="login-email" class="c-input" placeholder="tu@correo.com" autocomplete="email" required>
+          <label for="login-email" class="c-label" data-i18n="login_email_label">Tu correo electrónico</label>
+          <input type="email" id="login-email" class="c-input" placeholder="tu@email.com" data-i18n-placeholder="login_email_ph" autocomplete="email" required>
         </div>
         <div class="c-form-group">
           <label for="login-password" class="c-label">Contraseña</label>
           <input type="password" id="login-password" class="c-input" placeholder="Tu contraseña" autocomplete="current-password" required>
         </div>
-        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-login">
-          Iniciar Sesión
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-login" data-i18n="login_submit">
+          Enviar enlace de acceso
         </button>
       </form>
 
@@ -137,11 +137,11 @@
     <aside class="c-sidebar" id="sidebar">
       <div class="c-sidebar-logo">
         <div class="c-sidebar-logo-mark">Ahora<span>Tengo</span><br>Página</div>
-        <div class="c-sidebar-logo-sub">Panel de control</div>
+        <div class="c-sidebar-logo-sub" data-i18n="sidebar_sub">Panel de control</div>
       </div>
 
       <nav class="c-sidebar-nav">
-        <div class="c-sidebar-nav-label">Principal</div>
+        <div class="c-sidebar-nav-label" data-i18n="sidebar_label">Principal</div>
 
         <button class="c-nav-item active" data-section="dashboard">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -149,36 +149,40 @@
         </button>
         <button class="c-nav-item" data-section="business">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
-          <span>Mi Negocio</span>
+          <span data-i18n="nav_business">Mi Negocio</span>
         </button>
         <button class="c-nav-item" data-section="billing">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-          <span>Facturación</span>
+          <span data-i18n="nav_billing">Facturación</span>
         </button>
         <button class="c-nav-item" data-section="requests">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-          <span>Solicitudes</span>
+          <span data-i18n="nav_requests">Solicitudes</span>
         </button>
         <button class="c-nav-item" data-section="editor">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-          <span>Editor Visual</span>
+          <span data-i18n="nav_editor">Editor Visual</span>
         </button>
         <button class="c-nav-item" data-section="team">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          <span>Equipo</span>
+          <span data-i18n="nav_team">Equipo</span>
         </button>
         <button class="c-nav-item" data-section="account">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          <span>Mi Cuenta</span>
+          <span data-i18n="nav_account">Mi Cuenta</span>
         </button>
       </nav>
+
+      <div class="c-sidebar-lang">
+        <button type="button" class="c-lang-btn" id="c-lang-toggle">EN</button>
+      </div>
 
       <div class="c-sidebar-bottom">
         <div class="c-user-pill">
           <div class="c-avatar" id="user-avatar">—</div>
           <div class="c-user-info">
             <div class="c-user-name" id="business-name">Mi Negocio</div>
-            <button type="button" class="c-logout-link" id="btn-logout">Cerrar sesión</button>
+            <button type="button" class="c-logout-link" id="btn-logout" data-i18n="nav_logout">Cerrar sesión</button>
           </div>
         </div>
       </div>
@@ -209,7 +213,7 @@
       <!-- ── Section: Dashboard Overview ── -->
       <div id="section-dashboard" class="c-section active" data-section="dashboard">
         <div class="c-topbar">
-          <div class="c-page-title">Tu <span>Dashboard</span></div>
+          <div class="c-page-title" data-i18n-html="dash_title">Tu <span>Dashboard</span></div>
           <div class="c-topbar-actions">
             <div class="c-badge-status">
               <span class="c-status-dot"></span>
@@ -220,17 +224,17 @@
 
         <!-- Hero Card -->
         <div class="c-hero-card">
-          <div class="c-hero-eyebrow">Tu Página Web</div>
+          <div class="c-hero-eyebrow" data-i18n="hero_eyebrow">Tu Página Web</div>
           <div class="c-hero-title" id="website-url">Tu sitio web está en construcción</div>
           <div class="c-hero-sub" id="website-sub">Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.</div>
           <div class="c-hero-actions">
             <a href="#" class="c-btn c-btn-white" id="website-visit-btn" target="_blank" rel="noopener" style="display:none;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
-              Visitar mi sitio
+              <span data-i18n="hero_visit">Visitar mi sitio</span>
             </a>
             <a href="#" class="c-btn c-btn-ghost" data-section="editor">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-              Personalizar
+              <span data-i18n="hero_customize">Personalizar</span>
             </a>
           </div>
         </div>
@@ -298,27 +302,27 @@
         <div class="c-stats-grid">
           <div class="c-stat-card c-stat-visits">
             <div class="c-stat-icon">👁️</div>
-            <div class="c-stat-label">Visitas este mes</div>
+            <div class="c-stat-label" data-i18n="stat_visits">Visitas este mes</div>
             <div class="c-stat-value" id="stat-visitors">—</div>
-            <div class="c-stat-note">Disponible al publicar</div>
+            <div class="c-stat-note" data-i18n="stat_visits_sub">Disponible al publicar</div>
           </div>
           <div class="c-stat-card c-stat-requests">
             <div class="c-stat-icon">💬</div>
-            <div class="c-stat-label">Solicitudes abiertas</div>
+            <div class="c-stat-label" data-i18n="stat_requests">Solicitudes abiertas</div>
             <div class="c-stat-value" id="stat-requests" style="color: var(--c-accent2)">0</div>
-            <div class="c-stat-note">Sin solicitudes aún</div>
+            <div class="c-stat-note" data-i18n="stat_requests_sub">Sin solicitudes aún</div>
           </div>
           <div class="c-stat-card c-stat-status">
             <div class="c-stat-icon">⚡</div>
-            <div class="c-stat-label">Próximo cobro</div>
+            <div class="c-stat-label" data-i18n="stat_billing">Próximo cobro</div>
             <div class="c-stat-value" id="next-billing">—</div>
-            <div class="c-stat-note">Sin plan activo</div>
+            <div class="c-stat-note" data-i18n="stat_billing_sub">Sin plan activo</div>
           </div>
           <div class="c-stat-card c-stat-billing">
             <div class="c-stat-icon">💳</div>
-            <div class="c-stat-label">Tu plan</div>
+            <div class="c-stat-label" data-i18n="stat_plan">Tu plan</div>
             <div class="c-stat-value" id="plan-price">—</div>
-            <div class="c-stat-note" id="plan-name">—</div>
+            <div class="c-stat-note" id="plan-name" data-i18n="stat_plan_sub">—</div>
           </div>
         </div>
 
@@ -327,51 +331,51 @@
           <!-- Recent Requests -->
           <div class="c-panel">
             <div class="c-panel-header">
-              <div class="c-panel-title">Solicitudes Recientes</div>
-              <button type="button" class="c-panel-link" data-section="requests" id="dash-view-all-requests">Ver todas →</button>
+              <div class="c-panel-title" data-i18n="dash_recent">Solicitudes Recientes</div>
+              <button type="button" class="c-panel-link" data-section="requests" id="dash-view-all-requests" data-i18n="dash_view_all">Ver todas →</button>
             </div>
             <div id="dash-recent-requests" class="c-empty-state">
               <div class="c-empty-icon">📭</div>
-              <div class="c-empty-title">Sin solicitudes todavía</div>
-              <div class="c-empty-sub">Cuando necesites cambios en tu página, aparecerán aquí.</div>
+              <div class="c-empty-title" data-i18n="dash_no_requests">Sin solicitudes todavía</div>
+              <div class="c-empty-sub" data-i18n="dash_no_requests_sub">Cuando necesites cambios en tu página, aparecerán aquí.</div>
             </div>
           </div>
 
           <!-- Quick Actions -->
           <div class="c-panel">
             <div class="c-panel-header">
-              <div class="c-panel-title">Acciones Rápidas</div>
+              <div class="c-panel-title" data-i18n="dash_actions">Acciones Rápidas</div>
             </div>
             <div class="c-quick-actions">
               <a href="#" class="c-action-item" data-section="billing">
                 <div class="c-action-icon" style="background: rgba(108,92,231,0.15);">🌐</div>
                 <div class="c-action-text">
-                  <div class="c-action-name">Administrar suscripción</div>
-                  <div class="c-action-desc">Ver tu plan y facturación</div>
+                  <div class="c-action-name" data-i18n="action_subscription">Administrar suscripción</div>
+                  <div class="c-action-desc" data-i18n="action_subscription_sub">Ver tu plan y facturación</div>
                 </div>
                 <div class="c-action-arrow">›</div>
               </a>
               <a href="#" class="c-action-item" data-section="business">
                 <div class="c-action-icon" style="background: rgba(0,212,170,0.12);">🏪</div>
                 <div class="c-action-text">
-                  <div class="c-action-name">Completar mi negocio</div>
-                  <div class="c-action-desc">Agrega info y servicios</div>
+                  <div class="c-action-name" data-i18n="action_business">Completar mi negocio</div>
+                  <div class="c-action-desc" data-i18n="action_business_sub">Agrega info y servicios</div>
                 </div>
                 <div class="c-action-arrow">›</div>
               </a>
               <a href="#" class="c-action-item" data-section="requests">
                 <div class="c-action-icon" style="background: rgba(240,192,64,0.12);">📷</div>
                 <div class="c-action-text">
-                  <div class="c-action-name">Solicitar cambios</div>
-                  <div class="c-action-desc">Actualiza tu página web</div>
+                  <div class="c-action-name" data-i18n="action_changes">Solicitar cambios</div>
+                  <div class="c-action-desc" data-i18n="action_changes_sub">Actualiza tu página web</div>
                 </div>
                 <div class="c-action-arrow">›</div>
               </a>
               <a href="mailto:soporte@ahoratengopagina.com" class="c-action-item">
                 <div class="c-action-icon" style="background: rgba(255,107,107,0.12);">💬</div>
                 <div class="c-action-text">
-                  <div class="c-action-name">Contactar soporte</div>
-                  <div class="c-action-desc">Estamos aquí para ayudarte</div>
+                  <div class="c-action-name" data-i18n="action_support">Contactar soporte</div>
+                  <div class="c-action-desc" data-i18n="action_support_sub">Estamos aquí para ayudarte</div>
                 </div>
                 <div class="c-action-arrow">›</div>
               </a>
@@ -729,10 +733,10 @@
 
       <!-- ── Footer ── -->
       <footer class="c-footer">
-        <span>&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.</span>
+        <span>&copy; 2026 AhoraTengoPagina. <span data-i18n="footer_copy">Todos los derechos reservados.</span></span>
         <div class="c-footer-links">
-          <a href="/privacy-policy">Privacidad</a>
-          <a href="mailto:soporte@ahoratengopagina.com">Soporte</a>
+          <a href="/privacy-policy" data-i18n="footer_privacy">Privacidad</a>
+          <a href="mailto:soporte@ahoratengopagina.com" data-i18n="footer_support">Soporte</a>
         </div>
       </footer>
 

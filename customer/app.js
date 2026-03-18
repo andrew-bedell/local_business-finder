@@ -17,6 +17,154 @@
   let subscriptionData = null;
   let isRecoveryMode = false;
 
+  // ── i18n ──
+  var currentLang = localStorage.getItem('c_lang') || 'es';
+
+  var translations = {
+    es: {
+      // Sidebar
+      sidebar_sub: 'Panel de control',
+      sidebar_label: 'Principal',
+      nav_business: 'Mi Negocio',
+      nav_billing: 'Facturación',
+      nav_requests: 'Solicitudes',
+      nav_editor: 'Editor Visual',
+      nav_team: 'Equipo',
+      nav_account: 'Mi Cuenta',
+      nav_logout: 'Cerrar sesión',
+
+      // Dashboard
+      dash_title: 'Tu <span>Dashboard</span>',
+      hero_eyebrow: 'Tu Página Web',
+      hero_visit: 'Visitar mi sitio',
+      hero_customize: 'Personalizar',
+      stat_visits: 'Visitas este mes',
+      stat_visits_sub: 'Disponible al publicar',
+      stat_requests: 'Solicitudes abiertas',
+      stat_requests_sub: 'Sin solicitudes aún',
+      stat_billing: 'Próximo cobro',
+      stat_billing_sub: 'Sin plan activo',
+      stat_plan: 'Tu plan',
+      stat_plan_sub: 'Plan Mensual — AhoraTengoPagina',
+      dash_recent: 'Solicitudes Recientes',
+      dash_view_all: 'Ver todas →',
+      dash_no_requests: 'Sin solicitudes todavía',
+      dash_no_requests_sub: 'Cuando necesites cambios en tu página, aparecerán aquí.',
+      dash_actions: 'Acciones Rápidas',
+      action_subscription: 'Administrar suscripción',
+      action_subscription_sub: 'Ver tu plan y facturación',
+      action_business: 'Completar mi negocio',
+      action_business_sub: 'Agrega info y servicios',
+      action_changes: 'Solicitar cambios',
+      action_changes_sub: 'Actualiza tu página web',
+      action_support: 'Contactar soporte',
+      action_support_sub: 'Estamos aquí para ayudarte',
+
+      // Footer
+      footer_copy: 'Todos los derechos reservados.',
+      footer_privacy: 'Privacidad',
+      footer_support: 'Soporte',
+
+      // Login
+      login_title: 'Inicia sesión en tu panel',
+      login_email_label: 'Tu correo electrónico',
+      login_email_ph: 'tu@email.com',
+      login_submit: 'Enviar enlace de acceso',
+      login_hint: 'Te enviaremos un enlace mágico — sin contraseña necesaria.'
+    },
+    en: {
+      // Sidebar
+      sidebar_sub: 'Control Panel',
+      sidebar_label: 'Main',
+      nav_business: 'My Business',
+      nav_billing: 'Billing',
+      nav_requests: 'Requests',
+      nav_editor: 'Visual Editor',
+      nav_team: 'Team',
+      nav_account: 'My Account',
+      nav_logout: 'Sign out',
+
+      // Dashboard
+      dash_title: 'Your <span>Dashboard</span>',
+      hero_eyebrow: 'Your Website',
+      hero_visit: 'Visit my site',
+      hero_customize: 'Customize',
+      stat_visits: 'Visits this month',
+      stat_visits_sub: 'Available when published',
+      stat_requests: 'Open requests',
+      stat_requests_sub: 'No requests yet',
+      stat_billing: 'Next charge',
+      stat_billing_sub: 'No active plan',
+      stat_plan: 'Your plan',
+      stat_plan_sub: 'Monthly Plan — AhoraTengoPagina',
+      dash_recent: 'Recent Requests',
+      dash_view_all: 'View all →',
+      dash_no_requests: 'No requests yet',
+      dash_no_requests_sub: 'When you need changes to your page, they\'ll appear here.',
+      dash_actions: 'Quick Actions',
+      action_subscription: 'Manage subscription',
+      action_subscription_sub: 'View your plan and billing',
+      action_business: 'Complete my business',
+      action_business_sub: 'Add info and services',
+      action_changes: 'Request changes',
+      action_changes_sub: 'Update your website',
+      action_support: 'Contact support',
+      action_support_sub: 'We\'re here to help',
+
+      // Footer
+      footer_copy: 'All rights reserved.',
+      footer_privacy: 'Privacy',
+      footer_support: 'Support',
+
+      // Login
+      login_title: 'Sign in to your dashboard',
+      login_email_label: 'Your email address',
+      login_email_ph: 'you@email.com',
+      login_submit: 'Send access link',
+      login_hint: 'We\'ll send you a magic link — no password needed.'
+    }
+  };
+
+  function t(key) {
+    var lang = translations[currentLang] || translations.es;
+    return lang[key] || (translations.es[key] || key);
+  }
+
+  function applyLanguage() {
+    // Text content
+    var textEls = document.querySelectorAll('[data-i18n]');
+    textEls.forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (key) el.textContent = t(key);
+    });
+
+    // innerHTML (for elements with styled markup)
+    var htmlEls = document.querySelectorAll('[data-i18n-html]');
+    htmlEls.forEach(function (el) {
+      var key = el.getAttribute('data-i18n-html');
+      if (key) el.innerHTML = t(key);
+    });
+
+    // Placeholders
+    var phEls = document.querySelectorAll('[data-i18n-placeholder]');
+    phEls.forEach(function (el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      if (key) el.placeholder = t(key);
+    });
+
+    // Update toggle button text
+    var toggleBtn = $('#c-lang-toggle');
+    if (toggleBtn) {
+      toggleBtn.textContent = currentLang === 'es' ? 'EN' : 'ES';
+    }
+  }
+
+  function toggleLanguage() {
+    currentLang = currentLang === 'es' ? 'en' : 'es';
+    localStorage.setItem('c_lang', currentLang);
+    applyLanguage();
+  }
+
   // ── DOM refs ──
   const $ = function (sel) { return document.querySelector(sel); };
   const $$ = function (sel) { return document.querySelectorAll(sel); };
@@ -46,6 +194,9 @@
 
     // Set up event listeners
     bindEvents();
+
+    // Apply language (i18n)
+    applyLanguage();
 
     // Listen for auth state changes (handles OAuth redirects and token refresh)
     // Skip SIGNED_IN if dashboard is already loading (handleLogin handles its own load)
@@ -145,6 +296,14 @@
     if (btnLogout) {
       btnLogout.addEventListener('click', function () {
         handleLogout();
+      });
+    }
+
+    // Language toggle
+    var btnLangToggle = $('#c-lang-toggle');
+    if (btnLangToggle) {
+      btnLangToggle.addEventListener('click', function () {
+        toggleLanguage();
       });
     }
 
