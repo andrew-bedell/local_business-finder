@@ -1,11 +1,35 @@
 // Vercel serverless function: Resend inbound email webhook receiver
 // POST — email.received events from Resend
+// Signature verification requires raw body — use Vercel bodyParser config
+
+export const config = {
+  api: { bodyParser: false },
+};
 
 import { createHmac } from 'crypto';
+
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).send('Method not allowed');
+  }
+
+  // Read raw body for signature verification
+  const rawBody = await readRawBody(req);
+  let body;
+  try {
+    body = JSON.parse(rawBody);
+  } catch (e) {
+    console.error('Invalid JSON body:', e.message);
+    return res.status(400).send('Invalid JSON');
   }
 
   // Verify Resend webhook signature (svix)
@@ -20,7 +44,6 @@ export default async function handler(req, res) {
       return res.status(401).send('Missing signature headers');
     }
 
-    const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     const toSign = `${svixId}.${svixTimestamp}.${rawBody}`;
 
     // svix secret is base64-encoded after removing the "whsec_" prefix
@@ -53,7 +76,6 @@ export default async function handler(req, res) {
   };
 
   try {
-    const body = req.body;
     const eventType = body.type;
 
     if (eventType !== 'email.received') {
