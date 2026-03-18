@@ -365,9 +365,9 @@
       custColEmail: 'Email',
       custColPhone: 'Phone',
       custColPlan: 'Plan',
-      custColDemoUrl: 'Demo URL',
-      custColLiveUrl: 'Live URL',
-      custColPurchased: 'Purchased',
+      custColDemoUrl: 'Demo Website',
+      custColLiveUrl: 'Published URL',
+      custColPurchased: 'Domain Purchased',
       custColStatus: 'Status',
       custColSince: 'Since',
       custColActions: 'Actions',
@@ -883,9 +883,9 @@
       custColEmail: 'Correo',
       custColPhone: 'Teléfono',
       custColPlan: 'Plan',
-      custColDemoUrl: 'Demo URL',
-      custColLiveUrl: 'URL Final',
-      custColPurchased: 'Comprado',
+      custColDemoUrl: 'Demo Website',
+      custColLiveUrl: 'URL Publicada',
+      custColPurchased: 'Dominio Comprado',
       custColStatus: 'Estado',
       custColSince: 'Desde',
       custColActions: 'Acciones',
@@ -4790,20 +4790,21 @@
 
       // Website URLs from generated_websites via business
       const websites = (biz.generated_websites || []);
-      const websiteRecord = websites[0];
+      // Pick the website with actual content (config.html exists), fallback to first
+      const websiteRecord = websites.find(w => w.config && w.config.html) || websites[0] || null;
       const demoUrl = websiteRecord ? '/ver/' + websiteRecord.id : null;
-      const liveUrl = websiteRecord ? websiteRecord.published_url : null;
-      const hasPurchased = c.stripe_customer_id && sub && sub.stripe_subscription_id;
+      const publishedUrl = websiteRecord ? websiteRecord.published_url : null;
+      const hasDomain = !!(publishedUrl);
 
       const demoUrlHtml = demoUrl
         ? `<a href="${escapeHtml(demoUrl)}" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px">Preview</a>`
         : '<span style="color:var(--text-dim)">—</span>';
-      const liveUrlHtml = liveUrl
-        ? `<a href="${escapeHtml(liveUrl)}" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px">Live</a>`
+      const publishedUrlHtml = publishedUrl
+        ? `<a href="${escapeHtml(publishedUrl)}" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px">Live</a>`
         : '<span style="color:var(--text-dim)">—</span>';
-      const purchasedHtml = hasPurchased
+      const domainHtml = hasDomain
         ? '<span style="color:var(--success);font-size:16px">&#10003;</span>'
-        : '<span style="color:var(--text-dim)">—</span>';
+        : '<span style="color:var(--text-dim)">No</span>';
 
       return `<tr>
         <td>${idx + 1}</td>
@@ -4813,8 +4814,8 @@
         <td>${escapeHtml(biz.phone || '—')}</td>
         <td>${priceStr}</td>
         <td class="td-center">${demoUrlHtml}</td>
-        <td class="td-center">${liveUrlHtml}</td>
-        <td class="td-center">${purchasedHtml}</td>
+        <td class="td-center">${publishedUrlHtml}</td>
+        <td class="td-center">${domainHtml}</td>
         <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
         <td>${sinceDate}</td>
         <td><button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('view-customer',{detail:'${c.id}'}))">${t('custView')}</button></td>
