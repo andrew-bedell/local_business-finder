@@ -594,9 +594,12 @@ body.c-body a { text-decoration: none; color: inherit; }
   box-shadow: 0 8px 24px rgba(108,92,231,0.25);
 }
 
-.c-btn-white, .c-btn-white svg {
+.c-btn.c-btn-white,
+.c-btn.c-btn-white svg,
+a.c-btn-white {
   background: white;
   color: #0c1b33;
+  fill: #0c1b33;
 }
 .c-btn-white:hover {
   background: #f0f0ff;
