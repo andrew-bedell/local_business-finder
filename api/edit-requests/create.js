@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { business_id, customer_id, website_id, request_type, description, priority } = req.body || {};
+  const { business_id, customer_id, website_id, request_type, description, priority, element_type, element_selector, element_screenshot_url, current_value, ai_conversation } = req.body || {};
 
   if (!business_id || !customer_id || !request_type || !description) {
     return res.status(400).json({ error: 'Missing required fields: business_id, customer_id, request_type, description' });
@@ -51,6 +51,11 @@ export default async function handler(req, res) {
           description,
           priority: priority || 'normal',
           status: 'submitted',
+          element_type: element_type || null,
+          element_selector: element_selector || null,
+          element_screenshot_url: element_screenshot_url || null,
+          current_value: current_value || null,
+          ai_conversation: ai_conversation || null,
         }),
       }
     );
