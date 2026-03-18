@@ -979,3 +979,36 @@ CREATE INDEX IF NOT EXISTS idx_email_messages_created ON email_messages (created
 
 ALTER TABLE email_messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access" ON email_messages FOR ALL USING (true) WITH CHECK (true);
+
+-- ============================================================================
+-- 19. EMAIL_TEMPLATES — Editable email templates for transactional/marketing emails
+-- ============================================================================
+-- Stores email templates created via the drag-and-drop editor (GrapesJS).
+-- Templates with a trigger_key are used for automated transactional emails.
+-- Falls back to hardcoded templates in email-templates.js if no stored template exists.
+
+CREATE TABLE IF NOT EXISTS email_templates (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                    TEXT NOT NULL,
+  description             TEXT,
+  category                TEXT NOT NULL DEFAULT 'custom'
+                            CHECK (category IN ('transactional', 'marketing', 'custom')),
+  trigger_key             TEXT UNIQUE,              -- links to automation events (e.g. 'customer_welcome')
+  subject                 TEXT NOT NULL,
+  body_html               TEXT NOT NULL,
+  body_text               TEXT,
+  gjs_components          JSONB,                    -- GrapesJS editor state (components JSON)
+  gjs_styles              JSONB,                    -- GrapesJS editor state (styles JSON)
+  gjs_html                TEXT,                     -- GrapesJS raw HTML output
+  merge_tags              TEXT[],                   -- available merge tag names for this template
+  is_active               BOOLEAN DEFAULT TRUE,
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_templates_category ON email_templates (category);
+CREATE INDEX IF NOT EXISTS idx_email_templates_trigger_key ON email_templates (trigger_key);
+CREATE INDEX IF NOT EXISTS idx_email_templates_active ON email_templates (is_active);
+
+ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON email_templates FOR ALL USING (true) WITH CHECK (true);

@@ -2,7 +2,7 @@
 // Requires caller to be an admin employee (verified via JWT)
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { employeeInviteEmail } from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
     try {
       const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://ahoratengopagina.com';
       const inviteUrl = origin + '/employee/login';
-      const emailContent = employeeInviteEmail({ displayName: display_name || '', email, inviteUrl });
+      const emailContent = await getTemplateForTrigger('employee_invite', { displayName: display_name || '', email, inviteUrl });
       const emailResult = await sendEmail({ to: email, ...emailContent });
       if (!emailResult.success) {
         console.warn('SendGrid employee invite email failed (non-blocking):', emailResult.error);

@@ -2,7 +2,7 @@
 // POST — wraps edit_request insert with email notification to customer
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { editRequestReceivedEmail } from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
       const bizData = await bizRes.json();
 
       if (custs?.[0]?.email) {
-        const emailContent = editRequestReceivedEmail({
+        const emailContent = await getTemplateForTrigger('edit_request_received', {
           contactName: custs[0].contact_name || '',
           businessName: bizData?.[0]?.name || '',
           requestType: request_type,

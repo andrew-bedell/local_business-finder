@@ -2,7 +2,7 @@
 // PATCH — handles status transitions with customer email notifications
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { editRequestCompletedEmail, editRequestRejectedEmail } from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
 
           let emailContent;
           if (status === 'completed') {
-            emailContent = editRequestCompletedEmail({
+            emailContent = await getTemplateForTrigger('edit_request_completed', {
               contactName: custs[0].contact_name || '',
               businessName: bizData?.[0]?.name || '',
               requestType: editRequest.request_type,
@@ -116,7 +116,7 @@ export default async function handler(req, res) {
               portalUrl,
             });
           } else {
-            emailContent = editRequestRejectedEmail({
+            emailContent = await getTemplateForTrigger('edit_request_rejected', {
               contactName: custs[0].contact_name || '',
               businessName: bizData?.[0]?.name || '',
               requestType: editRequest.request_type,

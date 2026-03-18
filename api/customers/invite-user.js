@@ -2,7 +2,7 @@
 // POST — owner/manager invites a new team member to their business portal
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { customerTeamInviteEmail } from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -191,7 +191,7 @@ export default async function handler(req, res) {
 
       const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://ahoratengopagina.com';
       const inviteUrl = origin + '/mipagina';
-      const emailContent = customerTeamInviteEmail({ inviterName, businessName, email, inviteUrl });
+      const emailContent = await getTemplateForTrigger('customer_team_invite', { inviterName, businessName, email, inviteUrl });
       const emailResult = await sendEmail({ to: email, ...emailContent });
       if (!emailResult.success) {
         console.warn('SendGrid email failed (non-blocking):', emailResult.error);

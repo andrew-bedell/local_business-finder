@@ -2,11 +2,7 @@
 // POST — handles website lifecycle state changes
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import {
-  websitePublishedEmail,
-  websiteSuspendedEmail,
-  websiteReactivatedEmail,
-} from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -180,20 +176,20 @@ async function sendLifecycleEmail(action, business, website, supabaseUrl, supaba
   let emailContent;
 
   if (action === 'publish') {
-    emailContent = websitePublishedEmail({
+    emailContent = await getTemplateForTrigger('website_published', {
       contactName: customer.contact_name || '',
       businessName: business.name || '',
       publishedUrl: website.published_url || '',
       portalUrl,
     });
   } else if (action === 'suspend') {
-    emailContent = websiteSuspendedEmail({
+    emailContent = await getTemplateForTrigger('website_suspended', {
       contactName: customer.contact_name || '',
       businessName: business.name || '',
       portalUrl,
     });
   } else if (action === 'reactivate') {
-    emailContent = websiteReactivatedEmail({
+    emailContent = await getTemplateForTrigger('website_reactivated', {
       contactName: customer.contact_name || '',
       businessName: business.name || '',
       publishedUrl: website.published_url || '',

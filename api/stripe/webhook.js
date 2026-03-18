@@ -2,13 +2,7 @@
 // POST — receives Stripe webhook events and updates database
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import {
-  customerWelcomeEmail,
-  paymentConfirmationEmail,
-  paymentFailedEmail,
-  subscriptionCancelledEmail,
-  planChangeEmail,
-} from '../_lib/email-templates.js';
+import { getTemplateForTrigger } from '../_lib/email-templates.js';
 
 // Disable body parsing so we can verify the raw signature
 export const config = {
@@ -136,7 +130,7 @@ export default async function handler(req, res) {
 
               // Send branded welcome email (first payment only — check if auth user was just created)
               try {
-                const welcomeContent = customerWelcomeEmail({
+                const welcomeContent = await getTemplateForTrigger('customer_welcome', {
                   contactName: customer.contact_name || '',
                   businessName: businessName || '',
                   loginUrl: portalUrl,
@@ -148,7 +142,7 @@ export default async function handler(req, res) {
 
               // Send payment confirmation email (every successful invoice)
               try {
-                const paymentContent = paymentConfirmationEmail({
+                const paymentContent = await getTemplateForTrigger('payment_confirmed', {
                   contactName: customer.contact_name || '',
                   businessName: businessName || '',
                   amount: invoice.amount_paid,
@@ -186,7 +180,7 @@ export default async function handler(req, res) {
             if (customer?.email) {
               const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
               const portalUrl = 'https://ahoratengopagina.com/mipagina';
-              const failedContent = paymentFailedEmail({
+              const failedContent = await getTemplateForTrigger('payment_failed', {
                 contactName: customer.contact_name || '',
                 businessName: businessName || '',
                 amount: invoice.amount_due,
@@ -243,7 +237,7 @@ export default async function handler(req, res) {
               const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
               const currentPrice = sub.items?.data?.[0]?.price;
               const portalUrl = 'https://ahoratengopagina.com/mipagina';
-              const changeContent = planChangeEmail({
+              const changeContent = await getTemplateForTrigger('plan_changed', {
                 contactName: customer.contact_name || '',
                 businessName: businessName || '',
                 oldPlan: null,
@@ -300,7 +294,7 @@ export default async function handler(req, res) {
           if (customer?.email) {
             const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
             const portalUrl = 'https://ahoratengopagina.com/mipagina';
-            const cancelContent = subscriptionCancelledEmail({
+            const cancelContent = await getTemplateForTrigger('subscription_cancelled', {
               contactName: customer.contact_name || '',
               businessName: businessName || '',
               portalUrl,

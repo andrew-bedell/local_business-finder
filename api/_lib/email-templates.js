@@ -376,6 +376,77 @@ export function planChangeEmail({ contactName, businessName, oldPlan, newPlan, n
   };
 }
 
+// ── Merge Tag Rendering ──
+
+export function renderMergeTags(template, variables) {
+  let subject = template.subject || '';
+  let html = template.body_html || '';
+  let text = template.body_text || '';
+
+  for (const [key, value] of Object.entries(variables)) {
+    const tag = `{{${key}}}`;
+    const safeValue = String(value ?? '');
+    subject = subject.split(tag).join(safeValue);
+    html = html.split(tag).join(safeValue);
+    text = text.split(tag).join(safeValue);
+  }
+
+  return { subject, html, text };
+}
+
+// ── Dynamic Template Resolution ──
+// Fetches stored template from Supabase by trigger_key. Falls back to hardcoded.
+
+const HARDCODED_FALLBACKS = {
+  employee_invite: employeeInviteEmail,
+  customer_welcome: customerWelcomeEmail,
+  customer_team_invite: customerTeamInviteEmail,
+  website_published: websitePublishedEmail,
+  payment_confirmed: paymentConfirmationEmail,
+  payment_failed: paymentFailedEmail,
+  subscription_cancelled: subscriptionCancelledEmail,
+  website_suspended: websiteSuspendedEmail,
+  website_reactivated: websiteReactivatedEmail,
+  edit_request_received: editRequestReceivedEmail,
+  edit_request_completed: editRequestCompletedEmail,
+  edit_request_rejected: editRequestRejectedEmail,
+  plan_changed: planChangeEmail,
+};
+
+export async function getTemplateForTrigger(triggerKey, variables) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Try fetching stored template from Supabase
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const res = await fetch(
+        `${supabaseUrl}/rest/v1/email_templates?trigger_key=eq.${encodeURIComponent(triggerKey)}&is_active=eq.true&select=subject,body_html,body_text&limit=1`,
+        {
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return renderMergeTags(data[0], variables);
+      }
+    } catch (err) {
+      console.warn(`getTemplateForTrigger: Supabase fetch failed for ${triggerKey}, using fallback:`, err.message);
+    }
+  }
+
+  // Fall back to hardcoded template
+  const fallback = HARDCODED_FALLBACKS[triggerKey];
+  if (fallback) {
+    return fallback(variables);
+  }
+
+  throw new Error(`No template found for trigger: ${triggerKey}`);
+}
+
 // ── Helpers ──
 
 function formatCurrency(amount, currency) {
