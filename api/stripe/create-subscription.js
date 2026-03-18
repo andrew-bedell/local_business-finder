@@ -124,8 +124,9 @@ export default async function handler(req, res) {
     subParams.append('payment_settings[save_default_payment_method]', 'on_subscription');
     subParams.append('expand[]', 'latest_invoice.payment_intent');
 
-    // Enable card payments
+    // Enable card and Link payments
     subParams.append('payment_settings[payment_method_types][]', 'card');
+    subParams.append('payment_settings[payment_method_types][]', 'link');
 
     const stripeSubRes = await fetch('https://api.stripe.com/v1/subscriptions', {
       method: 'POST',
