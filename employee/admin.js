@@ -365,6 +365,9 @@
       custColEmail: 'Email',
       custColPhone: 'Phone',
       custColPlan: 'Plan',
+      custColDemoUrl: 'Demo URL',
+      custColLiveUrl: 'Live URL',
+      custColPurchased: 'Purchased',
       custColStatus: 'Status',
       custColSince: 'Since',
       custColActions: 'Actions',
@@ -880,6 +883,9 @@
       custColEmail: 'Correo',
       custColPhone: 'Teléfono',
       custColPlan: 'Plan',
+      custColDemoUrl: 'Demo URL',
+      custColLiveUrl: 'URL Final',
+      custColPurchased: 'Comprado',
       custColStatus: 'Estado',
       custColSince: 'Desde',
       custColActions: 'Acciones',
@@ -4687,7 +4693,7 @@
     try {
       const { data, error } = await supabaseClient
         .from('customers')
-        .select('*, businesses(name, phone, whatsapp, email, category, subcategory, address_full, rating, review_count, pipeline_status), subscriptions(id, status, stripe_subscription_id, stripe_price_id, current_period_start, current_period_end, cancel_at_period_end, created_at)')
+        .select('*, businesses(name, phone, whatsapp, email, category, subcategory, address_full, rating, review_count, pipeline_status, generated_websites(id, status, site_status, published_url, config)), subscriptions(id, status, stripe_subscription_id, stripe_price_id, current_period_start, current_period_end, cancel_at_period_end, created_at)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -4782,6 +4788,23 @@
 
       const sinceDate = c.created_at ? new Date(c.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
+      // Website URLs from generated_websites via business
+      const websites = (biz.generated_websites || []);
+      const websiteRecord = websites[0];
+      const demoUrl = websiteRecord ? '/ver/' + websiteRecord.id : null;
+      const liveUrl = websiteRecord ? websiteRecord.published_url : null;
+      const hasPurchased = c.stripe_customer_id && sub && sub.stripe_subscription_id;
+
+      const demoUrlHtml = demoUrl
+        ? `<a href="${escapeHtml(demoUrl)}" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px">Preview</a>`
+        : '<span style="color:var(--text-dim)">—</span>';
+      const liveUrlHtml = liveUrl
+        ? `<a href="${escapeHtml(liveUrl)}" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px">Live</a>`
+        : '<span style="color:var(--text-dim)">—</span>';
+      const purchasedHtml = hasPurchased
+        ? '<span style="color:var(--success);font-size:16px">&#10003;</span>'
+        : '<span style="color:var(--text-dim)">—</span>';
+
       return `<tr>
         <td>${idx + 1}</td>
         <td><strong>${escapeHtml(biz.name || '—')}</strong></td>
@@ -4789,6 +4812,9 @@
         <td>${escapeHtml(c.email || '—')}</td>
         <td>${escapeHtml(biz.phone || '—')}</td>
         <td>${priceStr}</td>
+        <td class="td-center">${demoUrlHtml}</td>
+        <td class="td-center">${liveUrlHtml}</td>
+        <td class="td-center">${purchasedHtml}</td>
         <td><span class="badge ${statusBadge}">${statusLabel}</span></td>
         <td>${sinceDate}</td>
         <td><button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('view-customer',{detail:'${c.id}'}))">${t('custView')}</button></td>
