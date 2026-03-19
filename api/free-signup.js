@@ -5,6 +5,7 @@
 import { sendEmail } from './_lib/sendgrid.js';
 import { getTemplateForTrigger } from './_lib/email-templates.js';
 import { matchOrCreateBusiness } from './_lib/match-business.js';
+import { enrichBusiness } from './_lib/enrich-business.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, address, productId } = req.body || {};
+  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, address, countryCode, productId } = req.body || {};
 
   // Require either businessId (employee flow) or businessName (marketing flow)
   if (!providedBusinessId && !businessName) {
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
   try {
     // Resolve businessId — use provided ID or match/create from businessName
     let businessId = providedBusinessId;
+    let googleData = null;
 
     if (!businessId && businessName) {
       const matchResult = await matchOrCreateBusiness({
@@ -54,10 +56,12 @@ export default async function handler(req, res) {
         contactName: customerName,
         contactWhatsapp: customerPhone,
         address: address || null,
+        countryCode: countryCode || null,
         supabaseUrl,
         supabaseKey,
       });
       businessId = matchResult.businessId;
+      googleData = matchResult.googleData;
     }
 
     // Duplicate customer guard: check if customer already exists for this business + email
@@ -191,7 +195,18 @@ export default async function handler(req, res) {
       }
     );
 
-    // 5. Send welcome email (non-blocking)
+    // 5. Trigger enrichment if we have a real place_id (non-blocking, fire-and-forget)
+    if (googleData?.place_id && !googleData.place_id.startsWith('marketing-')) {
+      enrichBusiness({
+        businessId,
+        placeId: googleData.place_id,
+        dataId: googleData.data_id || null,
+        supabaseUrl,
+        supabaseKey,
+      }).catch(err => console.warn('Enrichment error (non-blocking):', err.message));
+    }
+
+    // 6. Send welcome email (non-blocking)
     try {
       // Look up business name (use provided or fetch from DB)
       let resolvedBusinessName = businessName;

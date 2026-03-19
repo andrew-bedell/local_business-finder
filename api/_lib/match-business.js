@@ -1,7 +1,7 @@
 // Shared helper: match incoming signup data to an existing business, or create a new one.
 // Used by free-signup.js and stripe/create-subscription.js
 
-import { toE164, normalizePhone } from './phone-utils.js';
+import { toE164, normalizePhone, countryFromDialCode } from './phone-utils.js';
 export { normalizePhone };
 
 /**
@@ -14,6 +14,72 @@ function namesMatch(a, b) {
   const nb = normalize(b);
   // Exact match or one contains the other
   return na === nb || na.includes(nb) || nb.includes(na);
+}
+
+/**
+ * Parse address components from a SearchAPI address string.
+ * Addresses are inconsistent, so we extract what we can from comma-separated parts.
+ * Examples:
+ *   "Solares Residencial, 45019" → zip=45019
+ *   "Calle 60 #500, Centro, Mérida, Yucatán" → city=Mérida, state=Yucatán
+ *   "123 Main St, Austin, TX 78701" → city=Austin, state=TX, zip=78701
+ */
+function parseAddressComponents(addressStr) {
+  if (!addressStr) return {};
+  const parts = addressStr.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length === 0) return {};
+
+  const result = {};
+
+  // Check the last few parts for zip/state/city patterns
+  for (let i = parts.length - 1; i >= 0 && i >= parts.length - 3; i--) {
+    const part = parts[i];
+
+    // Pure zip code (4-6 digits)
+    if (!result.address_zip && /^\d{4,6}$/.test(part)) {
+      result.address_zip = part;
+      continue;
+    }
+
+    // US-style "TX 78701" or "Yucatán 97000"
+    const stateZipMatch = part.match(/^([A-Za-zÀ-ÿ.]+)\s+(\d{4,6})$/);
+    if (stateZipMatch && !result.address_state) {
+      result.address_state = stateZipMatch[1];
+      if (!result.address_zip) result.address_zip = stateZipMatch[2];
+      continue;
+    }
+
+    // Short state abbreviation or state name (no digits, not too long)
+    if (!result.address_state && !result.address_city && /^[A-Za-zÀ-ÿ\s.]{2,30}$/.test(part) && !/^\d/.test(part)) {
+      // If we haven't assigned state yet, this could be state (last non-zip part) or city
+      if (i === parts.length - 1 || (i === parts.length - 2 && result.address_zip)) {
+        result.address_state = part;
+      }
+      continue;
+    }
+  }
+
+  // City: the part just before state (if state was found)
+  if (result.address_state) {
+    const stateIdx = parts.findIndex(p => p.trim() === result.address_state);
+    if (stateIdx > 0) {
+      const candidate = parts[stateIdx - 1];
+      // Don't use street-like parts as city (containing #, numbers with letters)
+      if (/^[A-Za-zÀ-ÿ\s.'-]{2,40}$/.test(candidate)) {
+        result.address_city = candidate;
+      }
+    }
+  }
+
+  // If no state found but we have 3+ parts, try the last non-zip part as city
+  if (!result.address_city && !result.address_state && parts.length >= 2) {
+    const lastPart = result.address_zip ? parts[parts.length - 2] : parts[parts.length - 1];
+    if (lastPart && /^[A-Za-zÀ-ÿ\s.'-]{2,40}$/.test(lastPart)) {
+      result.address_city = lastPart;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -42,10 +108,17 @@ async function searchGoogleMaps({ businessName, address, searchApiKey }) {
     return null;
   }
 
+  // Parse address components from the address string
+  const addrComponents = parseAddressComponents(top.address);
+
   return {
     place_id: top.place_id || null,
+    data_id: top.data_id || null,
     name: top.title || businessName,
     address_full: top.address || null,
+    address_city: addrComponents.address_city || null,
+    address_state: addrComponents.address_state || null,
+    address_zip: addrComponents.address_zip || null,
     phone: top.phone || null,
     rating: top.rating || null,
     review_count: top.reviews || null,
@@ -54,6 +127,7 @@ async function searchGoogleMaps({ businessName, address, searchApiKey }) {
     latitude: top.gps_coordinates?.latitude || null,
     longitude: top.gps_coordinates?.longitude || null,
     hours: top.hours || null,
+    thumbnail: top.thumbnail || null,
   };
 }
 
@@ -68,11 +142,12 @@ async function searchGoogleMaps({ businessName, address, searchApiKey }) {
  * @param {string} [opts.contactName] - Person's name from form
  * @param {string} [opts.contactWhatsapp] - Person's WhatsApp from form
  * @param {string} [opts.address] - Business address for Google Places matching
+ * @param {string} [opts.countryCode] - Dialing code without + (e.g. "52") for country inference
  * @param {string} opts.supabaseUrl
  * @param {string} opts.supabaseKey
- * @returns {Promise<{ businessId: number, matched: boolean, business: object }>}
+ * @returns {Promise<{ businessId: number, matched: boolean, business: object, googleData: object|null }>}
  */
-export async function matchOrCreateBusiness({ businessName, email, phone, contactName, contactWhatsapp, address, supabaseUrl, supabaseKey }) {
+export async function matchOrCreateBusiness({ businessName, email, phone, contactName, contactWhatsapp, address, countryCode, supabaseUrl, supabaseKey }) {
   const headers = {
     'apikey': supabaseKey,
     'Authorization': `Bearer ${supabaseKey}`,
@@ -120,7 +195,7 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
           );
         }
 
-        return { businessId: match.id, matched: true, business: match };
+        return { businessId: match.id, matched: true, business: match, googleData };
       }
     }
   }
@@ -199,10 +274,13 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       );
     }
 
-    return { businessId: bestMatch.id, matched: true, business: bestMatch };
+    return { businessId: bestMatch.id, matched: true, business: bestMatch, googleData };
   }
 
   // ── Step 3: No match — create new business ──
+  // Resolve country from dial code
+  const addressCountry = countryCode ? countryFromDialCode(countryCode) : null;
+
   let bizPayload;
 
   if (googleData?.place_id) {
@@ -210,14 +288,20 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
     bizPayload = {
       place_id: googleData.place_id,
       name: googleData.name || businessName,
-      address_full: googleData.address_full || null,
+      address_full: googleData.address_full || address || null,
+      address_city: googleData.address_city || null,
+      address_state: googleData.address_state || null,
+      address_zip: googleData.address_zip || null,
+      address_country: addressCountry || null,
       phone: googleData.phone || null,
       rating: googleData.rating || null,
       review_count: googleData.review_count || null,
       types: googleData.types || null,
+      category: googleData.types?.[0] || null,
       maps_url: googleData.maps_url || null,
       latitude: googleData.latitude || null,
       longitude: googleData.longitude || null,
+      thumbnail: googleData.thumbnail || null,
       contact_name: contactName || null,
       contact_email: email || null,
       contact_phone: normalizedPhone || null,
@@ -225,11 +309,17 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       pipeline_status: 'saved',
     };
   } else {
-    // Synthetic business (no Google data available)
+    // Synthetic business (no Google data available) — still save form address + country
     const syntheticPlaceId = 'marketing-' + crypto.randomUUID();
+    const formAddrComponents = parseAddressComponents(address);
     bizPayload = {
       place_id: syntheticPlaceId,
       name: businessName,
+      address_full: address || null,
+      address_city: formAddrComponents.address_city || null,
+      address_state: formAddrComponents.address_state || null,
+      address_zip: formAddrComponents.address_zip || null,
+      address_country: addressCountry || null,
       contact_name: contactName || null,
       contact_email: email || null,
       contact_phone: normalizedPhone || null,
@@ -252,5 +342,5 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
   const bizRecords = await bizRes.json();
   const business = bizRecords[0];
 
-  return { businessId: business.id, matched: false, business };
+  return { businessId: business.id, matched: false, business, googleData };
 }

@@ -426,6 +426,7 @@
         customerEmail: customerEmail,
         customerPhone: whatsappNumber,
         address: businessAddress,
+        countryCode: countryCode,
       }),
     }).then(function(res) {
       if (res.ok || res.status === 409) {

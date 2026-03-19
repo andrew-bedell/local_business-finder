@@ -107,6 +107,21 @@ export function toE164(phone, opts = {}) {
 }
 
 /**
+ * Reverse lookup: dial code (without +) → ISO country code.
+ * For ambiguous codes (e.g. +1 → US/DO), returns the most common match.
+ */
+export function countryFromDialCode(dialCode) {
+  if (!dialCode) return null;
+  const code = String(dialCode).replace(/^\+/, '');
+  // Build reverse map (first match wins for duplicates like +1)
+  const reverseMap = {};
+  for (const [iso, dial] of Object.entries(COUNTRY_CODES)) {
+    if (!reverseMap[dial]) reverseMap[dial] = iso;
+  }
+  return reverseMap[code] || null;
+}
+
+/**
  * Legacy normalizePhone — strips formatting only (no country code logic).
  * Kept for backward compatibility in matching (where we compare raw values).
  */
