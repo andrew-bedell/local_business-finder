@@ -743,6 +743,7 @@ CREATE TABLE IF NOT EXISTS customers (
   monthly_price           DECIMAL(10, 2),             -- subscription price
   currency                TEXT DEFAULT 'USD',         -- USD, MXN, COP, etc.
   notes                   TEXT,                       -- operator notes
+  referral_source         TEXT,                       -- how the customer heard about us (collected via WhatsApp)
   created_at              TIMESTAMPTZ DEFAULT NOW(),
   last_updated_at         TIMESTAMPTZ DEFAULT NOW()
 );

@@ -21,7 +21,10 @@
       pipelineInactive: 'Inactive',
       pipelineSearchPlaceholder: 'Search by name, email, phone...',
       thStage: 'Stage',
-      thContact: 'Contact',
+      thCountry: 'Country',
+      thContact: 'Contact Name',
+      thContactWhatsapp: 'Contact WhatsApp',
+      thContactEmail: 'Contact Email',
       contactName: 'Contact Name',
       contactPhone: 'Contact Phone',
       contactEmail: 'Contact Email',
@@ -68,8 +71,8 @@
       thName: 'Business Name',
       thLocation: 'Location',
       thType: 'Type',
-      thPhone: 'Phone',
-      thEmail: 'Email',
+      thPhone: 'Business Phone',
+      thEmail: 'Business Email',
       thRating: 'Rating',
       thReviews: 'Reviews',
       thSocial: 'Social',
@@ -547,7 +550,10 @@
       pipelineInactive: 'Inactivos',
       pipelineSearchPlaceholder: 'Buscar por nombre, email, teléfono...',
       thStage: 'Etapa',
-      thContact: 'Contacto',
+      thCountry: 'País',
+      thContact: 'Nombre de Contacto',
+      thContactWhatsapp: 'WhatsApp de Contacto',
+      thContactEmail: 'Correo de Contacto',
       contactName: 'Nombre de Contacto',
       contactPhone: 'Teléfono de Contacto',
       contactEmail: 'Correo de Contacto',
@@ -594,8 +600,8 @@
       thName: 'Nombre',
       thLocation: 'Ubicación',
       thType: 'Tipo',
-      thPhone: 'Teléfono',
-      thEmail: 'Email',
+      thPhone: 'Tel. Negocio',
+      thEmail: 'Email Negocio',
       thRating: 'Calificación',
       thReviews: 'Reseñas',
       thSocial: 'Social',
@@ -1465,7 +1471,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -1592,7 +1598,7 @@
     if (search) {
       filtered = filtered.filter(b => {
         const haystack = [
-          b.name, b.phone, b.email, b.contact_name, b.contact_email, b.contact_phone, b.address_full, b.whatsapp
+          b.name, b.phone, b.email, b.contact_name, b.contact_email, b.contact_phone, b.contact_whatsapp, b.address_full, b.address_country, b.whatsapp
         ].filter(Boolean).join(' ').toLowerCase();
         return haystack.includes(search);
       });
@@ -1761,8 +1767,11 @@
         <td>${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center">${getStageBadgeHtml(b.pipeline_status)}</td>
+        <td>${b.address_country ? escapeHtml(b.address_country) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td>${b.contact_name ? escapeHtml(b.contact_name) : '<span style="color:var(--text-dim)">—</span>'}</td>
-        <td>${b.phone ? escapeHtml(b.phone) : '<span style="color:var(--text-dim)">N/A</span>'}</td>
+        <td>${b.contact_whatsapp ? escapeHtml(b.contact_whatsapp) : '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td>${b.contact_email ? escapeHtml(b.contact_email) : '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td>${b.phone ? escapeHtml(b.phone) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td>${b.email ? escapeHtml(b.email) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
