@@ -85,10 +85,16 @@
       thAiPhotos: 'AI Photos',
       thWebsite: 'Website',
       thWebsiteUrl: 'URL',
+      thEnrich: 'Enrich',
       thActions: 'Actions',
       viewBtn: 'View',
       badgeYes: 'Yes',
       badgeNo: '—',
+      btnEnrich: 'Enrich',
+      enriching: 'Enriching...',
+      enrichSuccess: 'Enrichment complete for {0}',
+      enrichError: 'Enrichment failed. Please try again.',
+      enrichNoPlaceId: 'No Google place ID — cannot enrich',
       btnReport: 'Report',
       btnPhotos: 'Generate Photos',
       generatingPhotos: 'Generating...',
@@ -618,10 +624,16 @@
       thAiPhotos: 'Fotos IA',
       thWebsite: 'Sitio Web',
       thWebsiteUrl: 'URL',
+      thEnrich: 'Enriquecer',
       thActions: 'Acciones',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
       badgeNo: '—',
+      btnEnrich: 'Enriquecer',
+      enriching: 'Enriqueciendo...',
+      enrichSuccess: 'Enriquecimiento completo para {0}',
+      enrichError: 'Error al enriquecer. Por favor intente de nuevo.',
+      enrichNoPlaceId: 'Sin Google place ID — no se puede enriquecer',
       btnReport: 'Informe',
       btnPhotos: 'Generar Fotos',
       generatingPhotos: 'Generando...',
@@ -1479,7 +1491,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="21" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -1771,8 +1783,8 @@
 
       return `<tr>
         <td class="td-center">${offset + i + 1}</td>
-        <td><strong>${escapeHtml(b.name)}</strong></td>
-        <td>${escapeHtml(extractCity(b.address_full))}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
+        <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
@@ -1790,6 +1802,7 @@
         <td class="td-center">${websiteUrlHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
+        <td class="td-center"><button class="btn btn-view btn-enrich" data-id="${b.id}">${b.description ? '\u2713' : t('btnEnrich')}</button></td>
         <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
       </tr>`;
     }).join('');
@@ -1838,6 +1851,15 @@
         navigator.clipboard.writeText(fullUrl).then(() => {
           showToast('URL copied', 'success');
         });
+      });
+    });
+
+    // Bind enrich buttons
+    resultsBody.querySelectorAll('.btn-enrich').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === businessId);
+        if (business) handleEnrich(business, btn);
       });
     });
 
@@ -1947,6 +1969,10 @@
     td.classList.remove('td-editing');
     if (field === 'pipeline_status') {
       td.innerHTML = getStageBadgeHtml(originalValue);
+    } else if (field === 'name') {
+      td.innerHTML = originalValue ? `<strong>${escapeHtml(originalValue)}</strong>` : '<span class="td-empty-placeholder">+</span>';
+    } else if (field === 'address_full') {
+      td.innerHTML = originalValue ? escapeHtml(extractCity(originalValue)) : '<span class="td-empty-placeholder">+</span>';
     } else {
       td.innerHTML = originalValue ? escapeHtml(originalValue) : '<span class="td-empty-placeholder">+</span>';
     }
@@ -1967,6 +1993,10 @@
     // Show the new value immediately (optimistic update)
     if (field === 'pipeline_status') {
       td.innerHTML = getStageBadgeHtml(newValue);
+    } else if (field === 'name') {
+      td.innerHTML = newValue ? `<strong>${escapeHtml(newValue)}</strong>` : '<span class="td-empty-placeholder">+</span>';
+    } else if (field === 'address_full') {
+      td.innerHTML = newValue ? escapeHtml(extractCity(newValue)) : '<span class="td-empty-placeholder">+</span>';
     } else {
       td.innerHTML = newValue ? escapeHtml(newValue) : '<span class="td-empty-placeholder">+</span>';
     }
@@ -2012,6 +2042,10 @@
       td.setAttribute('data-value', originalValue);
       if (field === 'pipeline_status') {
         td.innerHTML = getStageBadgeHtml(originalValue);
+      } else if (field === 'name') {
+        td.innerHTML = originalValue ? `<strong>${escapeHtml(originalValue)}</strong>` : '<span class="td-empty-placeholder">+</span>';
+      } else if (field === 'address_full') {
+        td.innerHTML = originalValue ? escapeHtml(extractCity(originalValue)) : '<span class="td-empty-placeholder">+</span>';
       } else {
         td.innerHTML = originalValue ? escapeHtml(originalValue) : '<span class="td-empty-placeholder">+</span>';
       }
@@ -2667,6 +2701,34 @@
         document.removeEventListener('keydown', handler);
       }
     });
+  }
+
+  async function handleEnrich(business, btn) {
+    const placeId = business.place_id;
+    if (!placeId || placeId.startsWith('marketing-')) {
+      showToast(t('enrichNoPlaceId'), 'error');
+      return;
+    }
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = t('enriching');
+    try {
+      const res = await fetch('/api/enrich/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId: business.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unknown error');
+      btn.textContent = '\u2713';
+      btn.disabled = false;
+      showToast(t('enrichSuccess', business.name), 'success');
+    } catch (err) {
+      console.error('Enrich failed:', err);
+      btn.textContent = origText;
+      btn.disabled = false;
+      showToast(t('enrichError'), 'error');
+    }
   }
 
   async function handleAdminTableReport(business, btn) {

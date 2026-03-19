@@ -175,13 +175,12 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
  * Step 3: Photos — fetch default photo set (skip if already enriched)
  */
 async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) {
-  // Guard: skip if photos already exist for this business
-  const existingRes = await fetch(
-    `${supabaseUrl}/rest/v1/business_photos?business_id=eq.${businessId}&select=id&limit=1`,
-    { headers }
+  // Delete existing google-source photos before inserting fresh ones (supports refresh)
+  await fetch(
+    `${supabaseUrl}/rest/v1/business_photos?business_id=eq.${businessId}&source=eq.google`,
+    { method: 'DELETE', headers: { ...headers, 'Prefer': 'return=minimal' } }
   );
-  const existing = existingRes.ok ? await existingRes.json() : [];
-  if (existing.length > 0) return;
+
   const params = new URLSearchParams({
     engine: 'google_maps_photos',
     data_id: dataId,
