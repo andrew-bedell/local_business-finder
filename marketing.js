@@ -107,6 +107,8 @@
       modal_whatsapp_ph: 'Ej: +52 999 123 4567',
       modal_email_label: 'Tu email',
       modal_email_ph: 'Ej: maria@gmail.com',
+      modal_address_label: 'Dirección de tu negocio',
+      modal_address_ph: 'Ej: Calle 60 #500, Centro, Mérida',
       modal_disclaimer: 'Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 72 horas.',
       modal_submit: 'Hablar con mi diseñador \u2192',
       modal_sending: 'Enviando...',
@@ -217,6 +219,8 @@
       modal_whatsapp_ph: 'E.g.: +52 999 123 4567',
       modal_email_label: 'Your email',
       modal_email_ph: 'E.g.: maria@gmail.com',
+      modal_address_label: 'Your business address',
+      modal_address_ph: 'E.g.: 123 Main St, Merida',
       modal_disclaimer: 'When you click, we\'ll contact you via WhatsApp. Tell us a bit about your business and your personal designer will have a page ready for you to review in 72 hours.',
       modal_submit: 'Talk to my designer \u2192',
       modal_sending: 'Sending...',
@@ -396,10 +400,11 @@
 
     var customerName = document.getElementById('lead-name').value.trim();
     var businessName = document.getElementById('lead-business').value.trim();
+    var businessAddress = document.getElementById('lead-address').value.trim();
     var whatsappNumber = document.getElementById('lead-whatsapp').value.trim();
     var customerEmail = document.getElementById('lead-email').value.trim();
 
-    if (!customerName || !businessName || !whatsappNumber || !customerEmail) return;
+    if (!customerName || !businessName || !businessAddress || !whatsappNumber || !customerEmail) return;
 
     formSubmitBtn.disabled = true;
     formSubmitBtn.textContent = t('modal_sending');
@@ -414,6 +419,7 @@
         customerName: customerName,
         customerEmail: customerEmail,
         customerPhone: whatsappNumber,
+        address: businessAddress,
       }),
     }).then(function(res) {
       if (res.ok || res.status === 409) {
@@ -426,6 +432,7 @@
             whatsapp_number: whatsappNumber,
             email: customerEmail,
             name: customerName,
+            address: businessAddress,
           }),
         }).catch(function(err) {
           console.warn('Lead capture error (non-blocking):', err);

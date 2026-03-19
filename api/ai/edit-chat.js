@@ -29,10 +29,14 @@ export default async function handler(req, res) {
 REGLAS IMPORTANTES:
 - Responde SIEMPRE en español
 - Sé amable, breve y claro
-- Cuando entiendas claramente qué quiere cambiar el cliente, usa la herramienta "submit_edit_request" para crear una solicitud estructurada
-- Si el pedido es vago, haz UNA pregunta de clarificación antes de enviar la solicitud
+- SIEMPRE haz al menos una pregunta de clarificación antes de usar la herramienta "submit_edit_request"
+- Si el usuario describe un cambio vago como "hazlo más bonito" o "cambia el texto", pregunta exactamente qué quiere
+- Para cambios de texto: confirma el nuevo texto exacto que quiere el cliente
+- Para cambios de imagen: pregunta qué tipo de imagen quieren y cómo debería verse
+- Para cambios de diseño: pregunta qué colores, fuentes o estilos prefieren
 - No hagas más de una pregunta a la vez
 - Mantén tus respuestas cortas (2-3 oraciones máximo)
+- Cuando tengas toda la información necesaria, resume lo que vas a hacer y usa la herramienta "submit_edit_request"
 - No ofrezcas opciones largas — sugiere la mejor acción directamente`;
 
   if (businessName) {

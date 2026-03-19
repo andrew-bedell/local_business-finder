@@ -1266,7 +1266,178 @@ a.c-btn-white {
 
 
 /* ============================================================================
-   21. VISUAL EDITOR
+   21. APPROVAL BANNER
+   ============================================================================ */
+.c-approval-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--c-radius-lg);
+  margin-bottom: 20px;
+  animation: c-fadeUp 0.4s ease both;
+}
+
+.c-approval-banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(108, 92, 231, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--c-accent);
+}
+
+.c-approval-banner-content {
+  flex: 1;
+}
+
+.c-approval-banner-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.c-approval-banner-desc {
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+
+/* ============================================================================
+   22. REVIEW SECTION
+   ============================================================================ */
+.c-review-info .c-panel {
+  margin-bottom: 20px;
+}
+
+.c-review-summary-label,
+.c-review-prompt-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 8px;
+}
+
+.c-review-summary {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--c-text);
+  margin-bottom: 20px;
+}
+
+.c-review-prompt {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.c-review-preview {
+  margin-bottom: 20px;
+}
+
+.c-review-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  padding: 4px;
+  width: fit-content;
+}
+
+.c-review-toggle .c-btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  border-radius: 6px;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.c-review-toggle .c-btn.active {
+  opacity: 1;
+  background: var(--c-accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.c-review-iframe-wrap {
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius-lg);
+  overflow: hidden;
+  background: #fff;
+  height: 500px;
+}
+
+.c-review-iframe-wrap iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.c-review-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.c-btn-lg {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.c-review-reject-form {
+  background: var(--c-surface);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--c-radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.c-review-reject-form .c-textarea {
+  margin-bottom: 12px;
+}
+
+.c-review-reject-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Review link in requests table */
+.c-btn-review-link {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-accent);
+  background: rgba(108, 92, 231, 0.15);
+  border: 1px solid rgba(108, 92, 231, 0.25);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.c-btn-review-link:hover {
+  background: rgba(108, 92, 231, 0.25);
+  color: #fff;
+}
+
+
+/* ============================================================================
+   23. VISUAL EDITOR
    ============================================================================ */
 .c-editor-layout {
   display: flex;
@@ -1592,6 +1763,24 @@ a.c-btn-white {
   .c-page-title { font-size: 22px; }
   .c-hero-card { padding: 28px 24px; }
   .c-hero-title { font-size: 22px; }
+
+  .c-approval-banner {
+    flex-wrap: wrap;
+  }
+  .c-approval-banner .c-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .c-review-actions {
+    flex-direction: column;
+  }
+  .c-review-actions .c-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .c-review-iframe-wrap {
+    height: 400px;
+  }
 
   .c-editor-layout {
     flex-direction: column;

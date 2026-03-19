@@ -75,8 +75,10 @@ CREATE TABLE IF NOT EXISTS businesses (
                             CHECK (pipeline_status IN (
                               'saved', 'lead', 'demo', 'active_customer', 'inactive_customer'
                             )),
+  contact_name            TEXT,                -- person's name from form submission
   contact_phone           TEXT,
   contact_email           TEXT,
+  contact_whatsapp        TEXT,                -- person's WhatsApp from form submission
   pipeline_status_changed_at TIMESTAMPTZ,
 
   -- Tracking
@@ -93,6 +95,7 @@ CREATE INDEX IF NOT EXISTS idx_businesses_city ON businesses (address_city);
 CREATE INDEX IF NOT EXISTS idx_businesses_status ON businesses (business_status);
 CREATE INDEX IF NOT EXISTS idx_businesses_completeness ON businesses (data_completeness_score);
 CREATE INDEX IF NOT EXISTS idx_businesses_slug ON businesses (slug) WHERE slug IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_businesses_place_id ON businesses (place_id) WHERE place_id IS NOT NULL;
 
 -- Composite: category + city search filter
 CREATE INDEX IF NOT EXISTS idx_businesses_category_city ON businesses (category, address_city);
@@ -468,6 +471,7 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   phone                   TEXT,
   email                   TEXT,
   city                    TEXT,
+  address                 TEXT,                -- full address for Google Places matching
   source                  TEXT DEFAULT 'website',
   status                  TEXT DEFAULT 'new'
                             CHECK (status IN ('new', 'contacted', 'qualified', 'converted', 'lost')),
@@ -817,10 +821,11 @@ CREATE TABLE IF NOT EXISTS edit_requests (
                             )),
   description             TEXT NOT NULL,
   status                  TEXT DEFAULT 'submitted'
-                            CHECK (status IN ('submitted', 'in_review', 'in_progress', 'completed', 'rejected')),
+                            CHECK (status IN ('submitted', 'processing', 'in_review', 'in_progress', 'ready_for_review', 'completed', 'rejected', 'customer_rejected')),
   priority                TEXT DEFAULT 'normal'
                             CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
   rejection_reason        TEXT,
+  ai_edit_summary         TEXT,                        -- AI-generated summary of what was changed in the HTML
   element_type            TEXT,                        -- visual editor: type of element (text, image, heading, button, section)
   element_selector        TEXT,                        -- visual editor: CSS selector path to the element
   element_screenshot_url  TEXT,                        -- visual editor: screenshot URL of the clicked element

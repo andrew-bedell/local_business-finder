@@ -69,6 +69,7 @@
       thLocation: 'Location',
       thType: 'Type',
       thPhone: 'Phone',
+      thEmail: 'Email',
       thRating: 'Rating',
       thReviews: 'Reviews',
       thSocial: 'Social',
@@ -419,10 +420,13 @@
       erColStatus: 'Status',
       erColActions: 'Actions',
       erStatusSubmitted: 'Submitted',
+      erStatusProcessing: 'Processing',
       erStatusInReview: 'In Review',
       erStatusInProgress: 'In Progress',
+      erStatusReadyForReview: 'Ready for Review',
       erStatusCompleted: 'Completed',
       erStatusRejected: 'Rejected',
+      erStatusCustomerRejected: 'Customer Rejected',
       erPriorityLow: 'Low',
       erPriorityNormal: 'Normal',
       erPriorityHigh: 'High',
@@ -591,6 +595,7 @@
       thLocation: 'Ubicación',
       thType: 'Tipo',
       thPhone: 'Teléfono',
+      thEmail: 'Email',
       thRating: 'Calificación',
       thReviews: 'Reseñas',
       thSocial: 'Social',
@@ -937,10 +942,13 @@
       erColStatus: 'Estado',
       erColActions: 'Acciones',
       erStatusSubmitted: 'Enviada',
+      erStatusProcessing: 'Procesando',
       erStatusInReview: 'En Revisión',
       erStatusInProgress: 'En Progreso',
+      erStatusReadyForReview: 'Listo para Revisar',
       erStatusCompleted: 'Completada',
       erStatusRejected: 'Rechazada',
+      erStatusCustomerRejected: 'Rechazado por Cliente',
       erPriorityLow: 'Baja',
       erPriorityNormal: 'Normal',
       erPriorityHigh: 'Alta',
@@ -1457,7 +1465,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="17" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -1755,6 +1763,7 @@
         <td class="td-center">${getStageBadgeHtml(b.pipeline_status)}</td>
         <td>${b.contact_name ? escapeHtml(b.contact_name) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td>${b.phone ? escapeHtml(b.phone) : '<span style="color:var(--text-dim)">N/A</span>'}</td>
+        <td>${b.email ? escapeHtml(b.email) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
         <td class="td-center">${socialCellHtml}</td>
@@ -5201,17 +5210,20 @@
     const container = document.getElementById('er-stats');
     if (!container) return;
     const total = adminEditRequestsFiltered.length;
-    const open = adminEditRequestsFiltered.filter(r => r.status !== 'completed' && r.status !== 'rejected').length;
+    const open = adminEditRequestsFiltered.filter(r => r.status !== 'completed' && r.status !== 'rejected' && r.status !== 'customer_rejected').length;
     container.innerHTML = '<span>' + t('erStatsTotal', total) + '</span><span>' + t('erStatsOpen', open) + '</span>';
   }
 
   function getErStatusBadge(status) {
     const map = {
       submitted: 'badge-no-site',
+      processing: 'badge-no-site',
       in_review: 'badge-no-site',
       in_progress: 'badge-no-site',
+      ready_for_review: 'badge-no-site',
       completed: 'badge-has-site',
       rejected: 'badge-no-site',
+      customer_rejected: 'badge-no-site',
     };
     return map[status] || 'badge-no-site';
   }
@@ -5219,10 +5231,13 @@
   function getErStatusLabel(status) {
     const map = {
       submitted: t('erStatusSubmitted'),
+      processing: t('erStatusProcessing'),
       in_review: t('erStatusInReview'),
       in_progress: t('erStatusInProgress'),
+      ready_for_review: t('erStatusReadyForReview'),
       completed: t('erStatusCompleted'),
       rejected: t('erStatusRejected'),
+      customer_rejected: t('erStatusCustomerRejected'),
     };
     return map[status] || status;
   }
@@ -5316,6 +5331,14 @@
     html += '<div style="background:#252833;padding:14px;border-radius:8px;font-size:13px;line-height:1.6;white-space:pre-wrap;">' + escapeHtml(request.description || '—') + '</div>';
     html += '</div>';
 
+    // AI Edit Summary (if present)
+    if (request.ai_edit_summary) {
+      html += '<div style="margin-top:16px;">';
+      html += '<h3 style="margin-bottom:8px;font-size:15px;font-weight:700;">🤖 AI Edit Summary</h3>';
+      html += '<div style="background:#1a2433;padding:14px;border-radius:8px;font-size:13px;line-height:1.6;border-left:3px solid #6366f1;">' + escapeHtml(request.ai_edit_summary) + '</div>';
+      html += '</div>';
+    }
+
     // Element info (if from visual editor)
     if (request.element_type || request.element_selector) {
       html += '<div style="margin-top:16px;">';
@@ -5337,7 +5360,7 @@
     html += '<h3 style="margin-bottom:12px;font-size:15px;font-weight:700;">' + t('erUpdateStatus') + '</h3>';
     html += '<div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;">';
     html += '<select id="er-detail-status" class="input input-sort">';
-    ['submitted', 'in_review', 'in_progress', 'completed', 'rejected'].forEach(s => {
+    ['submitted', 'processing', 'in_review', 'in_progress', 'ready_for_review', 'completed', 'rejected', 'customer_rejected'].forEach(s => {
       html += '<option value="' + s + '"' + (s === request.status ? ' selected' : '') + '>' + getErStatusLabel(s) + '</option>';
     });
     html += '</select>';
@@ -5345,7 +5368,7 @@
     html += '</div>';
 
     // Rejection reason (shown/hidden based on status)
-    html += '<div id="er-rejection-wrap" style="margin-bottom:16px;' + (request.status === 'rejected' ? '' : 'display:none;') + '">';
+    html += '<div id="er-rejection-wrap" style="margin-bottom:16px;' + (request.status === 'rejected' || request.status === 'customer_rejected' ? '' : 'display:none;') + '">';
     html += '<label style="font-size:13px;font-weight:600;color:#8b8fa3;margin-bottom:6px;display:block;">' + t('erRejectionReason') + '</label>';
     html += '<textarea id="er-rejection-reason" class="input" rows="3" style="width:100%;resize:vertical;">' + escapeHtml(request.rejection_reason || '') + '</textarea>';
     html += '</div>';
@@ -5383,7 +5406,7 @@
     if (statusSelect) {
       statusSelect.addEventListener('change', () => {
         if (rejectionWrap) {
-          rejectionWrap.style.display = statusSelect.value === 'rejected' ? '' : 'none';
+          rejectionWrap.style.display = (statusSelect.value === 'rejected' || statusSelect.value === 'customer_rejected') ? '' : 'none';
         }
       });
     }

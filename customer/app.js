@@ -16,6 +16,9 @@
   let websiteData = null;
   let subscriptionData = null;
   let isRecoveryMode = false;
+  let pendingReviewEditRequestId = null;
+  let reviewDraftHtml = null;
+  let reviewCurrentHtml = null;
 
   // ── i18n ──
   var currentLang = localStorage.getItem('c_lang') || 'es';
@@ -388,6 +391,75 @@
         cancelSubscription();
       });
     }
+
+    // Review section — approval banner
+    var btnReviewChanges = $('#btn-review-changes');
+    if (btnReviewChanges) {
+      btnReviewChanges.addEventListener('click', function () {
+        if (pendingReviewEditRequestId) {
+          loadReviewSection(pendingReviewEditRequestId);
+        }
+      });
+    }
+
+    // Review section — back button
+    var btnBackFromReview = $('#btn-back-from-review');
+    if (btnBackFromReview) {
+      btnBackFromReview.addEventListener('click', function () {
+        showSection('dashboard');
+      });
+    }
+
+    // Review section — before/after toggle
+    var btnAfter = $('#btn-review-after');
+    var btnBefore = $('#btn-review-before');
+    if (btnAfter) {
+      btnAfter.addEventListener('click', function () {
+        btnAfter.classList.add('active');
+        if (btnBefore) btnBefore.classList.remove('active');
+        showReviewVersion('after');
+      });
+    }
+    if (btnBefore) {
+      btnBefore.addEventListener('click', function () {
+        btnBefore.classList.add('active');
+        if (btnAfter) btnAfter.classList.remove('active');
+        showReviewVersion('before');
+      });
+    }
+
+    // Review section — approve
+    var btnApprove = $('#btn-approve-change');
+    if (btnApprove) {
+      btnApprove.addEventListener('click', function () {
+        approveChange();
+      });
+    }
+
+    // Review section — reject flow
+    var btnReject = $('#btn-reject-change');
+    if (btnReject) {
+      btnReject.addEventListener('click', function () {
+        var rejectForm = $('#review-reject-form');
+        if (rejectForm) rejectForm.style.display = '';
+      });
+    }
+
+    var btnConfirmReject = $('#btn-confirm-reject');
+    if (btnConfirmReject) {
+      btnConfirmReject.addEventListener('click', function () {
+        var reason = ($('#review-reject-reason') || {}).value || '';
+        rejectChange(reason);
+      });
+    }
+
+    var btnCancelReject = $('#btn-cancel-reject');
+    if (btnCancelReject) {
+      btnCancelReject.addEventListener('click', function () {
+        var rejectForm = $('#review-reject-form');
+        if (rejectForm) rejectForm.style.display = 'none';
+      });
+    }
   }
 
   // ── Auth ──
@@ -751,7 +823,17 @@
 
       hideLoading();
       showDashboardScreen();
-      showSection('dashboard');
+
+      // Check for ?review= URL parameter
+      var urlParams = new URLSearchParams(window.location.search);
+      var reviewId = urlParams.get('review');
+      if (reviewId) {
+        loadReviewSection(reviewId);
+      } else {
+        showSection('dashboard');
+        // Check for pending approvals (show banner)
+        checkPendingApprovals();
+      }
     } catch (err) {
       console.error('Dashboard load failed:', err);
       hideLoading();
@@ -856,7 +938,7 @@
     var statRequests = $('#stat-requests');
     if (statRequests && editRequests) {
       var openCount = editRequests.filter(function (r) {
-        return r.status !== 'completed' && r.status !== 'rejected';
+        return r.status !== 'completed' && r.status !== 'rejected' && r.status !== 'customer_rejected';
       }).length;
       statRequests.textContent = String(openCount);
     } else if (statRequests) {
@@ -1002,18 +1084,24 @@
 
     var statusLabels = {
       submitted: 'Enviada',
+      processing: 'Procesando',
       in_review: 'En revisión',
       in_progress: 'En progreso',
+      ready_for_review: 'Listo para revisar',
       completed: 'Completada',
-      rejected: 'Rechazada'
+      rejected: 'Rechazada',
+      customer_rejected: 'Rechazado por ti'
     };
 
     var statusClasses = {
       submitted: 'c-badge--submitted',
+      processing: 'c-badge--submitted',
       in_review: 'c-badge--in-review',
       in_progress: 'c-badge--in-progress',
+      ready_for_review: 'c-badge--in-review',
       completed: 'c-badge--completed',
-      rejected: 'c-badge--rejected'
+      rejected: 'c-badge--rejected',
+      customer_rejected: 'c-badge--rejected'
     };
 
     var priorityLabels = {
@@ -1043,11 +1131,24 @@
       html += '<td>' + escapeHtml(typeLabel) + '</td>';
       html += '<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(req.description || '') + '</td>';
       html += '<td><span class="c-badge ' + priorityClass + '">' + escapeHtml(priorityLabel) + '</span></td>';
-      html += '<td><span class="c-badge ' + statusClass + '">' + escapeHtml(statusLabel) + '</span></td>';
+      html += '<td><span class="c-badge ' + statusClass + '">' + escapeHtml(statusLabel) + '</span>';
+      if (req.status === 'ready_for_review') {
+        html += ' <button class="c-btn-review-link" data-review-id="' + escapeHtml(req.id) + '">Revisar</button>';
+      }
+      html += '</td>';
       html += '</tr>';
     });
 
     tbody.innerHTML = html;
+
+    // Bind "Revisar" links in the table
+    var reviewLinks = tbody.querySelectorAll('.c-btn-review-link');
+    reviewLinks.forEach(function (link) {
+      link.addEventListener('click', function () {
+        var reviewId = link.getAttribute('data-review-id');
+        if (reviewId) loadReviewSection(reviewId);
+      });
+    });
   }
 
   function renderInvoiceHistory() {
@@ -2366,6 +2467,7 @@
       ai_conversation: chatMessages.length > 0 ? chatMessages : null,
     };
 
+    // Step 1: Create the edit request
     fetch('/api/edit-requests/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2373,14 +2475,40 @@
     })
     .then(function (res) { return res.json(); })
     .then(function (result) {
-      if (result.success) {
-        showToast('Solicitud enviada correctamente.', 'success');
-        appendChatMessage('ai', '¡Listo! Tu solicitud ha sido enviada. Nuestro equipo la revisará pronto. ¿Quieres hacer otro cambio?');
-        pendingEditRequest = null;
-        clearSelectedElement();
-      } else {
-        throw new Error(result.error || 'Error');
+      if (!result.success) throw new Error(result.error || 'Error');
+
+      var editRequestId = result.editRequest ? result.editRequest.id : null;
+      pendingEditRequest = null;
+      clearSelectedElement();
+
+      // Step 2: Show processing message and trigger AI apply
+      appendChatMessage('ai', 'Estamos aplicando tu cambio... esto puede tomar unos segundos.');
+
+      if (!editRequestId) {
+        appendChatMessage('ai', '¡Solicitud enviada! Nuestro equipo la revisará pronto.');
+        return;
       }
+
+      // Step 3: Call AI apply endpoint
+      return fetch('/api/ai/apply-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ editRequestId: editRequestId }),
+      })
+      .then(function (applyRes) { return applyRes.json(); })
+      .then(function (applyResult) {
+        if (applyResult.success) {
+          appendChatMessage('ai', '¡Cambio aplicado! Te enviamos un correo para que lo revises. También puedes revisarlo desde tu Dashboard.');
+          // Show banner if visible
+          checkPendingApprovals();
+        } else {
+          appendChatMessage('ai', 'Hubo un problema al aplicar el cambio automáticamente. Nuestro equipo lo revisará manualmente.');
+        }
+      })
+      .catch(function (applyErr) {
+        console.error('AI apply error:', applyErr);
+        appendChatMessage('ai', 'No se pudo aplicar el cambio automáticamente. Nuestro equipo lo revisará pronto.');
+      });
     })
     .catch(function (err) {
       console.error('Confirm edit request error:', err);
@@ -2408,6 +2536,192 @@
 
     var btnSend = $('#btn-chat-send');
     if (btnSend) btnSend.disabled = false;
+  }
+
+  // ── Review Changes ──
+
+  function checkPendingApprovals() {
+    if (!customerData || !customerData.customers) return;
+
+    var customerId = customerData.customers.id;
+    fetch('/api/edit-requests/pending?customer_id=' + encodeURIComponent(customerId))
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        var banner = $('#c-approval-banner');
+        if (!banner) return;
+
+        if (result.count && result.count > 0) {
+          banner.style.display = '';
+          var desc = $('#c-approval-banner-desc');
+          if (desc) {
+            desc.textContent = result.count === 1
+              ? 'Tienes 1 cambio pendiente de revisión.'
+              : 'Tienes ' + result.count + ' cambios pendientes de revisión.';
+          }
+          // Store the first pending edit request ID for the banner button
+          pendingReviewEditRequestId = result.editRequests[0].id;
+        } else {
+          banner.style.display = 'none';
+          pendingReviewEditRequestId = null;
+        }
+      })
+      .catch(function (err) {
+        console.warn('Check pending approvals error:', err);
+      });
+  }
+
+  function loadReviewSection(editRequestId) {
+    showSection('review');
+
+    var summaryEl = $('#review-summary');
+    var promptEl = $('#review-prompt');
+    var iframe = $('#review-iframe');
+    var rejectForm = $('#review-reject-form');
+    if (rejectForm) rejectForm.style.display = 'none';
+
+    if (summaryEl) summaryEl.textContent = 'Cargando...';
+    if (promptEl) promptEl.textContent = '';
+
+    // Reset toggle to "after" view
+    var btnAfter = $('#btn-review-after');
+    var btnBefore = $('#btn-review-before');
+    if (btnAfter) btnAfter.classList.add('active');
+    if (btnBefore) btnBefore.classList.remove('active');
+
+    // Store the current review edit request ID
+    pendingReviewEditRequestId = editRequestId;
+
+    // Fetch edit request details and draft HTML in parallel
+    Promise.all([
+      fetch('/api/edit-requests/detail?id=' + encodeURIComponent(editRequestId)).then(function (r) { return r.json(); }),
+      null // We'll get website_id from the detail response
+    ]).then(function (results) {
+      var detailResult = results[0];
+      if (!detailResult.editRequest) {
+        showToast('No se encontró la solicitud de cambio.', 'error');
+        showSection('dashboard');
+        return;
+      }
+
+      var er = detailResult.editRequest;
+      if (summaryEl) summaryEl.textContent = er.ai_edit_summary || 'Cambio aplicado por IA';
+      if (promptEl) promptEl.textContent = er.description || '';
+
+      // Fetch draft HTML
+      if (er.website_id) {
+        return fetch('/api/preview/draft?website_id=' + encodeURIComponent(er.website_id))
+          .then(function (r) { return r.json(); });
+      }
+      return null;
+    }).then(function (previewResult) {
+      if (!previewResult) return;
+
+      reviewDraftHtml = previewResult.draftHtml || null;
+      reviewCurrentHtml = previewResult.currentHtml || null;
+
+      // Show draft (after) by default
+      if (iframe && reviewDraftHtml) {
+        iframe.srcdoc = reviewDraftHtml;
+      } else if (iframe) {
+        iframe.srcdoc = '<p style="text-align:center;padding:40px;color:#666;">No hay vista previa disponible.</p>';
+      }
+    }).catch(function (err) {
+      console.error('Load review section error:', err);
+      showToast('Error al cargar la revisión.', 'error');
+    });
+  }
+
+  function showReviewVersion(version) {
+    var iframe = $('#review-iframe');
+    if (!iframe) return;
+
+    if (version === 'before' && reviewCurrentHtml) {
+      iframe.srcdoc = reviewCurrentHtml;
+    } else if (version === 'after' && reviewDraftHtml) {
+      iframe.srcdoc = reviewDraftHtml;
+    }
+  }
+
+  function approveChange() {
+    if (!pendingReviewEditRequestId) return;
+
+    var btnApprove = $('#btn-approve-change');
+    if (btnApprove) {
+      btnApprove.disabled = true;
+      btnApprove.textContent = 'Publicando...';
+    }
+
+    fetch('/api/edit-requests/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ editRequestId: pendingReviewEditRequestId }),
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (result) {
+      if (result.success) {
+        showToast('¡Cambio aprobado y publicado!', 'success');
+        pendingReviewEditRequestId = null;
+        reviewDraftHtml = null;
+        reviewCurrentHtml = null;
+        showSection('dashboard');
+        // Refresh dashboard data
+        loadDashboard();
+      } else {
+        throw new Error(result.error || 'Error');
+      }
+    })
+    .catch(function (err) {
+      console.error('Approve change error:', err);
+      showToast('Error al aprobar el cambio. Intenta de nuevo.', 'error');
+    })
+    .finally(function () {
+      if (btnApprove) {
+        btnApprove.disabled = false;
+        btnApprove.textContent = 'Aprobar y Publicar';
+      }
+    });
+  }
+
+  function rejectChange(reason) {
+    if (!pendingReviewEditRequestId) return;
+
+    var btnReject = $('#btn-confirm-reject');
+    if (btnReject) {
+      btnReject.disabled = true;
+      btnReject.textContent = 'Enviando...';
+    }
+
+    fetch('/api/edit-requests/customer-reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        editRequestId: pendingReviewEditRequestId,
+        reason: reason || null,
+      }),
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (result) {
+      if (result.success) {
+        showToast('Cambio rechazado. Puedes enviar una nueva solicitud con más detalles.', 'success');
+        pendingReviewEditRequestId = null;
+        reviewDraftHtml = null;
+        reviewCurrentHtml = null;
+        showSection('dashboard');
+        loadDashboard();
+      } else {
+        throw new Error(result.error || 'Error');
+      }
+    })
+    .catch(function (err) {
+      console.error('Reject change error:', err);
+      showToast('Error al rechazar el cambio. Intenta de nuevo.', 'error');
+    })
+    .finally(function () {
+      if (btnReject) {
+        btnReject.disabled = false;
+        btnReject.textContent = 'Confirmar Rechazo';
+      }
+    });
   }
 
   // ── Start ──

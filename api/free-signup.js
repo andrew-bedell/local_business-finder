@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, productId } = req.body || {};
+  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, address, productId } = req.body || {};
 
   // Require either businessId (employee flow) or businessName (marketing flow)
   if (!providedBusinessId && !businessName) {
@@ -51,6 +51,9 @@ export default async function handler(req, res) {
         businessName,
         email: customerEmail,
         phone: customerPhone,
+        contactName: customerName,
+        contactWhatsapp: customerPhone,
+        address: address || null,
         supabaseUrl,
         supabaseKey,
       });
@@ -175,14 +178,14 @@ export default async function handler(req, res) {
       console.warn('Auth invite error (non-blocking):', authErr);
     }
 
-    // 4. Update business pipeline_status to 'demo' (free signup, not paying yet)
+    // 4. Update business pipeline_status to 'lead' (free signup, demo comes after we send preview)
     await fetch(
       `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}`,
       {
         method: 'PATCH',
         headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
         body: JSON.stringify({
-          pipeline_status: 'demo',
+          pipeline_status: 'lead',
           pipeline_status_changed_at: new Date().toISOString(),
         }),
       }

@@ -222,6 +222,18 @@
           </div>
         </div>
 
+        <!-- Approval Banner (shown when edits are ready for review) -->
+        <div id="c-approval-banner" class="c-approval-banner" style="display:none">
+          <div class="c-approval-banner-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <div class="c-approval-banner-content">
+            <div class="c-approval-banner-title">Cambios listos para aprobar</div>
+            <div class="c-approval-banner-desc" id="c-approval-banner-desc">Tienes cambios pendientes de revisión.</div>
+          </div>
+          <button class="c-btn c-btn-primary" id="btn-review-changes">Revisar Cambios</button>
+        </div>
+
         <!-- Hero Card -->
         <div class="c-hero-card">
           <div class="c-hero-eyebrow" data-i18n="hero_eyebrow">Tu Página Web</div>
@@ -727,6 +739,54 @@
                 <tr><td colspan="5" class="c-table-empty">Cargando...</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section: Review Changes ── -->
+      <div id="section-review" class="c-section" data-section="review">
+        <div class="c-topbar">
+          <button class="c-btn c-btn-ghost" id="btn-back-from-review">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            Volver
+          </button>
+          <div class="c-page-title">Revisar <span>Cambios</span></div>
+        </div>
+
+        <!-- Edit request info -->
+        <div class="c-review-info" id="review-info">
+          <div class="c-panel">
+            <div class="c-review-summary-label">Resumen del cambio</div>
+            <div class="c-review-summary" id="review-summary">Cargando...</div>
+            <div class="c-review-prompt-label">Tu solicitud original</div>
+            <div class="c-review-prompt" id="review-prompt"></div>
+          </div>
+        </div>
+
+        <!-- Before/After preview toggle -->
+        <div class="c-review-preview">
+          <div class="c-review-toggle">
+            <button class="c-btn c-btn-ghost active" id="btn-review-after">Nueva Versión</button>
+            <button class="c-btn c-btn-ghost" id="btn-review-before">Versión Actual</button>
+          </div>
+          <div class="c-review-iframe-wrap">
+            <iframe id="review-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
+          </div>
+        </div>
+
+        <!-- Approve / Reject actions -->
+        <div class="c-review-actions">
+          <button class="c-btn c-btn-primary c-btn-lg" id="btn-approve-change">Aprobar y Publicar</button>
+          <button class="c-btn c-btn-ghost" id="btn-reject-change">Rechazar</button>
+        </div>
+
+        <!-- Rejection reason (shown on reject click) -->
+        <div id="review-reject-form" class="c-review-reject-form" style="display:none">
+          <textarea id="review-reject-reason" class="c-input c-textarea" rows="3"
+                    placeholder="¿Por qué no estás satisfecho con el cambio?"></textarea>
+          <div class="c-review-reject-actions">
+            <button class="c-btn c-btn-danger" id="btn-confirm-reject">Confirmar Rechazo</button>
+            <button class="c-btn c-btn-ghost" id="btn-cancel-reject">Cancelar</button>
           </div>
         </div>
       </div>

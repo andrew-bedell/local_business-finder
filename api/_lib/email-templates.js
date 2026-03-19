@@ -313,6 +313,27 @@ export function editRequestCompletedEmail({ contactName, businessName, requestTy
   };
 }
 
+export function editReadyForReviewEmail({ customer_name, business_name, edit_description, approval_url }) {
+  const greeting = customer_name ? `Hola ${customer_name},` : 'Hola,';
+  const html = baseLayout('¡Tu cambio está listo para revisar!', `
+    <h2>${greeting}</h2>
+    <p>Hemos aplicado el cambio que solicitaste para <strong>${business_name || 'tu negocio'}</strong>:</p>
+    <div style="background:#f0f0f5;padding:14px 18px;border-radius:8px;border-left:4px solid #6C5CE7;margin:16px 0;font-size:14px;color:#4a4a66;font-style:italic;">
+      ${(edit_description || '').substring(0, 300)}
+    </div>
+    <p>Revisa el cambio y apruébalo para publicarlo en tu sitio web:</p>
+    <a href="${approval_url}" class="cta">Revisar y Aprobar</a>
+    <p style="font-size:13px;color:#888;">Si no estás satisfecho con el cambio, puedes rechazarlo y enviarnos más detalles desde tu portal.</p>
+  `);
+  const text = `${greeting}\n\nHemos aplicado el cambio que solicitaste para ${business_name || 'tu negocio'}:\n\n"${(edit_description || '').substring(0, 300)}"\n\nRevisa y aprueba: ${approval_url}\n\nSi no estás satisfecho, puedes rechazarlo desde tu portal.`;
+
+  return {
+    subject: `¡Tu cambio está listo para revisar! — ${business_name || 'AhoraTengoPagina'}`,
+    html,
+    text,
+  };
+}
+
 export function editRequestRejectedEmail({ contactName, businessName, requestType, rejectionReason, portalUrl }) {
   const greeting = contactName ? `Hola ${contactName},` : 'Hola,';
   const typeLabels = {
@@ -410,6 +431,7 @@ const HARDCODED_FALLBACKS = {
   edit_request_received: editRequestReceivedEmail,
   edit_request_completed: editRequestCompletedEmail,
   edit_request_rejected: editRequestRejectedEmail,
+  edit_ready_for_review: editReadyForReviewEmail,
   plan_changed: planChangeEmail,
 };
 
