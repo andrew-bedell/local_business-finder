@@ -1,5 +1,5 @@
-// Vercel serverless function: Update business pipeline status and contact fields
-// POST — updates pipeline_status and optionally contact_name, contact_phone, contact_email
+// Vercel serverless function: Update business pipeline status, contact, and info fields
+// POST — updates pipeline_status and optionally contact/business fields
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId, pipeline_status, contact_name, contact_phone, contact_email } = req.body || {};
+  const { businessId, pipeline_status, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country } = req.body || {};
 
   if (!businessId) {
     return res.status(400).json({ error: 'Missing required field: businessId' });
@@ -49,6 +49,10 @@ export default async function handler(req, res) {
     if (contact_name !== undefined) updatePayload.contact_name = contact_name;
     if (contact_phone !== undefined) updatePayload.contact_phone = contact_phone;
     if (contact_email !== undefined) updatePayload.contact_email = contact_email;
+    if (contact_whatsapp !== undefined) updatePayload.contact_whatsapp = contact_whatsapp;
+    if (phone !== undefined) updatePayload.phone = phone;
+    if (email !== undefined) updatePayload.email = email;
+    if (address_country !== undefined) updatePayload.address_country = address_country;
 
     if (Object.keys(updatePayload).length === 0) {
       return res.status(400).json({ error: 'No fields to update' });

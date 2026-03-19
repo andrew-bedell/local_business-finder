@@ -32,6 +32,10 @@
       pipelineContactSection: 'Contact & Pipeline',
       pipelineChangeSuccess: 'Pipeline updated successfully',
       pipelineChangeError: 'Failed to update pipeline',
+      inlineEditSaved: 'Saved',
+      inlineEditError: 'Failed to save',
+      clickToEdit: 'Click to edit',
+      clickToAdd: 'Click to add',
       pipelineSaving: 'Saving...',
       pipelineSaveBtn: 'Save Contact Info',
       stageSaved: 'Saved',
@@ -561,6 +565,10 @@
       pipelineContactSection: 'Contacto y Pipeline',
       pipelineChangeSuccess: 'Pipeline actualizado exitosamente',
       pipelineChangeError: 'Error al actualizar pipeline',
+      inlineEditSaved: 'Guardado',
+      inlineEditError: 'Error al guardar',
+      clickToEdit: 'Clic para editar',
+      clickToAdd: 'Clic para agregar',
       pipelineSaving: 'Guardando...',
       pipelineSaveBtn: 'Guardar Contacto',
       stageSaved: 'Guardado',
@@ -1766,13 +1774,13 @@
         <td><strong>${escapeHtml(b.name)}</strong></td>
         <td>${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
-        <td class="td-center">${getStageBadgeHtml(b.pipeline_status)}</td>
-        <td>${b.address_country ? escapeHtml(b.address_country) : '<span style="color:var(--text-dim)">—</span>'}</td>
-        <td>${b.contact_name ? escapeHtml(b.contact_name) : '<span style="color:var(--text-dim)">—</span>'}</td>
-        <td>${b.contact_whatsapp ? escapeHtml(b.contact_whatsapp) : '<span style="color:var(--text-dim)">—</span>'}</td>
-        <td>${b.contact_email ? escapeHtml(b.contact_email) : '<span style="color:var(--text-dim)">—</span>'}</td>
-        <td>${b.phone ? escapeHtml(b.phone) : '<span style="color:var(--text-dim)">—</span>'}</td>
-        <td>${b.email ? escapeHtml(b.email) : '<span style="color:var(--text-dim)">—</span>'}</td>
+        <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="contact_name" data-value="${escapeHtml(b.contact_name || '')}" title="${b.contact_name ? t('clickToEdit') : t('clickToAdd')}">${b.contact_name ? escapeHtml(b.contact_name) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="contact_whatsapp" data-value="${escapeHtml(b.contact_whatsapp || '')}" title="${b.contact_whatsapp ? t('clickToEdit') : t('clickToAdd')}">${b.contact_whatsapp ? escapeHtml(b.contact_whatsapp) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="contact_email" data-value="${escapeHtml(b.contact_email || '')}" title="${b.contact_email ? t('clickToEdit') : t('clickToAdd')}">${b.contact_email ? escapeHtml(b.contact_email) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="phone" data-value="${escapeHtml(b.phone || '')}" title="${b.phone ? t('clickToEdit') : t('clickToAdd')}">${b.phone ? escapeHtml(b.phone) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="email" data-value="${escapeHtml(b.email || '')}" title="${b.email ? t('clickToEdit') : t('clickToAdd')}">${b.email ? escapeHtml(b.email) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
         <td class="td-center">${socialCellHtml}</td>
@@ -1841,6 +1849,176 @@
         startNewConversation(businessId, phone);
       });
     });
+
+    // Bind inline editable cells
+    resultsBody.querySelectorAll('.td-editable').forEach((td) => {
+      td.addEventListener('click', (e) => {
+        // Don't trigger if already editing
+        if (td.classList.contains('td-editing')) return;
+        // Don't trigger if clicking inside an input/select already
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        startInlineEdit(td);
+      });
+    });
+  }
+
+  // ── Inline Edit ──
+
+  function startInlineEdit(td) {
+    const field = td.getAttribute('data-field');
+    const businessId = td.getAttribute('data-id');
+    const currentValue = td.getAttribute('data-value') || '';
+
+    td.classList.add('td-editing');
+
+    if (field === 'pipeline_status') {
+      // Show a dropdown for pipeline stage
+      const stages = [
+        { value: 'saved', label: t('stageSaved') },
+        { value: 'lead', label: t('stageLead') },
+        { value: 'demo', label: t('stageDemo') },
+        { value: 'active_customer', label: t('stageActiveCustomer') },
+        { value: 'inactive_customer', label: t('stageInactiveCustomer') },
+      ];
+      const select = document.createElement('select');
+      select.className = 'inline-edit-select';
+      stages.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.value;
+        opt.textContent = s.label;
+        if (s.value === currentValue) opt.selected = true;
+        select.appendChild(opt);
+      });
+      td.textContent = '';
+      td.appendChild(select);
+      select.focus();
+
+      select.addEventListener('change', () => {
+        saveInlineEdit(td, businessId, field, select.value);
+      });
+      select.addEventListener('blur', () => {
+        // If value didn't change, just cancel
+        if (select.value === currentValue) {
+          cancelInlineEdit(td, field, currentValue);
+        } else {
+          saveInlineEdit(td, businessId, field, select.value);
+        }
+      });
+      select.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          cancelInlineEdit(td, field, currentValue);
+        }
+      });
+    } else {
+      // Show a text input
+      const input = document.createElement('input');
+      input.type = field === 'contact_email' || field === 'email' ? 'email' : 'text';
+      input.className = 'inline-edit-input';
+      input.value = currentValue;
+      input.placeholder = t('clickToAdd');
+      td.textContent = '';
+      td.appendChild(input);
+      input.focus();
+      input.select();
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveInlineEdit(td, businessId, field, input.value.trim());
+        } else if (e.key === 'Escape') {
+          cancelInlineEdit(td, field, currentValue);
+        } else if (e.key === 'Tab') {
+          // Save on tab and let browser move focus
+          saveInlineEdit(td, businessId, field, input.value.trim());
+        }
+      });
+      input.addEventListener('blur', () => {
+        // Small delay to allow Tab to trigger save first
+        setTimeout(() => {
+          if (td.classList.contains('td-editing')) {
+            saveInlineEdit(td, businessId, field, input.value.trim());
+          }
+        }, 100);
+      });
+    }
+  }
+
+  function cancelInlineEdit(td, field, originalValue) {
+    td.classList.remove('td-editing');
+    if (field === 'pipeline_status') {
+      td.innerHTML = getStageBadgeHtml(originalValue);
+    } else {
+      td.innerHTML = originalValue ? escapeHtml(originalValue) : '<span class="td-empty-placeholder">+</span>';
+    }
+  }
+
+  async function saveInlineEdit(td, businessId, field, newValue) {
+    const originalValue = td.getAttribute('data-value') || '';
+
+    // No change — just cancel
+    if (newValue === originalValue) {
+      cancelInlineEdit(td, field, originalValue);
+      return;
+    }
+
+    td.classList.remove('td-editing');
+    td.classList.add('td-saving');
+
+    // Show the new value immediately (optimistic update)
+    if (field === 'pipeline_status') {
+      td.innerHTML = getStageBadgeHtml(newValue);
+    } else {
+      td.innerHTML = newValue ? escapeHtml(newValue) : '<span class="td-empty-placeholder">+</span>';
+    }
+
+    try {
+      const payload = { businessId: businessId };
+      payload[field] = newValue;
+
+      const res = await fetch('/api/businesses/update-pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error('Failed');
+
+      // Update data-value attribute
+      td.setAttribute('data-value', newValue);
+      td.setAttribute('title', newValue ? t('clickToEdit') : t('clickToAdd'));
+
+      // Update local data
+      const business = allBusinesses.find(b => String(b.id) === String(businessId));
+      if (business) {
+        business[field] = newValue;
+        // Also update in currentResults
+        const cr = currentResults.find(b => String(b.id) === String(businessId));
+        if (cr) cr[field] = newValue;
+      }
+
+      // If pipeline_status changed, update counts
+      if (field === 'pipeline_status') {
+        updatePipelineCounts(allBusinesses);
+      }
+
+      // Brief success flash
+      td.classList.add('td-save-success');
+      setTimeout(() => td.classList.remove('td-save-success'), 1200);
+
+      showToast(t('inlineEditSaved'), 'success');
+    } catch (err) {
+      console.error('Inline edit save error:', err);
+      // Revert to original value
+      td.setAttribute('data-value', originalValue);
+      if (field === 'pipeline_status') {
+        td.innerHTML = getStageBadgeHtml(originalValue);
+      } else {
+        td.innerHTML = originalValue ? escapeHtml(originalValue) : '<span class="td-empty-placeholder">+</span>';
+      }
+      showToast(t('inlineEditError'), 'error');
+    } finally {
+      td.classList.remove('td-saving');
+    }
   }
 
   // ── Pagination ──
@@ -2092,6 +2270,10 @@
                 <input type="email" class="input" id="modal-contact-email" value="${escapeHtml(business.contact_email || '')}" placeholder="${t('contactEmail')}">
               </div>
               <div class="form-group">
+                <label>${t('thContactWhatsapp')}</label>
+                <input type="text" class="input" id="modal-contact-whatsapp" value="${escapeHtml(business.contact_whatsapp || '')}" placeholder="${t('thContactWhatsapp')}">
+              </div>
+              <div class="form-group">
                 <label>${t('pipelineStage')}</label>
                 <select class="input" id="modal-pipeline-status">
                   <option value="saved" ${(business.pipeline_status || 'saved') === 'saved' ? 'selected' : ''}>${t('stageSaved')}</option>
@@ -2169,6 +2351,7 @@
         contact_name: modal.querySelector('#modal-contact-name').value.trim(),
         contact_phone: modal.querySelector('#modal-contact-phone').value.trim(),
         contact_email: modal.querySelector('#modal-contact-email').value.trim(),
+        contact_whatsapp: modal.querySelector('#modal-contact-whatsapp').value.trim(),
       };
 
       try {
@@ -2187,6 +2370,7 @@
         business.contact_name = payload.contact_name;
         business.contact_phone = payload.contact_phone;
         business.contact_email = payload.contact_email;
+        business.contact_whatsapp = payload.contact_whatsapp;
 
         // Update allBusinesses too
         const idx = allBusinesses.findIndex(b => b.id === business.id);
@@ -2195,6 +2379,7 @@
           allBusinesses[idx].contact_name = payload.contact_name;
           allBusinesses[idx].contact_phone = payload.contact_phone;
           allBusinesses[idx].contact_email = payload.contact_email;
+          allBusinesses[idx].contact_whatsapp = payload.contact_whatsapp;
         }
 
         // Re-apply pipeline counts and filter
