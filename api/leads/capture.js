@@ -1,6 +1,8 @@
 // Vercel serverless function: Marketing lead capture
 // Saves lead to Supabase and auto-sends a WhatsApp welcome template message.
 
+import { toE164 } from '../_lib/phone-utils.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -90,7 +92,7 @@ async function sendWelcomeWhatsApp(phone, businessName) {
   }
 
   // Normalize phone to E.164
-  const normalizedPhone = phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
+  const normalizedPhone = toE164(phone) || phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
 
   const components = [{
     type: 'body',

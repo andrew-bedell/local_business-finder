@@ -350,7 +350,24 @@
           </div>
           <div class="m-form-group">
             <label class="m-form-label" for="lead-whatsapp" data-i18n="modal_whatsapp_label">Tu WhatsApp</label>
-            <input class="m-form-input" type="tel" id="lead-whatsapp" name="whatsapp" data-i18n-placeholder="modal_whatsapp_ph" placeholder="Ej: +52 999 123 4567" required>
+            <div class="m-phone-row">
+              <select class="m-form-input m-phone-code" id="lead-country-code">
+                <option value="52">&#127474;&#127485; +52</option>
+                <option value="57">&#127464;&#127476; +57</option>
+                <option value="1">&#127482;&#127480; +1</option>
+                <option value="51">&#127477;&#127466; +51</option>
+                <option value="54">&#127462;&#127479; +54</option>
+                <option value="56">&#127464;&#127473; +56</option>
+                <option value="593">&#127466;&#127464; +593</option>
+                <option value="502">&#127468;&#127481; +502</option>
+                <option value="504">&#127469;&#127475; +504</option>
+                <option value="506">&#127464;&#127479; +506</option>
+                <option value="507">&#127477;&#127462; +507</option>
+                <option value="58">&#127483;&#127466; +58</option>
+                <option value="55">&#127463;&#127479; +55</option>
+              </select>
+              <input class="m-form-input m-phone-number" type="tel" id="lead-whatsapp" name="whatsapp" data-i18n-placeholder="modal_whatsapp_ph" placeholder="999 123 4567" required>
+            </div>
           </div>
           <div class="m-form-group">
             <label class="m-form-label" for="lead-email" data-i18n="modal_email_label">Tu email</label>

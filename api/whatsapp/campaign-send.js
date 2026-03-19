@@ -2,6 +2,8 @@
 // POST — sends template messages to audience members
 // Processes up to BATCH_SIZE recipients per call, client polls until done
 
+import { toE164 } from '../_lib/phone-utils.js';
+
 const BATCH_SIZE = 50;
 const SEND_DELAY_MS = 100; // delay between sends to respect rate limits
 
@@ -120,7 +122,7 @@ export default async function handler(req, res) {
         continue;
       }
 
-      const normalizedPhone = biz.phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
+      const normalizedPhone = toE164(biz.phone, { addressCountry: biz.address_country }) || biz.phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
 
       try {
         // Build Meta API payload

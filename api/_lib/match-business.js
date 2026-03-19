@@ -1,14 +1,8 @@
 // Shared helper: match incoming signup data to an existing business, or create a new one.
 // Used by free-signup.js and stripe/create-subscription.js
 
-/**
- * Normalize a phone number by stripping spaces, dashes, parens, dots.
- * Keeps leading + if present.
- */
-export function normalizePhone(phone) {
-  if (!phone) return null;
-  return phone.replace(/[\s\-().]/g, '').trim() || null;
-}
+import { toE164, normalizePhone } from './phone-utils.js';
+export { normalizePhone };
 
 /**
  * Basic name similarity check — case-insensitive, ignoring accents and punctuation.

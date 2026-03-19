@@ -1,6 +1,8 @@
 // Vercel serverless function: Send WhatsApp message via Meta Cloud API
 // POST — sends a free-form text or template message to a business owner
 
+import { toE164 } from '../_lib/phone-utils.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -35,8 +37,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Must provide either message or templateName' });
   }
 
-  // Normalize phone to E.164 (strip spaces/dashes, ensure leading +)
-  const normalizedPhone = phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
+  // Normalize phone to E.164
+  const normalizedPhone = toE164(phone) || phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
 
   try {
     // If sending free-form text, check the 24-hour window

@@ -104,7 +104,7 @@
       modal_business_label: 'Nombre de tu negocio',
       modal_business_ph: 'Ej: Salón de Uñas María',
       modal_whatsapp_label: 'Tu WhatsApp',
-      modal_whatsapp_ph: 'Ej: +52 999 123 4567',
+      modal_whatsapp_ph: '999 123 4567',
       modal_email_label: 'Tu email',
       modal_email_ph: 'Ej: maria@gmail.com',
       modal_address_label: 'Dirección de tu negocio',
@@ -216,7 +216,7 @@
       modal_business_label: 'Your business name',
       modal_business_ph: 'E.g.: Maria\'s Nail Salon',
       modal_whatsapp_label: 'Your WhatsApp',
-      modal_whatsapp_ph: 'E.g.: +52 999 123 4567',
+      modal_whatsapp_ph: '999 123 4567',
       modal_email_label: 'Your email',
       modal_email_ph: 'E.g.: maria@gmail.com',
       modal_address_label: 'Your business address',
@@ -401,10 +401,16 @@
     var customerName = document.getElementById('lead-name').value.trim();
     var businessName = document.getElementById('lead-business').value.trim();
     var businessAddress = document.getElementById('lead-address').value.trim();
-    var whatsappNumber = document.getElementById('lead-whatsapp').value.trim();
+    var countryCode = document.getElementById('lead-country-code').value;
+    var rawPhone = document.getElementById('lead-whatsapp').value.trim();
     var customerEmail = document.getElementById('lead-email').value.trim();
 
-    if (!customerName || !businessName || !businessAddress || !whatsappNumber || !customerEmail) return;
+    if (!customerName || !businessName || !businessAddress || !rawPhone || !customerEmail) return;
+
+    // Build E.164 number: strip non-digits from input, prepend +countryCode
+    var digits = rawPhone.replace(/[^\d]/g, '');
+    // If user typed the country code already, don't double it
+    var whatsappNumber = digits.startsWith(countryCode) ? '+' + digits : '+' + countryCode + digits;
 
     formSubmitBtn.disabled = true;
     formSubmitBtn.textContent = t('modal_sending');
