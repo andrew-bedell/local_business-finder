@@ -790,12 +790,8 @@
   // Fallback credentials used when server config is unavailable (local dev)
   const SUPABASE_URL_FALLBACK = 'https://xagfwyknlutmmtfufbfi.supabase.co';
   const SUPABASE_KEY_FALLBACK = '';
-  let supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL_FALLBACK, SUPABASE_KEY_FALLBACK) : null;
+  let supabaseClient = null;
   const savedPlaceIds = new Set();
-
-  if (!supabaseClient) {
-    console.warn('Supabase client not initialized. window.supabase =', window.supabase);
-  }
 
   function initSupabaseFromConfig(url, key) {
     if (window.supabase && url && key) {
