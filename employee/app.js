@@ -1925,9 +1925,10 @@
       if (parsed.url) params.set('url', parsed.url);
       params.set('hl', getSearchLanguage());
 
+      const isShareUrl = parsed.url && parsed.url.includes('share.google');
       const res = await withTimeout(
         fetch('/api/search/place-lookup?' + params.toString()),
-        20000,
+        isShareUrl ? 35000 : 20000,
         'Place lookup'
       );
 
