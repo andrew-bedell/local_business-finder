@@ -136,6 +136,11 @@
       thWebsiteUrl: 'URL',
       thEnrich: 'Enrich',
       thActions: 'Actions',
+      thDelete: 'Delete',
+      btnDelete: 'Delete',
+      deleteConfirm: 'Are you sure you want to delete "{0}"? This cannot be undone.',
+      deleteSuccess: '"{0}" has been deleted.',
+      deleteError: 'Failed to delete business. It may have related records.',
       viewBtn: 'View',
       badgeYes: 'Yes',
       badgeNo: '—',
@@ -683,6 +688,11 @@
       thWebsiteUrl: 'URL',
       thEnrich: 'Enriquecer',
       thActions: 'Acciones',
+      thDelete: 'Eliminar',
+      btnDelete: 'Eliminar',
+      deleteConfirm: '¿Estás seguro de que quieres eliminar "{0}"? Esta acción no se puede deshacer.',
+      deleteSuccess: '"{0}" ha sido eliminado.',
+      deleteError: 'No se pudo eliminar el negocio. Puede tener registros relacionados.',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
       badgeNo: '—',
@@ -1913,6 +1923,7 @@
         <td class="td-center">${mapsLink}</td>
         <td class="td-center"><button class="btn btn-view btn-enrich" data-id="${b.id}">${b.description ? '\u2713' : t('btnEnrich')}</button></td>
         <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
+        <td class="td-center"><button class="btn btn-view btn-delete" data-id="${b.id}" data-name="${escapeHtml(b.name)}" style="color:var(--danger);border-color:var(--danger)">${t('btnDelete')}</button></td>
       </tr>`;
     }).join('');
 
@@ -1978,6 +1989,15 @@
         const businessId = btn.getAttribute('data-id');
         const phone = btn.getAttribute('data-phone');
         startNewConversation(businessId, phone);
+      });
+    });
+
+    // Bind delete buttons
+    resultsBody.querySelectorAll('.btn-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        deleteBusiness(businessId, name);
       });
     });
 
@@ -2810,6 +2830,33 @@
         document.removeEventListener('keydown', handler);
       }
     });
+  }
+
+  async function deleteBusiness(businessId, businessName) {
+    if (!confirm(t('deleteConfirm', businessName))) return;
+    if (!supabaseClient) return;
+
+    try {
+      const { error } = await supabaseClient
+        .from('businesses')
+        .delete()
+        .eq('id', businessId);
+
+      if (error) {
+        console.error('Delete business error:', error);
+        showToast(t('deleteError'), 'error');
+        return;
+      }
+
+      showToast(t('deleteSuccess', businessName), 'success');
+      // Remove from current results and re-render
+      currentResults = currentResults.filter(b => String(b.id) !== String(businessId));
+      totalCount = Math.max(0, totalCount - 1);
+      renderTable();
+    } catch (err) {
+      console.error('Delete business error:', err);
+      showToast(t('deleteError'), 'error');
+    }
   }
 
   async function handleEnrich(business, btn) {
