@@ -22,10 +22,37 @@ export default async function handler(req, res) {
     if (parsed.place_id) place_id = parsed.place_id;
     if (parsed.data_id) data_id = parsed.data_id;
 
-    // Strategy 0: Web Search for unresolved share.google URLs
-    // share.google uses a JS redirect that server-side fetch() can't follow.
-    // Google's own search engine resolves its own share codes and returns a
-    // knowledge_graph object with kgmid, title, address, and GPS coordinates.
+    // Strategy 0a: Headless browser resolution (most reliable for share.google)
+    // Launches Chromium to render the page, execute the JS redirect, and capture
+    // the final Google Maps URL containing the exact place identifier.
+    if (!place_id && !data_id && parsed.is_share_url && parsed.original_url) {
+      try {
+        const host = req.headers.host || process.env.VERCEL_URL;
+        const protocol = host && host.includes('localhost') ? 'http' : 'https';
+        const resolveRes = await fetch(
+          `${protocol}://${host}/api/search/resolve-share?url=${encodeURIComponent(parsed.original_url)}`
+        );
+        if (resolveRes.ok) {
+          const { resolved_url } = await resolveRes.json();
+          if (resolved_url && !resolved_url.includes('share.google')) {
+            // Re-parse through existing extraction logic
+            const reparsed = await resolveUrl(resolved_url);
+            if (reparsed.place_id) place_id = reparsed.place_id;
+            if (reparsed.data_id) data_id = reparsed.data_id;
+            // If kgmid found, pass it to Strategy 1
+            if (!place_id && !data_id && reparsed.kgmid) {
+              parsed.kgmid = reparsed.kgmid;
+              parsed.search_query = reparsed.search_query;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Strategy 0a (headless browser) failed, falling back:', err.message);
+      }
+    }
+
+    // Strategy 0b: Web Search fallback for unresolved share.google URLs
+    // Uses SearchAPI's Google engine hoping for a knowledge_graph result.
     if (!place_id && !data_id && parsed.is_share_url && parsed.original_url) {
       try {
         const webParams = new URLSearchParams({
@@ -91,7 +118,7 @@ export default async function handler(req, res) {
           }
         }
       } catch (err) {
-        console.error('Strategy 0 (web search) failed:', err.message);
+        console.error('Strategy 0b (web search) failed:', err.message);
       }
     }
 
