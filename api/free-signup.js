@@ -201,6 +201,8 @@ export default async function handler(req, res) {
         businessId,
         placeId: googleData.place_id,
         dataId: googleData.data_id || null,
+        businessName: googleData.name || businessName || null,
+        businessAddress: googleData.address || address || null,
         supabaseUrl,
         supabaseKey,
       }).catch(err => console.warn('Enrichment error (non-blocking):', err.message));

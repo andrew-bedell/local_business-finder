@@ -68,6 +68,8 @@ export default async function handler(req, res) {
       businessId,
       placeId,
       dataId,
+      businessName: biz.name,
+      businessAddress: biz.address_full,
       supabaseUrl,
       supabaseKey,
     });

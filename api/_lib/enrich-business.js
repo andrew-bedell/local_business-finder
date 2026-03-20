@@ -61,10 +61,12 @@ function reviewHash(source, authorName, text) {
  * @param {number} opts.businessId - DB business ID
  * @param {string} opts.placeId - Google place_id
  * @param {string} [opts.dataId] - SearchAPI data_id (needed for photos)
+ * @param {string} [opts.businessName] - Business name (for social discovery)
+ * @param {string} [opts.businessAddress] - Business address (for social discovery)
  * @param {string} opts.supabaseUrl
  * @param {string} opts.supabaseKey
  */
-export async function enrichBusiness({ businessId, placeId, dataId, supabaseUrl, supabaseKey }) {
+export async function enrichBusiness({ businessId, placeId, dataId, businessName, businessAddress, supabaseUrl, supabaseKey }) {
   const searchApiKey = process.env.SEARCHAPI_KEY;
   if (!searchApiKey || !placeId) return;
 
@@ -79,6 +81,7 @@ export async function enrichBusiness({ businessId, placeId, dataId, supabaseUrl,
     enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUrl, headers }),
     enrichReviews({ businessId, placeId, dataId, searchApiKey, supabaseUrl, headers }),
     dataId ? enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) : Promise.resolve(),
+    businessName ? enrichSocialProfiles({ businessId, businessName, businessAddress, searchApiKey, supabaseUrl, headers }) : Promise.resolve(),
   ]);
 
   for (const r of results) {
@@ -257,6 +260,86 @@ async function saveReviews({ businessId, reviews, supabaseUrl, headers }) {
     },
     body: JSON.stringify(rows),
   });
+}
+
+/**
+ * Step 4: Social profile discovery — Google search for Instagram, Facebook, etc.
+ */
+async function enrichSocialProfiles({ businessId, businessName, businessAddress, searchApiKey, supabaseUrl, headers }) {
+  // Build a search query: "business name" city instagram OR facebook
+  const city = extractCityFromAddress(businessAddress);
+  const q = `"${businessName}"${city ? ' ' + city : ''} instagram OR facebook`;
+
+  const params = new URLSearchParams({
+    engine: 'google',
+    q,
+    num: '10',
+    api_key: searchApiKey,
+  });
+
+  const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
+  if (!res.ok) {
+    console.warn('SearchAPI social discovery failed:', res.status);
+    return;
+  }
+
+  const data = await res.json();
+  const organicResults = data.organic_results || [];
+
+  const socialPatterns = [
+    { platform: 'instagram', pattern: /instagram\.com\/([a-zA-Z0-9_.]+)\/?/ },
+    { platform: 'facebook', pattern: /facebook\.com\/([a-zA-Z0-9_.]+)\/?/ },
+    { platform: 'tiktok', pattern: /tiktok\.com\/@([a-zA-Z0-9_.]+)\/?/ },
+    { platform: 'twitter', pattern: /(?:twitter|x)\.com\/([a-zA-Z0-9_]+)\/?/ },
+    { platform: 'youtube', pattern: /youtube\.com\/(?:@|channel\/|c\/)([a-zA-Z0-9_-]+)\/?/ },
+    { platform: 'linkedin', pattern: /linkedin\.com\/(?:company|in)\/([a-zA-Z0-9_-]+)\/?/ },
+  ];
+
+  const found = new Map(); // platform -> url (first match wins)
+
+  for (const result of organicResults) {
+    const url = result.link || '';
+    if (!url) continue;
+    for (const { platform, pattern } of socialPatterns) {
+      if (found.has(platform)) continue;
+      const match = url.match(pattern);
+      if (match) {
+        // Skip generic pages (login, explore, etc.)
+        const username = match[1].toLowerCase();
+        const skip = ['login', 'explore', 'about', 'help', 'settings', 'p', 'stories', 'reel', 'watch', 'pages', 'groups'];
+        if (!skip.includes(username)) {
+          found.set(platform, url);
+        }
+      }
+    }
+  }
+
+  if (found.size === 0) return;
+
+  const profiles = [];
+  for (const [platform, url] of found) {
+    profiles.push({ business_id: businessId, platform, url });
+  }
+
+  // Upsert: on conflict (business_id, platform), update url
+  await fetch(`${supabaseUrl}/rest/v1/business_social_profiles`, {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Prefer': 'return=minimal,resolution=merge-duplicates',
+    },
+    body: JSON.stringify(profiles),
+  });
+}
+
+/**
+ * Extract city from a full address string (first comma-separated segment after street).
+ */
+function extractCityFromAddress(address) {
+  if (!address) return '';
+  const parts = address.split(',').map(s => s.trim());
+  // Typically: "Street, City, State ZIP, Country" — return the city part
+  return parts.length >= 2 ? parts[1] : parts[0];
 }
 
 /**
