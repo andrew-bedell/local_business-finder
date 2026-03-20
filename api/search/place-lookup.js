@@ -22,22 +22,46 @@ export default async function handler(req, res) {
     if (parsed.place_id) place_id = parsed.place_id;
     if (parsed.data_id) data_id = parsed.data_id;
 
-    // share.google URLs resolve to a search query — find the place by name
-    if (!place_id && !data_id && parsed.search_query) {
-      const searchParams = new URLSearchParams({
-        engine: 'google_maps',
-        q: parsed.search_query,
-        api_key: apiKey,
-      });
-      if (hl) searchParams.set('hl', hl);
+    // share.google URLs resolve to a kgmid and/or search query
+    if (!place_id && !data_id && (parsed.kgmid || parsed.search_query)) {
+      // Strategy 1: Use kgmid as the search query — Google Maps understands /g/ identifiers
+      // This gives an exact match for the specific business location.
+      if (parsed.kgmid) {
+        const kgParams = new URLSearchParams({
+          engine: 'google_maps',
+          q: parsed.kgmid,
+          api_key: apiKey,
+        });
+        if (hl) kgParams.set('hl', hl);
 
-      const searchRes = await fetch('https://www.searchapi.io/api/v1/search?' + searchParams.toString());
-      if (searchRes.ok) {
-        const searchData = await searchRes.json();
-        const firstResult = (searchData.local_results || [])[0];
-        if (firstResult) {
-          data_id = firstResult.data_id || null;
-          if (!data_id) place_id = firstResult.place_id || null;
+        const kgRes = await fetch('https://www.searchapi.io/api/v1/search?' + kgParams.toString());
+        if (kgRes.ok) {
+          const kgData = await kgRes.json();
+          const results = kgData.local_results || [];
+          if (results.length > 0) {
+            data_id = results[0].data_id || null;
+            if (!data_id) place_id = results[0].place_id || null;
+          }
+        }
+      }
+
+      // Strategy 2: Fallback — search by business name
+      if (!place_id && !data_id && parsed.search_query) {
+        const searchParams = new URLSearchParams({
+          engine: 'google_maps',
+          q: parsed.search_query,
+          api_key: apiKey,
+        });
+        if (hl) searchParams.set('hl', hl);
+
+        const searchRes = await fetch('https://www.searchapi.io/api/v1/search?' + searchParams.toString());
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const firstResult = (searchData.local_results || [])[0];
+          if (firstResult) {
+            data_id = firstResult.data_id || null;
+            if (!data_id) place_id = firstResult.place_id || null;
+          }
         }
       }
     }
@@ -127,7 +151,21 @@ async function resolveUrl(url) {
       return { data_id: '0x0:0x' + BigInt(cidMatch[1]).toString(16) };
     }
 
-    // Fallback: extract search query from Google Search redirect (share.google URLs)
+    // Extract kgmid (Knowledge Graph ID) — unique per business location (share.google URLs)
+    const kgmidMatch = url.match(/[?&]kgmid=([^&]+)/);
+    if (kgmidMatch) {
+      const kgmid = decodeURIComponent(kgmidMatch[1]);
+      // Also grab the query for fallback
+      try {
+        const searchUrl = new URL(url);
+        const searchQuery = searchUrl.searchParams.get('q');
+        return { kgmid, search_query: searchQuery || '' };
+      } catch (_) {
+        return { kgmid };
+      }
+    }
+
+    // Fallback: extract search query from Google Search redirect
     try {
       const searchUrl = new URL(url);
       const searchQuery = searchUrl.searchParams.get('q');
