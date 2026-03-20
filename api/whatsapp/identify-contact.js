@@ -68,11 +68,13 @@ export default async function handler(req, res) {
       bizOrConditions.push(`phone.eq.${encodeURIComponent(v)}`);
       bizOrConditions.push(`contact_phone.eq.${encodeURIComponent(v)}`);
       bizOrConditions.push(`contact_whatsapp.eq.${encodeURIComponent(v)}`);
+      bizOrConditions.push(`whatsapp.eq.${encodeURIComponent(v)}`);
     }
     if (lastTen.length === 10) {
       bizOrConditions.push(`phone.ilike.*${lastTen}`);
       bizOrConditions.push(`contact_phone.ilike.*${lastTen}`);
       bizOrConditions.push(`contact_whatsapp.ilike.*${lastTen}`);
+      bizOrConditions.push(`whatsapp.ilike.*${lastTen}`);
     }
 
     const bizRes = await fetch(

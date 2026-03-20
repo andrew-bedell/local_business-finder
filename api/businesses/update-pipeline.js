@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId, pipeline_status, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country, name, address_full } = req.body || {};
+  const { businessId, pipeline_status, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country, name, address_full, notes } = req.body || {};
 
   if (!businessId) {
     return res.status(400).json({ error: 'Missing required field: businessId' });
@@ -55,6 +55,7 @@ export default async function handler(req, res) {
     if (address_country !== undefined) updatePayload.address_country = address_country;
     if (name !== undefined) updatePayload.name = name;
     if (address_full !== undefined) updatePayload.address_full = address_full;
+    if (notes !== undefined) updatePayload.notes = notes;
 
     if (Object.keys(updatePayload).length === 0) {
       return res.status(400).json({ error: 'No fields to update' });

@@ -35,7 +35,6 @@
                   <svg class="nav-chevron" viewBox="0 0 12 12" width="10" height="10"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
                 </a>
                 <div class="nav-dropdown">
-                  <a href="/employee" class="nav-dropdown-item" data-i18n="navSearch">Search</a>
                   <a href="#" class="nav-dropdown-item active" id="nav-saved" data-tab="saved" data-i18n="navPipeline">Pipeline</a>
                 </div>
               </div>
@@ -114,6 +113,246 @@
     </nav>
 
     <main class="main">
+      <!-- Sticky Section Nav (visible on Pipeline tab) -->
+      <div class="section-nav" id="section-nav" style="display:none">
+        <div class="section-nav-inner">
+          <button class="section-nav-btn active" id="section-nav-search" data-i18n="navSearch">Search</button>
+          <button class="section-nav-btn" id="section-nav-pipeline">
+            <span data-i18n="navPipeline">Pipeline</span>
+            <span class="section-nav-count" id="section-nav-count"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Sections (from search page) -->
+      <div id="search-wrapper">
+        <!-- API Key Setup -->
+        <section class="card api-card" id="api-setup">
+          <div class="card-header">
+            <h2 data-i18n="apiKeyTitle">Google Places API Key</h2>
+            <button class="btn btn-text" id="api-help-toggle" data-i18n="setupGuide">Setup Guide</button>
+          </div>
+          <div class="api-key-row">
+            <input type="password" id="api-key-input" data-i18n-placeholder="apiKeyPlaceholder" placeholder="Enter your Google Places API key" class="input" autocomplete="off">
+            <button class="btn btn-primary" id="btn-save-key" data-i18n="saveKey">Save Key</button>
+          </div>
+          <div class="api-status" id="api-status"></div>
+          <div class="api-help" id="api-help" style="display:none;">
+            <ol>
+              <li data-i18n="helpStep1">Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a></li>
+              <li data-i18n="helpStep2">Create a new project (or select existing)</li>
+              <li data-i18n="helpStep3">Enable the <strong>Places API (New)</strong> and <strong>Maps JavaScript API</strong></li>
+              <li data-i18n="helpStep4">Go to <strong>Credentials</strong> and create an API key</li>
+              <li data-i18n="helpStep5">For security, restrict the key to your domain and the Places/Maps APIs</li>
+              <li data-i18n="helpStep6">Paste your key above and click Save</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Search Form -->
+        <section class="card search-card search-collapsible" id="search-section">
+          <div class="card-header">
+            <h2 data-i18n="searchTitle">Search for Businesses</h2>
+            <button class="btn btn-text" id="btn-collapse-search" data-i18n="searchCollapse">Collapse</button>
+          </div>
+          <div class="search-summary" id="search-summary"></div>
+          <div class="search-form">
+            <div class="form-group">
+              <label for="country-select" data-i18n="countryLabel">Country</label>
+              <select id="country-select" class="input">
+                <option value="us" data-i18n="countryUS">United States</option>
+                <option value="mx" data-i18n="countryMX">Mexico</option>
+                <option value="co" data-i18n="countryCO">Colombia</option>
+                <option value="ec" data-i18n="countryEC">Ecuador</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="location-input" data-i18n="locationLabel">Location</label>
+              <input type="text" id="location-input" class="input" data-i18n-placeholder="locationPlaceholder" placeholder="City, zip code, or address (e.g., Austin TX, 90210, 123 Main St)">
+            </div>
+            <div class="form-group">
+              <label for="business-type" data-i18n="businessTypeLabel">Business Type</label>
+              <div class="type-selector">
+                <select id="business-type" class="input">
+                  <option value="" data-i18n="selectType">Select a business type...</option>
+                  <option value="all" data-i18n="typeAll">All Types</option>
+                  <optgroup label="Food & Drink" data-i18n-label="groupFood">
+                    <option value="restaurant" data-i18n="typeRestaurant">Restaurants</option>
+                    <option value="cafe" data-i18n="typeCafe">Cafes & Coffee Shops</option>
+                    <option value="bakery" data-i18n="typeBakery">Bakeries</option>
+                    <option value="bar" data-i18n="typeBar">Bars & Pubs</option>
+                    <option value="meal_delivery" data-i18n="typeMealDelivery">Meal Delivery</option>
+                    <option value="meal_takeaway" data-i18n="typeMealTakeaway">Takeaway / Fast Food</option>
+                  </optgroup>
+                  <optgroup label="Beauty & Personal Care" data-i18n-label="groupBeauty">
+                    <option value="hair_care" data-i18n="typeHairCare">Barbers & Hair Salons</option>
+                    <option value="beauty_salon" data-i18n="typeBeautySalon">Beauty Salons</option>
+                    <option value="spa" data-i18n="typeSpa">Spas & Massage</option>
+                    <option value="nail_salon" data-i18n="typeNailSalon">Nail Salons</option>
+                  </optgroup>
+                  <optgroup label="Health & Fitness" data-i18n-label="groupHealth">
+                    <option value="gym" data-i18n="typeGym">Gyms & Fitness Centers</option>
+                    <option value="dentist" data-i18n="typeDentist">Dentists</option>
+                    <option value="doctor" data-i18n="typeDoctor">Doctors</option>
+                    <option value="pharmacy" data-i18n="typePharmacy">Pharmacies</option>
+                    <option value="physiotherapist" data-i18n="typePhysio">Physiotherapists</option>
+                    <option value="veterinary_care" data-i18n="typeVet">Veterinary Care</option>
+                  </optgroup>
+                  <optgroup label="Home Services" data-i18n-label="groupHome">
+                    <option value="plumber" data-i18n="typePlumber">Plumbers</option>
+                    <option value="electrician" data-i18n="typeElectrician">Electricians</option>
+                    <option value="locksmith" data-i18n="typeLocksmith">Locksmiths</option>
+                    <option value="painter" data-i18n="typePainter">Painters</option>
+                    <option value="roofing_contractor" data-i18n="typeRoofing">Roofing Contractors</option>
+                    <option value="moving_company" data-i18n="typeMoving">Moving Companies</option>
+                  </optgroup>
+                  <optgroup label="Automotive" data-i18n-label="groupAuto">
+                    <option value="car_repair" data-i18n="typeCarRepair">Auto Repair</option>
+                    <option value="car_wash" data-i18n="typeCarWash">Car Washes</option>
+                    <option value="car_dealer" data-i18n="typeCarDealer">Car Dealers</option>
+                    <option value="gas_station" data-i18n="typeGasStation">Gas Stations</option>
+                  </optgroup>
+                  <optgroup label="Shopping" data-i18n-label="groupShopping">
+                    <option value="clothing_store" data-i18n="typeClothing">Clothing Stores</option>
+                    <option value="jewelry_store" data-i18n="typeJewelry">Jewelry Stores</option>
+                    <option value="florist" data-i18n="typeFlorist">Florists</option>
+                    <option value="pet_store" data-i18n="typePetStore">Pet Stores</option>
+                    <option value="furniture_store" data-i18n="typeFurniture">Furniture Stores</option>
+                    <option value="hardware_store" data-i18n="typeHardware">Hardware Stores</option>
+                  </optgroup>
+                  <optgroup label="Professional Services" data-i18n-label="groupProfessional">
+                    <option value="lawyer" data-i18n="typeLawyer">Lawyers</option>
+                    <option value="accounting" data-i18n="typeAccountant">Accountants</option>
+                    <option value="real_estate_agency" data-i18n="typeRealEstate">Real Estate Agencies</option>
+                    <option value="insurance_agency" data-i18n="typeInsurance">Insurance Agencies</option>
+                  </optgroup>
+                  <optgroup label="Other" data-i18n-label="groupOther">
+                    <option value="laundry" data-i18n="typeLaundry">Laundry & Dry Cleaning</option>
+                    <option value="storage" data-i18n="typeStorage">Storage Facilities</option>
+                    <option value="travel_agency" data-i18n="typeTravel">Travel Agencies</option>
+                    <option value="lodging" data-i18n="typeLodging">Hotels & Lodging</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group form-group-half">
+                <label for="radius-select" data-i18n="radiusLabel">Search Radius</label>
+                <select id="radius-select" class="input">
+                  <option value="1609">1 mile</option>
+                  <option value="4828">3 miles</option>
+                  <option value="8047" selected>5 miles</option>
+                  <option value="16093">10 miles</option>
+                  <option value="32187">20 miles</option>
+                  <option value="48280">30 miles</option>
+                </select>
+              </div>
+              <div class="form-group form-group-half">
+                <label for="max-results" data-i18n="maxResultsLabel">Max Results</label>
+                <select id="max-results" class="input">
+                  <option value="10">10</option>
+                  <option value="20" selected>20</option>
+                  <option value="40">40</option>
+                  <option value="60">60</option>
+                  <option value="80">80</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-search" id="btn-search" disabled>
+              <span class="btn-text" data-i18n="searchBtn">Search Businesses</span>
+              <span class="btn-loading" style="display:none;">
+                <span class="spinner"></span> <span data-i18n="searching">Searching...</span>
+              </span>
+            </button>
+          </div>
+
+          <!-- URL Lookup -->
+          <div class="lookup-section">
+            <div class="lookup-divider">
+              <span data-i18n="lookupDivider">or add a specific business</span>
+            </div>
+            <div class="lookup-row">
+              <input type="text" id="lookup-input" class="input" data-i18n-placeholder="lookupPlaceholder" placeholder="Paste a Google Maps URL or Place ID...">
+              <button class="btn btn-primary" id="btn-lookup">
+                <span class="btn-text" data-i18n="lookupBtn">Look Up</span>
+                <span class="btn-loading" style="display:none;">
+                  <span class="spinner"></span> <span data-i18n="lookingUp">Looking up...</span>
+                </span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Progress -->
+        <section class="card progress-card" id="progress-section" style="display:none;">
+          <h2 data-i18n="progressTitle">Search Progress</h2>
+          <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <p class="progress-text" id="progress-text"></p>
+          <div class="progress-stats" id="progress-stats"></div>
+        </section>
+
+        <!-- Search Results -->
+        <section class="card results-card" id="search-results-section" style="display:none;">
+          <div class="results-header">
+            <div>
+              <h2 data-i18n="resultsTitle">Results</h2>
+              <p class="results-summary" id="search-results-summary"></p>
+            </div>
+            <div class="results-actions">
+              <button class="btn btn-secondary" id="btn-export-csv" data-i18n="exportCsv">Export CSV</button>
+              <button class="btn btn-save-db" id="btn-save-all" data-i18n="saveAllBtn">Save All to DB</button>
+              <button class="btn btn-secondary" id="btn-clear" data-i18n="clearBtn">Clear</button>
+            </div>
+          </div>
+
+          <!-- Filter bar -->
+          <div class="filter-bar">
+            <input type="text" id="search-filter-input" class="input" data-i18n-placeholder="filterPlaceholder" placeholder="Filter results by name or address...">
+            <select id="search-sort-select" class="input input-sort">
+              <option value="name" data-i18n="sortName">Sort by Name</option>
+              <option value="rating" data-i18n="sortRating">Sort by Rating</option>
+              <option value="reviews" data-i18n="sortReviews">Sort by Reviews</option>
+            </select>
+          </div>
+
+          <div class="results-table-wrapper">
+            <table class="results-table" id="search-results-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th class="col-type" data-i18n="thType">Type</th>
+                  <th class="col-name" data-i18n="thName">Business Name</th>
+                  <th class="col-address" data-i18n="thAddress">Address</th>
+                  <th class="col-phone" data-i18n="thPhone">Phone</th>
+                  <th class="col-rating" data-i18n="thRating">Rating</th>
+                  <th class="col-reviews" data-i18n="thReviews">Reviews</th>
+                  <th class="col-status" data-i18n="thStatus">Status</th>
+                  <th class="col-social" data-i18n="thSocial">Social</th>
+                  <th data-i18n="thReport">Report</th>
+                  <th data-i18n="thAiPhotos">AI Photos</th>
+                  <th data-i18n="thWebsite">Website</th>
+                  <th class="col-details" data-i18n="thDetails">Details</th>
+                  <th class="col-maps">Maps</th>
+                  <th class="col-save" data-i18n="thSave">Save</th>
+                </tr>
+              </thead>
+              <tbody id="search-results-body"></tbody>
+            </table>
+          </div>
+
+          <div class="no-results" id="search-no-results" style="display:none;">
+            <p data-i18n="noResults1">All businesses found in this area already have websites.</p>
+            <p data-i18n="noResults2">Try expanding the search radius or changing the business type.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- Visual separator / Pipeline anchor -->
+      <div class="section-divider" id="pipeline-anchor"></div>
+
       <!-- Stats Summary -->
       <section class="admin-stats-bar" id="stats-bar">
         <div class="admin-stat-card">
@@ -145,7 +384,7 @@
       </section>
 
       <!-- Pipeline Search -->
-      <div class="pipeline-search-row">
+      <div class="pipeline-search-row" id="pipeline-search-row">
         <input type="text" id="pipeline-search" class="input" data-i18n-placeholder="pipelineSearchPlaceholder" placeholder="Search by name, email, phone...">
       </div>
 
@@ -263,14 +502,13 @@
             <thead>
               <tr>
                 <th class="col-num">#</th>
+                <th data-i18n="thBusinessCode">ID</th>
                 <th class="col-name" data-i18n="thName">Business Name</th>
                 <th class="col-address" data-i18n="thLocation">Location</th>
                 <th data-i18n="thType">Type</th>
                 <th data-i18n="thStage">Stage</th>
                 <th data-i18n="thCountry">Country</th>
-                <th data-i18n="thContact">Contact Name</th>
-                <th data-i18n="thContactWhatsapp">Contact WhatsApp</th>
-                <th data-i18n="thContactEmail">Contact Email</th>
+                <th data-i18n="thContacts">Contacts</th>
                 <th class="col-phone" data-i18n="thPhone">Business Phone</th>
                 <th data-i18n="thEmail">Business Email</th>
                 <th class="col-rating" data-i18n="thRating">Rating</th>
@@ -905,6 +1143,7 @@
   <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
   <script src="https://unpkg.com/grapesjs-preset-newsletter@1.0.1"></script>
   <script src="/employee/auth.js"></script>
+  <script src="/employee/app.js"></script>
   <script src="/employee/admin.js"></script>
 </body>
 </html>

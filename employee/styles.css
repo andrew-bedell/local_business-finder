@@ -226,6 +226,74 @@ a:hover {
   border-color: var(--primary);
 }
 
+/* === Sticky Section Nav === */
+.section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 24px;
+}
+.section-nav-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+}
+.section-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.section-nav-btn:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.section-nav-btn.active {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.section-nav-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+.section-nav-btn.active .section-nav-count {
+  color: var(--primary);
+}
+
+/* === Collapsible Search === */
+.search-collapsible.collapsed .search-form,
+.search-collapsible.collapsed .lookup-section {
+  display: none;
+}
+.search-collapsible.collapsed .search-summary {
+  display: block;
+}
+.search-summary {
+  display: none;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+/* === Section Divider === */
+.section-divider {
+  height: 1px;
+  margin: 8px 0;
+}
+
 /* === Language Switcher === */
 .lang-switcher {
   display: flex;
@@ -749,6 +817,41 @@ select.input {
 @keyframes inlineSaveFlash {
   0% { background: var(--success-bg); }
   100% { background: transparent; }
+}
+
+/* Contacts count badge */
+.contacts-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-bg);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  padding: 0 5px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.td-contacts {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.td-contacts:hover {
+  background: var(--bg-hover);
+}
+
+/* Contact card in modal */
+.contact-card {
+  transition: background 0.15s;
+}
+
+.contact-card:hover {
+  background: var(--bg-hover) !important;
 }
 
 /* Star rating */

@@ -1,8 +1,8 @@
 {
   "rewrites": [
     { "source": "/employee/login", "destination": "/employee/login.html" },
-    { "source": "/employee", "destination": "/employee/index.html" },
-    { "source": "/employee/search", "destination": "/employee/index.html" },
+    { "source": "/employee", "destination": "/employee/admin.html" },
+    { "source": "/employee/search", "destination": "/employee/admin.html" },
     { "source": "/employee/admin", "destination": "/employee/admin.html" },
     { "source": "/employee/saved", "destination": "/employee/admin.html" },
     { "source": "/employee/messages", "destination": "/employee/admin.html" },

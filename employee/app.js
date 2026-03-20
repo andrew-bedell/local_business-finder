@@ -190,6 +190,10 @@
       saveAllSuccessToast: 'Successfully saved {0} of {1} businesses to database!',
       saveRowSuccess: '"{0}" saved to database.',
       saveRowError: 'Failed to save "{0}". Check console for details.',
+      viewInPipeline: 'View in Pipeline',
+      searchCollapse: 'Collapse',
+      searchExpand: 'Expand',
+      searchSummaryText: 'Last search: {0} — {1} results',
       // Error messages
       searchError: 'Search failed. Please check your API key and network connection, then try again.',
       timeoutError: '{0} timed out after {1}s. Check your API key and network connection.',
@@ -552,6 +556,10 @@
       saveAllSuccessToast: '¡{0} de {1} negocios guardados en la base de datos!',
       saveRowSuccess: '"{0}" guardado en la base de datos.',
       saveRowError: 'Error al guardar "{0}". Revisa la consola para más detalles.',
+      viewInPipeline: 'Ver en Pipeline',
+      searchCollapse: 'Contraer',
+      searchExpand: 'Expandir',
+      searchSummaryText: 'Última búsqueda: {0} — {1} resultados',
       // Error messages
       searchError: 'La búsqueda falló. Verifica tu clave API y conexión a internet, e intenta de nuevo.',
       timeoutError: '{0} agotó el tiempo de espera después de {1}s. Verifica tu clave API y conexión a internet.',
@@ -744,11 +752,12 @@
   function applyLanguage() {
     document.documentElement.lang = currentLang;
 
-    // Text content
+    // Text content — only set elements whose keys exist in our translations
+    const lang = translations[currentLang] || {};
     document.querySelectorAll('[data-i18n]').forEach((el) => {
       const key = el.getAttribute('data-i18n');
-      const val = t(key);
-      // Use innerHTML for keys that contain HTML tags
+      if (!lang[key]) return;
+      const val = lang[key];
       if (val.includes('<a ') || val.includes('<strong>')) {
         el.innerHTML = val;
       } else {
@@ -758,23 +767,22 @@
 
     // Placeholders
     document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
-      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (!lang[key]) return;
+      el.placeholder = lang[key];
     });
 
     // Optgroup labels
     document.querySelectorAll('[data-i18n-label]').forEach((el) => {
-      el.label = t(el.getAttribute('data-i18n-label'));
+      const key = el.getAttribute('data-i18n-label');
+      if (!lang[key]) return;
+      el.label = lang[key];
     });
 
     // Update lang switcher active state
     document.querySelectorAll('.lang-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
     });
-
-    // Update page title
-    document.title = currentLang === 'es'
-      ? 'Buscador de Negocios Locales - Sin Sitio Web'
-      : 'Local Business Finder - No Website';
 
     // Refresh radius labels and location placeholder for current country
     onCountryChange();
@@ -794,6 +802,28 @@
     toast.textContent = message;
     container.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 4000);
+  }
+
+  function showToastWithLink(message, type, linkText, scrollTargetId) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    const span = document.createElement('span');
+    span.textContent = message + ' ';
+    toast.appendChild(span);
+    const link = document.createElement('a');
+    link.href = '#';
+    link.textContent = linkText;
+    link.style.cssText = 'color:inherit;text-decoration:underline;font-weight:600';
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      var target = document.getElementById(scrollTargetId);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+      toast.remove();
+    });
+    toast.appendChild(link);
+    container.appendChild(toast);
+    setTimeout(() => { toast.remove(); }, 6000);
   }
 
   // ── Supabase ──
@@ -963,6 +993,7 @@
       await Promise.all(parallelOps);
 
       savedPlaceIds.add(place.placeId);
+      document.dispatchEvent(new CustomEvent('business-saved', { detail: { placeId: place.placeId } }));
 
       return true;
     } catch (err) {
@@ -1015,6 +1046,8 @@
   let filteredResults = [];
   let isSearching = false;
   let mapsLoaded = false;
+  let searchCollapsed = false;
+  let lastSearchInfo = null; // { location, count }
 
   function getSearchLanguage() {
     const country = countrySelect.value;
@@ -1039,12 +1072,12 @@
   const progressBar = $('#progress-bar');
   const progressText = $('#progress-text');
   const progressStats = $('#progress-stats');
-  const resultsSection = $('#results-section');
-  const resultsSummary = $('#results-summary');
-  const resultsBody = $('#results-body');
-  const noResults = $('#no-results');
-  const filterInput = $('#filter-input');
-  const sortSelect = $('#sort-select');
+  const resultsSection = $('#search-results-section');
+  const resultsSummary = $('#search-results-summary');
+  const resultsBody = $('#search-results-body');
+  const noResults = $('#search-no-results');
+  const filterInput = $('#search-filter-input');
+  const sortSelect = $('#search-sort-select');
   const btnExportCsv = $('#btn-export-csv');
   const btnClear = $('#btn-clear');
   const lookupInput = $('#lookup-input');
@@ -1070,6 +1103,10 @@
     lookupInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') lookupByUrl();
     });
+
+    // Collapse search toggle
+    const btnCollapse = document.getElementById('btn-collapse-search');
+    if (btnCollapse) btnCollapse.addEventListener('click', toggleSearchCollapse);
 
     // Language switcher
     document.querySelectorAll('.lang-btn').forEach((btn) => {
@@ -1274,6 +1311,8 @@
       updateProgress(90, t('foundBusinesses', mapped.length));
 
       allResults = noWebsite;
+      lastSearchInfo = { location: location, count: allResults.length };
+      updateSearchSummary();
 
       updateProgress(95, t('searchComplete'));
       progressStats.textContent = t('progressStatsText', mapped.length, allResults.length);
@@ -1378,15 +1417,15 @@
 
     if (allResults.length === 0) {
       noResults.style.display = 'block';
-      document.querySelector('.results-table-wrapper').style.display = 'none';
-      document.querySelector('.filter-bar').style.display = 'none';
+      resultsSection.querySelector('.results-table-wrapper').style.display = 'none';
+      resultsSection.querySelector('.filter-bar').style.display = 'none';
       resultsSummary.textContent = t('noWebsitesFound');
       return;
     }
 
     noResults.style.display = 'none';
-    document.querySelector('.results-table-wrapper').style.display = 'block';
-    document.querySelector('.filter-bar').style.display = 'flex';
+    resultsSection.querySelector('.results-table-wrapper').style.display = 'block';
+    resultsSection.querySelector('.filter-bar').style.display = 'flex';
 
     applyFilterAndSort();
     resultsSection.scrollIntoView({ behavior: 'smooth' });
@@ -1507,7 +1546,7 @@
           const ok = await saveBusiness(place);
           if (ok) {
             this.outerHTML = `<span class="badge badge-saved">${t('savedBtn')}</span>`;
-            showToast(t('saveRowSuccess', place.name), 'success');
+            showToastWithLink(t('saveRowSuccess', place.name), 'success', t('viewInPipeline'), 'pipeline-anchor');
           } else {
             this.textContent = t('saveError');
             this.disabled = false;
@@ -1573,6 +1612,22 @@
     progressSection.style.display = 'none';
     filterInput.value = '';
     resultsBody.innerHTML = '';
+  }
+
+  // ── Collapsible Search ──
+  function toggleSearchCollapse() {
+    const section = document.getElementById('search-section');
+    if (!section) return;
+    searchCollapsed = !searchCollapsed;
+    section.classList.toggle('collapsed', searchCollapsed);
+    const btn = document.getElementById('btn-collapse-search');
+    if (btn) btn.textContent = searchCollapsed ? t('searchExpand') : t('searchCollapse');
+  }
+
+  function updateSearchSummary() {
+    const el = document.getElementById('search-summary');
+    if (!el || !lastSearchInfo) return;
+    el.textContent = t('searchSummaryText', lastSearchInfo.location, lastSearchInfo.count);
   }
 
   // ── Category Mapping ──
@@ -4447,7 +4502,7 @@
         saveBtn.textContent = t('savingBtn');
         const ok = await saveBusiness(place);
         if (ok) {
-          showToast(t('saveRowSuccess', place.name), 'success');
+          showToastWithLink(t('saveRowSuccess', place.name), 'success', t('viewInPipeline'), 'pipeline-anchor');
           // Re-render the social profiles section now that business is saved
           initSocialProfilesSection(modal, place);
         } else {
@@ -4700,25 +4755,8 @@
   }
 
   function startApp() {
-    // Show the app container (hidden until auth passes)
-    const appEl = document.getElementById('app');
-    if (appEl) appEl.style.display = '';
-    // Show user info in header
-    if (window.__employeeAuth) {
-      const nameEl = document.getElementById('header-user-name');
-      const infoEl = document.getElementById('header-user-info');
-      if (nameEl && window.__employeeAuth.employee.display_name) {
-        nameEl.textContent = window.__employeeAuth.employee.display_name;
-      } else if (nameEl) {
-        nameEl.textContent = window.__employeeAuth.employee.email;
-      }
-      if (infoEl) infoEl.style.display = '';
-      const logoutBtn = document.getElementById('btn-logout');
-      if (logoutBtn) logoutBtn.addEventListener('click', () => window.__employeeAuth.signOut());
-    }
+    // Only initialize search — admin.js handles app container, user info, and navigation
     init();
-    initMobileNav();
-    initDesktopDropdowns();
   }
 
   if (window.__employeeAuth) {

@@ -7,7 +7,6 @@
   const NAV_GROUPS = {
     pipeline: {
       items: [
-        { label: 'navSearch', href: '/employee' },
         { label: 'navPipeline', tab: 'saved' }
       ],
       defaultTab: 'saved'
@@ -72,13 +71,32 @@
       thStage: 'Stage',
       thCountry: 'Country',
       thContact: 'Contact Name',
+      thContacts: 'Contacts',
       thContactWhatsapp: 'Contact WhatsApp',
       thContactEmail: 'Contact Email',
+      thBusinessCode: 'ID',
       contactName: 'Contact Name',
       contactPhone: 'Contact Phone',
       contactEmail: 'Contact Email',
+      contactTitle: 'Title / Role',
+      contactNotes: 'Contact Notes',
+      contactTitlePlaceholder: 'e.g. Owner, Manager, Cashier...',
+      contactIsPrimary: 'Primary Contact',
+      addContact: 'Add Contact',
+      editContact: 'Edit Contact',
+      deleteContact: 'Delete Contact',
+      deleteContactConfirm: 'Delete this contact?',
+      contactSaved: 'Contact saved',
+      contactDeleted: 'Contact deleted',
+      contactError: 'Failed to save contact',
+      contactDeleteError: 'Failed to delete contact',
+      noContacts: 'No contacts yet',
+      contactsCount: '{0} contact(s)',
+      businessNotes: 'Business Notes',
+      businessNotesPlaceholder: 'Add notes about this business...',
+      businessNotesSaved: 'Notes saved',
       pipelineStage: 'Pipeline Stage',
-      pipelineContactSection: 'Contact & Pipeline',
+      pipelineContactSection: 'Contacts & Pipeline',
       pipelineChangeSuccess: 'Pipeline updated successfully',
       pipelineChangeError: 'Failed to update pipeline',
       inlineEditSaved: 'Saved',
@@ -86,7 +104,7 @@
       clickToEdit: 'Click to edit',
       clickToAdd: 'Click to add',
       pipelineSaving: 'Saving...',
-      pipelineSaveBtn: 'Save Contact Info',
+      pipelineSaveBtn: 'Save Pipeline Status',
       stageSaved: 'Saved',
       stageLead: 'Lead',
       stageDemo: 'Demo',
@@ -624,13 +642,32 @@
       thStage: 'Etapa',
       thCountry: 'País',
       thContact: 'Nombre de Contacto',
+      thContacts: 'Contactos',
       thContactWhatsapp: 'WhatsApp de Contacto',
       thContactEmail: 'Correo de Contacto',
+      thBusinessCode: 'ID',
       contactName: 'Nombre de Contacto',
       contactPhone: 'Teléfono de Contacto',
       contactEmail: 'Correo de Contacto',
+      contactTitle: 'Título / Rol',
+      contactNotes: 'Notas del Contacto',
+      contactTitlePlaceholder: 'ej. Dueño, Gerente, Cajero...',
+      contactIsPrimary: 'Contacto Principal',
+      addContact: 'Agregar Contacto',
+      editContact: 'Editar Contacto',
+      deleteContact: 'Eliminar Contacto',
+      deleteContactConfirm: '¿Eliminar este contacto?',
+      contactSaved: 'Contacto guardado',
+      contactDeleted: 'Contacto eliminado',
+      contactError: 'Error al guardar contacto',
+      contactDeleteError: 'Error al eliminar contacto',
+      noContacts: 'Sin contactos',
+      contactsCount: '{0} contacto(s)',
+      businessNotes: 'Notas del Negocio',
+      businessNotesPlaceholder: 'Agregar notas sobre este negocio...',
+      businessNotesSaved: 'Notas guardadas',
       pipelineStage: 'Etapa del Pipeline',
-      pipelineContactSection: 'Contacto y Pipeline',
+      pipelineContactSection: 'Contactos y Pipeline',
       pipelineChangeSuccess: 'Pipeline actualizado exitosamente',
       pipelineChangeError: 'Error al actualizar pipeline',
       inlineEditSaved: 'Guardado',
@@ -638,7 +675,7 @@
       clickToEdit: 'Clic para editar',
       clickToAdd: 'Clic para agregar',
       pipelineSaving: 'Guardando...',
-      pipelineSaveBtn: 'Guardar Contacto',
+      pipelineSaveBtn: 'Guardar Etapa',
       stageSaved: 'Guardado',
       stageLead: 'Lead',
       stageDemo: 'Demo',
@@ -1163,11 +1200,17 @@
   }
 
   function applyLanguage() {
+    // Only set elements whose keys exist in our translations (avoid overwriting app.js keys)
+    const lang = translations[currentLang] || {};
     document.querySelectorAll('[data-i18n]').forEach((el) => {
-      el.textContent = t(el.getAttribute('data-i18n'));
+      const key = el.getAttribute('data-i18n');
+      if (!lang[key]) return;
+      el.textContent = lang[key];
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
-      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+      const key = el.getAttribute('data-i18n-placeholder');
+      if (!lang[key]) return;
+      el.placeholder = lang[key];
     });
     document.querySelectorAll('.lang-btn').forEach((btn) => {
       btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
@@ -1435,6 +1478,9 @@
       pipelineSearch.addEventListener('input', () => applyPipelineFilter());
     }
 
+    // Section nav (search/pipeline scroll pills)
+    initSectionNav();
+
     // Enable/disable IG posts filter based on Has Instagram
     filterInstagram.addEventListener('change', () => {
       filterIgPosts.disabled = filterInstagram.value !== 'yes';
@@ -1594,10 +1640,12 @@
         supabaseClient.from('generated_websites').select('id', { count: 'exact', head: true }),
       ]);
 
-      $('#stat-total').textContent = totalRes.count || 0;
+      var total = totalRes.count || 0;
+      $('#stat-total').textContent = total;
       $('#stat-leads').textContent = leadsRes.count || 0;
       $('#stat-active-customers').textContent = activeRes.count || 0;
       $('#stat-websites').textContent = websitesRes.count || 0;
+      updateSectionNavCount(total);
     } catch (err) {
       console.error('Stats load error:', err);
     }
@@ -1610,13 +1658,13 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="21" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="22" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), generated_websites(id, status, site_status, published_url, config)');
+        .select('*, business_social_profiles(*), generated_websites(id, status, site_status, published_url, config), business_contacts(*)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -1736,8 +1784,10 @@
     const search = (pipelineSearch ? pipelineSearch.value : '').toLowerCase().trim();
     if (search) {
       filtered = filtered.filter(b => {
+        const contactFields = (b.business_contacts || []).flatMap(c => [c.contact_name, c.contact_email, c.contact_phone, c.contact_whatsapp, c.contact_title]);
         const haystack = [
-          b.name, b.phone, b.email, b.contact_name, b.contact_email, b.contact_phone, b.contact_whatsapp, b.address_full, b.address_country, b.whatsapp
+          b.name, b.phone, b.email, b.business_code, b.contact_name, b.contact_email, b.contact_phone, b.contact_whatsapp, b.address_full, b.address_country, b.whatsapp,
+          ...contactFields
         ].filter(Boolean).join(' ').toLowerCase();
         return haystack.includes(search);
       });
@@ -1900,16 +1950,29 @@
         ? `<a href="${escapeHtml(b.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
         : `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.name + ' ' + (b.address_full || ''))}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
 
+      // Build contacts cell
+      const contacts = b.business_contacts || [];
+      const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
+      const contactsCount = contacts.length;
+      let contactsCellHtml;
+      if (contactsCount === 0) {
+        contactsCellHtml = '<span class="td-empty-placeholder">+</span>';
+      } else {
+        const nameDisplay = primaryContact.contact_name ? escapeHtml(primaryContact.contact_name) : '(unnamed)';
+        const titleDisplay = primaryContact.contact_title ? ` <span style="color:var(--text-dim);font-size:11px">${escapeHtml(primaryContact.contact_title)}</span>` : '';
+        const countBadge = contactsCount > 1 ? ` <span class="contacts-count-badge">${contactsCount}</span>` : '';
+        contactsCellHtml = nameDisplay + titleDisplay + countBadge;
+      }
+
       return `<tr>
         <td class="td-center">${offset + i + 1}</td>
+        <td class="td-center" style="font-size:11px;color:var(--text-dim);font-family:monospace" title="${escapeHtml(b.business_code || '')}">${escapeHtml(b.business_code || '—')}</td>
         <td class="td-editable" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
         <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="contact_name" data-value="${escapeHtml(b.contact_name || '')}" title="${b.contact_name ? t('clickToEdit') : t('clickToAdd')}">${b.contact_name ? escapeHtml(b.contact_name) : '<span class="td-empty-placeholder">+</span>'}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="contact_whatsapp" data-value="${escapeHtml(b.contact_whatsapp || '')}" title="${b.contact_whatsapp ? t('clickToEdit') : t('clickToAdd')}">${b.contact_whatsapp ? escapeHtml(b.contact_whatsapp) : '<span class="td-empty-placeholder">+</span>'}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="contact_email" data-value="${escapeHtml(b.contact_email || '')}" title="${b.contact_email ? t('clickToEdit') : t('clickToAdd')}">${b.contact_email ? escapeHtml(b.contact_email) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-contacts" data-id="${b.id}" title="${t('clickToEdit')}" style="cursor:pointer">${contactsCellHtml}</td>
         <td class="td-editable" data-id="${b.id}" data-field="phone" data-value="${escapeHtml(b.phone || '')}" title="${b.phone ? t('clickToEdit') : t('clickToAdd')}">${b.phone ? escapeHtml(b.phone) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-editable" data-id="${b.id}" data-field="email" data-value="${escapeHtml(b.email || '')}" title="${b.email ? t('clickToEdit') : t('clickToAdd')}">${b.email ? escapeHtml(b.email) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
@@ -2001,6 +2064,15 @@
       });
     });
 
+    // Bind contacts cells — click opens detail modal focused on contacts
+    resultsBody.querySelectorAll('.td-contacts').forEach((td) => {
+      td.addEventListener('click', () => {
+        const businessId = td.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === String(businessId));
+        if (business) openDetailModal(business);
+      });
+    });
+
     // Bind inline editable cells
     resultsBody.querySelectorAll('.td-editable').forEach((td) => {
       td.addEventListener('click', (e) => {
@@ -2063,7 +2135,7 @@
     } else {
       // Show a text input
       const input = document.createElement('input');
-      input.type = field === 'contact_email' || field === 'email' ? 'email' : 'text';
+      input.type = field === 'email' ? 'email' : 'text';
       input.className = 'inline-edit-input';
       input.value = currentValue;
       input.placeholder = t('clickToAdd');
@@ -2404,7 +2476,7 @@
         <div class="modal-header">
           <div>
             <h2>${escapeHtml(business.name)}</h2>
-            <p class="modal-address">${escapeHtml(business.address_full || '')}</p>
+            <p class="modal-address">${escapeHtml(business.address_full || '')}${business.business_code ? ` <span style="color:var(--text-dim);font-family:monospace;font-size:12px">${escapeHtml(business.business_code)}</span>` : ''}</p>
             <div class="modal-meta">
               <span class="stars">${starsHtml}</span>
               <span>${business.rating ? business.rating.toFixed(1) : 'N/A'}</span>
@@ -2417,25 +2489,10 @@
           <button class="modal-close" id="modal-close-btn">&times;</button>
         </div>
         <div class="modal-body">
+          <!-- Pipeline Status -->
           <div class="contact-edit-section">
             <h3>${t('pipelineContactSection')}</h3>
             <div class="contact-edit-grid">
-              <div class="form-group">
-                <label>${t('contactName')}</label>
-                <input type="text" class="input" id="modal-contact-name" value="${escapeHtml(business.contact_name || '')}" placeholder="${t('contactName')}">
-              </div>
-              <div class="form-group">
-                <label>${t('contactPhone')}</label>
-                <input type="text" class="input" id="modal-contact-phone" value="${escapeHtml(business.contact_phone || '')}" placeholder="${t('contactPhone')}">
-              </div>
-              <div class="form-group">
-                <label>${t('contactEmail')}</label>
-                <input type="email" class="input" id="modal-contact-email" value="${escapeHtml(business.contact_email || '')}" placeholder="${t('contactEmail')}">
-              </div>
-              <div class="form-group">
-                <label>${t('thContactWhatsapp')}</label>
-                <input type="text" class="input" id="modal-contact-whatsapp" value="${escapeHtml(business.contact_whatsapp || '')}" placeholder="${t('thContactWhatsapp')}">
-              </div>
               <div class="form-group">
                 <label>${t('pipelineStage')}</label>
                 <select class="input" id="modal-pipeline-status">
@@ -2449,6 +2506,64 @@
             </div>
             <div class="contact-edit-actions">
               <button class="btn btn-primary btn-sm" id="modal-save-pipeline">${t('pipelineSaveBtn')}</button>
+            </div>
+          </div>
+
+          <!-- Business Notes -->
+          <div class="modal-section">
+            <h3>${t('businessNotes')}</h3>
+            <textarea class="input" id="modal-business-notes" rows="3" placeholder="${t('businessNotesPlaceholder')}" style="width:100%;resize:vertical">${escapeHtml(business.notes || '')}</textarea>
+            <div style="margin-top:8px">
+              <button class="btn btn-primary btn-sm" id="modal-save-notes">${t('pipelineSaveBtn')}</button>
+            </div>
+          </div>
+
+          <!-- Contacts -->
+          <div class="modal-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <h3 style="margin:0">${t('thContacts')}</h3>
+              <button class="btn btn-primary btn-sm" id="modal-add-contact">${t('addContact')}</button>
+            </div>
+            <div id="modal-contacts-list">
+              <p style="color:var(--text-muted)">${t('noContacts')}</p>
+            </div>
+            <div id="modal-contact-form" style="display:none">
+              <div class="contact-edit-grid" style="margin-top:12px">
+                <div class="form-group">
+                  <label>${t('contactName')}</label>
+                  <input type="text" class="input" id="cf-name" placeholder="${t('contactName')}">
+                </div>
+                <div class="form-group">
+                  <label>${t('contactTitle')}</label>
+                  <input type="text" class="input" id="cf-title" placeholder="${t('contactTitlePlaceholder')}">
+                </div>
+                <div class="form-group">
+                  <label>${t('contactPhone')}</label>
+                  <input type="text" class="input" id="cf-phone" placeholder="${t('contactPhone')}">
+                </div>
+                <div class="form-group">
+                  <label>${t('contactEmail')}</label>
+                  <input type="email" class="input" id="cf-email" placeholder="${t('contactEmail')}">
+                </div>
+                <div class="form-group">
+                  <label>${t('thContactWhatsapp')}</label>
+                  <input type="text" class="input" id="cf-whatsapp" placeholder="${t('thContactWhatsapp')}">
+                </div>
+                <div class="form-group">
+                  <label style="display:flex;align-items:center;gap:6px">
+                    <input type="checkbox" id="cf-primary"> ${t('contactIsPrimary')}
+                  </label>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:8px">
+                <label>${t('contactNotes')}</label>
+                <textarea class="input" id="cf-notes" rows="2" style="width:100%;resize:vertical"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-primary btn-sm" id="cf-save">${t('pipelineSaveBtn')}</button>
+                <button class="btn btn-secondary btn-sm" id="cf-cancel">${t('closeBtn')}</button>
+              </div>
+              <input type="hidden" id="cf-contact-id" value="">
             </div>
           </div>
 
@@ -2501,7 +2616,7 @@
       }
     });
 
-    // Save contact info + pipeline status
+    // Save pipeline status
     modal.querySelector('#modal-save-pipeline').addEventListener('click', async () => {
       const btn = modal.querySelector('#modal-save-pipeline');
       const origText = btn.textContent;
@@ -2511,10 +2626,6 @@
       const payload = {
         businessId: business.id,
         pipeline_status: modal.querySelector('#modal-pipeline-status').value,
-        contact_name: modal.querySelector('#modal-contact-name').value.trim(),
-        contact_phone: modal.querySelector('#modal-contact-phone').value.trim(),
-        contact_email: modal.querySelector('#modal-contact-email').value.trim(),
-        contact_whatsapp: modal.querySelector('#modal-contact-whatsapp').value.trim(),
       };
 
       try {
@@ -2526,23 +2637,13 @@
 
         if (!res.ok) throw new Error('Failed');
 
-        const data = await res.json();
-
         // Update local business object so table re-renders correctly
         business.pipeline_status = payload.pipeline_status;
-        business.contact_name = payload.contact_name;
-        business.contact_phone = payload.contact_phone;
-        business.contact_email = payload.contact_email;
-        business.contact_whatsapp = payload.contact_whatsapp;
 
         // Update allBusinesses too
         const idx = allBusinesses.findIndex(b => b.id === business.id);
         if (idx >= 0) {
           allBusinesses[idx].pipeline_status = payload.pipeline_status;
-          allBusinesses[idx].contact_name = payload.contact_name;
-          allBusinesses[idx].contact_phone = payload.contact_phone;
-          allBusinesses[idx].contact_email = payload.contact_email;
-          allBusinesses[idx].contact_whatsapp = payload.contact_whatsapp;
         }
 
         // Re-apply pipeline counts and filter
@@ -2558,6 +2659,196 @@
         btn.textContent = origText;
       }
     });
+
+    // ── Save Business Notes ──
+    modal.querySelector('#modal-save-notes').addEventListener('click', async () => {
+      const btn = modal.querySelector('#modal-save-notes');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('pipelineSaving');
+
+      const notesValue = modal.querySelector('#modal-business-notes').value.trim();
+      try {
+        const res = await fetch('/api/businesses/update-pipeline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessId: business.id, notes: notesValue }),
+        });
+        if (!res.ok) throw new Error('Failed');
+
+        business.notes = notesValue;
+        const idx = allBusinesses.findIndex(b => b.id === business.id);
+        if (idx >= 0) allBusinesses[idx].notes = notesValue;
+
+        showToast(t('businessNotesSaved'), 'success');
+      } catch (err) {
+        console.error('Save notes error:', err);
+        showToast(t('pipelineChangeError'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    });
+
+    // ── Contacts Management ──
+    const contactsList = modal.querySelector('#modal-contacts-list');
+    const contactForm = modal.querySelector('#modal-contact-form');
+
+    function renderContactsList(contacts) {
+      if (!contacts || contacts.length === 0) {
+        contactsList.innerHTML = `<p style="color:var(--text-muted)">${t('noContacts')}</p>`;
+        return;
+      }
+      contactsList.innerHTML = contacts.map(c => `
+        <div class="contact-card" data-contact-id="${c.id}" style="background:var(--bg-input);border-radius:var(--radius);padding:12px;margin-bottom:8px;position:relative">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <strong>${escapeHtml(c.contact_name || '(unnamed)')}</strong>
+            ${c.contact_title ? `<span style="color:var(--text-muted);font-size:12px">${escapeHtml(c.contact_title)}</span>` : ''}
+            ${c.is_primary ? `<span class="badge badge-saved" style="font-size:10px;padding:2px 6px">${t('contactIsPrimary')}</span>` : ''}
+            <span style="color:var(--text-dim);font-size:11px;font-family:monospace;margin-left:auto">${escapeHtml(c.contact_code || '')}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:12px">
+            ${c.contact_phone ? `<span>Phone: ${escapeHtml(c.contact_phone)}</span>` : ''}
+            ${c.contact_whatsapp ? `<span>WA: ${escapeHtml(c.contact_whatsapp)}</span>` : ''}
+            ${c.contact_email ? `<span>Email: ${escapeHtml(c.contact_email)}</span>` : ''}
+          </div>
+          ${c.notes ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;font-style:italic">${escapeHtml(c.notes)}</div>` : ''}
+          <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px">
+            <button class="btn btn-text btn-sm contact-edit-btn" data-contact-id="${c.id}" style="font-size:11px;padding:2px 8px">${t('editContact')}</button>
+            <button class="btn btn-text btn-sm contact-delete-btn" data-contact-id="${c.id}" style="font-size:11px;padding:2px 8px;color:var(--danger)">${t('deleteContact')}</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Bind edit buttons
+      contactsList.querySelectorAll('.contact-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const contactId = btn.getAttribute('data-contact-id');
+          const contact = (business.business_contacts || []).find(c => String(c.id) === contactId);
+          if (contact) openContactForm(contact);
+        });
+      });
+
+      // Bind delete buttons
+      contactsList.querySelectorAll('.contact-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm(t('deleteContactConfirm'))) return;
+          const contactId = btn.getAttribute('data-contact-id');
+          try {
+            const res = await fetch('/api/contacts/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contactId, businessId: business.id }),
+            });
+            if (!res.ok) throw new Error('Failed');
+
+            // Remove from local data
+            business.business_contacts = (business.business_contacts || []).filter(c => String(c.id) !== contactId);
+            const idx = allBusinesses.findIndex(b => b.id === business.id);
+            if (idx >= 0) allBusinesses[idx].business_contacts = business.business_contacts;
+
+            renderContactsList(business.business_contacts);
+            applyPipelineFilter(pipelineStage);
+            showToast(t('contactDeleted'), 'success');
+          } catch (err) {
+            console.error('Delete contact error:', err);
+            showToast(t('contactDeleteError'), 'error');
+          }
+        });
+      });
+    }
+
+    function openContactForm(contact) {
+      contactForm.style.display = '';
+      modal.querySelector('#cf-contact-id').value = contact ? contact.id : '';
+      modal.querySelector('#cf-name').value = contact ? (contact.contact_name || '') : '';
+      modal.querySelector('#cf-title').value = contact ? (contact.contact_title || '') : '';
+      modal.querySelector('#cf-phone').value = contact ? (contact.contact_phone || '') : '';
+      modal.querySelector('#cf-email').value = contact ? (contact.contact_email || '') : '';
+      modal.querySelector('#cf-whatsapp').value = contact ? (contact.contact_whatsapp || '') : '';
+      modal.querySelector('#cf-notes').value = contact ? (contact.notes || '') : '';
+      modal.querySelector('#cf-primary').checked = contact ? !!contact.is_primary : false;
+      modal.querySelector('#cf-name').focus();
+    }
+
+    function closeContactForm() {
+      contactForm.style.display = 'none';
+      modal.querySelector('#cf-contact-id').value = '';
+    }
+
+    // Add contact button
+    modal.querySelector('#modal-add-contact').addEventListener('click', () => openContactForm(null));
+
+    // Cancel contact form
+    modal.querySelector('#cf-cancel').addEventListener('click', () => closeContactForm());
+
+    // Save contact form
+    modal.querySelector('#cf-save').addEventListener('click', async () => {
+      const btn = modal.querySelector('#cf-save');
+      const origText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('pipelineSaving');
+
+      const contactId = modal.querySelector('#cf-contact-id').value || null;
+      const payload = {
+        businessId: business.id,
+        contactId: contactId ? parseInt(contactId, 10) : undefined,
+        contact_name: modal.querySelector('#cf-name').value.trim(),
+        contact_title: modal.querySelector('#cf-title').value.trim(),
+        contact_phone: modal.querySelector('#cf-phone').value.trim(),
+        contact_email: modal.querySelector('#cf-email').value.trim(),
+        contact_whatsapp: modal.querySelector('#cf-whatsapp').value.trim(),
+        notes: modal.querySelector('#cf-notes').value.trim(),
+        is_primary: modal.querySelector('#cf-primary').checked,
+      };
+
+      try {
+        const res = await fetch('/api/contacts/upsert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+        const savedContact = data.contact;
+
+        // Update local data
+        if (!business.business_contacts) business.business_contacts = [];
+
+        if (contactId) {
+          // Update existing
+          const ci = business.business_contacts.findIndex(c => String(c.id) === contactId);
+          if (ci >= 0) business.business_contacts[ci] = savedContact;
+        } else {
+          // Add new
+          business.business_contacts.push(savedContact);
+        }
+
+        // If this was set as primary, unmark others locally
+        if (payload.is_primary) {
+          business.business_contacts.forEach(c => {
+            if (String(c.id) !== String(savedContact.id)) c.is_primary = false;
+          });
+        }
+
+        const idx = allBusinesses.findIndex(b => b.id === business.id);
+        if (idx >= 0) allBusinesses[idx].business_contacts = business.business_contacts;
+
+        renderContactsList(business.business_contacts);
+        closeContactForm();
+        applyPipelineFilter(pipelineStage);
+        showToast(t('contactSaved'), 'success');
+      } catch (err) {
+        console.error('Save contact error:', err);
+        showToast(t('contactError'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
+    });
+
+    // Initial render of contacts
+    renderContactsList(business.business_contacts || []);
 
     // Copy top reviews button
     modal.querySelector('#modal-copy-reviews').addEventListener('click', () => {
@@ -3699,7 +3990,7 @@
   function switchTab(tab) {
     activeTab = tab;
     const sections = {
-      saved: ['stats-bar', 'filter-section', 'results-section'],
+      saved: ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section'],
       audiences: ['audiences-section'],
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
@@ -3712,7 +4003,7 @@
     };
 
     // Hide all sections
-    ['stats-bar', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -3722,6 +4013,14 @@
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
+
+    // Show/hide search wrapper and section nav (only visible on Pipeline tab)
+    const searchWrapper = document.getElementById('search-wrapper');
+    const sectionNav = document.getElementById('section-nav');
+    const pipelineAnchor = document.getElementById('pipeline-anchor');
+    if (searchWrapper) searchWrapper.style.display = (tab === 'saved') ? '' : 'none';
+    if (sectionNav) sectionNav.style.display = (tab === 'saved') ? '' : 'none';
+    if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
     ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
@@ -3753,6 +4052,55 @@
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
     if (tab === 'team') loadTeamEmployees();
+  }
+
+  // ── Business Saved Event (from search/app.js) ──
+  document.addEventListener('business-saved', function () {
+    if (activeTab === 'saved') {
+      loadBusinesses();
+      loadStats();
+    }
+  });
+
+  // ── Sticky Section Nav ──
+  function initSectionNav() {
+    var searchBtn = document.getElementById('section-nav-search');
+    var pipelineBtn = document.getElementById('section-nav-pipeline');
+    if (!searchBtn || !pipelineBtn) return;
+
+    searchBtn.addEventListener('click', function () {
+      var target = document.getElementById('search-section');
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    pipelineBtn.addEventListener('click', function () {
+      var target = document.getElementById('pipeline-anchor');
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // IntersectionObserver to highlight which section is in view
+    var anchor = document.getElementById('pipeline-anchor');
+    if (anchor && window.IntersectionObserver) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          var inPipeline = !entry.isIntersecting;
+          // If pipeline anchor is below viewport, we're in search; if above, we're in pipeline
+          if (entry.boundingClientRect.top < 0) {
+            inPipeline = true;
+          } else {
+            inPipeline = false;
+          }
+          searchBtn.classList.toggle('active', !inPipeline);
+          pipelineBtn.classList.toggle('active', inPipeline);
+        });
+      }, { threshold: 0 });
+      observer.observe(anchor);
+    }
+  }
+
+  function updateSectionNavCount(count) {
+    var el = document.getElementById('section-nav-count');
+    if (el) el.textContent = count > 0 ? '(' + count + ')' : '';
   }
 
   async function loadConversations() {

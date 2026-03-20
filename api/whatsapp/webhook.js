@@ -1,8 +1,9 @@
 // Vercel serverless function: WhatsApp webhook receiver
 // GET  — webhook verification (Meta challenge)
-// POST — inbound messages + message status updates
+// POST — inbound messages + message status updates + auto-reply
 
 import { createHmac } from 'crypto';
+import { handleAutoReply } from '../_lib/whatsapp-responder.js';
 
 export default async function handler(req, res) {
   // GET: Webhook verification
@@ -64,7 +65,20 @@ export default async function handler(req, res) {
         // Process inbound messages
         const messages = value.messages || [];
         for (const msg of messages) {
-          await handleInboundMessage(msg, value.contacts, supabaseUrl, headers);
+          const result = await handleInboundMessage(msg, value.contacts, supabaseUrl, supabaseKey, headers);
+
+          // Trigger auto-reply (non-blocking — don't let failures hold up the webhook)
+          if (result) {
+            handleAutoReply({
+              senderPhone: msg.from,
+              messageBody: msg.text?.body || '',
+              messageType: msg.type || 'text',
+              businessId: result.businessId,
+              conversationId: result.conversationId,
+              supabaseUrl,
+              supabaseKey,
+            }).catch(err => console.error('Auto-reply error (non-blocking):', err));
+          }
         }
 
         // Process status updates
@@ -82,31 +96,48 @@ export default async function handler(req, res) {
   return res.status(200).send('OK');
 }
 
-async function handleInboundMessage(msg, contacts, supabaseUrl, headers) {
+/**
+ * Process an inbound message: log it to DB and return context for auto-reply.
+ * Returns { businessId, conversationId } or null.
+ */
+async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, headers) {
   const senderPhone = msg.from;
   const wamid = msg.id;
   const timestamp = msg.timestamp;
   const messageBody = msg.text?.body || '';
   const messageType = msg.type || 'text';
+  const senderName = contacts?.[0]?.profile?.name || null;
 
   // Look up conversation by recipient_phone
   const convResp = await fetch(
     `${supabaseUrl}/rest/v1/whatsapp_conversations?recipient_phone=eq.%2B${senderPhone}&select=id,business_id,unread_count`,
     { headers }
   );
+  if (!convResp.ok) {
+    console.error('Conversation lookup failed:', convResp.status, await convResp.text().catch(() => ''));
+    return { businessId: null, conversationId: null };
+  }
   const convData = await convResp.json();
 
   if (!convData || convData.length === 0) {
     // No existing conversation — try matching by phone in businesses table
-    const bizResp = await fetch(
-      `${supabaseUrl}/rest/v1/businesses?phone=like.*${senderPhone.slice(-10)}*&select=id&limit=1`,
-      { headers }
-    );
+    const lastTen = senderPhone.slice(-10);
+    const bizLookupUrl = `${supabaseUrl}/rest/v1/businesses?or=(phone.ilike.*${lastTen},contact_phone.ilike.*${lastTen},contact_whatsapp.ilike.*${lastTen},whatsapp.ilike.*${lastTen})&select=id&limit=1`;
+    const bizResp = await fetch(bizLookupUrl, { headers });
+
+    if (!bizResp.ok) {
+      console.error('Business phone lookup failed:', bizResp.status, await bizResp.text().catch(() => ''));
+      console.log('Inbound from unknown number (lookup error):', senderPhone, '| Name:', senderName);
+      return { businessId: null, conversationId: null };
+    }
+
     const bizData = await bizResp.json();
 
-    if (!bizData || bizData.length === 0) {
-      console.warn('Inbound message from unknown number:', senderPhone);
-      return;
+    if (!Array.isArray(bizData) || bizData.length === 0) {
+      // Unknown contact — no business match. Still send auto-reply to gather info.
+      // Can't create conversation (business_id required), so return with null IDs.
+      console.log('Inbound from unknown number:', senderPhone, '| lastTen:', lastTen, '| Name:', senderName, '| Message:', messageBody.substring(0, 100));
+      return { businessId: null, conversationId: null };
     }
 
     // Create new conversation
@@ -149,7 +180,8 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, headers) {
         }),
       }
     );
-    return;
+
+    return { businessId: bizData[0].id, conversationId };
   }
 
   // Existing conversation
@@ -193,6 +225,8 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, headers) {
 
   // Track campaign reply
   await updateCampaignReplyCount(conv.business_id, supabaseUrl, headers);
+
+  return { businessId: conv.business_id, conversationId: conv.id };
 }
 
 async function handleStatusUpdate(status, supabaseUrl, headers) {

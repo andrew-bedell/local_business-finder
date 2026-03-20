@@ -147,6 +147,52 @@ async function searchGoogleMaps({ businessName, address, searchApiKey }) {
  * @param {string} opts.supabaseKey
  * @returns {Promise<{ businessId: number, matched: boolean, business: object, googleData: object|null }>}
  */
+/**
+ * Create a contact in business_contacts if we have any contact info.
+ * Checks for duplicates by email or phone before creating.
+ */
+async function ensureContact({ businessId, contactName, contactEmail, contactPhone, contactWhatsapp, headers, supabaseUrl }) {
+  if (!contactName && !contactEmail && !contactPhone && !contactWhatsapp) return;
+
+  // Check if a contact with the same email or phone already exists for this business
+  const checks = [];
+  if (contactEmail) checks.push(`contact_email.eq.${encodeURIComponent(contactEmail)}`);
+  if (contactPhone) checks.push(`contact_phone.eq.${encodeURIComponent(contactPhone)}`);
+  if (contactWhatsapp) checks.push(`contact_whatsapp.eq.${encodeURIComponent(contactWhatsapp)}`);
+
+  if (checks.length > 0) {
+    const existingRes = await fetch(
+      `${supabaseUrl}/rest/v1/business_contacts?business_id=eq.${businessId}&or=(${checks.join(',')})&limit=1`,
+      { headers }
+    );
+    const existing = existingRes.ok ? await existingRes.json() : [];
+    if (existing.length > 0) return; // Contact already exists
+  }
+
+  // Check if business has any contacts — if not, make this one primary
+  const countRes = await fetch(
+    `${supabaseUrl}/rest/v1/business_contacts?business_id=eq.${businessId}&select=id&limit=1`,
+    { headers }
+  );
+  const existingContacts = countRes.ok ? await countRes.json() : [];
+  const isPrimary = existingContacts.length === 0;
+
+  const contactPayload = {
+    business_id: businessId,
+    contact_name: contactName || null,
+    contact_email: contactEmail || null,
+    contact_phone: contactPhone || null,
+    contact_whatsapp: contactWhatsapp || null,
+    is_primary: isPrimary,
+  };
+
+  await fetch(`${supabaseUrl}/rest/v1/business_contacts`, {
+    method: 'POST',
+    headers: { ...headers, 'Prefer': 'return=minimal' },
+    body: JSON.stringify(contactPayload),
+  });
+}
+
 export async function matchOrCreateBusiness({ businessName, email, phone, contactName, contactWhatsapp, address, countryCode, supabaseUrl, supabaseKey }) {
   const headers = {
     'apikey': supabaseKey,
@@ -194,6 +240,15 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
             }
           );
         }
+
+        // Also create a contact record
+        await ensureContact({
+          businessId: match.id,
+          contactName, contactEmail: email,
+          contactPhone: normalizedPhone,
+          contactWhatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
+          headers, supabaseUrl,
+        });
 
         return { businessId: match.id, matched: true, business: match, googleData };
       }
@@ -274,6 +329,15 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       );
     }
 
+    // Also create a contact record
+    await ensureContact({
+      businessId: bestMatch.id,
+      contactName, contactEmail: email,
+      contactPhone: normalizedPhone,
+      contactWhatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
+      headers, supabaseUrl,
+    });
+
     return { businessId: bestMatch.id, matched: true, business: bestMatch, googleData };
   }
 
@@ -341,6 +405,15 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
 
   const bizRecords = await bizRes.json();
   const business = bizRecords[0];
+
+  // Create a contact record for the new business
+  await ensureContact({
+    businessId: business.id,
+    contactName, contactEmail: email,
+    contactPhone: normalizedPhone,
+    contactWhatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
+    headers, supabaseUrl,
+  });
 
   return { businessId: business.id, matched: false, business, googleData };
 }
