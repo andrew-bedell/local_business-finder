@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   if (!anthropicKey) return res.status(503).json({ error: 'Anthropic API key not configured' });
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseKey) return res.status(503).json({ error: 'Supabase not configured' });
 
   const { editRequestId } = req.body || {};

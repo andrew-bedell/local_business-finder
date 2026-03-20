@@ -1,7 +1,7 @@
 export default function handler(req, res) {
   const googleApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
   const supabaseUrl = process.env.SUPABASE_URL || '';
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+  const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '';
   const stripePublishableKey = process.env.STRIPE_PUBLISHABLE_KEY || '';
 
   // Return config with whatever keys are available.
