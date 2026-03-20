@@ -74,8 +74,9 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: 'An employee with this email already exists' });
     }
 
-    // Invite user via Supabase Auth Admin API
-    const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+    // Generate invite link via Supabase Admin API (does NOT send Supabase's built-in email)
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://ahoratengopagina.com';
+    const inviteRes = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
       method: 'POST',
       headers: {
         'apikey': serviceKey,
@@ -83,8 +84,10 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        type: 'invite',
         email,
         data: { display_name: display_name || '' },
+        redirect_to: origin + '/employee/login',
       }),
     });
 
@@ -96,10 +99,11 @@ export default async function handler(req, res) {
 
     const inviteData = await inviteRes.json();
     const newAuthUserId = inviteData.id;
+    const inviteActionLink = inviteData.action_link;
 
     if (!newAuthUserId) {
       console.error('No user ID in invite response:', JSON.stringify(inviteData).substring(0, 500));
-      return res.status(502).json({ error: 'Invitation sent but no user ID returned' });
+      return res.status(502).json({ error: 'Invitation created but no user ID returned' });
     }
 
     // Insert employee record
@@ -129,17 +133,16 @@ export default async function handler(req, res) {
 
     const employees = await insertRes.json();
 
-    // Send branded email via SendGrid (non-blocking — don't fail invite if email fails)
+    // Send branded email with the actual invite magic link
     try {
-      const origin = req.headers.origin || req.headers.referer?.replace(/\/[^/]*$/, '') || 'https://ahoratengopagina.com';
-      const inviteUrl = origin + '/employee/login';
+      const inviteUrl = inviteActionLink || (origin + '/employee/login');
       const emailContent = await getTemplateForTrigger('employee_invite', { displayName: display_name || '', email, inviteUrl });
       const emailResult = await sendEmail({ to: email, ...emailContent });
       if (!emailResult.success) {
-        console.warn('SendGrid employee invite email failed (non-blocking):', emailResult.error);
+        console.warn('Employee invite email failed (non-blocking):', emailResult.error);
       }
     } catch (emailErr) {
-      console.warn('SendGrid employee invite email error (non-blocking):', emailErr);
+      console.warn('Employee invite email error (non-blocking):', emailErr);
     }
 
     return res.status(200).json(employees[0] || {});
