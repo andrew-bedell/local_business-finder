@@ -13,6 +13,11 @@
       tagline: 'Find businesses without websites near any location',
       navSearch: 'Search',
       navSaved: 'Saved',
+      navPipeline: 'Pipeline',
+      navGroupPipeline: 'Pipeline',
+      navGroupMessaging: 'Messaging',
+      navGroupCustomers: 'Customers',
+      navGroupSettings: 'Settings',
       // API section
       apiKeyTitle: 'Google Places API Key',
       setupGuide: 'Setup Guide',
@@ -370,6 +375,11 @@
       tagline: 'Encuentra negocios sin sitio web cerca de cualquier ubicación',
       navSearch: 'Buscar',
       navSaved: 'Guardados',
+      navPipeline: 'Pipeline',
+      navGroupPipeline: 'Pipeline',
+      navGroupMessaging: 'Mensajes',
+      navGroupCustomers: 'Clientes',
+      navGroupSettings: 'Ajustes',
       // API section
       apiKeyTitle: 'Clave API de Google Places',
       setupGuide: 'Guía de Configuración',
@@ -4612,6 +4622,83 @@
 
   // ── Start ──
   // Wait for auth guard (auth.js) to verify employee before initializing
+  // ── Mobile Bottom Nav (Search Page) ──
+  function initMobileNav() {
+    const bottomNav = document.getElementById('bottom-nav');
+    const subNavRow = document.getElementById('sub-nav-row');
+    if (!bottomNav || !subNavRow) return;
+
+    // Pipeline group is active on search page, Search sub-item highlighted
+    subNavRow.innerHTML = '<a href="/employee" class="sub-nav-pill active">' + t('navSearch') + '</a>' +
+      '<a href="/employee/admin" class="sub-nav-pill">' + t('navPipeline') + '</a>';
+    subNavRow.style.display = '';
+    subNavRow.classList.add('visible');
+
+    // Other groups navigate to admin page with hash
+    bottomNav.querySelectorAll('.bottom-nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = btn.dataset.group;
+        if (group === 'pipeline') {
+          // Already here — just highlight
+          bottomNav.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          subNavRow.innerHTML = '<a href="/employee" class="sub-nav-pill active">' + t('navSearch') + '</a>' +
+            '<a href="/employee/admin" class="sub-nav-pill">' + t('navPipeline') + '</a>';
+          subNavRow.style.display = '';
+          subNavRow.classList.add('visible');
+        } else if (group === 'settings') {
+          // Show lang toggle in sub-nav
+          bottomNav.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          var lang = localStorage.getItem('app_lang') || 'en';
+          subNavRow.innerHTML = '<button class="sub-nav-pill ' + (lang === 'en' ? 'active' : '') + '" data-lang-toggle="en">EN</button>' +
+            '<button class="sub-nav-pill ' + (lang === 'es' ? 'active' : '') + '" data-lang-toggle="es">ES</button>';
+          subNavRow.style.display = '';
+          subNavRow.classList.add('visible');
+          subNavRow.querySelectorAll('[data-lang-toggle]').forEach(pill => {
+            pill.addEventListener('click', () => {
+              currentLang = pill.dataset.langToggle;
+              localStorage.setItem('app_lang', currentLang);
+              applyLanguage();
+              initMobileNav(); // re-render
+            });
+          });
+        } else {
+          window.location.href = '/employee/admin#' + group;
+        }
+      });
+    });
+  }
+
+  // Desktop dropdown toggle for search page
+  function initDesktopDropdowns() {
+    document.querySelectorAll('.nav-group-trigger').forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        const group = trigger.closest('.nav-group');
+        if (!group || !group.querySelector('.nav-dropdown')) return;
+        e.preventDefault();
+        document.querySelectorAll('.nav-group.open').forEach(g => {
+          if (g !== group) g.classList.remove('open');
+        });
+        group.classList.toggle('open');
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-group')) {
+        document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+      }
+    });
+    // Lang buttons in desktop dropdown
+    document.querySelectorAll('.nav-dropdown-lang .lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLang = btn.dataset.lang;
+        localStorage.setItem('app_lang', currentLang);
+        applyLanguage();
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+      });
+    });
+  }
+
   function startApp() {
     // Show the app container (hidden until auth passes)
     const appEl = document.getElementById('app');
@@ -4630,6 +4717,8 @@
       if (logoutBtn) logoutBtn.addEventListener('click', () => window.__employeeAuth.signOut());
     }
     init();
+    initMobileNav();
+    initDesktopDropdowns();
   }
 
   if (window.__employeeAuth) {

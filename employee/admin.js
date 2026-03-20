@@ -3,6 +3,51 @@
 (function () {
   'use strict';
 
+  // ── Nav Groups ──
+  const NAV_GROUPS = {
+    pipeline: {
+      items: [
+        { label: 'navSearch', href: '/employee' },
+        { label: 'navPipeline', tab: 'saved' }
+      ],
+      defaultTab: 'saved'
+    },
+    messaging: {
+      items: [
+        { label: 'navCampaigns', tab: 'campaigns' },
+        { label: 'navAudiences', tab: 'audiences' },
+        { label: 'navMessages', tab: 'messages' },
+        { label: 'navEmail', tab: 'email' },
+        { label: 'navTemplates', tab: 'templates' }
+      ],
+      defaultTab: 'campaigns'
+    },
+    customers: {
+      items: [
+        { label: 'navCustomers', tab: 'customers' },
+        { label: 'navEditRequests', tab: 'edit_requests' },
+        { label: 'navProducts', tab: 'products' }
+      ],
+      defaultTab: 'customers'
+    },
+    settings: {
+      items: [
+        { label: 'navTeam', tab: 'team', adminOnly: true },
+        { label: 'langToggle', isLangToggle: true }
+      ],
+      defaultTab: 'team'
+    }
+  };
+
+  // Reverse mapping: tab name → group name
+  const TAB_TO_GROUP = {};
+  Object.entries(NAV_GROUPS).forEach(function (entry) {
+    var group = entry[0], config = entry[1];
+    config.items.forEach(function (item) {
+      if (item.tab) TAB_TO_GROUP[item.tab] = group;
+    });
+  });
+
   // ── i18n ──
   let currentLang = localStorage.getItem('app_lang') || 'en';
 
@@ -13,6 +58,10 @@
       navSearch: 'Search',
       navSaved: 'Saved',
       navPipeline: 'Pipeline',
+      navGroupPipeline: 'Pipeline',
+      navGroupMessaging: 'Messaging',
+      navGroupCustomers: 'Customers',
+      navGroupSettings: 'Settings',
       pipelineAll: 'All',
       pipelineSaved: 'Saved',
       pipelineLead: 'Leads',
@@ -556,6 +605,10 @@
       navSearch: 'Buscar',
       navSaved: 'Guardados',
       navPipeline: 'Pipeline',
+      navGroupPipeline: 'Pipeline',
+      navGroupMessaging: 'Mensajes',
+      navGroupCustomers: 'Clientes',
+      navGroupSettings: 'Ajustes',
       pipelineAll: 'Todos',
       pipelineSaved: 'Guardados',
       pipelineLead: 'Leads',
@@ -1430,24 +1483,47 @@
       }
     });
 
-    // Tab navigation
-    ['saved', 'audiences', 'campaigns', 'messages', 'products', 'customers'].forEach(tab => {
-      const navEl = document.getElementById('nav-' + tab);
-      if (navEl) {
-        navEl.addEventListener('click', (e) => {
-          e.preventDefault();
-          switchTab(tab);
+    // Tab navigation — event delegation on grouped nav dropdowns + bottom nav
+    document.querySelectorAll('.nav-dropdown-item[data-tab]').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        switchTab(item.dataset.tab);
+        // Close dropdown
+        document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+      });
+    });
+
+    // Desktop dropdown toggle (click-based)
+    document.querySelectorAll('.nav-group-trigger').forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        const group = trigger.closest('.nav-group');
+        if (!group) return;
+        // If this group has no dropdown, it's a plain link — let it navigate
+        if (!group.querySelector('.nav-dropdown')) return;
+        document.querySelectorAll('.nav-group.open').forEach(g => {
+          if (g !== group) g.classList.remove('open');
         });
+        group.classList.toggle('open');
+      });
+    });
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-group')) {
+        document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
       }
     });
-    // Edit requests tab (hyphenated nav ID)
-    const navEditRequests = document.getElementById('nav-edit-requests');
-    if (navEditRequests) {
-      navEditRequests.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchTab('edit_requests');
+
+    // Desktop dropdown lang buttons
+    document.querySelectorAll('.nav-dropdown-lang .lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentLang = btn.dataset.lang;
+        localStorage.setItem('app_lang', currentLang);
+        applyLanguage();
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
       });
-    }
+    });
 
     // Sync templates button
     const syncBtn = document.getElementById('btn-sync-templates');
@@ -3600,7 +3676,7 @@
       if (el) el.style.display = '';
     });
 
-    // Update nav active states
+    // Update nav active states (dropdown items)
     ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
@@ -3608,6 +3684,17 @@
     const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
+
+    // Update desktop group trigger active states
+    document.querySelectorAll('.nav-group-trigger').forEach(tr => tr.classList.remove('active'));
+    const group = TAB_TO_GROUP[tab];
+    if (group) {
+      const groupTrigger = document.getElementById('nav-group-' + group);
+      if (groupTrigger) groupTrigger.classList.add('active');
+    }
+
+    // Update mobile nav
+    updateMobileNav(tab);
 
     // Load data for the tab
     if (tab === 'audiences') loadAudiences();
@@ -6256,15 +6343,6 @@
     loadEmailConversations();
   }
 
-  // Email nav tab
-  const navEmail = document.getElementById('nav-email');
-  if (navEmail) {
-    navEmail.addEventListener('click', (e) => {
-      e.preventDefault();
-      switchTab('email');
-    });
-  }
-
   // Email toggle buttons
   const emailToggleCust = document.getElementById('email-toggle-customers');
   if (emailToggleCust) emailToggleCust.addEventListener('click', () => toggleEmailView('customers'));
@@ -6856,14 +6934,6 @@
 
   // ── Template Editor Event Listeners ──
 
-  const navTemplates = document.getElementById('nav-templates');
-  if (navTemplates) {
-    navTemplates.addEventListener('click', (e) => {
-      e.preventDefault();
-      switchTab('templates');
-    });
-  }
-
   const btnNewTemplate = document.getElementById('btn-new-template');
   if (btnNewTemplate) btnNewTemplate.addEventListener('click', () => openTemplateEditor(null));
 
@@ -7133,13 +7203,102 @@
   const btnInvite = document.getElementById('btn-invite-employee');
   if (btnInvite) btnInvite.addEventListener('click', inviteEmployee);
 
-  // Team nav tab handler (integrated into switchTab system)
-  const navTeam = document.getElementById('nav-team');
-  if (navTeam) {
-    navTeam.addEventListener('click', (e) => {
-      e.preventDefault();
-      switchTab('team');
+  // ── Mobile Bottom Nav ──
+  let mobileActiveGroup = 'pipeline';
+
+  function initMobileNav() {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (!bottomNav) return;
+
+    bottomNav.querySelectorAll('.bottom-nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = btn.dataset.group;
+        selectMobileGroup(group);
+        // If tapping a group, switch to its default tab
+        const config = NAV_GROUPS[group];
+        if (config && config.defaultTab) {
+          // For settings, only switch if the user is admin (team tab exists)
+          if (group === 'settings') {
+            if (window.__employeeAuth && window.__employeeAuth.employee.role === 'admin') {
+              switchTab(config.defaultTab);
+            }
+            // Otherwise just show the sub-nav (lang toggle only)
+          } else {
+            switchTab(config.defaultTab);
+          }
+        }
+      });
     });
+
+    // Initialize with pipeline group
+    selectMobileGroup('pipeline');
+  }
+
+  function selectMobileGroup(group) {
+    mobileActiveGroup = group;
+    const bottomNav = document.getElementById('bottom-nav');
+    const subNavRow = document.getElementById('sub-nav-row');
+    if (!bottomNav || !subNavRow) return;
+
+    // Update bottom nav active state
+    bottomNav.querySelectorAll('.bottom-nav-item').forEach(b => {
+      b.classList.toggle('active', b.dataset.group === group);
+    });
+
+    // Build sub-nav pills
+    const config = NAV_GROUPS[group];
+    if (!config) { subNavRow.style.display = 'none'; return; }
+
+    let html = '';
+    config.items.forEach(item => {
+      if (item.adminOnly && (!window.__employeeAuth || window.__employeeAuth.employee.role !== 'admin')) return;
+      if (item.isLangToggle) {
+        html += '<button class="sub-nav-pill ' + (currentLang === 'en' ? 'active' : '') + '" data-lang-toggle="en">EN</button>';
+        html += '<button class="sub-nav-pill ' + (currentLang === 'es' ? 'active' : '') + '" data-lang-toggle="es">ES</button>';
+        return;
+      }
+      if (item.href) {
+        html += '<a href="' + item.href + '" class="sub-nav-pill">' + t(item.label) + '</a>';
+      } else {
+        var isActive = activeTab === item.tab;
+        html += '<button class="sub-nav-pill ' + (isActive ? 'active' : '') + '" data-tab="' + item.tab + '">' + t(item.label) + '</button>';
+      }
+    });
+
+    subNavRow.innerHTML = html;
+    subNavRow.style.display = '';
+    subNavRow.classList.add('visible');
+
+    // Bind sub-nav pill clicks
+    subNavRow.querySelectorAll('[data-tab]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        switchTab(pill.dataset.tab);
+      });
+    });
+
+    subNavRow.querySelectorAll('[data-lang-toggle]').forEach(pill => {
+      pill.addEventListener('click', () => {
+        currentLang = pill.dataset.langToggle;
+        localStorage.setItem('app_lang', currentLang);
+        applyLanguage();
+        // Re-render sub-nav to update active states
+        selectMobileGroup('settings');
+      });
+    });
+  }
+
+  function updateMobileNav(tab) {
+    const group = TAB_TO_GROUP[tab];
+    if (group && group !== mobileActiveGroup) {
+      selectMobileGroup(group);
+    }
+    // Update pill active state within current group
+    const subNavRow = document.getElementById('sub-nav-row');
+    if (subNavRow) {
+      subNavRow.querySelectorAll('.sub-nav-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.tab === tab);
+      });
+    }
   }
 
   // ── Start ──
@@ -7167,9 +7326,22 @@
       }
     }
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
+      document.addEventListener('DOMContentLoaded', function () {
+        init();
+        initMobileNav();
+        // Handle cross-page nav via URL hash (e.g. /employee/admin#messaging)
+        var hash = window.location.hash.replace('#', '');
+        if (hash && NAV_GROUPS[hash]) {
+          switchTab(NAV_GROUPS[hash].defaultTab);
+        }
+      });
     } else {
       init();
+      initMobileNav();
+      var hash = window.location.hash.replace('#', '');
+      if (hash && NAV_GROUPS[hash]) {
+        switchTab(NAV_GROUPS[hash].defaultTab);
+      }
     }
   }
 

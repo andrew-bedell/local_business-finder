@@ -50,9 +50,39 @@
             <p class="tagline" data-i18n="tagline">Find businesses without websites near any location</p>
           </div>
           <div class="header-actions">
-            <nav class="header-nav">
-              <a href="/employee" class="nav-tab active" data-i18n="navSearch">Search</a>
-              <a href="/employee/admin" class="nav-tab" data-i18n="navSaved">Saved</a>
+            <nav class="header-nav" id="header-nav">
+              <div class="nav-group" data-group="pipeline">
+                <a href="#" class="nav-tab nav-group-trigger active" id="nav-group-pipeline">
+                  <span data-i18n="navGroupPipeline">Pipeline</span>
+                  <svg class="nav-chevron" viewBox="0 0 12 12" width="10" height="10"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </a>
+                <div class="nav-dropdown">
+                  <a href="/employee" class="nav-dropdown-item active" data-i18n="navSearch">Search</a>
+                  <a href="/employee/admin" class="nav-dropdown-item" data-i18n="navPipeline">Pipeline</a>
+                </div>
+              </div>
+              <div class="nav-group" data-group="messaging">
+                <a href="/employee/admin#messaging" class="nav-tab nav-group-trigger">
+                  <span data-i18n="navGroupMessaging">Messaging</span>
+                </a>
+              </div>
+              <div class="nav-group" data-group="customers">
+                <a href="/employee/admin#customers" class="nav-tab nav-group-trigger">
+                  <span data-i18n="navGroupCustomers">Customers</span>
+                </a>
+              </div>
+              <div class="nav-group" data-group="settings">
+                <a href="#" class="nav-tab nav-group-trigger" id="nav-group-settings">
+                  <span data-i18n="navGroupSettings">Settings</span>
+                  <svg class="nav-chevron" viewBox="0 0 12 12" width="10" height="10"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </a>
+                <div class="nav-dropdown">
+                  <div class="nav-dropdown-lang">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="es">ES</button>
+                  </div>
+                </div>
+              </div>
             </nav>
             <div class="lang-switcher" id="lang-switcher">
               <button class="lang-btn active" data-lang="en">EN</button>
@@ -66,6 +96,29 @@
         </div>
       </div>
     </header>
+
+    <!-- Sub-nav pill row (mobile, populated by JS) -->
+    <div class="sub-nav-row" id="sub-nav-row"></div>
+
+    <!-- Bottom Navigation (mobile) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="bottom-nav-item active" data-group="pipeline">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        <span class="bottom-nav-label" data-i18n="navGroupPipeline">Pipeline</span>
+      </button>
+      <button class="bottom-nav-item" data-group="messaging">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span class="bottom-nav-label" data-i18n="navGroupMessaging">Messaging</span>
+      </button>
+      <button class="bottom-nav-item" data-group="customers">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span class="bottom-nav-label" data-i18n="navGroupCustomers">Customers</span>
+      </button>
+      <button class="bottom-nav-item" data-group="settings">
+        <svg class="bottom-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span class="bottom-nav-label" data-i18n="navGroupSettings">Settings</span>
+      </button>
+    </nav>
 
     <main class="main">
       <!-- API Key Setup -->

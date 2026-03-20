@@ -119,6 +119,113 @@ a:hover {
   color: #fff;
 }
 
+/* === Nav Group Dropdowns (Desktop) === */
+.nav-group {
+  position: relative;
+}
+
+.nav-group-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.nav-chevron {
+  transition: transform 0.15s;
+  opacity: 0.5;
+}
+
+.nav-group.open .nav-chevron {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 180px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.nav-group.open .nav-dropdown {
+  display: block;
+}
+
+.nav-dropdown-item {
+  display: block;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+
+.nav-dropdown-item:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-dropdown-item.active {
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+
+.nav-dropdown-lang {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+/* === Bottom Navigation (Mobile) === */
+.bottom-nav {
+  display: none;
+}
+
+.sub-nav-row {
+  display: none;
+}
+
+/* === Sub-nav pill row (shared for mobile & inline) === */
+.sub-nav-pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  margin-right: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.sub-nav-pill:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+
+.sub-nav-pill.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
 /* === Language Switcher === */
 .lang-switcher {
   display: flex;
@@ -3835,5 +3942,106 @@ select.input {
   }
   .templates-list {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ===================================================
+   Mobile Bottom Navigation & Responsive Nav
+   =================================================== */
+@media (max-width: 768px) {
+  /* Hide desktop header nav and lang switcher on mobile */
+  .header-nav {
+    display: none !important;
+  }
+
+  .lang-switcher {
+    display: none !important;
+  }
+
+  /* Simplify header on mobile */
+  .header-top {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .tagline {
+    display: none;
+  }
+
+  .header-user-info {
+    flex-direction: row !important;
+    gap: 8px !important;
+  }
+
+  /* Bottom nav bar */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--primary);
+  }
+
+  .bottom-nav-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Sub-nav pill row below header */
+  .sub-nav-row {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  .sub-nav-row.visible {
+    display: block !important;
+  }
+
+  /* Add bottom padding so content isn't hidden behind fixed bottom nav */
+  .main {
+    padding-bottom: 76px !important;
+  }
+
+  .footer {
+    margin-bottom: 56px;
   }
 }
