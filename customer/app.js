@@ -4,8 +4,8 @@
   'use strict';
 
   // ── Config ──
-  const SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
+  const SUPABASE_URL_FALLBACK = 'https://xagfwyknlutmmtfufbfi.supabase.co';
+  const SUPABASE_KEY_FALLBACK = '';
 
   // ── State ──
   let supabase = null;
@@ -173,15 +173,39 @@
   const $$ = function (sel) { return document.querySelectorAll(sel); };
 
   // ── Init ──
-  function init() {
-    // Initialize Supabase client
+  async function init() {
+    // Initialize Supabase client from server config
     if (typeof window.supabase === 'undefined' && typeof window.Supabase === 'undefined') {
       console.error('Supabase SDK not loaded');
       return;
     }
 
     var sb = window.supabase;
-    supabase = sb.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Fetch credentials from server
+    try {
+      var configRes = await fetch('/api/config');
+      if (configRes.ok) {
+        var configData = await configRes.json();
+        var url = configData.supabaseUrl || SUPABASE_URL_FALLBACK;
+        var key = configData.supabaseKey || SUPABASE_KEY_FALLBACK;
+        if (url && key) {
+          supabase = sb.createClient(url, key);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch config:', err.message);
+    }
+
+    // Fallback to hardcoded values if config fetch failed
+    if (!supabase && SUPABASE_URL_FALLBACK && SUPABASE_KEY_FALLBACK) {
+      supabase = sb.createClient(SUPABASE_URL_FALLBACK, SUPABASE_KEY_FALLBACK);
+    }
+
+    if (!supabase) {
+      console.error('Failed to initialize Supabase client');
+      return;
+    }
 
     // Extract business slug from URL: /mipagina/:nombre
     var pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -1204,6 +1228,26 @@
     }
   }
 
+  function pollEditRequestStatus(editRequestId, customerId, maxAttempts) {
+    var attempts = 0;
+    var interval = setInterval(async function () {
+      attempts++;
+      if (attempts >= maxAttempts) { clearInterval(interval); return; }
+      try {
+        var requests = await loadEditRequests(customerId);
+        var found = requests.find(function (r) { return r.id === editRequestId; });
+        if (found && found.status === 'ready_for_review') {
+          clearInterval(interval);
+          renderEditRequests(requests);
+          checkPendingApprovals();
+          showToast('¡Tu cambio está listo para revisar!', 'success');
+        }
+      } catch (err) {
+        console.warn('Poll edit request status error:', err);
+      }
+    }, 5000);
+  }
+
   async function submitEditRequest(type, description, priority) {
     if (!type) {
       showToast('Selecciona un tipo de solicitud.', 'warning');
@@ -1248,7 +1292,7 @@
         throw new Error(result.error || 'Failed to create edit request');
       }
 
-      showToast('Solicitud enviada correctamente. Te notificaremos cuando esté lista.', 'success');
+      showToast('Solicitud enviada. Estamos aplicando el cambio automáticamente...', 'success');
 
       // Clear form
       var descField = $('#request-description');
@@ -1261,6 +1305,12 @@
       // Reload edit requests
       var requests = await loadEditRequests(customer.id);
       renderEditRequests(requests);
+
+      // Poll for AI auto-apply completion (every 5s, max 12 attempts = 60s)
+      var editRequestId = result.editRequest ? result.editRequest.id : null;
+      if (editRequestId) {
+        pollEditRequestStatus(editRequestId, customer.id, 12);
+      }
     } catch (err) {
       console.error('Submit edit request failed:', err);
       showToast('Error al enviar la solicitud. Intenta de nuevo.', 'error');
@@ -1766,6 +1816,9 @@
           html += '<button class="c-btn-toggle" data-member-id="' + escapeHtml(m.id) + '" data-action="activate">Activar</button>';
         } else {
           html += '<button class="c-btn-toggle" data-member-id="' + escapeHtml(m.id) + '" data-action="deactivate">Desactivar</button>';
+          if (!m.joined_at) {
+            html += ' <button class="c-btn-toggle" data-member-id="' + escapeHtml(m.id) + '" data-action="resend" style="margin-left:4px;">Reenviar</button>';
+          }
         }
       } else {
         html += '<span style="color:var(--c-text-dim);font-size:12px;">—</span>';
@@ -1781,7 +1834,11 @@
       btn.addEventListener('click', function () {
         var memberId = btn.getAttribute('data-member-id');
         var action = btn.getAttribute('data-action');
-        toggleTeamMember(memberId, action === 'activate');
+        if (action === 'resend') {
+          resendTeamInvite(memberId, btn);
+        } else {
+          toggleTeamMember(memberId, action === 'activate');
+        }
       });
     });
   }
@@ -1876,6 +1933,41 @@
     } catch (err) {
       console.error('Toggle team member error:', err);
       showToast(err.message || 'Error al actualizar miembro.', 'error');
+    }
+  }
+
+  async function resendTeamInvite(memberId, btn) {
+    var member = teamMembers.find(function (m) { return m.id === memberId; });
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      if (!token) throw new Error('No session');
+
+      var response = await fetch('/api/customers/resend-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ member_id: memberId }),
+      });
+
+      var data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al reenviar');
+      }
+
+      showToast('Invitación reenviada a ' + escapeHtml(member ? member.email : '') + '.', 'success');
+    } catch (err) {
+      console.error('Resend team invite error:', err);
+      showToast(err.message || 'Error al reenviar la invitación.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   }
 
@@ -2481,7 +2573,7 @@
       pendingEditRequest = null;
       clearSelectedElement();
 
-      // Step 2: Show processing message and trigger AI apply
+      // Show processing message — server handles AI apply automatically
       appendChatMessage('ai', 'Estamos aplicando tu cambio... esto puede tomar unos segundos.');
 
       if (!editRequestId) {
@@ -2489,26 +2581,26 @@
         return;
       }
 
-      // Step 3: Call AI apply endpoint
-      return fetch('/api/ai/apply-edit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ editRequestId: editRequestId }),
-      })
-      .then(function (applyRes) { return applyRes.json(); })
-      .then(function (applyResult) {
-        if (applyResult.success) {
-          appendChatMessage('ai', '¡Cambio aplicado! Te enviamos un correo para que lo revises. También puedes revisarlo desde tu Dashboard.');
-          // Show banner if visible
-          checkPendingApprovals();
-        } else {
-          appendChatMessage('ai', 'Hubo un problema al aplicar el cambio automáticamente. Nuestro equipo lo revisará manualmente.');
-        }
-      })
-      .catch(function (applyErr) {
-        console.error('AI apply error:', applyErr);
-        appendChatMessage('ai', 'No se pudo aplicar el cambio automáticamente. Nuestro equipo lo revisará pronto.');
-      });
+      // Poll for AI auto-apply completion (every 5s, max 12 attempts = 60s)
+      var customerId = customerData && customerData.customers ? customerData.customers.id : null;
+      if (customerId) {
+        var chatPollAttempts = 0;
+        var chatPollInterval = setInterval(async function () {
+          chatPollAttempts++;
+          if (chatPollAttempts >= 12) { clearInterval(chatPollInterval); return; }
+          try {
+            var requests = await loadEditRequests(customerId);
+            var found = requests.find(function (r) { return r.id === editRequestId; });
+            if (found && found.status === 'ready_for_review') {
+              clearInterval(chatPollInterval);
+              appendChatMessage('ai', '¡Cambio aplicado! Te enviamos un correo para que lo revises. También puedes revisarlo desde tu Dashboard.');
+              checkPendingApprovals();
+            }
+          } catch (pollErr) {
+            console.warn('Chat poll error:', pollErr);
+          }
+        }, 5000);
+      }
     })
     .catch(function (err) {
       console.error('Confirm edit request error:', err);

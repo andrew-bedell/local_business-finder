@@ -102,6 +102,20 @@ export default async function handler(req, res) {
       console.warn('Edit request confirmation email error (non-blocking):', emailErr);
     }
 
+    // Fire-and-forget AI apply (non-blocking) — only if website exists
+    if (website_id) {
+      try {
+        const applyUrl = `https://${req.headers.host}/api/ai/apply-edit`;
+        fetch(applyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ editRequestId: editRequest.id }),
+        }).catch(err => console.warn('Auto-apply trigger error (non-blocking):', err.message));
+      } catch (triggerErr) {
+        console.warn('Auto-apply trigger setup error (non-blocking):', triggerErr.message);
+      }
+    }
+
     return res.status(200).json({ success: true, editRequest });
   } catch (err) {
     console.error('Create edit request error:', err);

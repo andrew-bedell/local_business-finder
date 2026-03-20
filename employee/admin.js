@@ -475,6 +475,10 @@
       teamInviteError: 'Failed to send invitation',
       teamDeactivate: 'Deactivate',
       teamActivate: 'Activate',
+      teamResend: 'Resend',
+      teamResending: 'Sending…',
+      teamResendSuccess: 'Invitation resent to {0}',
+      teamResendError: 'Failed to resend invitation',
       teamRoleAdmin: 'Admin',
       teamRoleEmployee: 'Employee',
       teamStatusActive: 'Active',
@@ -1010,6 +1014,10 @@
       teamInviteError: 'Error al enviar invitación',
       teamDeactivate: 'Desactivar',
       teamActivate: 'Activar',
+      teamResend: 'Reenviar',
+      teamResending: 'Enviando…',
+      teamResendSuccess: 'Invitación reenviada a {0}',
+      teamResendError: 'Error al reenviar invitación',
       teamRoleAdmin: 'Admin',
       teamRoleEmployee: 'Empleado',
       teamStatusActive: 'Activo',
@@ -1269,12 +1277,34 @@
   }
 
   // ── Supabase ──
-  const SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
-  let supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  // Initialized from server config via initSupabaseFromConfig(), fallback is empty
+  const SUPABASE_URL_FALLBACK = 'https://xagfwyknlutmmtfufbfi.supabase.co';
+  const SUPABASE_KEY_FALLBACK = '';
+  let supabaseClient = null;
 
-  if (!supabaseClient) {
-    console.warn('Supabase client not initialized.');
+  async function initSupabaseFromConfig() {
+    if (!window.supabase) {
+      console.warn('Supabase SDK not loaded.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const data = await res.json();
+        const url = data.supabaseUrl || SUPABASE_URL_FALLBACK;
+        const key = data.supabaseKey || SUPABASE_KEY_FALLBACK;
+        if (url && key) {
+          supabaseClient = window.supabase.createClient(url, key);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch config:', err.message);
+    }
+    // Fallback
+    if (SUPABASE_URL_FALLBACK && SUPABASE_KEY_FALLBACK) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL_FALLBACK, SUPABASE_KEY_FALLBACK);
+    }
   }
 
   // ── State ──
@@ -1312,7 +1342,10 @@
   const pipelineSearch = document.getElementById('pipeline-search');
 
   // ── Initialize ──
-  function init() {
+  async function init() {
+    // Initialize Supabase from server config before anything else
+    await initSupabaseFromConfig();
+
     applyLanguage();
 
     // Language switcher
@@ -6957,9 +6990,11 @@
         : `<span class="team-badge team-badge-inactive">${t('teamStatusInactive')}</span>`;
       const joinedDate = emp.joined_at ? new Date(emp.joined_at).toLocaleDateString() : '—';
       const isCurrentUser = window.__employeeAuth && emp.auth_user_id === window.__employeeAuth.user.id;
+      const isPending = emp.is_active && !emp.joined_at;
+      const resendBtn = isPending ? ` <button class="btn btn-view" data-emp-id="${emp.id}" data-action="resend" style="font-size:11px;padding:3px 10px">${t('teamResend')}</button>` : '';
       const actionBtn = isCurrentUser ? '<span style="color:var(--text-dim);font-size:12px">You</span>'
         : emp.is_active
-        ? `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="deactivate" style="font-size:11px;padding:3px 10px">${t('teamDeactivate')}</button>`
+        ? `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="deactivate" style="font-size:11px;padding:3px 10px">${t('teamDeactivate')}</button>${resendBtn}`
         : `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="activate" style="font-size:11px;padding:3px 10px">${t('teamActivate')}</button>`;
       return `<tr>
         <td>${escapeHtml(emp.display_name || '—')}</td>
@@ -6976,7 +7011,11 @@
       btn.addEventListener('click', () => {
         const empId = btn.dataset.empId;
         const action = btn.dataset.action;
-        toggleEmployeeActive(empId, action === 'activate');
+        if (action === 'resend') {
+          resendEmployeeInvite(empId, btn);
+        } else {
+          toggleEmployeeActive(empId, action === 'activate');
+        }
       });
     });
   }
@@ -7053,6 +7092,40 @@
     } catch (err) {
       console.error('Toggle employee error:', err);
       showToast(t('teamUpdateError'), 'error');
+    }
+  }
+
+  async function resendEmployeeInvite(empId, btn) {
+    const auth = window.__employeeAuth;
+    if (!auth || auth.employee.role !== 'admin') return;
+
+    const emp = teamEmployees.find(e => e.id === empId);
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = t('teamResending');
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch('/api/employees/resend-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ employee_id: empId }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Resend failed');
+      }
+      showToast(t('teamResendSuccess', emp ? emp.email : ''), 'success');
+    } catch (err) {
+      console.error('Resend invite error:', err);
+      showToast(t('teamResendError') + ': ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   }
 

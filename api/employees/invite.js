@@ -2,7 +2,7 @@
 // Requires caller to be an admin employee (verified via JWT)
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { getTemplateForTrigger } from '../_lib/email-templates.js';
+import { employeeInviteEmail } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -136,8 +136,13 @@ export default async function handler(req, res) {
     // Send branded email with the actual invite magic link
     try {
       const inviteUrl = inviteActionLink || (origin + '/employee/login');
-      const emailContent = await getTemplateForTrigger('employee_invite', { displayName: display_name || '', email, inviteUrl });
-      const emailResult = await sendEmail({ to: email, ...emailContent });
+      const emailContent = employeeInviteEmail({ displayName: display_name || '', email, inviteUrl });
+      const emailResult = await sendEmail({
+        to: email,
+        ...emailContent,
+        from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
+        replyTo: 'andres@ahoratengopagina.com',
+      });
       if (!emailResult.success) {
         console.warn('Employee invite email failed (non-blocking):', emailResult.error);
       }

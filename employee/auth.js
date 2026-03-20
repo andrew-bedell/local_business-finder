@@ -2,22 +2,50 @@
 (function () {
   'use strict';
 
-  var SUPABASE_URL = 'https://xagfwyknlutmmtfufbfi.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_2ZsXzfuXEPF7MJxxB7mA-Q_H--jfttp';
+  var SUPABASE_URL_FALLBACK = 'https://xagfwyknlutmmtfufbfi.supabase.co';
+  var SUPABASE_KEY_FALLBACK = '';
 
   if (typeof window.supabase === 'undefined') {
     console.error('Supabase SDK not loaded');
     return;
   }
 
-  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var supabase = null;
   var isLoginPage = window.location.pathname.indexOf('/employee/login') !== -1;
   var isRecoveryMode = false;
 
-  if (isLoginPage) {
-    initLoginPage();
-  } else {
-    checkAuthAndRedirect();
+  // Fetch Supabase credentials from server, then initialize
+  initFromConfig().then(function () {
+    if (!supabase) {
+      console.error('Failed to initialize Supabase client');
+      if (!isLoginPage) {
+        window.location.href = '/employee/login?error=config';
+      }
+      return;
+    }
+    if (isLoginPage) {
+      initLoginPage();
+    } else {
+      checkAuthAndRedirect();
+    }
+  });
+
+  function initFromConfig() {
+    return fetch('/api/config').then(function (res) {
+      if (!res.ok) throw new Error('Config fetch failed');
+      return res.json();
+    }).then(function (data) {
+      var url = data.supabaseUrl || SUPABASE_URL_FALLBACK;
+      var key = data.supabaseKey || SUPABASE_KEY_FALLBACK;
+      if (url && key) {
+        supabase = window.supabase.createClient(url, key);
+      }
+    }).catch(function (err) {
+      console.warn('Could not fetch config, using fallback:', err.message);
+      if (SUPABASE_URL_FALLBACK && SUPABASE_KEY_FALLBACK) {
+        supabase = window.supabase.createClient(SUPABASE_URL_FALLBACK, SUPABASE_KEY_FALLBACK);
+      }
+    });
   }
 
   // ── Auth Guard (for protected pages) ──
