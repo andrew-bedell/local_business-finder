@@ -22,6 +22,79 @@ export default async function handler(req, res) {
     if (parsed.place_id) place_id = parsed.place_id;
     if (parsed.data_id) data_id = parsed.data_id;
 
+    // Strategy 0: Web Search for unresolved share.google URLs
+    // share.google uses a JS redirect that server-side fetch() can't follow.
+    // Google's own search engine resolves its own share codes and returns a
+    // knowledge_graph object with kgmid, title, address, and GPS coordinates.
+    if (!place_id && !data_id && parsed.is_share_url && parsed.original_url) {
+      try {
+        const webParams = new URLSearchParams({
+          engine: 'google',
+          q: parsed.original_url,
+          api_key: apiKey,
+        });
+
+        const webRes = await fetch('https://www.searchapi.io/api/v1/search?' + webParams.toString());
+        if (webRes.ok) {
+          const webData = await webRes.json();
+          const kg = webData.knowledge_graph;
+
+          if (kg) {
+            // Try kgmid first — exact match via Google Maps
+            if (kg.kgmid && !place_id && !data_id) {
+              const kgParams = new URLSearchParams({
+                engine: 'google_maps',
+                q: kg.kgmid,
+                api_key: apiKey,
+              });
+              if (hl) kgParams.set('hl', hl);
+
+              const kgRes = await fetch('https://www.searchapi.io/api/v1/search?' + kgParams.toString());
+              if (kgRes.ok) {
+                const kgData = await kgRes.json();
+                const results = kgData.local_results || [];
+                if (results.length > 0) {
+                  data_id = results[0].data_id || null;
+                  if (!data_id) place_id = results[0].place_id || null;
+                }
+              }
+            }
+
+            // Fallback: use name + address with coordinate bias from knowledge_graph
+            if (!place_id && !data_id && kg.title) {
+              const nameQuery = kg.address ? `${kg.title} ${kg.address}` : kg.title;
+              const fallbackParams = new URLSearchParams({
+                engine: 'google_maps',
+                q: nameQuery,
+                api_key: apiKey,
+              });
+              if (hl) fallbackParams.set('hl', hl);
+
+              // Use GPS coordinates from knowledge_graph for location bias
+              if (kg.local_results_map && kg.local_results_map.gps_coordinates) {
+                const coords = kg.local_results_map.gps_coordinates;
+                fallbackParams.set('ll', `@${coords.latitude},${coords.longitude},14z`);
+              } else if (kg.latitude && kg.longitude) {
+                fallbackParams.set('ll', `@${kg.latitude},${kg.longitude},14z`);
+              }
+
+              const fallbackRes = await fetch('https://www.searchapi.io/api/v1/search?' + fallbackParams.toString());
+              if (fallbackRes.ok) {
+                const fallbackData = await fallbackRes.json();
+                const results = fallbackData.local_results || [];
+                if (results.length > 0) {
+                  data_id = results[0].data_id || null;
+                  if (!data_id) place_id = results[0].place_id || null;
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Strategy 0 (web search) failed:', err.message);
+      }
+    }
+
     // share.google URLs resolve to a kgmid and/or search query
     if (!place_id && !data_id && (parsed.kgmid || parsed.search_query)) {
       // Strategy 1: Use kgmid as the search query — Google Maps understands /g/ identifiers
@@ -126,8 +199,11 @@ export default async function handler(req, res) {
 // Resolve a Google Maps URL to extract place_id or data_id
 async function resolveUrl(url) {
   try {
+    const originalUrl = url;
+    const isShareGoogle = originalUrl.includes('share.google');
+
     // Handle shortened URLs by following redirects
-    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl') || url.includes('share.google')) {
+    if (url.includes('maps.app.goo.gl') || url.includes('goo.gl') || isShareGoogle) {
       const resolved = await fetch(url, { redirect: 'follow' });
       url = resolved.url;
     }
@@ -165,9 +241,22 @@ async function resolveUrl(url) {
       }
     }
 
-    // Fallback: extract search query from Google Search redirect
+    // Detect unresolved share.google URLs — the JS redirect wasn't followed,
+    // so the resolved URL is still on /share.google with the raw share code as ?q=
+    // Set search_query to null to prevent Strategy 2 from searching a nonsense share code
     try {
       const searchUrl = new URL(url);
+      const isUnresolvedShare = isShareGoogle && searchUrl.pathname === '/share.google';
+
+      if (isUnresolvedShare) {
+        return {
+          search_query: null,
+          is_share_url: true,
+          original_url: originalUrl,
+        };
+      }
+
+      // Fallback: extract search query from Google Search redirect
       const searchQuery = searchUrl.searchParams.get('q');
       if (searchQuery) {
         return { search_query: searchQuery };
