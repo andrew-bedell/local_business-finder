@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method !== 'DELETE') return res.status(405).json({ error: 'Method not allowed' });
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const vercelToken = process.env.VERCEL_TOKEN;
   const vercelProjectId = process.env.VERCEL_PROJECT_ID;
 

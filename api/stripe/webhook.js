@@ -65,7 +65,7 @@ export default async function handler(req, res) {
 
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!stripeWebhookSecret || !supabaseUrl || !supabaseKey) {
     return res.status(503).json({ error: 'Webhook not configured' });
