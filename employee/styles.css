@@ -72,7 +72,7 @@ a:hover {
 }
 
 .header-inner {
-  max-width: var(--max-width);
+  max-width: none;
   margin: 0 auto;
 }
 
@@ -236,7 +236,7 @@ a:hover {
   padding: 8px 24px;
 }
 .section-nav-inner {
-  max-width: var(--max-width);
+  max-width: none;
   margin: 0 auto;
   display: flex;
   gap: 8px;
@@ -342,7 +342,7 @@ a:hover {
 
 /* === Main === */
 .main {
-  max-width: var(--max-width);
+  max-width: none;
   margin: 0 auto;
   padding: 24px 20px;
   display: flex;
@@ -695,6 +695,70 @@ select.input {
 
 .results-table tbody tr:hover {
   background: var(--bg-hover);
+}
+
+/* === Sticky Columns (Pipeline Table) === */
+.pipeline-table .col-sticky {
+  position: sticky;
+  z-index: 2;
+  background: inherit;
+}
+.pipeline-table thead .col-sticky {
+  z-index: 3;
+}
+.pipeline-table .col-sticky::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  box-shadow: none;
+  transition: box-shadow 0.15s;
+}
+/* Checkbox col */
+.col-select {
+  width: 36px;
+  text-align: center !important;
+  left: 0;
+}
+.pipeline-table .col-sticky-1 { left: 36px; }
+.pipeline-table .col-sticky-2 { left: 76px; white-space: nowrap; border-right: 1px solid var(--border); }
+/* Shadow on the last sticky column to show scroll separation */
+.pipeline-table .col-sticky-2::after {
+  right: -4px;
+  width: 4px;
+  box-shadow: inset 4px 0 4px -4px rgba(0, 0, 0, 0.3);
+}
+/* Inherit row background for sticky cells */
+.pipeline-table tbody tr .col-sticky { background: var(--bg-card); }
+.pipeline-table tbody tr:hover .col-sticky { background: var(--bg-hover); }
+.pipeline-table thead tr .col-sticky { background: var(--bg-input); }
+
+/* === Select Checkbox === */
+.pipeline-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* === Bulk Actions Bar === */
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--primary-bg);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+.bulk-actions-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-right: auto;
 }
 
 .col-num {
@@ -2182,7 +2246,7 @@ select.input {
 }
 
 .enrichment-bar-inner {
-  max-width: var(--max-width);
+  max-width: none;
   margin: 0 auto;
   display: flex;
   align-items: center;
