@@ -182,7 +182,7 @@
 
   function verifyAndRedirect(session) {
     supabase.from('employees')
-      .select('id, email, display_name, role, is_active')
+      .select('id, email, display_name, role, is_active, joined_at')
       .eq('auth_user_id', session.user.id)
       .eq('is_active', true)
       .single()
@@ -196,13 +196,23 @@
           return;
         }
 
-        // Update joined_at if this is the first login
+        // Update joined_at and send welcome email if this is the first login
         if (!empResult.data.joined_at) {
           supabase.from('employees')
             .update({ joined_at: new Date().toISOString() })
             .eq('id', empResult.data.id)
             .then(function () {})
             .catch(function () {});
+
+          // Send welcome/tutorial email (non-blocking)
+          fetch('/api/employees/welcome', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({ employee_id: empResult.data.id })
+          }).catch(function () {});
         }
 
         var redirect = sessionStorage.getItem('employee_redirect') || '/employee';

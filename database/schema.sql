@@ -863,6 +863,7 @@ CREATE TABLE IF NOT EXISTS employees (
   is_active               BOOLEAN DEFAULT TRUE,
   invited_at              TIMESTAMPTZ,
   joined_at               TIMESTAMPTZ,
+  welcome_email_sent_at   TIMESTAMPTZ,
   created_at              TIMESTAMPTZ DEFAULT NOW(),
   last_updated_at         TIMESTAMPTZ DEFAULT NOW()
 );

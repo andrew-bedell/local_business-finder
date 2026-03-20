@@ -101,6 +101,167 @@ export function customerTeamInviteEmail({ inviterName, businessName, email, invi
   };
 }
 
+export function employeeWelcomeEmail({ displayName, searchUrl, dashboardUrl }) {
+  const greeting = displayName ? `¡Hola ${displayName}!` : '¡Hola!';
+  const html = baseLayout('Bienvenido al equipo', `
+    <h2>${greeting}</h2>
+    <p>Bienvenido al equipo de <strong>AhoraTengoPagina</strong>. Este correo es tu guía rápida para empezar a encontrar negocios y crear sus páginas web.</p>
+
+    <h2 style="font-size:18px;margin:32px 0 20px;">Tu flujo de trabajo en 7 pasos</h2>
+
+    <!--[if mso]><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><![endif]-->
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">1</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Buscar Negocios</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Ve a la pestaña <strong>Buscar</strong>, selecciona país, ciudad y tipo de negocio, y haz clic en <strong>Buscar</strong>. El sistema encuentra negocios que no tienen página web.</p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">2</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Guardar en el Pipeline</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Guarda los negocios interesantes — aparecerán en la pestaña <strong>Pipeline</strong> donde puedes darles seguimiento.</p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">3</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Enriquecer Datos</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Haz clic en <strong>Enrich</strong> para recopilar automáticamente fotos, reseñas, horarios y perfiles sociales del negocio.</p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">4</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Generar Reporte</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Haz clic en <strong>Report</strong> para generar un análisis de investigación con IA. Este reporte se convierte en el contenido de la página web.</p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">5</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Generar Fotos con IA</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Haz clic en <strong>Photos</strong> para llenar los vacíos visuales con imágenes generadas por IA del negocio.</p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">6</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Crear la Página Web</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Haz clic en <strong>Website</strong> para generar una página completa usando el reporte y las fotos. ¡Lista para publicar!</p>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:24px;">
+      <tr>
+        <td width="44" valign="top" style="padding-right:14px;">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
+            <td style="background:#6C5CE7;color:#ffffff;font-size:16px;font-weight:700;width:36px;height:36px;text-align:center;line-height:36px;border-radius:50%;">7</td>
+          </tr></table>
+        </td>
+        <td valign="top" style="padding-bottom:20px;">
+          <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Contactar al Negocio</p>
+          <p style="margin:0;font-size:14px;color:#4a4a66;line-height:1.5;">Envía un WhatsApp o correo al dueño mostrando su página. Mueve el negocio por las etapas del pipeline: <strong>Saved → Lead → Demo → Active</strong>.</p>
+        </td>
+      </tr>
+    </table>
+
+    <!--[if mso]></table><![endif]-->
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:24px 0;">
+      <tr>
+        <td align="center" style="padding:0 0 10px;">
+          <a href="${searchUrl}" style="display:inline-block;background:#6C5CE7;color:#ffffff !important;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;">Ir a Buscar</a>
+        </td>
+      </tr>
+      <tr>
+        <td align="center">
+          <a href="${dashboardUrl}" style="display:inline-block;background:#ffffff;color:#6C5CE7 !important;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;border:2px solid #6C5CE7;">Ir al Pipeline</a>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background:#f8f8fb;border-radius:8px;padding:20px;margin-top:24px;">
+      <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#1a1a2e;">Tips rápidos</p>
+      <ul style="color:#4a4a66;font-size:13px;line-height:1.7;padding-left:18px;margin:0;">
+        <li>Empieza buscando en tu ciudad para familiarizarte con el flujo</li>
+        <li>Los negocios con más reseñas generan mejores reportes y páginas</li>
+        <li>Puedes enriquecer, generar reporte y fotos en cualquier orden</li>
+        <li>Guarda este correo como referencia — lo puedes consultar cuando quieras</li>
+      </ul>
+    </div>
+  `);
+
+  const text = `${greeting}
+
+Bienvenido al equipo de AhoraTengoPagina. Aquí tienes tu guía rápida:
+
+1. BUSCAR NEGOCIOS — Ve a Buscar, selecciona país/ciudad/tipo, haz clic en Buscar.
+2. GUARDAR EN EL PIPELINE — Guarda los negocios interesantes para darles seguimiento.
+3. ENRIQUECER DATOS — Haz clic en Enrich para recopilar fotos, reseñas y perfiles sociales.
+4. GENERAR REPORTE — Haz clic en Report para crear un análisis con IA (contenido de la web).
+5. GENERAR FOTOS CON IA — Haz clic en Photos para crear imágenes del negocio.
+6. CREAR LA PÁGINA WEB — Haz clic en Website para generar la página completa.
+7. CONTACTAR AL NEGOCIO — Envía WhatsApp/correo y mueve por el pipeline: Saved → Lead → Demo → Active.
+
+Ir a Buscar: ${searchUrl}
+Ir al Pipeline: ${dashboardUrl}
+
+Tips:
+- Empieza buscando en tu ciudad para familiarizarte
+- Los negocios con más reseñas generan mejores páginas
+- Guarda este correo como referencia`;
+
+  return {
+    subject: '¡Bienvenido al equipo! Tu guía para empezar — AhoraTengoPagina',
+    html,
+    text,
+  };
+}
+
 // ── Transactional Email Templates ──
 
 export function websitePublishedEmail({ contactName, businessName, publishedUrl, portalUrl }) {
@@ -420,6 +581,7 @@ export function renderMergeTags(template, variables) {
 
 const HARDCODED_FALLBACKS = {
   employee_invite: employeeInviteEmail,
+  employee_welcome: employeeWelcomeEmail,
   customer_welcome: customerWelcomeEmail,
   customer_team_invite: customerTeamInviteEmail,
   website_published: websitePublishedEmail,
