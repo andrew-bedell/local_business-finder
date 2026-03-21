@@ -196,7 +196,26 @@ async function matchContact(rawPhone) {
       .limit(5);
 
     if (businesses && businesses.length > 0) {
+      console.log(`  → Matched via businesses table: ${businesses[0].id}`);
       return await fetchBusinessContext(businesses[0].id);
+    }
+
+    // Step 1.5: Search business_contacts table
+    const contactFilters = variants.map(v => `contact_phone.eq.${v},contact_whatsapp.eq.${v}`).join(',');
+    let contactOrFilter = contactFilters;
+    if (lastTen.length === 10) {
+      contactOrFilter += `,contact_phone.ilike.%${lastTen},contact_whatsapp.ilike.%${lastTen}`;
+    }
+
+    const { data: contacts } = await sb
+      .from('business_contacts')
+      .select('business_id')
+      .or(contactOrFilter)
+      .limit(1);
+
+    if (contacts && contacts.length > 0 && contacts[0].business_id) {
+      console.log(`  → Matched via business_contacts: ${contacts[0].business_id}`);
+      return await fetchBusinessContext(contacts[0].business_id);
     }
 
     // Step 2: Search marketing_leads table
