@@ -72,7 +72,7 @@ a:hover {
 }
 
 .header-inner {
-  max-width: none;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -342,9 +342,9 @@ a:hover {
 
 /* === Main === */
 .main {
-  max-width: none;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 24px 20px;
+  padding: 24px 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
