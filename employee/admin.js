@@ -72,6 +72,7 @@
       thCountry: 'Country',
       thContact: 'Contact Name',
       thContacts: 'Contacts',
+      thContactPhone: 'Contact Phone',
       thContactWhatsapp: 'Contact WhatsApp',
       thContactEmail: 'Contact Email',
       thBusinessCode: 'ID',
@@ -159,6 +160,13 @@
       deleteConfirm: 'Are you sure you want to delete "{0}"? This cannot be undone.',
       deleteSuccess: '"{0}" has been deleted.',
       deleteError: 'Failed to delete business. It may have related records.',
+      bulkEnrich: 'Enrich Selected',
+      bulkDelete: 'Delete Selected',
+      bulkClear: 'Clear Selection',
+      bulkSelected: '{0} selected',
+      bulkDeleteConfirm: 'Are you sure you want to delete {0} businesses? This cannot be undone.',
+      bulkDeleteSuccess: 'Deleted {0} businesses.',
+      bulkEnrichSuccess: 'Enrichment started for {0} businesses.',
       viewBtn: 'View',
       badgeYes: 'Yes',
       badgeNo: '—',
@@ -643,6 +651,7 @@
       thCountry: 'País',
       thContact: 'Nombre de Contacto',
       thContacts: 'Contactos',
+      thContactPhone: 'Tel. Contacto',
       thContactWhatsapp: 'WhatsApp de Contacto',
       thContactEmail: 'Correo de Contacto',
       thBusinessCode: 'ID',
@@ -730,6 +739,13 @@
       deleteConfirm: '¿Estás seguro de que quieres eliminar "{0}"? Esta acción no se puede deshacer.',
       deleteSuccess: '"{0}" ha sido eliminado.',
       deleteError: 'No se pudo eliminar el negocio. Puede tener registros relacionados.',
+      bulkEnrich: 'Enriquecer Seleccionados',
+      bulkDelete: 'Eliminar Seleccionados',
+      bulkClear: 'Limpiar Selección',
+      bulkSelected: '{0} seleccionados',
+      bulkDeleteConfirm: '¿Estás seguro de que quieres eliminar {0} negocios? Esta acción no se puede deshacer.',
+      bulkDeleteSuccess: '{0} negocios eliminados.',
+      bulkEnrichSuccess: 'Enriquecimiento iniciado para {0} negocios.',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
       badgeNo: '—',
@@ -1419,6 +1435,7 @@
   let totalCount = 0;
   let currentResults = [];
   let allFiltered = []; // Full filtered dataset for client-side pagination
+  const selectedIds = new Set(); // Selected business IDs for bulk actions
   let allBusinesses = []; // Unfiltered dataset for pipeline counts
   let pipelineStage = 'all'; // Currently selected pipeline filter
   // Cache for detail modal data (keyed by business ID)
@@ -1525,6 +1542,31 @@
         renderCurrentPage();
       }
     });
+    // Select-all checkbox
+    const selectAllCb = document.getElementById('select-all');
+    if (selectAllCb) {
+      selectAllCb.addEventListener('change', () => {
+        const pageIds = currentResults.map(b => String(b.id));
+        if (selectAllCb.checked) {
+          pageIds.forEach(id => selectedIds.add(id));
+        } else {
+          pageIds.forEach(id => selectedIds.delete(id));
+        }
+        resultsBody.querySelectorAll('.row-select').forEach(cb => {
+          cb.checked = selectAllCb.checked;
+        });
+        updateBulkActionsBar();
+      });
+    }
+
+    // Bulk action buttons
+    const btnBulkDelete = document.getElementById('btn-bulk-delete');
+    if (btnBulkDelete) btnBulkDelete.addEventListener('click', bulkDelete);
+    const btnBulkEnrich = document.getElementById('btn-bulk-enrich');
+    if (btnBulkEnrich) btnBulkEnrich.addEventListener('click', bulkEnrich);
+    const btnBulkClear = document.getElementById('btn-bulk-clear');
+    if (btnBulkClear) btnBulkClear.addEventListener('click', clearSelection);
+
     pageSizeSelect.addEventListener('change', () => {
       pageSize = parseInt(pageSizeSelect.value, 10);
       currentPage = 0;
@@ -1658,7 +1700,7 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="22" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
 
     try {
@@ -1964,15 +2006,19 @@
         contactsCellHtml = nameDisplay + titleDisplay + countBadge;
       }
 
+      const isChecked = selectedIds.has(String(b.id));
       return `<tr>
-        <td class="td-center">${offset + i + 1}</td>
+        <td class="td-center col-sticky col-select"><input type="checkbox" class="pipeline-checkbox row-select" data-id="${b.id}" ${isChecked ? 'checked' : ''}></td>
+        <td class="td-center col-sticky col-sticky-1">${offset + i + 1}</td>
+        <td class="td-editable col-sticky col-sticky-2" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
         <td class="td-center" style="font-size:11px;color:var(--text-dim);font-family:monospace" title="${escapeHtml(b.business_code || '')}">${escapeHtml(b.business_code || '—')}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
         <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(extractCity(b.address_full))}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-contacts" data-id="${b.id}" title="${t('clickToEdit')}" style="cursor:pointer">${contactsCellHtml}</td>
+        <td>${primaryContact && primaryContact.contact_phone ? escapeHtml(primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>
+        <td>${primaryContact && primaryContact.contact_email ? escapeHtml(primaryContact.contact_email) : '<span class="td-empty-placeholder">—</span>'}</td>
         <td class="td-editable" data-id="${b.id}" data-field="phone" data-value="${escapeHtml(b.phone || '')}" title="${b.phone ? t('clickToEdit') : t('clickToAdd')}">${b.phone ? escapeHtml(b.phone) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-editable" data-id="${b.id}" data-field="email" data-value="${escapeHtml(b.email || '')}" title="${b.email ? t('clickToEdit') : t('clickToAdd')}">${b.email ? escapeHtml(b.email) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
@@ -2083,6 +2129,111 @@
         startInlineEdit(td);
       });
     });
+
+    // Bind row checkboxes
+    resultsBody.querySelectorAll('.row-select').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const id = cb.getAttribute('data-id');
+        if (cb.checked) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+        updateBulkActionsBar();
+        updateSelectAllCheckbox();
+      });
+    });
+    updateSelectAllCheckbox();
+  }
+
+  // ── Selection & Bulk Actions ──
+
+  function updateBulkActionsBar() {
+    const bar = document.getElementById('bulk-actions-bar');
+    const countEl = document.getElementById('bulk-actions-count');
+    if (!bar || !countEl) return;
+    if (selectedIds.size > 0) {
+      bar.style.display = '';
+      countEl.textContent = t('bulkSelected', selectedIds.size);
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  function updateSelectAllCheckbox() {
+    const selectAll = document.getElementById('select-all');
+    if (!selectAll) return;
+    const pageIds = currentResults.map(b => String(b.id));
+    const allChecked = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
+    const someChecked = pageIds.some(id => selectedIds.has(id));
+    selectAll.checked = allChecked;
+    selectAll.indeterminate = someChecked && !allChecked;
+  }
+
+  function clearSelection() {
+    selectedIds.clear();
+    updateBulkActionsBar();
+    resultsBody.querySelectorAll('.row-select').forEach(cb => { cb.checked = false; });
+    updateSelectAllCheckbox();
+  }
+
+  async function bulkDelete() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(t('bulkDeleteConfirm', selectedIds.size))) return;
+    if (!supabaseClient) return;
+
+    const ids = Array.from(selectedIds);
+    try {
+      const { error } = await supabaseClient
+        .from('businesses')
+        .delete()
+        .in('id', ids);
+
+      if (error) {
+        console.error('Bulk delete error:', error);
+        showToast(t('deleteError'), 'error');
+        return;
+      }
+
+      showToast(t('bulkDeleteSuccess', ids.length), 'success');
+      selectedIds.clear();
+      updateBulkActionsBar();
+      loadBusinesses();
+      loadStats();
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      showToast(t('deleteError'), 'error');
+    }
+  }
+
+  async function bulkEnrich() {
+    if (selectedIds.size === 0) return;
+
+    const businesses = currentResults.filter(b => selectedIds.has(String(b.id)));
+    const enrichable = businesses.filter(b => b.place_id && !b.place_id.startsWith('marketing-'));
+
+    if (enrichable.length === 0) {
+      showToast(t('enrichNoPlaceId'), 'error');
+      return;
+    }
+
+    showToast(t('bulkEnrichSuccess', enrichable.length), 'success');
+
+    for (const business of enrichable) {
+      try {
+        await fetch('/api/enrich/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ businessId: business.id }),
+        });
+      } catch (err) {
+        console.warn('Enrich failed for', business.name, err);
+      }
+    }
+
+    selectedIds.clear();
+    updateBulkActionsBar();
+    loadBusinesses();
   }
 
   // ── Inline Edit ──

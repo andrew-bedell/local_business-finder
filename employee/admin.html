@@ -497,18 +497,29 @@
           </div>
         </div>
 
+        <!-- Bulk Actions Bar (hidden until selection) -->
+        <div class="bulk-actions-bar" id="bulk-actions-bar" style="display:none">
+          <span class="bulk-actions-count" id="bulk-actions-count"></span>
+          <button class="btn btn-secondary btn-sm" id="btn-bulk-enrich" data-i18n="bulkEnrich">Enrich Selected</button>
+          <button class="btn btn-secondary btn-sm" id="btn-bulk-delete" style="color:var(--danger);border-color:var(--danger)" data-i18n="bulkDelete">Delete Selected</button>
+          <button class="btn btn-text btn-sm" id="btn-bulk-clear" data-i18n="bulkClear">Clear Selection</button>
+        </div>
+
         <div class="results-table-wrapper">
-          <table class="results-table" id="results-table">
+          <table class="results-table pipeline-table" id="results-table">
             <thead>
               <tr>
-                <th class="col-num">#</th>
+                <th class="col-select col-sticky"><input type="checkbox" id="select-all" class="pipeline-checkbox" title="Select all"></th>
+                <th class="col-num col-sticky col-sticky-1">#</th>
+                <th class="col-name col-sticky col-sticky-2" data-i18n="thName">Business Name</th>
                 <th data-i18n="thBusinessCode">ID</th>
-                <th class="col-name" data-i18n="thName">Business Name</th>
                 <th class="col-address" data-i18n="thLocation">Location</th>
                 <th data-i18n="thType">Type</th>
                 <th data-i18n="thStage">Stage</th>
                 <th data-i18n="thCountry">Country</th>
                 <th data-i18n="thContacts">Contacts</th>
+                <th data-i18n="thContactPhone">Contact Phone</th>
+                <th data-i18n="thContactEmail">Contact Email</th>
                 <th class="col-phone" data-i18n="thPhone">Business Phone</th>
                 <th data-i18n="thEmail">Business Email</th>
                 <th class="col-rating" data-i18n="thRating">Rating</th>
