@@ -57,6 +57,21 @@ TIPO DE CONTACTO: ${context.contactType}`;
 
   if (context.websiteUrl) {
     prompt += `\nPÁGINA WEB: ${context.websiteUrl} (estado: ${context.websiteStatus || 'desconocido'})`;
+  } else {
+    prompt += `\nPÁGINA WEB: No tiene página web todavía`;
+  }
+
+  // If the business doesn't have a website yet, override with website pitch — regardless of contact type
+  if (!context.websiteUrl) {
+    prompt += `
+
+INSTRUCCIÓN PRIORITARIA: Este negocio NO tiene página web todavía.
+- Saluda mencionando que lo conoces: usa el nombre del negocio "${biz}"
+- Pregúntale si le gustaría que le creemos una página web profesional para su negocio
+- Menciona que podemos crear una demostración GRATIS para que vea cómo quedaría
+- Sé conversacional y amable — no suenes como un vendedor
+- Si ya se le ofreció antes en la conversación, no repitas la oferta, continúa la conversación naturalmente`;
+    return prompt;
   }
 
   switch (context.contactType) {
@@ -66,7 +81,7 @@ TIPO DE CONTACTO: ${context.contactType}`;
 INSTRUCCIÓN: Este es un CLIENTE ACTIVO con suscripción pagada.
 - Ayúdalo con cambios en su página, preguntas de facturación, o soporte técnico
 - Si pide un cambio en su página, toma nota del cambio y dile que lo procesaremos
-- Puede ver su página en: ${context.websiteUrl || 'su URL publicada'}
+- Puede ver su página en: ${context.websiteUrl}
 - Puede administrar su cuenta en: ahoratengopagina.com/mipagina`;
       break;
 
@@ -82,7 +97,7 @@ INSTRUCCIÓN: Este fue un cliente pero ya no tiene suscripción activa.
       prompt += `
 
 INSTRUCCIÓN: Este contacto tiene una DEMOSTRACIÓN de página web lista.
-- Anímalo a revisar su página de demostración${context.websiteUrl ? ': ' + context.websiteUrl : ''}
+- Anímalo a revisar su página de demostración: ${context.websiteUrl}
 - Pregunta qué le parece y si le gustaría activarla
 - Si tiene preguntas sobre precios, dile que un asesor le dará los detalles`;
       break;
