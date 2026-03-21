@@ -130,7 +130,7 @@ async function logMessage({ conversationId, businessId, direction, body, message
     direction,
     message_type: messageType,
     body: body || '',
-    status: direction === 'inbound' ? 'received' : 'sent',
+    status: direction === 'inbound' ? 'delivered' : 'sent',
   };
 
   if (direction === 'outbound') {

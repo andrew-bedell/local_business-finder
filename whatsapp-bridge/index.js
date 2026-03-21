@@ -70,6 +70,56 @@ client.on('disconnected', (reason) => {
 // Track messages being processed to avoid double-replies
 const processing = new Set();
 
+// Cache LID → real phone to avoid repeated async lookups
+const lidCache = new Map();
+
+function isLikelyLid(msgFrom) {
+  if (msgFrom.endsWith('@lid')) return true;
+  const digits = msgFrom.replace(/\D/g, '');
+  return digits.length > 13;
+}
+
+async function resolvePhone(msgFrom, msg) {
+  const lidKey = msgFrom.replace(/@(c\.us|lid)$/, '');
+
+  if (lidCache.has(lidKey)) return lidCache.get(lidKey);
+
+  let resolved = null;
+
+  // Strategy 1: purpose-built LID resolver
+  try {
+    const results = await client.getContactLidAndPhone([msgFrom]);
+    if (results?.[0]?.pn) {
+      resolved = results[0].pn.replace(/@c\.us$/, '');
+      console.log(`  → LID resolved via API: ${lidKey} → ${resolved}`);
+    }
+  } catch (err) {
+    console.warn(`  → getContactLidAndPhone failed:`, err.message);
+  }
+
+  // Strategy 2: fallback to contact object
+  if (!resolved) {
+    try {
+      const contact = await msg.getContact();
+      if (contact?.number) {
+        resolved = String(contact.number).replace(/\D/g, '');
+        console.log(`  → LID resolved via getContact: ${lidKey} → ${resolved}`);
+      }
+    } catch (err) {
+      console.warn(`  → getContact fallback failed:`, err.message);
+    }
+  }
+
+  if (resolved) {
+    if (lidCache.size >= 1000) lidCache.delete(lidCache.keys().next().value);
+    lidCache.set(lidKey, resolved);
+    return resolved;
+  }
+
+  console.warn(`  → LID resolution failed for ${lidKey}, using as-is`);
+  return lidKey;
+}
+
 client.on('message', async (msg) => {
   // Skip group messages — only handle direct (1:1) messages
   if (msg.from.endsWith('@g.us')) return;
@@ -88,15 +138,23 @@ client.on('message', async (msg) => {
   // Clean up after 60 seconds
   setTimeout(() => processing.delete(msgKey), 60_000);
 
-  // Extract phone number (strip @c.us suffix)
-  const rawPhone = msg.from.replace('@c.us', '');
+  // Extract phone number (strip @c.us or @lid suffix, resolve LIDs)
+  let rawPhone = msg.from.replace(/@(c\.us|lid)$/, '');
+
+  if (isLikelyLid(msg.from)) {
+    console.log(`[${new Date().toLocaleTimeString()}] LID detected: ${msg.from}`);
+    rawPhone = await resolvePhone(msg.from, msg);
+  }
+
   const digits = extractDigits(rawPhone);
   const canonicalPhone = getCanonicalPhone(digits);
   const phoneVariants = buildPhoneVariants(rawPhone);
 
   const messageBody = msg.body || '';
 
-  console.log(`[${new Date().toLocaleTimeString()}] Inbound from ${canonicalPhone}: ${messageBody.substring(0, 80)}${messageBody.length > 80 ? '...' : ''}`);
+  const lidNote = isLikelyLid(msg.from) && rawPhone !== msg.from.replace(/@(c\.us|lid)$/, '')
+    ? ` (resolved from LID)` : '';
+  console.log(`[${new Date().toLocaleTimeString()}] Inbound from ${canonicalPhone}${lidNote}: ${messageBody.substring(0, 80)}${messageBody.length > 80 ? '...' : ''}`);
 
   try {
     // Step 1: Match contact to business
