@@ -2017,7 +2017,7 @@
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-contacts" data-id="${b.id}" title="${t('clickToEdit')}" style="cursor:pointer">${contactsCellHtml}</td>
-        <td>${primaryContact && primaryContact.contact_phone ? escapeHtml(primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>
+        <td>${primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone) ? escapeHtml(primaryContact.contact_whatsapp || primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>
         <td>${primaryContact && primaryContact.contact_email ? escapeHtml(primaryContact.contact_email) : '<span class="td-empty-placeholder">—</span>'}</td>
         <td class="td-editable" data-id="${b.id}" data-field="phone" data-value="${escapeHtml(b.phone || '')}" title="${b.phone ? t('clickToEdit') : t('clickToAdd')}">${b.phone ? escapeHtml(b.phone) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-editable" data-id="${b.id}" data-field="email" data-value="${escapeHtml(b.email || '')}" title="${b.email ? t('clickToEdit') : t('clickToAdd')}">${b.email ? escapeHtml(b.email) : '<span class="td-empty-placeholder">+</span>'}</td>
@@ -2689,16 +2689,12 @@
                   <input type="text" class="input" id="cf-title" placeholder="${t('contactTitlePlaceholder')}">
                 </div>
                 <div class="form-group">
-                  <label>${t('contactPhone')}</label>
-                  <input type="text" class="input" id="cf-phone" placeholder="${t('contactPhone')}">
+                  <label>${t('thContactWhatsapp')}</label>
+                  <input type="text" class="input" id="cf-whatsapp" placeholder="${t('thContactWhatsapp')}">
                 </div>
                 <div class="form-group">
                   <label>${t('contactEmail')}</label>
                   <input type="email" class="input" id="cf-email" placeholder="${t('contactEmail')}">
-                </div>
-                <div class="form-group">
-                  <label>${t('thContactWhatsapp')}</label>
-                  <input type="text" class="input" id="cf-whatsapp" placeholder="${t('thContactWhatsapp')}">
                 </div>
                 <div class="form-group">
                   <label style="display:flex;align-items:center;gap:6px">
@@ -2859,8 +2855,7 @@
             <span style="color:var(--text-dim);font-size:11px;font-family:monospace;margin-left:auto">${escapeHtml(c.contact_code || '')}</span>
           </div>
           <div style="font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:12px">
-            ${c.contact_phone ? `<span>Phone: ${escapeHtml(c.contact_phone)}</span>` : ''}
-            ${c.contact_whatsapp ? `<span>WA: ${escapeHtml(c.contact_whatsapp)}</span>` : ''}
+            ${(c.contact_whatsapp || c.contact_phone) ? `<span>WA: ${escapeHtml(c.contact_whatsapp || c.contact_phone)}</span>` : ''}
             ${c.contact_email ? `<span>Email: ${escapeHtml(c.contact_email)}</span>` : ''}
           </div>
           ${c.notes ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;font-style:italic">${escapeHtml(c.notes)}</div>` : ''}
@@ -2914,9 +2909,8 @@
       modal.querySelector('#cf-contact-id').value = contact ? contact.id : '';
       modal.querySelector('#cf-name').value = contact ? (contact.contact_name || '') : '';
       modal.querySelector('#cf-title').value = contact ? (contact.contact_title || '') : '';
-      modal.querySelector('#cf-phone').value = contact ? (contact.contact_phone || '') : '';
+      modal.querySelector('#cf-whatsapp').value = contact ? (contact.contact_whatsapp || contact.contact_phone || '') : '';
       modal.querySelector('#cf-email').value = contact ? (contact.contact_email || '') : '';
-      modal.querySelector('#cf-whatsapp').value = contact ? (contact.contact_whatsapp || '') : '';
       modal.querySelector('#cf-notes').value = contact ? (contact.notes || '') : '';
       modal.querySelector('#cf-primary').checked = contact ? !!contact.is_primary : false;
       modal.querySelector('#cf-name').focus();
@@ -2946,7 +2940,7 @@
         contactId: contactId ? parseInt(contactId, 10) : undefined,
         contact_name: modal.querySelector('#cf-name').value.trim(),
         contact_title: modal.querySelector('#cf-title').value.trim(),
-        contact_phone: modal.querySelector('#cf-phone').value.trim(),
+        contact_phone: modal.querySelector('#cf-whatsapp').value.trim(),
         contact_email: modal.querySelector('#cf-email').value.trim(),
         contact_whatsapp: modal.querySelector('#cf-whatsapp').value.trim(),
         notes: modal.querySelector('#cf-notes').value.trim(),
