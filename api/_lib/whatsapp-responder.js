@@ -170,6 +170,18 @@ async function matchByPhone(senderPhone, supabaseUrl, headers) {
       return await fetchBusinessContext(businesses[0].id, supabaseUrl, headers);
     }
 
+    // Check business_contacts table
+    const contactRes = await fetch(
+      `${supabaseUrl}/rest/v1/business_contacts?or=(contact_phone.ilike.*${lastTen},contact_whatsapp.ilike.*${lastTen})&select=business_id&limit=1`,
+      { headers }
+    );
+    if (contactRes.ok) {
+      const contacts = await contactRes.json();
+      if (contacts.length > 0) {
+        return await fetchBusinessContext(contacts[0].business_id, supabaseUrl, headers);
+      }
+    }
+
     // Check marketing_leads
     const leadRes = await fetch(
       `${supabaseUrl}/rest/v1/marketing_leads?phone.ilike.*${lastTen}&select=id,business_name,name,city&limit=1`,
