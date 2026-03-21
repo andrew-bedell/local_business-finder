@@ -133,6 +133,8 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
 
     let bizData = await bizResp.json();
 
+    let matchSource = 'businesses';
+
     // Fallback: check business_contacts table if no match in businesses
     if (!Array.isArray(bizData) || bizData.length === 0) {
       const contactLookupUrl = `${supabaseUrl}/rest/v1/business_contacts?or=(contact_phone.ilike.*${lastTen},contact_whatsapp.ilike.*${lastTen})&select=business_id&limit=1`;
@@ -141,21 +143,74 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
         const contactData = await contactResp.json();
         if (Array.isArray(contactData) && contactData.length > 0) {
           bizData = [{ id: contactData[0].business_id }];
+          matchSource = 'business_contacts';
+          console.log('[webhook] Phone matched via business_contacts:', contactData[0].business_id, '| phone:', senderPhone);
         }
+      } else {
+        console.error('[webhook] business_contacts fallback lookup failed:', contactResp.status, await contactResp.text().catch(() => ''));
       }
     }
 
     if (!Array.isArray(bizData) || bizData.length === 0) {
-      // Unknown contact — no business match. Still send auto-reply to gather info.
-      // Can't create conversation (business_id required), so return with null IDs.
+      // Unknown contact — no business match. Create conversation so message is saved.
       console.log('Inbound from unknown number:', senderPhone, '| lastTen:', lastTen, '| Name:', senderName, '| Message:', messageBody.substring(0, 100));
-      return { businessId: null, conversationId: null };
+
+      const now = new Date().toISOString();
+      const normalizedPhone = '+' + senderPhone;
+      const createConv = await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_conversations`,
+        {
+          method: 'POST',
+          headers: { ...headers, 'Prefer': 'return=representation' },
+          body: JSON.stringify({
+            business_id: null,
+            recipient_phone: normalizedPhone,
+            status: 'active',
+            last_inbound_at: now,
+            unread_count: 1,
+            last_message_text: messageBody.substring(0, 200),
+            last_message_at: now,
+          }),
+        }
+      );
+
+      if (!createConv.ok) {
+        console.error('Failed to create conversation for unknown contact:', await createConv.text().catch(() => ''));
+        return { businessId: null, conversationId: null };
+      }
+
+      const newConv = await createConv.json();
+      const conversationId = newConv[0]?.id;
+
+      if (conversationId) {
+        await fetch(
+          `${supabaseUrl}/rest/v1/whatsapp_messages`,
+          {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              conversation_id: conversationId,
+              business_id: null,
+              direction: 'inbound',
+              message_type: messageType,
+              body: messageBody,
+              wamid: wamid,
+              status: 'delivered',
+              delivered_at: new Date(parseInt(timestamp) * 1000).toISOString(),
+              created_at: new Date(parseInt(timestamp) * 1000).toISOString(),
+            }),
+          }
+        );
+      }
+
+      return { businessId: null, conversationId };
     }
+
+    console.log('[webhook] Matched via', matchSource, '| business_id:', bizData[0].id, '| phone:', senderPhone, '| Name:', senderName);
 
     // Write sender's WhatsApp number to matched contact if contact_whatsapp is empty
     const whatsappNumber = '+' + senderPhone;
     try {
-      // Find primary contact (or first contact) for this business that has no WhatsApp
       const contactLookup = await fetch(
         `${supabaseUrl}/rest/v1/business_contacts?business_id=eq.${bizData[0].id}&order=is_primary.desc,id.asc&limit=1&select=id,contact_whatsapp`,
         { headers }
@@ -173,8 +228,59 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
       console.warn('Failed to backfill contact WhatsApp:', err.message);
     }
 
-    // Create new conversation
+    // Check for existing conversation by business_id (phone format may differ)
+    const existConvResp = await fetch(
+      `${supabaseUrl}/rest/v1/whatsapp_conversations?business_id=eq.${bizData[0].id}&select=id,unread_count&limit=1`,
+      { headers }
+    );
+    const existConvData = existConvResp.ok ? await existConvResp.json() : [];
+
     const now = new Date().toISOString();
+
+    if (existConvData.length > 0) {
+      // Found existing conversation — update phone to Meta format + save inbound message
+      const existConv = existConvData[0];
+      console.log('[webhook] Found existing conversation by business_id:', existConv.id, '| updating recipient_phone to:', whatsappNumber);
+
+      await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_conversations?id=eq.${existConv.id}`,
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({
+            recipient_phone: whatsappNumber,
+            last_inbound_at: now,
+            unread_count: (existConv.unread_count || 0) + 1,
+            last_message_text: messageBody.substring(0, 200),
+            last_message_at: now,
+          }),
+        }
+      );
+
+      await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_messages`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            conversation_id: existConv.id,
+            business_id: bizData[0].id,
+            direction: 'inbound',
+            message_type: messageType,
+            body: messageBody,
+            wamid: wamid,
+            status: 'delivered',
+            delivered_at: new Date(parseInt(timestamp) * 1000).toISOString(),
+            created_at: new Date(parseInt(timestamp) * 1000).toISOString(),
+          }),
+        }
+      );
+
+      await updateCampaignReplyCount(bizData[0].id, supabaseUrl, headers);
+      return { businessId: bizData[0].id, conversationId: existConv.id };
+    }
+
+    // No existing conversation — create new one
     const createConv = await fetch(
       `${supabaseUrl}/rest/v1/whatsapp_conversations`,
       {
@@ -182,7 +288,7 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
         headers: { ...headers, 'Prefer': 'return=representation' },
         body: JSON.stringify({
           business_id: bizData[0].id,
-          recipient_phone: '+' + senderPhone,
+          recipient_phone: whatsappNumber,
           status: 'active',
           last_inbound_at: now,
           unread_count: 1,
@@ -194,7 +300,6 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
     const newConv = await createConv.json();
     const conversationId = newConv[0]?.id;
 
-    // Insert message
     await fetch(
       `${supabaseUrl}/rest/v1/whatsapp_messages`,
       {
@@ -221,6 +326,55 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
   const conv = convData[0];
   const now = new Date().toISOString();
 
+  let resolvedBusinessId = conv.business_id;
+
+  // If conversation exists but has no business_id, re-run phone matching to fix it
+  if (!resolvedBusinessId) {
+    console.log('[webhook] Existing conversation has null business_id — re-matching phone:', senderPhone, '| conv:', conv.id);
+    const lastTen = senderPhone.slice(-10);
+
+    // Try businesses table first
+    const bizLookupUrl = `${supabaseUrl}/rest/v1/businesses?or=(phone.ilike.*${lastTen},contact_phone.ilike.*${lastTen},contact_whatsapp.ilike.*${lastTen},whatsapp.ilike.*${lastTen})&select=id&limit=1`;
+    const bizResp = await fetch(bizLookupUrl, { headers });
+    if (bizResp.ok) {
+      const bizData = await bizResp.json();
+      if (Array.isArray(bizData) && bizData.length > 0) {
+        resolvedBusinessId = bizData[0].id;
+        console.log('[webhook] Re-match SUCCESS via businesses table:', resolvedBusinessId, '| phone:', senderPhone);
+      }
+    } else {
+      console.error('[webhook] Re-match businesses lookup failed:', bizResp.status);
+    }
+
+    // Fallback: business_contacts table
+    if (!resolvedBusinessId) {
+      const contactLookupUrl = `${supabaseUrl}/rest/v1/business_contacts?or=(contact_phone.ilike.*${lastTen},contact_whatsapp.ilike.*${lastTen})&select=business_id&limit=1`;
+      const contactResp = await fetch(contactLookupUrl, { headers });
+      if (contactResp.ok) {
+        const contactData = await contactResp.json();
+        if (Array.isArray(contactData) && contactData.length > 0) {
+          resolvedBusinessId = contactData[0].business_id;
+          console.log('[webhook] Re-match SUCCESS via business_contacts:', resolvedBusinessId, '| phone:', senderPhone);
+        }
+      } else {
+        console.error('[webhook] Re-match business_contacts lookup failed:', contactResp.status);
+      }
+    }
+
+    // Update conversation with resolved business_id
+    if (resolvedBusinessId) {
+      console.log('[webhook] Updating conversation', conv.id, 'with business_id:', resolvedBusinessId);
+      await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_conversations?id=eq.${conv.id}`,
+        { method: 'PATCH', headers, body: JSON.stringify({ business_id: resolvedBusinessId }) }
+      );
+    } else {
+      console.log('[webhook] Re-match FAILED — no business found for phone:', senderPhone);
+    }
+  } else {
+    console.log('[webhook] Existing conversation matched:', conv.id, '| business_id:', conv.business_id, '| phone:', senderPhone);
+  }
+
   // Update conversation
   await fetch(
     `${supabaseUrl}/rest/v1/whatsapp_conversations?id=eq.${conv.id}`,
@@ -244,7 +398,7 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
       headers,
       body: JSON.stringify({
         conversation_id: conv.id,
-        business_id: conv.business_id,
+        business_id: resolvedBusinessId,
         direction: 'inbound',
         message_type: messageType,
         body: messageBody,
@@ -257,9 +411,11 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
   );
 
   // Track campaign reply
-  await updateCampaignReplyCount(conv.business_id, supabaseUrl, headers);
+  if (resolvedBusinessId) {
+    await updateCampaignReplyCount(resolvedBusinessId, supabaseUrl, headers);
+  }
 
-  return { businessId: conv.business_id, conversationId: conv.id };
+  return { businessId: resolvedBusinessId, conversationId: conv.id };
 }
 
 async function handleStatusUpdate(status, supabaseUrl, headers) {

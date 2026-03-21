@@ -167,6 +167,7 @@ async function matchByPhone(senderPhone, supabaseUrl, headers) {
     }
     const businesses = await bizRes.json();
     if (businesses.length > 0) {
+      console.log('[responder] matchByPhone: matched via businesses table:', businesses[0].id, '| phone:', senderPhone);
       return await fetchBusinessContext(businesses[0].id, supabaseUrl, headers);
     }
 
@@ -178,8 +179,11 @@ async function matchByPhone(senderPhone, supabaseUrl, headers) {
     if (contactRes.ok) {
       const contacts = await contactRes.json();
       if (contacts.length > 0) {
+        console.log('[responder] matchByPhone: matched via business_contacts:', contacts[0].business_id, '| phone:', senderPhone);
         return await fetchBusinessContext(contacts[0].business_id, supabaseUrl, headers);
       }
+    } else {
+      console.error('[responder] matchByPhone: business_contacts lookup failed:', contactRes.status, await contactRes.text().catch(() => ''));
     }
 
     // Check marketing_leads
@@ -204,9 +208,10 @@ async function matchByPhone(senderPhone, supabaseUrl, headers) {
       };
     }
   } catch (err) {
-    console.error('matchByPhone error:', err);
+    console.error('[responder] matchByPhone error:', err);
   }
 
+  console.log('[responder] matchByPhone: no match found for phone:', senderPhone);
   return null;
 }
 
