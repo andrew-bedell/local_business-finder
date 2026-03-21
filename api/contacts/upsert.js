@@ -1,6 +1,8 @@
 // Vercel serverless function: Create or update a contact
 // POST — { businessId, contactId?, contact_name, contact_title, contact_phone, contact_email, contact_whatsapp, notes, is_primary }
 
+import { normalizePhone } from '../_lib/phone-utils.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -49,9 +51,9 @@ export default async function handler(req, res) {
 
     if (contact_name !== undefined) payload.contact_name = contact_name;
     if (contact_title !== undefined) payload.contact_title = contact_title;
-    if (contact_phone !== undefined) payload.contact_phone = contact_phone;
+    if (contact_phone !== undefined) payload.contact_phone = normalizePhone(contact_phone);
     if (contact_email !== undefined) payload.contact_email = contact_email;
-    if (contact_whatsapp !== undefined) payload.contact_whatsapp = contact_whatsapp;
+    if (contact_whatsapp !== undefined) payload.contact_whatsapp = normalizePhone(contact_whatsapp);
     if (notes !== undefined) payload.notes = notes;
     if (is_primary !== undefined) payload.is_primary = is_primary;
 
