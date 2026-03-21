@@ -870,6 +870,7 @@
         address_full: place.address,
         address_country: country,
         phone: place.phone,
+        whatsapp: place.whatsapp || place.phone || null,
         website: place.website || '',
         rating: place.rating || null,
         review_count: place.reviewCount || 0,

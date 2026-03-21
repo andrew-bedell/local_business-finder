@@ -152,6 +152,27 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
       return { businessId: null, conversationId: null };
     }
 
+    // Write sender's WhatsApp number to matched contact if contact_whatsapp is empty
+    const whatsappNumber = '+' + senderPhone;
+    try {
+      // Find primary contact (or first contact) for this business that has no WhatsApp
+      const contactLookup = await fetch(
+        `${supabaseUrl}/rest/v1/business_contacts?business_id=eq.${bizData[0].id}&order=is_primary.desc,id.asc&limit=1&select=id,contact_whatsapp`,
+        { headers }
+      );
+      if (contactLookup.ok) {
+        const existingContacts = await contactLookup.json();
+        if (existingContacts.length > 0 && !existingContacts[0].contact_whatsapp) {
+          await fetch(
+            `${supabaseUrl}/rest/v1/business_contacts?id=eq.${existingContacts[0].id}`,
+            { method: 'PATCH', headers, body: JSON.stringify({ contact_whatsapp: whatsappNumber }) }
+          );
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to backfill contact WhatsApp:', err.message);
+    }
+
     // Create new conversation
     const now = new Date().toISOString();
     const createConv = await fetch(
