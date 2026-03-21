@@ -131,7 +131,19 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
       return { businessId: null, conversationId: null };
     }
 
-    const bizData = await bizResp.json();
+    let bizData = await bizResp.json();
+
+    // Fallback: check business_contacts table if no match in businesses
+    if (!Array.isArray(bizData) || bizData.length === 0) {
+      const contactLookupUrl = `${supabaseUrl}/rest/v1/business_contacts?or=(contact_phone.ilike.*${lastTen},contact_whatsapp.ilike.*${lastTen})&select=business_id&limit=1`;
+      const contactResp = await fetch(contactLookupUrl, { headers });
+      if (contactResp.ok) {
+        const contactData = await contactResp.json();
+        if (Array.isArray(contactData) && contactData.length > 0) {
+          bizData = [{ id: contactData[0].business_id }];
+        }
+      }
+    }
 
     if (!Array.isArray(bizData) || bizData.length === 0) {
       // Unknown contact — no business match. Still send auto-reply to gather info.
