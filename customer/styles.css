@@ -1742,6 +1742,151 @@ a.c-btn-white {
 
 
 /* ============================================================================
+   ANALYTICS
+   ============================================================================ */
+
+.c-analytics-range {
+  min-width: 160px;
+}
+
+.c-analytics-stats {
+  margin-bottom: 20px;
+}
+
+.c-analytics-chart-card {
+  margin-bottom: 20px;
+}
+
+.c-analytics-chart {
+  min-height: 224px;
+  overflow-x: auto;
+}
+
+.c-analytics-chart svg {
+  display: block;
+}
+
+.c-analytics-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--c-text-muted);
+  font-size: 14px;
+}
+
+.c-analytics-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Referrers */
+.c-analytics-referrers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.c-referrer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.c-referrer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.c-referrer-domain {
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.c-referrer-count {
+  color: var(--c-text-muted);
+  font-size: 12px;
+}
+
+.c-referrer-bar {
+  height: 6px;
+  background: var(--c-surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.c-referrer-bar-fill {
+  height: 100%;
+  background: var(--c-accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Device Breakdown */
+.c-device-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.c-device-row:last-child {
+  margin-bottom: 0;
+}
+
+.c-device-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.c-device-icon {
+  font-size: 16px;
+}
+
+.c-device-label {
+  color: var(--c-text);
+  font-weight: 500;
+  flex: 1;
+}
+
+.c-device-pct {
+  color: var(--c-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.c-device-bar {
+  height: 6px;
+  background: var(--c-surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.c-device-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.c-device-bar-desktop {
+  background: var(--c-accent);
+}
+
+.c-device-bar-mobile {
+  background: var(--c-accent2);
+}
+
+.c-device-bar-tablet {
+  background: var(--c-gold);
+}
+
+
+/* ============================================================================
    RESPONSIVE
    ============================================================================ */
 @media (max-width: 900px) {
@@ -1758,6 +1903,7 @@ a.c-btn-white {
 
   .c-stats-grid { grid-template-columns: repeat(2, 1fr); }
   .c-bottom-grid { grid-template-columns: 1fr; }
+  .c-analytics-bottom-grid { grid-template-columns: 1fr; }
   .c-form-row { grid-template-columns: 1fr; }
 
   .c-page-title { font-size: 22px; }

@@ -63,6 +63,31 @@
       action_support: 'Contactar soporte',
       action_support_sub: 'Estamos aquí para ayudarte',
 
+      // Analytics
+      nav_analytics: 'Analíticas',
+      nav_analytics_short: 'Stats',
+      analytics_title: 'Analíticas de tu <span>Sitio Web</span>',
+      analytics_7d: 'Últimos 7 días',
+      analytics_30d: 'Últimos 30 días',
+      analytics_90d: 'Últimos 90 días',
+      analytics_views: 'Visitas',
+      analytics_unique: 'visitantes únicos',
+      analytics_calls: 'Llamadas',
+      analytics_calls_sub: 'clics en teléfono',
+      analytics_directions: 'Direcciones',
+      analytics_directions_sub: 'clics en mapa',
+      analytics_contacts: 'Contactos',
+      analytics_contacts_sub: 'email + redes + formularios',
+      analytics_chart_title: 'Visitas por día',
+      analytics_referrers: 'Fuentes de Tráfico',
+      analytics_devices: 'Dispositivos',
+      analytics_no_data: 'Sin datos aún',
+      analytics_loading: 'Cargando datos...',
+      analytics_direct: 'Directo',
+      analytics_desktop: 'Escritorio',
+      analytics_mobile: 'Móvil',
+      analytics_tablet: 'Tablet',
+
       // Footer
       footer_copy: 'Todos los derechos reservados.',
       footer_privacy: 'Privacidad',
@@ -113,6 +138,31 @@
       action_changes_sub: 'Update your website',
       action_support: 'Contact support',
       action_support_sub: 'We\'re here to help',
+
+      // Analytics
+      nav_analytics: 'Analytics',
+      nav_analytics_short: 'Stats',
+      analytics_title: 'Your <span>Website Analytics</span>',
+      analytics_7d: 'Last 7 days',
+      analytics_30d: 'Last 30 days',
+      analytics_90d: 'Last 90 days',
+      analytics_views: 'Views',
+      analytics_unique: 'unique visitors',
+      analytics_calls: 'Calls',
+      analytics_calls_sub: 'phone clicks',
+      analytics_directions: 'Directions',
+      analytics_directions_sub: 'map clicks',
+      analytics_contacts: 'Contacts',
+      analytics_contacts_sub: 'email + social + forms',
+      analytics_chart_title: 'Views per day',
+      analytics_referrers: 'Traffic Sources',
+      analytics_devices: 'Devices',
+      analytics_no_data: 'No data yet',
+      analytics_loading: 'Loading data...',
+      analytics_direct: 'Direct',
+      analytics_desktop: 'Desktop',
+      analytics_mobile: 'Mobile',
+      analytics_tablet: 'Tablet',
 
       // Footer
       footer_copy: 'All rights reserved.',
@@ -374,6 +424,15 @@
         var description = ($('#request-description') || {}).value || '';
         var priority = ($('#request-priority') || {}).value || 'normal';
         submitEditRequest(type, description, priority);
+      });
+    }
+
+    // Analytics range selector
+    var analyticsRange = $('#analytics-range');
+    if (analyticsRange) {
+      analyticsRange.addEventListener('change', function () {
+        analyticsCache = {};  // clear cache on range change
+        loadAnalytics(parseInt(analyticsRange.value, 10) || 30);
       });
     }
 
@@ -839,6 +898,9 @@
       setupTeamSection();
       renderTeamTable(team);
 
+      // Load analytics for dashboard visitor stat
+      loadAnalytics(30);
+
       // Update header
       var businessNameEl = $('#business-name');
       if (businessNameEl && businessData) {
@@ -1180,6 +1242,166 @@
     // This section can be expanded later with Stripe API integration
   }
 
+  // ── Analytics ──
+  let analyticsCache = {};
+
+  async function loadAnalytics(days) {
+    if (!businessData || !businessData.id) return;
+
+    var cacheKey = businessData.id + '_' + days;
+    if (analyticsCache[cacheKey]) {
+      renderAnalytics(analyticsCache[cacheKey]);
+      return;
+    }
+
+    // Show loading state
+    var chartEl = document.getElementById('analytics-chart');
+    if (chartEl) chartEl.innerHTML = '<div class="c-analytics-chart-empty">' + t('analytics_loading') + '</div>';
+
+    try {
+      var res = await fetch('/api/analytics/stats?businessId=' + businessData.id + '&days=' + days);
+      if (!res.ok) throw new Error('Failed');
+      var data = await res.json();
+      analyticsCache[cacheKey] = data;
+      renderAnalytics(data);
+    } catch (err) {
+      console.error('Analytics load error:', err);
+      if (chartEl) chartEl.innerHTML = '<div class="c-analytics-chart-empty">' + t('analytics_no_data') + '</div>';
+    }
+  }
+
+  function renderAnalytics(data) {
+    // Stats cards
+    var viewsEl = document.getElementById('analytics-views');
+    var uniqueEl = document.getElementById('analytics-unique');
+    var callsEl = document.getElementById('analytics-calls');
+    var directionsEl = document.getElementById('analytics-directions');
+    var contactsEl = document.getElementById('analytics-contacts');
+
+    if (viewsEl) viewsEl.textContent = (data.totals.page_views || 0).toLocaleString();
+    if (uniqueEl) uniqueEl.textContent = (data.totals.unique_visitors || 0).toLocaleString() + ' ' + t('analytics_unique');
+    if (callsEl) callsEl.textContent = (data.totals.phone_clicks || 0).toLocaleString();
+    if (directionsEl) directionsEl.textContent = (data.totals.direction_clicks || 0).toLocaleString();
+    if (contactsEl) {
+      var contactTotal = (data.totals.email_clicks || 0) + (data.totals.social_clicks || 0) + (data.totals.form_submissions || 0);
+      contactsEl.textContent = contactTotal.toLocaleString();
+    }
+
+    // Also update dashboard stat
+    var statVisitors = document.getElementById('stat-visitors');
+    if (statVisitors) statVisitors.textContent = (data.totals.page_views || 0).toLocaleString();
+
+    // Chart
+    renderChart(data.daily);
+
+    // Referrers
+    renderReferrers(data.topReferrers);
+
+    // Devices
+    renderDeviceBreakdown(data.deviceBreakdown);
+  }
+
+  function renderChart(daily) {
+    var chartEl = document.getElementById('analytics-chart');
+    if (!chartEl || !daily || daily.length === 0) {
+      if (chartEl) chartEl.innerHTML = '<div class="c-analytics-chart-empty">' + t('analytics_no_data') + '</div>';
+      return;
+    }
+
+    var maxViews = Math.max.apply(null, daily.map(function (d) { return d.page_views; }));
+    if (maxViews === 0) maxViews = 1;
+
+    var chartHeight = 200;
+    var barWidth = Math.max(4, Math.min(20, Math.floor((chartEl.offsetWidth - 40) / daily.length) - 2));
+
+    // Build SVG bar chart
+    var svgWidth = daily.length * (barWidth + 2) + 40;
+    var displayWidth = Math.max(svgWidth, chartEl.offsetWidth);
+
+    var bars = '';
+    var labels = '';
+    var gridLines = '';
+
+    // Grid lines (4 lines)
+    for (var g = 0; g <= 4; g++) {
+      var gy = chartHeight - (g / 4) * chartHeight;
+      var gVal = Math.round((g / 4) * maxViews);
+      gridLines += '<line x1="35" y1="' + gy + '" x2="' + displayWidth + '" y2="' + gy + '" stroke="var(--c-border, #2e3140)" stroke-width="1" stroke-dasharray="4,4"/>';
+      gridLines += '<text x="30" y="' + (gy + 4) + '" text-anchor="end" fill="var(--c-text-muted, #8b8fa3)" font-size="10">' + gVal + '</text>';
+    }
+
+    for (var i = 0; i < daily.length; i++) {
+      var d = daily[i];
+      var barHeight = (d.page_views / maxViews) * chartHeight;
+      var x = 40 + i * (barWidth + 2);
+      var y = chartHeight - barHeight;
+
+      bars += '<rect x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + barHeight +
+        '" rx="2" fill="var(--c-accent, #7c5cfc)" opacity="0.85">' +
+        '<title>' + d.date + ': ' + d.page_views + ' views</title></rect>';
+
+      // Show date labels (every 7th day or first/last)
+      if (i === 0 || i === daily.length - 1 || i % 7 === 0) {
+        var dateParts = d.date.split('-');
+        var labelText = dateParts[1] + '/' + dateParts[2];
+        labels += '<text x="' + (x + barWidth / 2) + '" y="' + (chartHeight + 14) + '" text-anchor="middle" fill="var(--c-text-muted, #8b8fa3)" font-size="10">' + labelText + '</text>';
+      }
+    }
+
+    chartEl.innerHTML = '<svg width="100%" height="' + (chartHeight + 24) + '" viewBox="0 0 ' + displayWidth + ' ' + (chartHeight + 24) + '" preserveAspectRatio="none" style="overflow:visible">' +
+      gridLines + bars + labels + '</svg>';
+  }
+
+  function renderReferrers(referrers) {
+    var el = document.getElementById('analytics-referrers');
+    if (!el) return;
+
+    if (!referrers || referrers.length === 0) {
+      el.innerHTML = '<p class="c-text-muted">' + t('analytics_no_data') + '</p>';
+      return;
+    }
+
+    var maxCount = referrers[0].count || 1;
+    el.innerHTML = referrers.map(function (r) {
+      var pct = Math.round((r.count / maxCount) * 100);
+      var domain = r.domain || t('analytics_direct');
+      return '<div class="c-referrer-row">' +
+        '<div class="c-referrer-info">' +
+          '<span class="c-referrer-domain">' + escapeHtml(domain) + '</span>' +
+          '<span class="c-referrer-count">' + r.count + '</span>' +
+        '</div>' +
+        '<div class="c-referrer-bar"><div class="c-referrer-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderDeviceBreakdown(breakdown) {
+    var el = document.getElementById('analytics-devices');
+    if (!el) return;
+
+    if (!breakdown || (breakdown.desktop === 0 && breakdown.mobile === 0 && breakdown.tablet === 0)) {
+      el.innerHTML = '<p class="c-text-muted">' + t('analytics_no_data') + '</p>';
+      return;
+    }
+
+    var devices = [
+      { key: 'desktop', label: t('analytics_desktop'), pct: breakdown.desktop || 0, icon: '🖥️' },
+      { key: 'mobile', label: t('analytics_mobile'), pct: breakdown.mobile || 0, icon: '📱' },
+      { key: 'tablet', label: t('analytics_tablet'), pct: breakdown.tablet || 0, icon: '📲' }
+    ];
+
+    el.innerHTML = devices.map(function (d) {
+      return '<div class="c-device-row">' +
+        '<div class="c-device-info">' +
+          '<span class="c-device-icon">' + d.icon + '</span>' +
+          '<span class="c-device-label">' + d.label + '</span>' +
+          '<span class="c-device-pct">' + d.pct + '%</span>' +
+        '</div>' +
+        '<div class="c-device-bar"><div class="c-device-bar-fill c-device-bar-' + d.key + '" style="width:' + d.pct + '%"></div></div>' +
+      '</div>';
+    }).join('');
+  }
+
   // ── Actions ──
   async function saveBusinessInfo(formData) {
     if (!businessData) {
@@ -1452,6 +1674,13 @@
     // Load visual editor when section is shown
     if (normalizedId === 'editor') {
       initVisualEditor();
+    }
+
+    // Load analytics when section is shown
+    if (normalizedId === 'analytics') {
+      var rangeEl = document.getElementById('analytics-range');
+      var days = rangeEl ? parseInt(rangeEl.value, 10) || 30 : 30;
+      loadAnalytics(days);
     }
   }
 

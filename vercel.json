@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/analytics/summarize",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "functions": {
     "api/search/resolve-share.js": {
       "memory": 1024
