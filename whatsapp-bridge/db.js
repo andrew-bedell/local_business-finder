@@ -182,9 +182,143 @@ async function getConversationHistory(conversationId, limit = 20) {
 }
 
 
+// ── Onboarding flow CRUD ──
+
+/**
+ * Find an active onboarding flow by phone number.
+ * Active = step not in (complete, abandoned, error).
+ *
+ * @param {string} phone — Canonical phone number
+ * @returns {Object|null} { flowId, step, flow_data, business_id, conversation_id } or null
+ */
+async function findActiveFlow(phone) {
+  const sb = getClient();
+
+  const { data, error } = await sb
+    .from('onboarding_flows')
+    .select('id, step, flow_data, business_id, conversation_id')
+    .eq('phone', phone)
+    .not('step', 'in', '("complete","abandoned","error")')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('findActiveFlow error:', error.message);
+  }
+
+  return data || null;
+}
+
+
+/**
+ * Create a new onboarding flow.
+ *
+ * @param {Object} opts
+ * @param {string} opts.conversationId — FK to whatsapp_conversations
+ * @param {string} opts.phone — Canonical phone number
+ * @param {string} opts.chatId — WhatsApp chat ID (e.g., 5216241234567@c.us)
+ * @param {Object} [opts.initialData={}] — Initial flow_data (e.g., pre-collected business name/city)
+ * @returns {string|null} flow id
+ */
+async function createFlow({ conversationId, phone, chatId, initialData = {} }) {
+  const sb = getClient();
+
+  const flowData = {
+    collected: {},
+    searchResults: [],
+    selectedPlace: null,
+    enrichmentSummary: null,
+    chatId,
+    retryCount: 0,
+    ...initialData,
+  };
+
+  const { data, error } = await sb
+    .from('onboarding_flows')
+    .insert({
+      conversation_id: conversationId,
+      phone,
+      step: 'collect_info',
+      flow_data: flowData,
+    })
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('createFlow error:', error.message);
+    return null;
+  }
+
+  return data?.id || null;
+}
+
+
+/**
+ * Update an onboarding flow's step, data, or linked records.
+ *
+ * @param {string} flowId — UUID of the flow
+ * @param {Object} updates — Fields to update
+ * @param {string} [updates.step] — New step
+ * @param {Object} [updates.flow_data] — Updated flow_data (replaces entire JSONB)
+ * @param {number} [updates.business_id] — Link to business
+ * @param {string} [updates.website_id] — Link to generated website
+ */
+async function updateFlow(flowId, updates) {
+  const sb = getClient();
+
+  const record = { last_activity_at: new Date().toISOString() };
+
+  if (updates.step !== undefined) record.step = updates.step;
+  if (updates.flow_data !== undefined) record.flow_data = updates.flow_data;
+  if (updates.business_id !== undefined) record.business_id = updates.business_id;
+  if (updates.website_id !== undefined) record.website_id = updates.website_id;
+
+  if (updates.step === 'complete') {
+    record.completed_at = new Date().toISOString();
+  }
+
+  const { error } = await sb
+    .from('onboarding_flows')
+    .update(record)
+    .eq('id', flowId);
+
+  if (error) {
+    console.error('updateFlow error:', error.message);
+  }
+}
+
+
+/**
+ * Get a flow by ID.
+ *
+ * @param {string} flowId — UUID
+ * @returns {Object|null} Full flow record
+ */
+async function getFlow(flowId) {
+  const sb = getClient();
+
+  const { data, error } = await sb
+    .from('onboarding_flows')
+    .select('*')
+    .eq('id', flowId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('getFlow error:', error.message);
+  }
+
+  return data || null;
+}
+
+
 module.exports = {
   findConversationByPhone,
   upsertConversation,
   logMessage,
   getConversationHistory,
+  findActiveFlow,
+  createFlow,
+  updateFlow,
+  getFlow,
 };

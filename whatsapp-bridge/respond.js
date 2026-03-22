@@ -40,7 +40,9 @@ REGLAS:
     prompt += `
 
 CONTEXTO: Este contacto es DESCONOCIDO — no lo encontramos en nuestra base de datos.
-INSTRUCCIÓN: Preséntate brevemente y pregunta el nombre de su negocio y en qué ciudad se encuentra, para poder identificarlo en nuestro sistema.`;
+INSTRUCCIÓN: Preséntate brevemente y pregunta el nombre de su negocio y en qué ciudad se encuentra, para poder identificarlo en nuestro sistema.
+- Si el usuario ya te da el nombre de su negocio Y dice que quiere una página web, incluye [START_ONBOARDING] al final de tu respuesta
+- Solo incluye el marcador si el usuario expresó interés claro en tener una página web`;
     return prompt;
   }
 
@@ -68,9 +70,14 @@ TIPO DE CONTACTO: ${context.contactType}`;
 INSTRUCCIÓN PRIORITARIA: Este negocio NO tiene página web todavía.
 - Saluda mencionando que lo conoces: usa el nombre del negocio "${biz}"
 - Pregúntale si le gustaría que le creemos una página web profesional para su negocio
-- Menciona que podemos crear una demostración GRATIS para que vea cómo quedaría
+- Menciona que podemos crear una página web GRATIS para que vea cómo quedaría
 - Sé conversacional y amable — no suenes como un vendedor
-- Si ya se le ofreció antes en la conversación, no repitas la oferta, continúa la conversación naturalmente`;
+- Si ya se le ofreció antes en la conversación, no repitas la oferta, continúa la conversación naturalmente
+
+REGLA DE ACTIVACIÓN IMPORTANTE:
+- Si el usuario dice claramente que SÍ quiere una página web (acepta la oferta, muestra interés claro, dice "sí", "dale", "me interesa", "quiero", etc.), incluye exactamente el texto [START_ONBOARDING] al FINAL de tu respuesta (después de tu mensaje amigable)
+- NO incluyas [START_ONBOARDING] si el usuario solo hace preguntas, pide más información, o no ha aceptado claramente
+- El marcador [START_ONBOARDING] debe ir en su propia línea al final, después de tu respuesta conversacional`;
     return prompt;
   }
 

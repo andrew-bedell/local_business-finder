@@ -7,7 +7,8 @@
 //   3. npm start
 //   4. Scan QR code with WhatsApp (Link Device)
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
@@ -15,6 +16,7 @@ const qrcode = require('qrcode-terminal');
 const { matchContact, buildPhoneVariants, getCanonicalPhone, extractDigits } = require('./match-contact');
 const { generateResponse } = require('./respond');
 const { findConversationByPhone, upsertConversation, logMessage, getConversationHistory } = require('./db');
+const onboarding = require('./onboarding');
 
 // ── Validate environment ──
 
@@ -30,7 +32,7 @@ for (const key of required) {
 // ── Initialize WhatsApp client ──
 
 const client = new Client({
-  authStrategy: new LocalAuth(),
+  authStrategy: new LocalAuth({ dataPath: path.join(__dirname, '.wwebjs_auth') }),
   puppeteer: {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -157,6 +159,41 @@ client.on('message', async (msg) => {
   console.log(`[${new Date().toLocaleTimeString()}] Inbound from ${canonicalPhone}${lidNote}: ${messageBody.substring(0, 80)}${messageBody.length > 80 ? '...' : ''}`);
 
   try {
+    // Step 0: Check for active onboarding flow (takes priority over normal flow)
+    const flowCheck = await onboarding.checkOnboardingFlow(canonicalPhone);
+
+    if (flowCheck.active) {
+      console.log(`  → Active onboarding flow: ${flowCheck.flowId} (step: ${flowCheck.step})`);
+
+      // Still need conversation for logging
+      let existingConversation = await findConversationByPhone(phoneVariants);
+      const conversationId = await upsertConversation({
+        businessId: existingConversation?.business_id || null,
+        phone: canonicalPhone,
+        messagePreview: messageBody.substring(0, 200),
+        direction: 'inbound',
+        existingConversation,
+      });
+
+      if (conversationId) {
+        await logMessage({ conversationId, businessId: existingConversation?.business_id || null, direction: 'inbound', body: messageBody });
+      }
+
+      const reply = await onboarding.handleOnboardingMessage(
+        flowCheck.flowId, messageBody, conversationId, canonicalPhone, { client }
+      );
+
+      if (reply) {
+        await msg.reply(reply);
+        console.log(`  → Onboarding reply: ${reply.substring(0, 80)}${reply.length > 80 ? '...' : ''}`);
+
+        if (conversationId) {
+          await logMessage({ conversationId, businessId: existingConversation?.business_id || null, direction: 'outbound', body: reply });
+        }
+      }
+      return;
+    }
+
     // Step 1: Match contact to business
     const context = await matchContact(rawPhone);
 
@@ -195,10 +232,48 @@ client.on('message', async (msg) => {
     }
 
     // Step 5: Generate response via Claude
-    const reply = await generateResponse(context, messageBody, history);
+    let reply = await generateResponse(context, messageBody, history);
 
     if (!reply) {
       console.log('  → No reply generated (skipped)');
+      return;
+    }
+
+    // Step 5.5: Check for [START_ONBOARDING] marker in Claude's response
+    const ONBOARDING_MARKER = '[START_ONBOARDING]';
+    if (reply.includes(ONBOARDING_MARKER)) {
+      // Strip the marker from the reply
+      reply = reply.replace(ONBOARDING_MARKER, '').trim();
+
+      // Send the conversational reply first
+      await msg.reply(reply);
+      console.log(`  → Replied (pre-onboarding): ${reply.substring(0, 80)}${reply.length > 80 ? '...' : ''}`);
+
+      if (conversationId) {
+        await logMessage({ conversationId, businessId, direction: 'outbound', body: reply });
+      }
+
+      // Start onboarding flow
+      const chatId = msg.from;
+      const preCollected = {};
+      // Try to carry over known data from context
+      if (context?.businessName) preCollected.businessName = context.businessName;
+      if (context?.city) preCollected.businessCity = context.city;
+      if (context?.contactName) preCollected.contactName = context.contactName;
+
+      console.log(`  → Starting onboarding flow for ${canonicalPhone}`);
+      const onboardingReply = await onboarding.startOnboardingFlow(
+        conversationId, canonicalPhone, chatId, preCollected
+      );
+
+      if (onboardingReply) {
+        await msg.reply(onboardingReply);
+        console.log(`  → Onboarding started: ${onboardingReply.substring(0, 80)}${onboardingReply.length > 80 ? '...' : ''}`);
+
+        if (conversationId) {
+          await logMessage({ conversationId, businessId, direction: 'outbound', body: onboardingReply });
+        }
+      }
       return;
     }
 
@@ -241,6 +316,59 @@ client.on('message', async (msg) => {
     }
   }
 });
+
+// ── Abandonment check — mark stale onboarding flows ──
+
+const { createClient: createSupabaseClient } = require('@supabase/supabase-js');
+
+setInterval(async () => {
+  try {
+    const sb = createSupabaseClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
+    const cutoff72h = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
+    const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    // Mark flows inactive for 72h as abandoned
+    const { data: abandoned } = await sb
+      .from('onboarding_flows')
+      .update({ step: 'abandoned' })
+      .lt('last_activity_at', cutoff72h)
+      .not('step', 'in', '("complete","abandoned","error")')
+      .select('id, phone, flow_data');
+
+    if (abandoned && abandoned.length > 0) {
+      console.log(`[Abandonment] Marked ${abandoned.length} flows as abandoned`);
+    }
+
+    // Send reminder for flows inactive for 24h (but not yet 72h)
+    const { data: stale } = await sb
+      .from('onboarding_flows')
+      .select('id, phone, flow_data')
+      .lt('last_activity_at', cutoff24h)
+      .gte('last_activity_at', cutoff72h)
+      .not('step', 'in', '("complete","abandoned","error","generate")');
+
+    if (stale && stale.length > 0) {
+      for (const flow of stale) {
+        const chatId = flow.flow_data?.chatId;
+        if (chatId && !flow.flow_data?.reminderSent) {
+          try {
+            await client.sendMessage(chatId, '¡Hola! 👋 Vimos que comenzaste a crear tu página web. ¿Quieres continuar? Estamos aquí para ayudarte.');
+            // Mark reminder as sent
+            await sb.from('onboarding_flows').update({
+              flow_data: { ...flow.flow_data, reminderSent: true },
+              last_activity_at: new Date().toISOString(),
+            }).eq('id', flow.id);
+            console.log(`[Abandonment] Sent reminder to ${flow.phone}`);
+          } catch (err) {
+            console.warn(`[Abandonment] Failed to send reminder to ${flow.phone}:`, err.message);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Abandonment] Check failed:', err.message);
+  }
+}, 30 * 60 * 1000); // Every 30 minutes
 
 // ── Start ──
 
