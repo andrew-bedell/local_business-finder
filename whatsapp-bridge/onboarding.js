@@ -47,12 +47,25 @@ async function startOnboardingFlow(conversationId, phone, chatId, preCollected =
 
   if (!flowId) return null;
 
+  // If we already have a businessId, link it to the flow immediately
+  if (preCollected.businessId) {
+    await updateFlow(flowId, { business_id: preCollected.businessId });
+  }
+
   // Figure out what we still need
   const missing = getMissingFields(preCollected);
 
   if (missing.length === 0) {
-    // We already have everything — jump to search
     const flow = await getFlow(flowId);
+
+    // If we already have a businessId, skip search/verify — go straight to enrich
+    if (preCollected.businessId) {
+      flow.flow_data.businessId = preCollected.businessId;
+      await updateFlow(flowId, { step: 'enrich', flow_data: flow.flow_data });
+      return await handleEnrich(flowId, flow.flow_data);
+    }
+
+    // Otherwise search Google Places
     await updateFlow(flowId, { step: 'search_business', flow_data: flow.flow_data });
     return await handleSearchBusiness(flowId, flow.flow_data);
   }
@@ -151,7 +164,14 @@ async function handleCollectInfo(flowId, flow, message) {
   const missing = getMissingFields(updated);
 
   if (missing.length === 0) {
-    // All fields collected — move to search
+    // If we already have a businessId from context, skip search/verify → enrich
+    if (flow.business_id || flowData.collected?.businessId) {
+      flowData.businessId = flow.business_id || flowData.collected.businessId;
+      await updateFlow(flowId, { step: 'enrich', flow_data: flowData });
+      return await handleEnrich(flowId, flowData);
+    }
+
+    // Otherwise search Google Places
     await updateFlow(flowId, { step: 'search_business', flow_data: flowData });
     return await handleSearchBusiness(flowId, flowData);
   }
@@ -267,31 +287,15 @@ async function handleVerifyBusiness(flowId, flow, message) {
 async function handleEnrich(flowId, flowData) {
   const place = flowData.selectedPlace;
   const collected = flowData.collected || {};
-
-  if (!place || !place.placeId) {
-    await updateFlow(flowId, { step: 'error', flow_data: flowData });
-    return 'Hubo un problema al procesar tu negocio. Un asesor te contactará pronto.';
-  }
+  let businessId = flowData.businessId || null;
 
   try {
-    // Save/match business via free-signup's matchOrCreateBusiness pattern
-    // We call the enrich trigger which handles upsert internally
     const { createClient } = require('@supabase/supabase-js');
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
 
-    // Check if business already exists by place_id
-    const { data: existing } = await sb
-      .from('businesses')
-      .select('id')
-      .eq('place_id', place.placeId)
-      .limit(1)
-      .single();
-
-    let businessId;
-
-    if (existing) {
-      businessId = existing.id;
-      // Update contact info if we have it
+    if (businessId) {
+      // Business already known (matched from DB before onboarding started)
+      // Just update contact info
       const updates = {};
       if (collected.contactName) updates.contact_name = collected.contactName;
       if (collected.email) updates.contact_email = collected.email;
@@ -300,38 +304,60 @@ async function handleEnrich(flowId, flowData) {
       if (Object.keys(updates).length > 0) {
         await sb.from('businesses').update(updates).eq('id', businessId);
       }
-    } else {
-      // Create new business
-      const insertData = {
-        name: place.name,
-        place_id: place.placeId,
-        address_full: place.address,
-        rating: place.rating,
-        review_count: place.reviewCount,
-        maps_url: place.mapsUrl,
-        pipeline_status: 'prospect',
-      };
-
-      if (collected.contactName) insertData.contact_name = collected.contactName;
-      if (collected.email) insertData.contact_email = collected.email;
-      if (flowData.chatId) insertData.contact_whatsapp = flowData.chatId.replace(/@c\.us$/, '');
-
-      // Extract city from address
-      if (place.address) {
-        const parts = place.address.split(',').map(p => p.trim());
-        if (parts.length >= 2) {
-          insertData.address_city = parts[parts.length - 2];
-        }
-      }
-
-      const { data: newBiz, error } = await sb
+    } else if (place && place.placeId) {
+      // Business found via Google Places search — match or create
+      const { data: existing } = await sb
         .from('businesses')
-        .insert(insertData)
         .select('id')
+        .eq('place_id', place.placeId)
+        .limit(1)
         .single();
 
-      if (error) throw new Error(`Failed to create business: ${error.message}`);
-      businessId = newBiz.id;
+      if (existing) {
+        businessId = existing.id;
+        const updates = {};
+        if (collected.contactName) updates.contact_name = collected.contactName;
+        if (collected.email) updates.contact_email = collected.email;
+        if (flowData.chatId) updates.contact_whatsapp = flowData.chatId.replace(/@c\.us$/, '');
+
+        if (Object.keys(updates).length > 0) {
+          await sb.from('businesses').update(updates).eq('id', businessId);
+        }
+      } else {
+        // Create new business
+        const insertData = {
+          name: place.name,
+          place_id: place.placeId,
+          address_full: place.address,
+          rating: place.rating,
+          review_count: place.reviewCount,
+          maps_url: place.mapsUrl,
+          pipeline_status: 'prospect',
+        };
+
+        if (collected.contactName) insertData.contact_name = collected.contactName;
+        if (collected.email) insertData.contact_email = collected.email;
+        if (flowData.chatId) insertData.contact_whatsapp = flowData.chatId.replace(/@c\.us$/, '');
+
+        if (place.address) {
+          const parts = place.address.split(',').map(p => p.trim());
+          if (parts.length >= 2) {
+            insertData.address_city = parts[parts.length - 2];
+          }
+        }
+
+        const { data: newBiz, error } = await sb
+          .from('businesses')
+          .insert(insertData)
+          .select('id')
+          .single();
+
+        if (error) throw new Error(`Failed to create business: ${error.message}`);
+        businessId = newBiz.id;
+      }
+    } else {
+      await updateFlow(flowId, { step: 'error', flow_data: flowData });
+      return 'Hubo un problema al procesar tu negocio. Un asesor te contactará pronto.';
     }
 
     // Link business to flow

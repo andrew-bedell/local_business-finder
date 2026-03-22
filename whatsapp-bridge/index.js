@@ -257,11 +257,12 @@ client.on('message', async (msg) => {
       const chatId = msg.from;
       const preCollected = {};
       // Try to carry over known data from context
+      if (context?.businessId) preCollected.businessId = context.businessId;
       if (context?.businessName) preCollected.businessName = context.businessName;
       if (context?.city) preCollected.businessCity = context.city;
       if (context?.contactName) preCollected.contactName = context.contactName;
 
-      console.log(`  → Starting onboarding flow for ${canonicalPhone}`);
+      console.log(`  → Starting onboarding flow for ${canonicalPhone} (businessId: ${context?.businessId || 'none'})`);
       const onboardingReply = await onboarding.startOnboardingFlow(
         conversationId, canonicalPhone, chatId, preCollected
       );
