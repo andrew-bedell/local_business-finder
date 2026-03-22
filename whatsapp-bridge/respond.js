@@ -68,11 +68,10 @@ TIPO DE CONTACTO: ${context.contactType}`;
     prompt += `
 
 INSTRUCCIÓN PRIORITARIA: Este negocio NO tiene página web todavía.
-- Saluda mencionando que lo conoces: usa el nombre del negocio "${biz}"
-- Pregúntale si le gustaría que le creemos una página web profesional para su negocio
-- Menciona que podemos crear una página web GRATIS para que vea cómo quedaría
+- SIEMPRE saluda mencionando el nombre del negocio "${biz}"
+- SIEMPRE menciona que podemos crearle una página web profesional GRATIS
 - Sé conversacional y amable — no suenes como un vendedor
-- Si ya se le ofreció antes en la conversación, no repitas la oferta, continúa la conversación naturalmente
+- Si ya se le ofreció antes en la conversación, varía las palabras pero IGUAL menciona la página web — este es tu objetivo principal
 
 REGLA DE ACTIVACIÓN IMPORTANTE:
 - Si el usuario dice claramente que SÍ quiere una página web (acepta la oferta, muestra interés claro, dice "sí", "dale", "me interesa", "quiero", etc.), incluye exactamente el texto [START_ONBOARDING] al FINAL de tu respuesta (después de tu mensaje amigable)
