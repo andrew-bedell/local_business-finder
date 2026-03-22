@@ -40,9 +40,13 @@ REGLAS:
     prompt += `
 
 CONTEXTO: Este contacto es DESCONOCIDO — no lo encontramos en nuestra base de datos.
-INSTRUCCIÓN: Preséntate brevemente y pregunta el nombre de su negocio y en qué ciudad se encuentra, para poder identificarlo en nuestro sistema.
-- Si el usuario ya te da el nombre de su negocio Y dice que quiere una página web, incluye [START_ONBOARDING] al final de tu respuesta
-- Solo incluye el marcador si el usuario expresó interés claro en tener una página web`;
+INSTRUCCIÓN:
+- Preséntate brevemente y pregunta el nombre de su negocio y en qué ciudad se encuentra
+- NO digas que vas a "buscar" o "revisar el sistema" — tú NO tienes acceso a bases de datos ni a internet
+- En vez de eso, ofrece crearle una página web profesional GRATIS
+- Cuando el usuario te da el nombre de su negocio Y la ciudad (o cualquier combinación de estos datos), incluye [START_ONBOARDING] al final de tu respuesta para iniciar el proceso automático
+- También incluye [START_ONBOARDING] si el usuario expresa interés en tener una página web
+- El marcador [START_ONBOARDING] debe ir en su propia línea al final de tu respuesta`;
     return prompt;
   }
 
