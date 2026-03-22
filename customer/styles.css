@@ -1954,3 +1954,382 @@ a.c-btn-white {
   .c-hero-actions .c-btn { width: 100%; justify-content: center; }
   .c-footer { flex-direction: column; gap: 12px; text-align: center; }
 }
+
+
+/* ── Referral Section ── */
+
+.c-referral-code-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 10px 18px;
+  margin: 16px 0 4px;
+}
+
+.c-referral-code-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+}
+
+.c-referral-code {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.c-btn-wa {
+  background: #25d366 !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 700;
+}
+
+.c-btn-wa:hover {
+  background: #1fb855 !important;
+}
+
+.c-btn-wa svg {
+  flex-shrink: 0;
+}
+
+.c-referral-stats {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.c-referral-empty {
+  text-align: center;
+  padding: 24px 0;
+  font-size: 14px;
+}
+
+.c-referral-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.c-referral-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-text-muted, #888);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--c-border, #222);
+}
+
+.c-referral-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--c-border, #222);
+}
+
+.c-ref-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.c-ref-badge-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.c-ref-badge-contacted { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+.c-ref-badge-converted { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.c-ref-badge-rewarded { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+.c-ref-badge-expired { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
+.c-ref-badge-rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+
+/* ============================================================================
+   SCHEDULING SECTION
+   ============================================================================ */
+
+/* ── Sub-tab navigation ── */
+.c-sched-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  padding: 4px;
+  margin-bottom: 24px;
+  width: fit-content;
+}
+
+.c-sched-tab {
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.c-sched-tab:hover {
+  color: var(--c-text);
+  background: var(--c-surface2);
+}
+
+.c-sched-tab.active {
+  color: #fff;
+  background: var(--c-accent);
+}
+
+/* ── Sub-tab content ── */
+.c-sched-content {
+  display: none;
+}
+
+.c-sched-content.active {
+  display: block;
+}
+
+/* ── Scheduling type selector cards ── */
+.c-sched-type-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.c-sched-type-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px 16px;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
+  border-radius: var(--c-radius-lg);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.c-sched-type-card:hover {
+  border-color: rgba(108, 92, 231, 0.4);
+  background: var(--c-surface2);
+}
+
+.c-sched-type-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.c-sched-type-card input[type="radio"]:checked ~ .c-sched-type-icon,
+.c-sched-type-card.selected .c-sched-type-icon {
+  color: var(--c-accent);
+}
+
+.c-sched-type-card input[type="radio"]:checked ~ .c-sched-type-label,
+.c-sched-type-card.selected .c-sched-type-label {
+  color: var(--c-text);
+}
+
+.c-sched-type-card.selected,
+.c-sched-type-card:has(input:checked) {
+  border-color: var(--c-accent);
+  background: rgba(108, 92, 231, 0.08);
+}
+
+.c-sched-type-icon {
+  color: var(--c-text-muted);
+  transition: color 0.2s;
+}
+
+.c-sched-type-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text-muted);
+  transition: color 0.2s;
+}
+
+.c-sched-type-desc {
+  font-size: 12px;
+  color: var(--c-text-dim);
+  line-height: 1.4;
+}
+
+/* ── Staff & Service cards ── */
+.c-sched-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--c-radius);
+  transition: border-color 0.15s;
+}
+
+.c-sched-card + .c-sched-card {
+  margin-top: 8px;
+}
+
+.c-sched-card:hover {
+  border-color: rgba(108, 92, 231, 0.3);
+}
+
+.c-sched-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(108, 92, 231, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--c-accent);
+}
+
+.c-sched-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.c-sched-card-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--c-text);
+}
+
+.c-sched-card-meta {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-sched-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.c-sched-card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.c-sched-badge-duration {
+  background: rgba(108, 92, 231, 0.12);
+  color: var(--c-accent);
+}
+
+.c-sched-badge-price {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--c-success);
+}
+
+.c-sched-badge-capacity {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--c-warning);
+}
+
+/* ── Service color dot ── */
+.c-sched-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Color input ── */
+.c-input-color {
+  height: 42px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* ── Form hint ── */
+.c-form-hint {
+  display: block;
+  font-size: 11px;
+  color: var(--c-text-dim);
+  margin-top: 4px;
+}
+
+/* ── Specialties tags ── */
+.c-sched-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.c-sched-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(108, 92, 231, 0.1);
+  color: var(--c-accent);
+}
+
+/* ── Empty state ── */
+.c-sched-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--c-text-muted);
+}
+
+.c-sched-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+
+.c-sched-empty-text {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.c-sched-empty-sub {
+  font-size: 12px;
+  color: var(--c-text-dim);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .c-sched-tabs {
+    width: 100%;
+  }
+  .c-sched-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
+  }
+  .c-sched-type-cards {
+    grid-template-columns: 1fr;
+  }
+  .c-sched-card {
+    flex-wrap: wrap;
+  }
+  .c-sched-card-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

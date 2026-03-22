@@ -88,6 +88,65 @@
       analytics_mobile: 'Móvil',
       analytics_tablet: 'Tablet',
 
+      // Scheduling
+      nav_scheduling: 'Reservas',
+      nav_scheduling_short: 'Reservas',
+      sched_title: 'Sistema de <span>Reservas</span>',
+      sched_desc: 'Configura tu sistema de reservas, administra tu personal y define tus servicios.',
+      sched_tab_config: 'Configuración',
+      sched_tab_staff: 'Personal',
+      sched_tab_services: 'Servicios',
+      sched_config_title: 'Tipo de Negocio',
+      sched_type_label: 'Modelo de reservas',
+      sched_type_appointment: 'Citas',
+      sched_type_appointment_desc: 'Barbería, salón, spa, consultorio',
+      sched_type_class: 'Clases',
+      sched_type_class_desc: 'Gimnasio, yoga, estudio de baile',
+      sched_timezone: 'Zona horaria',
+      sched_booking_window: 'Ventana de reservas (días)',
+      sched_min_advance: 'Anticipación mínima (horas)',
+      sched_cancel_hours: 'Cancelación permitida (horas antes)',
+      sched_save_config: 'Guardar Configuración',
+      sched_config_saved: 'Configuración guardada.',
+      sched_config_error: 'Error al guardar configuración.',
+      sched_staff_title: 'Personal',
+      sched_staff_name: 'Nombre',
+      sched_staff_phone: 'Teléfono',
+      sched_staff_email: 'Correo',
+      sched_staff_specialties: 'Especialidades',
+      sched_staff_bio: 'Biografía',
+      sched_add_staff: '+ Agregar',
+      sched_save_staff: 'Guardar',
+      sched_cancel: 'Cancelar',
+      sched_staff_loading: 'Cargando...',
+      sched_staff_empty: 'Sin personal registrado',
+      sched_staff_empty_sub: 'Agrega a tu equipo para empezar.',
+      sched_staff_saved: 'Personal guardado.',
+      sched_staff_deleted: 'Personal eliminado.',
+      sched_staff_error: 'Error al guardar personal.',
+      sched_svc_title: 'Servicios',
+      sched_svc_name: 'Nombre del servicio',
+      sched_svc_category: 'Categoría',
+      sched_svc_description: 'Descripción',
+      sched_svc_duration: 'Duración (min)',
+      sched_svc_price: 'Precio',
+      sched_svc_currency: 'Moneda',
+      sched_svc_capacity: 'Capacidad máxima',
+      sched_svc_capacity_hint: '1 = cita individual, >1 = clase grupal',
+      sched_svc_color: 'Color',
+      sched_add_service: '+ Agregar',
+      sched_save_service: 'Guardar',
+      sched_svc_loading: 'Cargando...',
+      sched_svc_empty: 'Sin servicios registrados',
+      sched_svc_empty_sub: 'Define los servicios que ofreces.',
+      sched_svc_saved: 'Servicio guardado.',
+      sched_svc_deleted: 'Servicio eliminado.',
+      sched_svc_error: 'Error al guardar servicio.',
+      sched_edit: 'Editar',
+      sched_delete: 'Eliminar',
+      sched_confirm_delete_staff: '¿Eliminar este miembro del personal?',
+      sched_confirm_delete_service: '¿Eliminar este servicio?',
+
       // Footer
       footer_copy: 'Todos los derechos reservados.',
       footer_privacy: 'Privacidad',
@@ -163,6 +222,65 @@
       analytics_desktop: 'Desktop',
       analytics_mobile: 'Mobile',
       analytics_tablet: 'Tablet',
+
+      // Scheduling
+      nav_scheduling: 'Bookings',
+      nav_scheduling_short: 'Book',
+      sched_title: 'Booking <span>System</span>',
+      sched_desc: 'Configure your booking system, manage staff and define your services.',
+      sched_tab_config: 'Configuration',
+      sched_tab_staff: 'Staff',
+      sched_tab_services: 'Services',
+      sched_config_title: 'Business Type',
+      sched_type_label: 'Booking model',
+      sched_type_appointment: 'Appointments',
+      sched_type_appointment_desc: 'Barber, salon, spa, office',
+      sched_type_class: 'Classes',
+      sched_type_class_desc: 'Gym, yoga, dance studio',
+      sched_timezone: 'Timezone',
+      sched_booking_window: 'Booking window (days)',
+      sched_min_advance: 'Minimum advance (hours)',
+      sched_cancel_hours: 'Cancellation allowed (hours before)',
+      sched_save_config: 'Save Configuration',
+      sched_config_saved: 'Configuration saved.',
+      sched_config_error: 'Error saving configuration.',
+      sched_staff_title: 'Staff',
+      sched_staff_name: 'Name',
+      sched_staff_phone: 'Phone',
+      sched_staff_email: 'Email',
+      sched_staff_specialties: 'Specialties',
+      sched_staff_bio: 'Bio',
+      sched_add_staff: '+ Add',
+      sched_save_staff: 'Save',
+      sched_cancel: 'Cancel',
+      sched_staff_loading: 'Loading...',
+      sched_staff_empty: 'No staff members',
+      sched_staff_empty_sub: 'Add your team to get started.',
+      sched_staff_saved: 'Staff member saved.',
+      sched_staff_deleted: 'Staff member removed.',
+      sched_staff_error: 'Error saving staff member.',
+      sched_svc_title: 'Services',
+      sched_svc_name: 'Service name',
+      sched_svc_category: 'Category',
+      sched_svc_description: 'Description',
+      sched_svc_duration: 'Duration (min)',
+      sched_svc_price: 'Price',
+      sched_svc_currency: 'Currency',
+      sched_svc_capacity: 'Max capacity',
+      sched_svc_capacity_hint: '1 = individual appointment, >1 = group class',
+      sched_svc_color: 'Color',
+      sched_add_service: '+ Add',
+      sched_save_service: 'Save',
+      sched_svc_loading: 'Loading...',
+      sched_svc_empty: 'No services yet',
+      sched_svc_empty_sub: 'Define the services you offer.',
+      sched_svc_saved: 'Service saved.',
+      sched_svc_deleted: 'Service removed.',
+      sched_svc_error: 'Error saving service.',
+      sched_edit: 'Edit',
+      sched_delete: 'Delete',
+      sched_confirm_delete_staff: 'Remove this staff member?',
+      sched_confirm_delete_service: 'Remove this service?',
 
       // Footer
       footer_copy: 'All rights reserved.',
@@ -1682,6 +1800,153 @@
       var days = rangeEl ? parseInt(rangeEl.value, 10) || 30 : 30;
       loadAnalytics(days);
     }
+
+    // Load referrals when section is shown
+    if (normalizedId === 'referrals') {
+      loadReferralSection();
+    }
+
+    // Load scheduling when section is shown
+    if (normalizedId === 'scheduling') {
+      loadSchedulingSection();
+    }
+  }
+
+  // ── Referral System ──
+
+  var referralData = null;
+  var referralHistoryLoaded = false;
+
+  async function loadReferralSection() {
+    if (!referralData) {
+      await loadReferralCode();
+    }
+    if (!referralHistoryLoaded) {
+      await loadReferralHistory();
+    }
+    bindReferralEvents();
+  }
+
+  async function loadReferralCode() {
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      if (!token) return;
+
+      var res = await fetch('/api/referrals/get-code', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      var data = await res.json();
+
+      if (res.ok && data.code) {
+        referralData = data;
+        var codeEl = document.getElementById('referral-code');
+        if (codeEl) codeEl.textContent = data.code;
+
+        var sentEl = document.getElementById('ref-stat-sent');
+        var convEl = document.getElementById('ref-stat-converted');
+        var rewEl = document.getElementById('ref-stat-rewards');
+        if (sentEl) sentEl.textContent = data.totalReferrals || 0;
+        if (convEl) convEl.textContent = data.successfulReferrals || 0;
+        if (rewEl) rewEl.textContent = data.totalRewards || 0;
+      }
+    } catch (err) {
+      console.error('Load referral code error:', err);
+    }
+  }
+
+  async function loadReferralHistory() {
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      if (!token) return;
+
+      var res = await fetch('/api/referrals/list', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      var data = await res.json();
+
+      if (res.ok && data.referrals) {
+        renderReferralHistory(data.referrals);
+        referralHistoryLoaded = true;
+      }
+    } catch (err) {
+      console.error('Load referral history error:', err);
+    }
+  }
+
+  function renderReferralHistory(referrals) {
+    var container = document.getElementById('referral-history');
+    if (!container) return;
+
+    if (!referrals || referrals.length === 0) {
+      container.innerHTML = '<p class="c-text-muted c-referral-empty">Aun no tienes referidos. Comparte tu codigo por WhatsApp!</p>';
+      return;
+    }
+
+    var statusLabels = {
+      pending: 'Pendiente',
+      contacted: 'Contactado',
+      converted: 'Convertido',
+      rewarded: 'Recompensado',
+      expired: 'Expirado',
+      rejected: 'Rechazado',
+    };
+
+    var rows = referrals.map(function (r) {
+      var date = r.created_at ? new Date(r.created_at).toLocaleDateString('es') : '—';
+      var status = r.status || 'pending';
+      var label = statusLabels[status] || status;
+      var reward = r.referrer_reward_status === 'applied' ? '1 mes gratis' : '—';
+
+      return '<tr>' +
+        '<td>' + escapeHtml(r.referred_business_name || '—') + '</td>' +
+        '<td><span class="c-ref-badge c-ref-badge-' + status + '">' + escapeHtml(label) + '</span></td>' +
+        '<td>' + date + '</td>' +
+        '<td>' + reward + '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML = '<table class="c-referral-table">' +
+      '<thead><tr><th>Negocio</th><th>Estado</th><th>Fecha</th><th>Recompensa</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '</table>';
+  }
+
+  function bindReferralEvents() {
+    var btnWa = document.getElementById('btn-share-wa');
+    var btnCopy = document.getElementById('btn-copy-link');
+
+    if (btnWa) {
+      btnWa.onclick = function () {
+        if (!referralData || !referralData.code) return;
+        var link = 'https://ahoratengopagina.com/ref/' + referralData.code;
+        var message = 'Hola! Te recomiendo AhoraTengoPagina para crear la pagina web de tu negocio. '
+          + 'Yo ya tengo la mia y me ha ayudado mucho a conseguir mas clientes.\n\n'
+          + 'Con mi codigo tienes 50% de descuento los primeros 2 meses.\n\n'
+          + link;
+        window.open('https://wa.me/?text=' + encodeURIComponent(message), '_blank');
+      };
+    }
+
+    if (btnCopy) {
+      btnCopy.onclick = function () {
+        if (!referralData || !referralData.code) return;
+        var link = 'https://ahoratengopagina.com/ref/' + referralData.code;
+        navigator.clipboard.writeText(link).then(function () {
+          showToast('Enlace copiado!', 'success');
+        }).catch(function () {
+          // Fallback
+          var input = document.createElement('input');
+          input.value = link;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          document.body.removeChild(input);
+          showToast('Enlace copiado!', 'success');
+        });
+      };
+    }
   }
 
   function showLoginScreen() {
@@ -3043,6 +3308,614 @@
         btnReject.textContent = 'Confirmar Rechazo';
       }
     });
+  }
+
+  // ── Scheduling System ──
+
+  var schedStaffData = [];
+  var schedServicesData = [];
+  var schedConfigLoaded = false;
+
+  async function getAuthToken() {
+    var session = await supabase.auth.getSession();
+    return session.data.session ? session.data.session.access_token : null;
+  }
+
+  async function loadSchedulingSection() {
+    if (!schedConfigLoaded) {
+      await loadSchedulingConfig();
+      schedConfigLoaded = true;
+    }
+    bindSchedulingEvents();
+  }
+
+  var schedEvtsBound = false;
+
+  function bindSchedulingEvents() {
+    if (schedEvtsBound) return;
+    schedEvtsBound = true;
+
+    // Sub-tab switching
+    var tabs = document.querySelectorAll('[data-sched-tab]');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var tabId = tab.getAttribute('data-sched-tab');
+        // Update tab active state
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        // Show/hide content
+        var contents = document.querySelectorAll('[data-sched-content]');
+        contents.forEach(function (c) {
+          c.style.display = 'none';
+          c.classList.remove('active');
+        });
+        var target = document.querySelector('[data-sched-content="' + tabId + '"]');
+        if (target) {
+          target.style.display = '';
+          target.classList.add('active');
+        }
+        // Load data for the tab
+        if (tabId === 'staff') loadSchedulingStaff();
+        if (tabId === 'services') loadSchedulingServices();
+      });
+    });
+
+    // Type card selection
+    var typeCards = document.querySelectorAll('.c-sched-type-card');
+    typeCards.forEach(function (card) {
+      card.addEventListener('click', function () {
+        typeCards.forEach(function (c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+        var radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+        // Show config fields
+        var fields = document.getElementById('sched-config-fields');
+        if (fields) fields.style.display = '';
+      });
+    });
+
+    // Config form
+    var configForm = document.getElementById('sched-config-form');
+    if (configForm) {
+      configForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveSchedulingConfig();
+      });
+    }
+
+    // Staff form
+    var staffForm = document.getElementById('sched-staff-form');
+    if (staffForm) {
+      staffForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveStaffMember();
+      });
+    }
+
+    var btnAddStaff = document.getElementById('btn-add-staff');
+    if (btnAddStaff) {
+      btnAddStaff.addEventListener('click', function () {
+        showStaffForm(null);
+      });
+    }
+
+    var btnCancelStaff = document.getElementById('btn-cancel-staff');
+    if (btnCancelStaff) {
+      btnCancelStaff.addEventListener('click', function () {
+        hideStaffForm();
+      });
+    }
+
+    // Service form
+    var serviceForm = document.getElementById('sched-service-form');
+    if (serviceForm) {
+      serviceForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveServiceItem();
+      });
+    }
+
+    var btnAddService = document.getElementById('btn-add-service');
+    if (btnAddService) {
+      btnAddService.addEventListener('click', function () {
+        showServiceForm(null);
+      });
+    }
+
+    var btnCancelService = document.getElementById('btn-cancel-service');
+    if (btnCancelService) {
+      btnCancelService.addEventListener('click', function () {
+        hideServiceForm();
+      });
+    }
+  }
+
+  // ── Config ──
+
+  async function loadSchedulingConfig() {
+    try {
+      var token = await getAuthToken();
+      if (!token) return;
+
+      var res = await fetch('/api/scheduling/config', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      var data = await res.json();
+
+      if (res.ok) {
+        // Set type cards
+        if (data.scheduling_type) {
+          var card = document.querySelector('.c-sched-type-card[data-type="' + data.scheduling_type + '"]');
+          if (card) {
+            card.classList.add('selected');
+            var radio = card.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+          }
+          var fields = document.getElementById('sched-config-fields');
+          if (fields) fields.style.display = '';
+        }
+
+        // Set config fields
+        var config = data.scheduling_config || {};
+        var tz = document.getElementById('sched-timezone');
+        if (tz && config.timezone) tz.value = config.timezone;
+        var bw = document.getElementById('sched-booking-window');
+        if (bw && config.booking_window_days != null) bw.value = config.booking_window_days;
+        var ma = document.getElementById('sched-min-advance');
+        if (ma && config.min_advance_hours != null) ma.value = config.min_advance_hours;
+        var ch = document.getElementById('sched-cancel-hours');
+        if (ch && config.cancellation_hours != null) ch.value = config.cancellation_hours;
+      }
+    } catch (err) {
+      console.error('Load scheduling config error:', err);
+    }
+  }
+
+  async function saveSchedulingConfig() {
+    var btnSave = document.getElementById('btn-save-sched-config');
+    if (btnSave) {
+      btnSave.disabled = true;
+      btnSave.textContent = 'Guardando...';
+    }
+
+    try {
+      var token = await getAuthToken();
+      if (!token) throw new Error('No session');
+
+      var typeRadio = document.querySelector('input[name="scheduling_type"]:checked');
+      var scheduling_type = typeRadio ? typeRadio.value : null;
+
+      var scheduling_config = {
+        timezone: (document.getElementById('sched-timezone') || {}).value || 'America/Mexico_City',
+        booking_window_days: parseInt((document.getElementById('sched-booking-window') || {}).value, 10) || 30,
+        min_advance_hours: parseInt((document.getElementById('sched-min-advance') || {}).value, 10) || 2,
+        cancellation_hours: parseInt((document.getElementById('sched-cancel-hours') || {}).value, 10) || 24,
+      };
+
+      var res = await fetch('/api/scheduling/config', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ scheduling_type: scheduling_type, scheduling_config: scheduling_config }),
+      });
+
+      if (!res.ok) {
+        var err = await res.json();
+        throw new Error(err.error || 'Error');
+      }
+
+      showToast(t('sched_config_saved'), 'success');
+    } catch (err) {
+      console.error('Save scheduling config error:', err);
+      showToast(t('sched_config_error'), 'error');
+    } finally {
+      if (btnSave) {
+        btnSave.disabled = false;
+        btnSave.textContent = t('sched_save_config');
+      }
+    }
+  }
+
+  // ── Staff CRUD ──
+
+  async function loadSchedulingStaff() {
+    var listEl = document.getElementById('sched-staff-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="c-table-empty">' + t('sched_staff_loading') + '</div>';
+
+    try {
+      var token = await getAuthToken();
+      if (!token) return;
+
+      var res = await fetch('/api/scheduling/staff', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      var data = await res.json();
+      schedStaffData = Array.isArray(data) ? data : [];
+      renderStaffList();
+    } catch (err) {
+      console.error('Load staff error:', err);
+      listEl.innerHTML = '<div class="c-table-empty">' + t('sched_staff_error') + '</div>';
+    }
+  }
+
+  function renderStaffList() {
+    var listEl = document.getElementById('sched-staff-list');
+    if (!listEl) return;
+
+    if (schedStaffData.length === 0) {
+      listEl.innerHTML = '<div class="c-sched-empty">' +
+        '<div class="c-sched-empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>' +
+        '<div class="c-sched-empty-text">' + t('sched_staff_empty') + '</div>' +
+        '<div class="c-sched-empty-sub">' + t('sched_staff_empty_sub') + '</div>' +
+        '</div>';
+      return;
+    }
+
+    var html = '';
+    schedStaffData.forEach(function (s) {
+      var initials = (s.name || '?').split(' ').map(function (w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+      var meta = [];
+      if (s.phone) meta.push(escapeHtml(s.phone));
+      if (s.email) meta.push(escapeHtml(s.email));
+
+      html += '<div class="c-sched-card" data-staff-id="' + escapeHtml(s.id) + '">';
+      html += '<div class="c-sched-card-avatar">' + escapeHtml(initials) + '</div>';
+      html += '<div class="c-sched-card-info">';
+      html += '<div class="c-sched-card-name">' + escapeHtml(s.name) + '</div>';
+      if (meta.length > 0) {
+        html += '<div class="c-sched-card-meta">' + meta.join(' · ') + '</div>';
+      }
+      if (s.specialties && s.specialties.length > 0) {
+        html += '<div class="c-sched-tags">';
+        s.specialties.forEach(function (sp) {
+          html += '<span class="c-sched-tag">' + escapeHtml(sp) + '</span>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+      html += '<div class="c-sched-card-actions">';
+      html += '<button class="c-btn c-btn-ghost c-btn--sm" data-action="edit-staff" data-id="' + escapeHtml(s.id) + '">' + t('sched_edit') + '</button>';
+      html += '<button class="c-btn c-btn-ghost c-btn--sm" data-action="delete-staff" data-id="' + escapeHtml(s.id) + '" style="color:var(--c-danger);">' + t('sched_delete') + '</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    listEl.innerHTML = html;
+
+    // Bind action buttons
+    listEl.querySelectorAll('[data-action="edit-staff"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        var staff = schedStaffData.find(function (s) { return s.id === id; });
+        if (staff) showStaffForm(staff);
+      });
+    });
+
+    listEl.querySelectorAll('[data-action="delete-staff"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        if (window.confirm(t('sched_confirm_delete_staff'))) {
+          deleteStaffMember(id);
+        }
+      });
+    });
+  }
+
+  function showStaffForm(staff) {
+    var panel = document.getElementById('sched-staff-form-panel');
+    var title = document.getElementById('sched-staff-form-title');
+    if (!panel) return;
+    panel.style.display = '';
+
+    if (staff) {
+      title.textContent = t('sched_edit') + ' — ' + staff.name;
+      document.getElementById('sched-staff-id').value = staff.id;
+      document.getElementById('sched-staff-name').value = staff.name || '';
+      document.getElementById('sched-staff-phone').value = staff.phone || '';
+      document.getElementById('sched-staff-email').value = staff.email || '';
+      document.getElementById('sched-staff-specialties').value = (staff.specialties || []).join(', ');
+      document.getElementById('sched-staff-bio').value = staff.bio || '';
+    } else {
+      title.textContent = t('sched_add_staff').replace('+ ', '');
+      document.getElementById('sched-staff-id').value = '';
+      document.getElementById('sched-staff-name').value = '';
+      document.getElementById('sched-staff-phone').value = '';
+      document.getElementById('sched-staff-email').value = '';
+      document.getElementById('sched-staff-specialties').value = '';
+      document.getElementById('sched-staff-bio').value = '';
+    }
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function hideStaffForm() {
+    var panel = document.getElementById('sched-staff-form-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  async function saveStaffMember() {
+    var btnSave = document.getElementById('btn-save-staff');
+    if (btnSave) { btnSave.disabled = true; btnSave.textContent = 'Guardando...'; }
+
+    try {
+      var token = await getAuthToken();
+      if (!token) throw new Error('No session');
+
+      var id = (document.getElementById('sched-staff-id') || {}).value;
+      var name = (document.getElementById('sched-staff-name') || {}).value.trim();
+      var phone = (document.getElementById('sched-staff-phone') || {}).value.trim();
+      var email = (document.getElementById('sched-staff-email') || {}).value.trim();
+      var specialtiesStr = (document.getElementById('sched-staff-specialties') || {}).value;
+      var bio = (document.getElementById('sched-staff-bio') || {}).value.trim();
+
+      if (!name) { showToast(t('sched_staff_name') + ' requerido', 'warning'); return; }
+
+      var specialties = specialtiesStr ? specialtiesStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+
+      var payload = { name: name, phone: phone || null, email: email || null, bio: bio || null, specialties: specialties };
+
+      var method = id ? 'PATCH' : 'POST';
+      if (id) payload.id = id;
+
+      var res = await fetch('/api/scheduling/staff', {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        var errData = await res.json();
+        throw new Error(errData.error || 'Error');
+      }
+
+      showToast(t('sched_staff_saved'), 'success');
+      hideStaffForm();
+      await loadSchedulingStaff();
+    } catch (err) {
+      console.error('Save staff error:', err);
+      showToast(t('sched_staff_error'), 'error');
+    } finally {
+      if (btnSave) { btnSave.disabled = false; btnSave.textContent = t('sched_save_staff'); }
+    }
+  }
+
+  async function deleteStaffMember(staffId) {
+    try {
+      var token = await getAuthToken();
+      if (!token) throw new Error('No session');
+
+      var res = await fetch('/api/scheduling/staff?id=' + encodeURIComponent(staffId), {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+
+      if (!res.ok) {
+        var errData = await res.json();
+        throw new Error(errData.error || 'Error');
+      }
+
+      showToast(t('sched_staff_deleted'), 'success');
+      await loadSchedulingStaff();
+    } catch (err) {
+      console.error('Delete staff error:', err);
+      showToast(t('sched_staff_error'), 'error');
+    }
+  }
+
+  // ── Services CRUD ──
+
+  async function loadSchedulingServices() {
+    var listEl = document.getElementById('sched-service-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="c-table-empty">' + t('sched_svc_loading') + '</div>';
+
+    try {
+      var token = await getAuthToken();
+      if (!token) return;
+
+      var res = await fetch('/api/scheduling/services', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      var data = await res.json();
+      schedServicesData = Array.isArray(data) ? data : [];
+      renderServiceList();
+    } catch (err) {
+      console.error('Load services error:', err);
+      listEl.innerHTML = '<div class="c-table-empty">' + t('sched_svc_error') + '</div>';
+    }
+  }
+
+  function renderServiceList() {
+    var listEl = document.getElementById('sched-service-list');
+    if (!listEl) return;
+
+    if (schedServicesData.length === 0) {
+      listEl.innerHTML = '<div class="c-sched-empty">' +
+        '<div class="c-sched-empty-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>' +
+        '<div class="c-sched-empty-text">' + t('sched_svc_empty') + '</div>' +
+        '<div class="c-sched-empty-sub">' + t('sched_svc_empty_sub') + '</div>' +
+        '</div>';
+      return;
+    }
+
+    var html = '';
+    schedServicesData.forEach(function (svc) {
+      var badges = [];
+      badges.push('<span class="c-sched-card-badge c-sched-badge-duration">' + escapeHtml(svc.duration_minutes + ' min') + '</span>');
+      if (svc.price > 0) {
+        badges.push('<span class="c-sched-card-badge c-sched-badge-price">$' + escapeHtml(Number(svc.price).toFixed(0)) + ' ' + escapeHtml(svc.currency || 'MXN') + '</span>');
+      }
+      if (svc.max_capacity > 1) {
+        badges.push('<span class="c-sched-card-badge c-sched-badge-capacity">' + escapeHtml(String(svc.max_capacity)) + ' max</span>');
+      }
+
+      html += '<div class="c-sched-card" data-service-id="' + escapeHtml(svc.id) + '">';
+      if (svc.color) {
+        html += '<div class="c-sched-color-dot" style="background:' + escapeHtml(svc.color) + ';"></div>';
+      }
+      html += '<div class="c-sched-card-info">';
+      html += '<div class="c-sched-card-name">' + escapeHtml(svc.name) + '</div>';
+      var meta = [];
+      if (svc.category) meta.push(escapeHtml(svc.category));
+      if (svc.description) meta.push(escapeHtml(svc.description));
+      if (meta.length > 0) {
+        html += '<div class="c-sched-card-meta">' + meta.join(' · ') + '</div>';
+      }
+      html += '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">' + badges.join('') + '</div>';
+      html += '</div>';
+      html += '<div class="c-sched-card-actions">';
+      html += '<button class="c-btn c-btn-ghost c-btn--sm" data-action="edit-service" data-id="' + escapeHtml(svc.id) + '">' + t('sched_edit') + '</button>';
+      html += '<button class="c-btn c-btn-ghost c-btn--sm" data-action="delete-service" data-id="' + escapeHtml(svc.id) + '" style="color:var(--c-danger);">' + t('sched_delete') + '</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    listEl.innerHTML = html;
+
+    // Bind action buttons
+    listEl.querySelectorAll('[data-action="edit-service"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        var svc = schedServicesData.find(function (s) { return s.id === id; });
+        if (svc) showServiceForm(svc);
+      });
+    });
+
+    listEl.querySelectorAll('[data-action="delete-service"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        if (window.confirm(t('sched_confirm_delete_service'))) {
+          deleteServiceItem(id);
+        }
+      });
+    });
+  }
+
+  function showServiceForm(svc) {
+    var panel = document.getElementById('sched-service-form-panel');
+    var title = document.getElementById('sched-service-form-title');
+    if (!panel) return;
+    panel.style.display = '';
+
+    if (svc) {
+      title.textContent = t('sched_edit') + ' — ' + svc.name;
+      document.getElementById('sched-service-id').value = svc.id;
+      document.getElementById('sched-svc-name').value = svc.name || '';
+      document.getElementById('sched-svc-category').value = svc.category || '';
+      document.getElementById('sched-svc-description').value = svc.description || '';
+      document.getElementById('sched-svc-duration').value = svc.duration_minutes || 60;
+      document.getElementById('sched-svc-price').value = svc.price || 0;
+      document.getElementById('sched-svc-currency').value = svc.currency || 'MXN';
+      document.getElementById('sched-svc-capacity').value = svc.max_capacity || 1;
+      document.getElementById('sched-svc-color').value = svc.color || '#6C5CE7';
+    } else {
+      title.textContent = t('sched_add_service').replace('+ ', '');
+      document.getElementById('sched-service-id').value = '';
+      document.getElementById('sched-svc-name').value = '';
+      document.getElementById('sched-svc-category').value = '';
+      document.getElementById('sched-svc-description').value = '';
+      document.getElementById('sched-svc-duration').value = '60';
+      document.getElementById('sched-svc-price').value = '0';
+      document.getElementById('sched-svc-currency').value = 'MXN';
+      document.getElementById('sched-svc-capacity').value = '1';
+      document.getElementById('sched-svc-color').value = '#6C5CE7';
+    }
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function hideServiceForm() {
+    var panel = document.getElementById('sched-service-form-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  async function saveServiceItem() {
+    var btnSave = document.getElementById('btn-save-service');
+    if (btnSave) { btnSave.disabled = true; btnSave.textContent = 'Guardando...'; }
+
+    try {
+      var token = await getAuthToken();
+      if (!token) throw new Error('No session');
+
+      var id = (document.getElementById('sched-service-id') || {}).value;
+      var name = (document.getElementById('sched-svc-name') || {}).value.trim();
+      var category = (document.getElementById('sched-svc-category') || {}).value.trim();
+      var description = (document.getElementById('sched-svc-description') || {}).value.trim();
+      var duration_minutes = parseInt((document.getElementById('sched-svc-duration') || {}).value, 10);
+      var price = parseFloat((document.getElementById('sched-svc-price') || {}).value) || 0;
+      var currency = (document.getElementById('sched-svc-currency') || {}).value || 'MXN';
+      var max_capacity = parseInt((document.getElementById('sched-svc-capacity') || {}).value, 10) || 1;
+      var color = (document.getElementById('sched-svc-color') || {}).value || '#6C5CE7';
+
+      if (!name) { showToast(t('sched_svc_name') + ' requerido', 'warning'); return; }
+      if (!duration_minutes || duration_minutes < 1) { showToast(t('sched_svc_duration') + ' inválido', 'warning'); return; }
+
+      var payload = {
+        name: name,
+        description: description || null,
+        duration_minutes: duration_minutes,
+        price: price,
+        currency: currency,
+        category: category || null,
+        max_capacity: max_capacity,
+        color: color,
+      };
+
+      var method = id ? 'PATCH' : 'POST';
+      if (id) payload.id = id;
+
+      var res = await fetch('/api/scheduling/services', {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        var errData = await res.json();
+        throw new Error(errData.error || 'Error');
+      }
+
+      showToast(t('sched_svc_saved'), 'success');
+      hideServiceForm();
+      await loadSchedulingServices();
+    } catch (err) {
+      console.error('Save service error:', err);
+      showToast(t('sched_svc_error'), 'error');
+    } finally {
+      if (btnSave) { btnSave.disabled = false; btnSave.textContent = t('sched_save_service'); }
+    }
+  }
+
+  async function deleteServiceItem(serviceId) {
+    try {
+      var token = await getAuthToken();
+      if (!token) throw new Error('No session');
+
+      var res = await fetch('/api/scheduling/services?id=' + encodeURIComponent(serviceId), {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+
+      if (!res.ok) {
+        var errData = await res.json();
+        throw new Error(errData.error || 'Error');
+      }
+
+      showToast(t('sched_svc_deleted'), 'success');
+      await loadSchedulingServices();
+    } catch (err) {
+      console.error('Delete service error:', err);
+      showToast(t('sched_svc_error'), 'error');
+    }
   }
 
   // ── Start ──

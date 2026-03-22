@@ -159,6 +159,10 @@
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
           <span data-i18n="nav_billing">Facturación</span>
         </button>
+        <button class="c-nav-item" data-section="referrals">
+          <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          <span>Referidos</span>
+        </button>
         <button class="c-nav-item" data-section="requests">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
           <span data-i18n="nav_requests">Solicitudes</span>
@@ -170,6 +174,10 @@
         <button class="c-nav-item" data-section="team">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
           <span data-i18n="nav_team">Equipo</span>
+        </button>
+        <button class="c-nav-item" data-section="scheduling">
+          <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+          <span data-i18n="nav_scheduling">Reservas</span>
         </button>
         <button class="c-nav-item" data-section="account">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -206,9 +214,11 @@
       <button class="c-tab" data-section="analytics" data-i18n="nav_analytics_short">Stats</button>
       <button class="c-tab" data-section="business">Negocio</button>
       <button class="c-tab" data-section="billing">Pago</button>
+      <button class="c-tab" data-section="referrals">Referidos</button>
       <button class="c-tab" data-section="requests">Solicitudes</button>
       <button class="c-tab" data-section="editor">Editor</button>
       <button class="c-tab" data-section="team">Equipo</button>
+      <button class="c-tab" data-section="scheduling" data-i18n="nav_scheduling_short">Reservas</button>
       <button class="c-tab" data-section="account">Cuenta</button>
     </nav>
 
@@ -388,6 +398,14 @@
                 </div>
                 <div class="c-action-arrow">›</div>
               </a>
+              <a href="#" class="c-action-item" data-section="referrals">
+                <div class="c-action-icon" style="background: rgba(34,197,94,0.12);">🎁</div>
+                <div class="c-action-text">
+                  <div class="c-action-name">Invitar amigos</div>
+                  <div class="c-action-desc">Gana 1 mes gratis por referido</div>
+                </div>
+                <div class="c-action-arrow">›</div>
+              </a>
               <a href="mailto:soporte@ahoratengopagina.com" class="c-action-item">
                 <div class="c-action-icon" style="background: rgba(255,107,107,0.12);">💬</div>
                 <div class="c-action-text">
@@ -564,6 +582,60 @@
           <div class="c-panel-title" style="margin-bottom:12px">Administrar Pago</div>
           <p class="c-text-muted" style="margin-bottom:16px">Actualiza tu método de pago o descarga facturas desde el portal de facturación.</p>
           <button type="button" class="c-btn c-btn-primary" id="btn-stripe-portal">Administrar Facturación</button>
+        </div>
+      </div>
+
+      <!-- ── Section: Referidos ── -->
+      <div id="section-referrals" class="c-section" data-section="referrals">
+        <div class="c-topbar">
+          <div class="c-page-title">Programa de <span>Referidos</span></div>
+        </div>
+
+        <!-- Referral CTA Card -->
+        <div class="c-hero-card c-referral-hero">
+          <div class="c-hero-eyebrow">Gana recompensas</div>
+          <div class="c-hero-title">Gana 1 mes gratis por cada negocio que refieras</div>
+          <div class="c-hero-sub">Tu amigo recibe 50% de descuento en sus primeros 2 meses. Tu recibes 1 mes gratis cuando se suscriba.</div>
+
+          <div class="c-referral-code-box">
+            <span class="c-referral-code-label">Tu codigo</span>
+            <span class="c-referral-code" id="referral-code">---</span>
+          </div>
+
+          <div class="c-hero-actions">
+            <button type="button" class="c-btn c-btn-wa" id="btn-share-wa">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Compartir por WhatsApp
+            </button>
+            <button type="button" class="c-btn c-btn-ghost" id="btn-copy-link">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+              Copiar enlace
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="c-stats-grid c-referral-stats">
+          <div class="c-stat-card">
+            <div class="c-stat-value" id="ref-stat-sent">0</div>
+            <div class="c-stat-label">Referidos enviados</div>
+          </div>
+          <div class="c-stat-card">
+            <div class="c-stat-value" id="ref-stat-converted">0</div>
+            <div class="c-stat-label">Referidos exitosos</div>
+          </div>
+          <div class="c-stat-card">
+            <div class="c-stat-value" id="ref-stat-rewards">0</div>
+            <div class="c-stat-label">Meses gratis ganados</div>
+          </div>
+        </div>
+
+        <!-- Referral History -->
+        <div class="c-panel">
+          <div class="c-panel-title" style="margin-bottom:16px">Historial de Referidos</div>
+          <div id="referral-history">
+            <p class="c-text-muted c-referral-empty">Aun no tienes referidos. Comparte tu codigo por WhatsApp!</p>
+          </div>
         </div>
       </div>
 
@@ -767,6 +839,202 @@
       </div>
 
       <!-- ── Section: Equipo ── -->
+      <!-- ── Section: Scheduling (Reservas) ── -->
+      <div id="section-scheduling" class="c-section" data-section="scheduling">
+        <div class="c-topbar">
+          <div class="c-page-title" data-i18n-html="sched_title">Sistema de <span>Reservas</span></div>
+        </div>
+        <p class="c-section-desc" data-i18n="sched_desc">Configura tu sistema de reservas, administra tu personal y define tus servicios.</p>
+
+        <!-- Sub-tab navigation -->
+        <div class="c-sched-tabs" id="sched-tabs">
+          <button class="c-sched-tab active" data-sched-tab="config" data-i18n="sched_tab_config">Configuración</button>
+          <button class="c-sched-tab" data-sched-tab="staff" data-i18n="sched_tab_staff">Personal</button>
+          <button class="c-sched-tab" data-sched-tab="services" data-i18n="sched_tab_services">Servicios</button>
+        </div>
+
+        <!-- Sub-tab: Config -->
+        <div class="c-sched-content active" id="sched-content-config" data-sched-content="config">
+          <div class="c-panel">
+            <div class="c-panel-title" data-i18n="sched_config_title" style="margin-bottom:20px">Tipo de Negocio</div>
+            <form id="sched-config-form" class="c-form" novalidate>
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="sched_type_label">Modelo de reservas</label>
+                <div class="c-sched-type-cards" id="sched-type-cards">
+                  <label class="c-sched-type-card" data-type="appointment_based">
+                    <input type="radio" name="scheduling_type" value="appointment_based">
+                    <div class="c-sched-type-icon">
+                      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+                    </div>
+                    <div class="c-sched-type-label" data-i18n="sched_type_appointment">Citas</div>
+                    <div class="c-sched-type-desc" data-i18n="sched_type_appointment_desc">Barbería, salón, spa, consultorio</div>
+                  </label>
+                  <label class="c-sched-type-card" data-type="class_based">
+                    <input type="radio" name="scheduling_type" value="class_based">
+                    <div class="c-sched-type-icon">
+                      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    </div>
+                    <div class="c-sched-type-label" data-i18n="sched_type_class">Clases</div>
+                    <div class="c-sched-type-desc" data-i18n="sched_type_class_desc">Gimnasio, yoga, estudio de baile</div>
+                  </label>
+                </div>
+              </div>
+
+              <div id="sched-config-fields" style="display:none;">
+                <div class="c-form-row" style="grid-template-columns: 1fr 1fr;">
+                  <div class="c-form-group">
+                    <label class="c-label" data-i18n="sched_timezone">Zona horaria</label>
+                    <select id="sched-timezone" class="c-input c-select">
+                      <option value="America/Mexico_City">Ciudad de México (CST)</option>
+                      <option value="America/Bogota">Bogotá (COT)</option>
+                      <option value="America/Cancun">Cancún (EST)</option>
+                      <option value="America/Tijuana">Tijuana (PST)</option>
+                      <option value="America/Monterrey">Monterrey (CST)</option>
+                      <option value="America/Los_Angeles">Los Ángeles (PST)</option>
+                      <option value="America/New_York">Nueva York (EST)</option>
+                      <option value="America/Chicago">Chicago (CST)</option>
+                    </select>
+                  </div>
+                  <div class="c-form-group">
+                    <label class="c-label" data-i18n="sched_booking_window">Ventana de reservas (días)</label>
+                    <input type="number" id="sched-booking-window" class="c-input" value="30" min="1" max="365">
+                  </div>
+                </div>
+                <div class="c-form-row" style="grid-template-columns: 1fr 1fr;">
+                  <div class="c-form-group">
+                    <label class="c-label" data-i18n="sched_min_advance">Anticipación mínima (horas)</label>
+                    <input type="number" id="sched-min-advance" class="c-input" value="2" min="0" max="168">
+                  </div>
+                  <div class="c-form-group">
+                    <label class="c-label" data-i18n="sched_cancel_hours">Cancelación permitida (horas antes)</label>
+                    <input type="number" id="sched-cancel-hours" class="c-input" value="24" min="0" max="168">
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="c-btn c-btn-primary" id="btn-save-sched-config" style="margin-top:16px;" data-i18n="sched_save_config">
+                Guardar Configuración
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Staff (Personal) -->
+        <div class="c-sched-content" id="sched-content-staff" data-sched-content="staff" style="display:none;">
+          <div class="c-panel" id="sched-staff-form-panel" style="display:none;">
+            <div class="c-panel-title" id="sched-staff-form-title" style="margin-bottom:20px">Agregar Personal</div>
+            <form id="sched-staff-form" class="c-form" novalidate>
+              <input type="hidden" id="sched-staff-id">
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_staff_name">Nombre</label>
+                  <input type="text" id="sched-staff-name" class="c-input" placeholder="Nombre completo" required>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_staff_phone">Teléfono</label>
+                  <input type="tel" id="sched-staff-phone" class="c-input" placeholder="+52 55 1234 5678">
+                </div>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_staff_email">Correo</label>
+                  <input type="email" id="sched-staff-email" class="c-input" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_staff_specialties">Especialidades</label>
+                  <input type="text" id="sched-staff-specialties" class="c-input" placeholder="Corte, color, barba (separar con comas)">
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="sched_staff_bio">Biografía</label>
+                <textarea id="sched-staff-bio" class="c-input c-textarea" rows="2" placeholder="Breve descripción..."></textarea>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="c-btn c-btn-primary" id="btn-save-staff" data-i18n="sched_save_staff">Guardar</button>
+                <button type="button" class="c-btn c-btn-ghost" id="btn-cancel-staff" data-i18n="sched_cancel">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="c-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <div class="c-panel-title" data-i18n="sched_staff_title">Personal</div>
+              <button type="button" class="c-btn c-btn-primary c-btn--sm" id="btn-add-staff" data-i18n="sched_add_staff">+ Agregar</button>
+            </div>
+            <div id="sched-staff-list">
+              <div class="c-table-empty" data-i18n="sched_staff_loading">Cargando...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-tab: Services (Servicios) -->
+        <div class="c-sched-content" id="sched-content-services" data-sched-content="services" style="display:none;">
+          <div class="c-panel" id="sched-service-form-panel" style="display:none;">
+            <div class="c-panel-title" id="sched-service-form-title" style="margin-bottom:20px">Agregar Servicio</div>
+            <form id="sched-service-form" class="c-form" novalidate>
+              <input type="hidden" id="sched-service-id">
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_name">Nombre del servicio</label>
+                  <input type="text" id="sched-svc-name" class="c-input" placeholder="Ej: Corte de cabello" required>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_category">Categoría</label>
+                  <input type="text" id="sched-svc-category" class="c-input" placeholder="Ej: Cortes, Clases, etc.">
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="sched_svc_description">Descripción</label>
+                <textarea id="sched-svc-description" class="c-input c-textarea" rows="2" placeholder="Descripción breve del servicio..."></textarea>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_duration">Duración (min)</label>
+                  <input type="number" id="sched-svc-duration" class="c-input" value="60" min="5" max="480" required>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_price">Precio</label>
+                  <input type="number" id="sched-svc-price" class="c-input" value="0" min="0" step="0.01">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_currency">Moneda</label>
+                  <select id="sched-svc-currency" class="c-input c-select">
+                    <option value="MXN">MXN</option>
+                    <option value="USD">USD</option>
+                    <option value="COP">COP</option>
+                  </select>
+                </div>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_capacity">Capacidad máxima</label>
+                  <input type="number" id="sched-svc-capacity" class="c-input" value="1" min="1" max="200">
+                  <span class="c-form-hint" data-i18n="sched_svc_capacity_hint">1 = cita individual, >1 = clase grupal</span>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="sched_svc_color">Color</label>
+                  <input type="color" id="sched-svc-color" class="c-input c-input-color" value="#6C5CE7">
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="c-btn c-btn-primary" id="btn-save-service" data-i18n="sched_save_service">Guardar</button>
+                <button type="button" class="c-btn c-btn-ghost" id="btn-cancel-service" data-i18n="sched_cancel">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="c-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+              <div class="c-panel-title" data-i18n="sched_svc_title">Servicios</div>
+              <button type="button" class="c-btn c-btn-primary c-btn--sm" id="btn-add-service" data-i18n="sched_add_service">+ Agregar</button>
+            </div>
+            <div id="sched-service-list">
+              <div class="c-table-empty" data-i18n="sched_svc_loading">Cargando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="section-team" class="c-section" data-section="team">
         <div class="c-topbar">
           <div class="c-page-title">Mi <span>Equipo</span></div>

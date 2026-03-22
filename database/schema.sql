@@ -1124,3 +1124,379 @@ CREATE TABLE IF NOT EXISTS analytics_summaries (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_analytics_summaries_unique ON analytics_summaries (business_id, date);
 CREATE INDEX IF NOT EXISTS idx_analytics_summaries_business_date ON analytics_summaries (business_id, date);
+
+
+-- ============================================================================
+-- 22. REFERRAL_CODES — One referral code per customer
+-- ============================================================================
+-- Short, human-readable codes customers share to refer other businesses.
+
+CREATE TABLE IF NOT EXISTS referral_codes (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  customer_id             UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  code                    TEXT UNIQUE NOT NULL,        -- short code like "TACOS42"
+  is_active               BOOLEAN DEFAULT TRUE,
+  total_referrals         INTEGER DEFAULT 0,           -- denormalized count
+  successful_referrals    INTEGER DEFAULT 0,           -- converted count
+  total_rewards           INTEGER DEFAULT 0,           -- free months earned
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE (customer_id)                                  -- one code per customer
+);
+
+CREATE INDEX IF NOT EXISTS idx_referral_codes_code ON referral_codes (code);
+CREATE INDEX IF NOT EXISTS idx_referral_codes_customer ON referral_codes (customer_id);
+
+ALTER TABLE referral_codes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON referral_codes FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 23. REFERRALS — Individual referral tracking
+-- ============================================================================
+-- Tracks each referral from creation through conversion and reward application.
+
+CREATE TABLE IF NOT EXISTS referrals (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  referral_code_id        UUID NOT NULL REFERENCES referral_codes(id) ON DELETE CASCADE,
+  referrer_customer_id    UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+
+  -- Referred business info (captured at landing page)
+  referred_business_name  TEXT,
+  referred_phone          TEXT,
+  referred_email          TEXT,
+  referred_city           TEXT,
+
+  -- Tracking (set when they convert to a customer)
+  referred_customer_id    UUID REFERENCES customers(id) ON DELETE SET NULL,
+  referred_business_id    BIGINT REFERENCES businesses(id) ON DELETE SET NULL,
+
+  -- Status lifecycle
+  status                  TEXT DEFAULT 'pending'
+                            CHECK (status IN (
+                              'pending',          -- lead captured, not yet converted
+                              'contacted',        -- we reached out
+                              'converted',        -- they became a customer
+                              'rewarded',         -- both rewards applied
+                              'expired',          -- no conversion after 90 days
+                              'rejected'          -- invalid or spam
+                            )),
+
+  -- Rewards
+  referrer_reward_status  TEXT DEFAULT 'pending'
+                            CHECK (referrer_reward_status IN ('pending', 'applied', 'not_eligible')),
+  referrer_stripe_credit_id TEXT,                  -- Stripe balance transaction ID for the free month
+  referred_reward_status  TEXT DEFAULT 'pending'
+                            CHECK (referred_reward_status IN ('pending', 'applied', 'not_eligible')),
+  referred_stripe_coupon_id TEXT,                  -- Stripe coupon ID applied to referred subscription
+
+  -- Source tracking
+  source                  TEXT DEFAULT 'whatsapp'
+                            CHECK (source IN ('whatsapp', 'link', 'manual')),
+
+  created_at              TIMESTAMPTZ DEFAULT NOW(),
+  converted_at            TIMESTAMPTZ,
+  rewarded_at             TIMESTAMPTZ,
+  last_updated_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_code ON referrals (referral_code_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals (referrer_customer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_status ON referrals (status);
+
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON referrals FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER referrals_updated_at
+  BEFORE UPDATE ON referrals FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 24. MARKETING_LEADS — Referral columns
+-- ============================================================================
+-- Links marketing leads captured via referral back to the referral record.
+
+ALTER TABLE marketing_leads ADD COLUMN IF NOT EXISTS referral_code TEXT;
+ALTER TABLE marketing_leads ADD COLUMN IF NOT EXISTS referral_id UUID REFERENCES referrals(id) ON DELETE SET NULL;
+
+
+-- ============================================================================
+-- 25. SCHEDULING — Column additions to businesses
+-- ============================================================================
+
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS scheduling_type TEXT
+  CHECK (scheduling_type IN ('appointment_based', 'class_based'));
+
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS scheduling_config JSONB DEFAULT '{}';
+
+
+-- ============================================================================
+-- 26. STAFF_MEMBERS — Staff/employees of the business (instructors, barbers)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS staff_members (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name              TEXT NOT NULL,
+  phone             TEXT,
+  email             TEXT,
+  photo_url         TEXT,
+  bio               TEXT,
+  specialties       TEXT[] DEFAULT '{}',
+  is_active         BOOLEAN DEFAULT TRUE,
+  sort_order        INTEGER DEFAULT 0,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_members_business ON staff_members (business_id);
+CREATE INDEX IF NOT EXISTS idx_staff_members_active ON staff_members (business_id, is_active) WHERE is_active = TRUE;
+
+ALTER TABLE staff_members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON staff_members FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER staff_members_updated_at
+  BEFORE UPDATE ON staff_members
+  FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 27. STAFF_SCHEDULES — Recurring weekly availability per staff member
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS staff_schedules (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  staff_member_id   UUID NOT NULL REFERENCES staff_members(id) ON DELETE CASCADE,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  day_of_week       INTEGER NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+  start_time        TIME NOT NULL,
+  end_time          TIME NOT NULL,
+  is_active         BOOLEAN DEFAULT TRUE,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE (staff_member_id, day_of_week, start_time)
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_schedules_staff ON staff_schedules (staff_member_id);
+CREATE INDEX IF NOT EXISTS idx_staff_schedules_business ON staff_schedules (business_id);
+
+ALTER TABLE staff_schedules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON staff_schedules FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 28. STAFF_EXCEPTIONS — Days off, holidays, custom hours
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS staff_exceptions (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  staff_member_id   UUID NOT NULL REFERENCES staff_members(id) ON DELETE CASCADE,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  exception_date    DATE NOT NULL,
+  is_available      BOOLEAN DEFAULT FALSE,
+  start_time        TIME,
+  end_time          TIME,
+  reason            TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE (staff_member_id, exception_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_staff_exceptions_staff ON staff_exceptions (staff_member_id);
+CREATE INDEX IF NOT EXISTS idx_staff_exceptions_business ON staff_exceptions (business_id);
+CREATE INDEX IF NOT EXISTS idx_staff_exceptions_date ON staff_exceptions (exception_date);
+
+ALTER TABLE staff_exceptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON staff_exceptions FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 29. BOOKING_SERVICES — Services or class types offered
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS booking_services (
+  id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id         BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name                TEXT NOT NULL,
+  description         TEXT,
+  duration_minutes    INTEGER NOT NULL CHECK (duration_minutes > 0),
+  price               DECIMAL(10, 2) DEFAULT 0,
+  currency            TEXT DEFAULT 'MXN' CHECK (currency IN ('MXN', 'USD', 'COP')),
+  category            TEXT,
+  max_capacity        INTEGER DEFAULT 1 CHECK (max_capacity > 0),
+  requires_membership BOOLEAN DEFAULT FALSE,
+  color               TEXT,
+  is_active           BOOLEAN DEFAULT TRUE,
+  sort_order          INTEGER DEFAULT 0,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_booking_services_business ON booking_services (business_id);
+CREATE INDEX IF NOT EXISTS idx_booking_services_active ON booking_services (business_id, is_active) WHERE is_active = TRUE;
+
+ALTER TABLE booking_services ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON booking_services FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER booking_services_updated_at
+  BEFORE UPDATE ON booking_services
+  FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 30. BOOKING_SLOTS — Concrete bookable time windows
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS booking_slots (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  service_id        UUID NOT NULL REFERENCES booking_services(id) ON DELETE CASCADE,
+  staff_member_id   UUID REFERENCES staff_members(id) ON DELETE SET NULL,
+  slot_type         TEXT NOT NULL CHECK (slot_type IN ('class', 'appointment')),
+  slot_date         DATE NOT NULL,
+  start_time        TIME NOT NULL,
+  end_time          TIME NOT NULL,
+  max_capacity      INTEGER DEFAULT 1 CHECK (max_capacity > 0),
+  booked_count      INTEGER DEFAULT 0,
+  status            TEXT DEFAULT 'available'
+                      CHECK (status IN ('available', 'full', 'cancelled')),
+  notes             TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_booking_slots_business ON booking_slots (business_id);
+CREATE INDEX IF NOT EXISTS idx_booking_slots_service ON booking_slots (service_id);
+CREATE INDEX IF NOT EXISTS idx_booking_slots_staff ON booking_slots (staff_member_id);
+CREATE INDEX IF NOT EXISTS idx_booking_slots_date ON booking_slots (business_id, slot_date);
+CREATE INDEX IF NOT EXISTS idx_booking_slots_available ON booking_slots (business_id, slot_date, status) WHERE status = 'available';
+
+ALTER TABLE booking_slots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON booking_slots FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 31. BOOKING_CLIENTS — End-customers of the business
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS booking_clients (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  phone             TEXT NOT NULL,
+  name              TEXT,
+  email             TEXT,
+  notes             TEXT,
+  is_active         BOOLEAN DEFAULT TRUE,
+  otp_code          TEXT,
+  otp_expires_at    TIMESTAMPTZ,
+  total_bookings    INTEGER DEFAULT 0,
+  last_booking_at   TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at   TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE (business_id, phone)
+);
+
+CREATE INDEX IF NOT EXISTS idx_booking_clients_business ON booking_clients (business_id);
+CREATE INDEX IF NOT EXISTS idx_booking_clients_phone ON booking_clients (business_id, phone);
+
+ALTER TABLE booking_clients ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON booking_clients FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER booking_clients_updated_at
+  BEFORE UPDATE ON booking_clients
+  FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 32. BOOKINGS — Actual reservations
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS bookings (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  slot_id           UUID NOT NULL REFERENCES booking_slots(id) ON DELETE CASCADE,
+  client_id         UUID NOT NULL REFERENCES booking_clients(id) ON DELETE CASCADE,
+  service_id        UUID NOT NULL REFERENCES booking_services(id) ON DELETE CASCADE,
+  staff_member_id   UUID REFERENCES staff_members(id) ON DELETE SET NULL,
+  status            TEXT DEFAULT 'confirmed'
+                      CHECK (status IN ('confirmed', 'cancelled', 'completed', 'no_show')),
+  booked_at         TIMESTAMPTZ DEFAULT NOW(),
+  cancelled_at      TIMESTAMPTZ,
+  cancellation_reason TEXT,
+  admin_notes       TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE (slot_id, client_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_business ON bookings (business_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_slot ON bookings (slot_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_client ON bookings (client_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_service ON bookings (service_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings (business_id, status);
+
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON bookings FOR ALL USING (true) WITH CHECK (true);
+
+
+-- ============================================================================
+-- 33. MEMBERSHIP_PLANS — For class-based model
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS membership_plans (
+  id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id         BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  name                TEXT NOT NULL,
+  description         TEXT,
+  classes_per_month   INTEGER,
+  price               DECIMAL(10, 2) DEFAULT 0,
+  currency            TEXT DEFAULT 'MXN' CHECK (currency IN ('MXN', 'USD', 'COP')),
+  allowed_services    UUID[],
+  is_active           BOOLEAN DEFAULT TRUE,
+  sort_order          INTEGER DEFAULT 0,
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_membership_plans_business ON membership_plans (business_id);
+CREATE INDEX IF NOT EXISTS idx_membership_plans_active ON membership_plans (business_id, is_active) WHERE is_active = TRUE;
+
+ALTER TABLE membership_plans ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON membership_plans FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER membership_plans_updated_at
+  BEFORE UPDATE ON membership_plans
+  FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
+
+
+-- ============================================================================
+-- 34. CLIENT_MEMBERSHIPS — Assigns a plan to a client
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS client_memberships (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id       BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  client_id         UUID NOT NULL REFERENCES booking_clients(id) ON DELETE CASCADE,
+  plan_id           UUID NOT NULL REFERENCES membership_plans(id) ON DELETE CASCADE,
+  status            TEXT DEFAULT 'active'
+                      CHECK (status IN ('active', 'paused', 'cancelled', 'expired')),
+  period_start      DATE NOT NULL,
+  period_end        DATE NOT NULL,
+  classes_used      INTEGER DEFAULT 0,
+  classes_limit     INTEGER,
+  admin_notes       TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  last_updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_client_memberships_business ON client_memberships (business_id);
+CREATE INDEX IF NOT EXISTS idx_client_memberships_client ON client_memberships (client_id);
+CREATE INDEX IF NOT EXISTS idx_client_memberships_plan ON client_memberships (plan_id);
+CREATE INDEX IF NOT EXISTS idx_client_memberships_active ON client_memberships (business_id, status) WHERE status = 'active';
+
+ALTER TABLE client_memberships ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON client_memberships FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER client_memberships_updated_at
+  BEFORE UPDATE ON client_memberships
+  FOR EACH ROW EXECUTE FUNCTION update_last_updated_at();
