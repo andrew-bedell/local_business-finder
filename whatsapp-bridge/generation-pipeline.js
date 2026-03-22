@@ -182,7 +182,41 @@ async function generateResearchReport(businessData, name, language) {
     throw new Error('Failed to extract JSON from research report response');
   }
 
-  return JSON.parse(jsonMatch[0]);
+  let jsonStr = jsonMatch[0];
+
+  // Clean up common Claude JSON issues: trailing commas before ] or }
+  jsonStr = jsonStr.replace(/,\s*([\]}])/g, '$1');
+
+  try {
+    return JSON.parse(jsonStr);
+  } catch (firstErr) {
+    // If still failing, try to find the last complete top-level brace
+    // (handles truncated responses where the JSON got cut off)
+    console.warn('Research report JSON parse failed, attempting recovery:', firstErr.message);
+
+    let braceDepth = 0;
+    let lastValidEnd = -1;
+    for (let i = 0; i < jsonStr.length; i++) {
+      if (jsonStr[i] === '{') braceDepth++;
+      else if (jsonStr[i] === '}') {
+        braceDepth--;
+        if (braceDepth === 0) { lastValidEnd = i; break; }
+      }
+    }
+
+    if (lastValidEnd > 0) {
+      const trimmed = jsonStr.substring(0, lastValidEnd + 1)
+        .replace(/,\s*([\]}])/g, '$1');
+      try {
+        return JSON.parse(trimmed);
+      } catch (secondErr) {
+        console.error('Research report JSON recovery also failed:', secondErr.message);
+        throw secondErr;
+      }
+    }
+
+    throw firstErr;
+  }
 }
 
 

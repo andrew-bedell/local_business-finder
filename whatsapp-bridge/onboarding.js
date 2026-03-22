@@ -38,6 +38,24 @@ async function checkOnboardingFlow(phone) {
  * @returns {string|null} Welcome message to send, or null on failure
  */
 async function startOnboardingFlow(conversationId, phone, chatId, preCollected = {}) {
+  // If we have a businessId, fetch email from the DB so we don't re-ask
+  if (preCollected.businessId && !preCollected.email) {
+    try {
+      const { createClient } = require('@supabase/supabase-js');
+      const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
+      const { data: biz } = await sb
+        .from('businesses')
+        .select('contact_email')
+        .eq('id', preCollected.businessId)
+        .single();
+      if (biz?.contact_email) {
+        preCollected.email = biz.contact_email;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch email from business:', err.message);
+    }
+  }
+
   const flowId = await createFlow({
     conversationId,
     phone,
@@ -376,7 +394,10 @@ async function handleEnrich(flowId, flowData) {
     } else {
       const enrichResult = await enrichResp.json();
       if (enrichResult.dataId) {
-        flowData.selectedPlace.dataId = enrichResult.dataId;
+        if (flowData.selectedPlace) {
+          flowData.selectedPlace.dataId = enrichResult.dataId;
+        }
+        flowData.dataId = enrichResult.dataId;
         await updateFlow(flowId, { flow_data: flowData });
       }
     }
