@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, address, countryCode, productId } = req.body || {};
+  const { businessId: providedBusinessId, businessName, customerEmail, customerName, customerPhone, address, countryCode, productId, referralCode } = req.body || {};
 
   // Require either businessId (employee flow) or businessName (marketing flow)
   if (!providedBusinessId && !businessName) {
@@ -96,6 +96,11 @@ export default async function handler(req, res) {
       monthly_price: 0,
       currency,
     };
+
+    // Store referral code permanently if provided
+    if (referralCode) {
+      customerPayload.referral_code = referralCode.trim().toUpperCase();
+    }
 
     const custRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
       method: 'POST',

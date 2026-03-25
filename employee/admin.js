@@ -25,7 +25,8 @@
       items: [
         { label: 'navCustomers', tab: 'customers' },
         { label: 'navEditRequests', tab: 'edit_requests' },
-        { label: 'navProducts', tab: 'products' }
+        { label: 'navProducts', tab: 'products' },
+        { label: 'navReferrals', tab: 'referrals' }
       ],
       defaultTab: 'customers'
     },
@@ -479,6 +480,7 @@
       custNoSubscription: 'No subscription',
       custWhatsApp: 'WhatsApp',
       custPortalLink: 'Customer Portal',
+      custReferralCode: 'Referred By',
       custWebsite: 'Website',
       custCategory: 'Category',
       custAddress: 'Address',
@@ -629,6 +631,29 @@
       templatesFlowLinked: 'Linked: {0}',
       templatesFlowNotLinked: 'Not linked',
       templatesTriggerNone: 'None',
+      // Referrals
+      navReferrals: 'Referrals',
+      refAllStatuses: 'All Statuses',
+      refStatusPending: 'Pending',
+      refStatusContacted: 'Contacted',
+      refStatusConverted: 'Converted',
+      refStatusRewarded: 'Rewarded',
+      refStatusExpired: 'Expired',
+      refStatusRejected: 'Rejected',
+      refSearchPh: 'Search referrals...',
+      refThCode: 'Code',
+      refThReferrer: 'Referrer',
+      refThReferred: 'Referred Business',
+      refThPhone: 'Phone',
+      refThStatus: 'Status',
+      refThRewards: 'Rewards',
+      refThDate: 'Date',
+      refEmpty: 'No referrals yet',
+      refTotal: 'Total',
+      refConverted: 'Converted',
+      refRewarded: 'Rewarded',
+      refRewardReferrer: 'Referrer: {0}',
+      refRewardReferred: 'Referred: {0}',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -1054,6 +1079,7 @@
       custNoSubscription: 'Sin suscripción',
       custWhatsApp: 'WhatsApp',
       custPortalLink: 'Portal del Cliente',
+      custReferralCode: 'Referido Por',
       custWebsite: 'Sitio Web',
       custCategory: 'Categoría',
       custAddress: 'Dirección',
@@ -1204,6 +1230,29 @@
       templatesFlowLinked: 'Vinculado: {0}',
       templatesFlowNotLinked: 'No vinculado',
       templatesTriggerNone: 'Ninguno',
+      // Referrals
+      navReferrals: 'Referidos',
+      refAllStatuses: 'Todos los Estados',
+      refStatusPending: 'Pendiente',
+      refStatusContacted: 'Contactado',
+      refStatusConverted: 'Convertido',
+      refStatusRewarded: 'Recompensado',
+      refStatusExpired: 'Expirado',
+      refStatusRejected: 'Rechazado',
+      refSearchPh: 'Buscar referidos...',
+      refThCode: 'Código',
+      refThReferrer: 'Referidor',
+      refThReferred: 'Negocio Referido',
+      refThPhone: 'Teléfono',
+      refThStatus: 'Estado',
+      refThRewards: 'Recompensas',
+      refThDate: 'Fecha',
+      refEmpty: 'No hay referidos aún',
+      refTotal: 'Total',
+      refConverted: 'Convertidos',
+      refRewarded: 'Recompensados',
+      refRewardReferrer: 'Referidor: {0}',
+      refRewardReferred: 'Referido: {0}',
     },
   };
 
@@ -4144,11 +4193,12 @@
       products: ['products-section'],
       customers: ['customers-section'],
       edit_requests: ['edit-requests-section'],
+      referrals: ['referrals-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'referrals-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -4168,11 +4218,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-referrals', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', referrals: 'nav-referrals', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -4196,6 +4246,7 @@
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
+    if (tab === 'referrals') loadAdminReferrals();
     if (tab === 'team') loadTeamEmployees();
   }
 
@@ -5903,6 +5954,10 @@
               <span class="customer-detail-label">${t('custPortalLink')}</span>
               <span><a href="${portalLink}" target="_blank" style="color:var(--primary)">${portalLink}</a></span>
             </div>` : ''}
+            ${customer.referral_code ? `<div class="customer-detail-row">
+              <span class="customer-detail-label">${t('custReferralCode')}</span>
+              <span><code style="background:var(--bg-input);padding:2px 8px;border-radius:4px;font-size:12px;">${escapeHtml(customer.referral_code)}</code></span>
+            </div>` : ''}
           </div>
         </div>
 
@@ -7557,6 +7612,104 @@
   document.addEventListener('duplicate-template', (e) => duplicateTemplate(e.detail));
   document.addEventListener('delete-template', (e) => deleteTemplate(e.detail));
   document.addEventListener('insert-merge-tag', (e) => insertMergeTag(e.detail));
+
+  // ── Referrals Management ──
+  let adminReferrals = [];
+
+  async function loadAdminReferrals() {
+    var tbody = document.getElementById('ref-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#8b8fa3;">Loading...</td></tr>';
+
+    var statusFilter = document.getElementById('ref-status-filter');
+    var searchInput = document.getElementById('ref-search');
+    var status = statusFilter ? statusFilter.value : '';
+    var search = searchInput ? searchInput.value : '';
+
+    var url = '/api/referrals/admin?';
+    if (status) url += 'status=' + encodeURIComponent(status) + '&';
+    if (search) url += 'search=' + encodeURIComponent(search) + '&';
+
+    try {
+      var res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to load referrals');
+      adminReferrals = await res.json();
+      renderAdminReferrals();
+    } catch (err) {
+      console.error('Load referrals error:', err);
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Error loading referrals</td></tr>';
+    }
+  }
+
+  function renderAdminReferrals() {
+    var tbody = document.getElementById('ref-table-body');
+    var statsEl = document.getElementById('ref-stats');
+    if (!tbody) return;
+
+    // Stats
+    if (statsEl) {
+      var total = adminReferrals.length;
+      var converted = adminReferrals.filter(function (r) { return r.status === 'converted' || r.status === 'rewarded'; }).length;
+      var rewarded = adminReferrals.filter(function (r) { return r.status === 'rewarded'; }).length;
+      statsEl.innerHTML = '<div class="customers-stat-badges">' +
+        '<span class="badge" style="background:var(--primary-bg);color:var(--primary)">' + t('refTotal') + ': ' + total + '</span>' +
+        '<span class="badge" style="background:var(--success-bg);color:var(--success)">' + t('refConverted') + ': ' + converted + '</span>' +
+        '<span class="badge" style="background:var(--warning-bg);color:var(--warning)">' + t('refRewarded') + ': ' + rewarded + '</span>' +
+        '</div>';
+    }
+
+    if (adminReferrals.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#8b8fa3;">' + t('refEmpty') + '</td></tr>';
+      return;
+    }
+
+    var html = '';
+    adminReferrals.forEach(function (r) {
+      var statusClass = '';
+      if (r.status === 'rewarded') statusClass = 'background:var(--success-bg);color:var(--success)';
+      else if (r.status === 'converted') statusClass = 'background:var(--primary-bg);color:var(--primary)';
+      else if (r.status === 'pending') statusClass = 'background:var(--warning-bg);color:var(--warning)';
+      else if (r.status === 'contacted') statusClass = 'background:rgba(59,130,246,0.12);color:#3b82f6';
+      else if (r.status === 'expired' || r.status === 'rejected') statusClass = 'background:var(--danger-bg);color:var(--danger)';
+
+      var rewardInfo = '';
+      if (r.referrerRewardStatus && r.referrerRewardStatus !== 'pending') {
+        rewardInfo += '<span class="badge" style="font-size:11px;background:var(--success-bg);color:var(--success)">' + t('refRewardReferrer', r.referrerRewardStatus) + '</span> ';
+      }
+      if (r.referredRewardStatus && r.referredRewardStatus !== 'pending') {
+        rewardInfo += '<span class="badge" style="font-size:11px;background:var(--primary-bg);color:var(--primary)">' + t('refRewardReferred', r.referredRewardStatus) + '</span>';
+      }
+      if (!rewardInfo) rewardInfo = '<span style="color:var(--text-dim)">—</span>';
+
+      var date = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—';
+
+      html += '<tr>' +
+        '<td><code style="font-size:12px;background:var(--bg-input);padding:2px 6px;border-radius:4px;">' + (r.referralCode || '—') + '</code></td>' +
+        '<td>' + escapeHtml(r.referrerBusinessName || r.referrerName || '—') + '</td>' +
+        '<td>' + escapeHtml(r.referredBusinessName || '—') + '</td>' +
+        '<td>' + escapeHtml(r.referredPhone || '—') + '</td>' +
+        '<td><span class="badge" style="' + statusClass + '">' + (r.status || '—') + '</span></td>' +
+        '<td>' + rewardInfo + '</td>' +
+        '<td style="white-space:nowrap">' + date + '</td>' +
+        '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // Bind referral filter events
+  (function () {
+    var statusFilter = document.getElementById('ref-status-filter');
+    var searchInput = document.getElementById('ref-search');
+    if (statusFilter) statusFilter.addEventListener('change', function () { loadAdminReferrals(); });
+    if (searchInput) {
+      var debounceTimer;
+      searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () { loadAdminReferrals(); }, 400);
+      });
+    }
+  })();
 
   // ── Team Management ──
   let teamEmployees = [];

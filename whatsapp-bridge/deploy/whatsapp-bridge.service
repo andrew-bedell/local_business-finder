@@ -1,0 +1,36 @@
+[Unit]
+Description=WhatsApp Bridge — Claude-powered auto-reply bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=whatsapp
+Group=whatsapp
+WorkingDirectory=/opt/whatsapp-bridge
+ExecStart=/usr/bin/node index.js
+EnvironmentFile=/opt/whatsapp-bridge/.env
+Restart=always
+RestartSec=10
+
+# Graceful shutdown — send SIGTERM, wait 30s for WhatsApp client cleanup
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/whatsapp-bridge
+PrivateTmp=true
+
+# Chromium needs /dev/shm for shared memory
+PrivateDevices=false
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=whatsapp-bridge
+
+[Install]
+WantedBy=multi-user.target
