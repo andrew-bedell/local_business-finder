@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>Te recomiendan AhoraTengoPagina</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/referral/styles.css">
+</head>
+<body>
+  <header class="ref-header">
+    <a href="/" class="ref-logo">AhoraTengoPagina</a>
+  </header>
+
+  <main class="ref-main">
+    <div class="ref-card">
+      <div class="ref-badge" id="ref-badge" style="display:none">
+        Recomendado por <strong id="ref-referrer-name"></strong>
+      </div>
+
+      <h1 class="ref-title">Tu pagina web profesional con <span class="ref-highlight">50% de descuento</span></h1>
+      <p class="ref-subtitle">Creamos paginas web para negocios locales. Tu recomendacion te da 50% de descuento en los primeros 2 meses.</p>
+
+      <!-- Option 1: Fill form to be contacted -->
+      <form id="ref-form" class="ref-form">
+        <div class="ref-field">
+          <label for="ref-business">Nombre de tu negocio *</label>
+          <input type="text" id="ref-business" placeholder="Ej: Tacos Don Pepe" required>
+        </div>
+        <div class="ref-field">
+          <label for="ref-phone">Tu WhatsApp *</label>
+          <input type="tel" id="ref-phone" placeholder="Ej: +57 300 123 4567" required>
+        </div>
+        <div class="ref-field">
+          <label for="ref-email">Tu correo (opcional)</label>
+          <input type="email" id="ref-email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="ref-field">
+          <label for="ref-city">Ciudad (opcional)</label>
+          <input type="text" id="ref-city" placeholder="Ej: Bogota">
+        </div>
+        <button type="submit" class="ref-btn" id="ref-submit">Quiero mi pagina web</button>
+      </form>
+
+      <!-- Option 2: Go directly to purchase -->
+      <div id="ref-buy-section" class="ref-buy-section">
+        <div class="ref-divider"><span>o</span></div>
+        <button type="button" class="ref-btn ref-btn-buy" id="ref-buy-btn">Ver precios y comprar ahora</button>
+        <p class="ref-buy-note">El 50% de descuento se aplicara automaticamente en tu compra.</p>
+      </div>
+
+      <div id="ref-success" class="ref-success" style="display:none">
+        <div class="ref-success-icon">&#10003;</div>
+        <h2>Recibimos tu informacion!</h2>
+        <p>Pronto te contactaremos por WhatsApp para mostrarte como quedaria tu pagina web.</p>
+        <a id="ref-wa-link" href="#" class="ref-btn ref-btn-wa" style="display:none">
+          Escribenos por WhatsApp
+        </a>
+        <a id="ref-checkout-link" href="/#precios" class="ref-btn ref-btn-buy" style="display:none; margin-top:12px">
+          O compra ahora con 50% de descuento
+        </a>
+      </div>
+
+      <div id="ref-invalid" class="ref-invalid" style="display:none">
+        <h2>Codigo no valido</h2>
+        <p>El enlace de referido no es valido o ha expirado. Pide a tu amigo que te envie el enlace de nuevo.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="ref-footer">
+    <p>&copy; 2026 AhoraTengoPagina</p>
+  </footer>
+
+  <script src="/referral/app.js"></script>
+</body>
+</html>

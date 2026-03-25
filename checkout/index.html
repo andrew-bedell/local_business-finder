@@ -89,6 +89,22 @@
     .wa-notice-text { font-size: .83rem; line-height: 1.5; color: #166534; }
     .wa-notice-text strong { font-weight: 600; display: block; margin-bottom: 2px; }
 
+    .referral-banner { background: linear-gradient(135deg, #dcfce7, #d1fae5); border: 1px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 20px; text-align: center; }
+    .referral-banner-title { font-weight: 700; font-size: .95rem; color: #166534; margin-bottom: 4px; }
+    .referral-banner-sub { font-size: .82rem; color: #15803d; }
+    .referral-input-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .referral-input-row input { flex: 1; height: 44px; border: 1.5px solid var(--border); border-radius: 8px; padding: 0 14px; font-size: .9rem; font-family: 'DM Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+    .referral-input-row input:focus { border-color: var(--accent); outline: none; }
+    .referral-apply-btn { padding: 0 20px; height: 44px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: .85rem; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; transition: background .15s; }
+    .referral-apply-btn:hover { background: var(--accent-hover); }
+    .referral-apply-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .referral-msg { font-size: .8rem; margin-top: -12px; margin-bottom: 16px; }
+    .referral-msg.success { color: var(--green); }
+    .referral-msg.error { color: var(--red); }
+    .discount-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .discount-label { font-size: .85rem; color: var(--green); font-weight: 500; }
+    .discount-amount { font-size: .95rem; color: var(--green); font-weight: 600; }
+
     .powered-by { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: .72rem; color: var(--muted); margin-top: 8px; }
     .powered-by span { font-weight: 600; color: #635bff; }
 
@@ -130,6 +146,11 @@
     <div class="left-col">
       <h1 class="left-panel-title">Completa tu compra</h1>
       <p class="left-panel-sub">Rellena tus datos y tu dise&ntilde;ador se pondr&aacute; en contacto contigo en breve.</p>
+      <!-- Referral discount banner (shown when referral is active) -->
+      <div class="referral-banner" id="referral-banner" style="display:none">
+        <div class="referral-banner-title" id="referral-banner-title">&#127881; 50% de descuento aplicado</div>
+        <div class="referral-banner-sub" id="referral-banner-sub">Recomendado por un amigo &mdash; 50% de descuento en tus primeros 2 meses</div>
+      </div>
       <div class="wa-notice">
         <div class="wa-notice-icon">&#128172;</div>
         <div class="wa-notice-text"><strong>Tu dise&ntilde;ador te contactar&aacute; por WhatsApp</strong>Confirma que el n&uacute;mero que registras aqu&iacute; es el mismo de WhatsApp.</div>
@@ -142,6 +163,14 @@
             <div class="form-group"><label for="field-email">Correo electr&oacute;nico</label><input type="email" id="field-email" name="email" placeholder="maria@ejemplo.com" required autocomplete="email"></div>
             <div class="form-group"><label for="field-phone">N&uacute;mero de WhatsApp</label><input type="tel" id="field-phone" name="phone" placeholder="+52 999 123 4567" autocomplete="tel"></div>
             <div class="form-group"><label for="field-business">Nombre de tu negocio</label><input type="text" id="field-business" name="business_name" placeholder="Sal&oacute;n de U&ntilde;as Mar&iacute;a" required></div>
+          </div>
+          <div class="card-section" id="referral-section">
+            <div class="section-label">C&oacute;digo de referido (opcional)</div>
+            <div class="referral-input-row">
+              <input type="text" id="field-referral" placeholder="Ej: MARIA42" maxlength="20" autocomplete="off">
+              <button type="button" class="referral-apply-btn" id="btn-apply-referral">Aplicar</button>
+            </div>
+            <div class="referral-msg" id="referral-msg" style="display:none"></div>
           </div>
           <div class="card-section">
             <div class="section-label">M&eacute;todo de pago</div>
@@ -171,6 +200,10 @@
             <div class="product-price" id="summary-price">&mdash;</div>
           </div>
           <div class="divider"></div>
+          <div class="discount-row" id="discount-row" style="display:none">
+            <div class="discount-label">Descuento referido (50%)</div>
+            <div class="discount-amount" id="discount-amount">&mdash;</div>
+          </div>
           <div class="total-row"><div class="total-label">Total hoy</div><div class="total-amount" id="summary-total">&mdash;</div></div>
           <div style="font-size:.75rem; color:var(--muted); margin-top:6px; text-align:right;">Cancela cuando quieras. Sin contratos.</div>
         </div>
@@ -216,6 +249,7 @@
     var productId = pathParts[pathParts.length - 1];
     if (!productId || productId === 'checkout') { showPageError('Enlace de checkout inv\u00e1lido.'); return; }
     var stripe = null, elements = null, selectedProduct = null;
+    var activeReferralCode = null; // Set when a valid referral code is applied
     var urlParams = new URLSearchParams(window.location.search);
     var websiteId = urlParams.get('website') || null;
     if (urlParams.get('redirect_status')) { handleRedirectReturn(); } else { init(); }
@@ -260,6 +294,7 @@
         document.getElementById('checkout-content').style.display = '';
         document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
         document.getElementById('success-btn').addEventListener('click', function() { window.location.href = '/'; });
+        initReferral();
       } catch (err) { showPageError(err.message); }
     }
 
@@ -272,8 +307,101 @@
       document.getElementById('summary-name').textContent = product.name || 'Plan';
       document.getElementById('summary-desc').textContent = product.description || '';
       document.getElementById('summary-price').textContent = formatted + interval;
-      document.getElementById('summary-total').textContent = formatted + ' ' + curr;
-      document.getElementById('submit-text').textContent = 'Pagar ahora \u2014 ' + formatted + ' ' + curr + interval;
+
+      // Show discount if referral is active
+      var discountRow = document.getElementById('discount-row');
+      if (activeReferralCode) {
+        var discounted = price * 0.5;
+        var discountFormatted = '-' + symbol + discounted.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        var totalFormatted = symbol + discounted.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        if (discountRow) { discountRow.style.display = ''; document.getElementById('discount-amount').textContent = discountFormatted; }
+        document.getElementById('summary-total').textContent = totalFormatted + ' ' + curr;
+        document.getElementById('submit-text').textContent = 'Pagar ahora \u2014 ' + totalFormatted + ' ' + curr + interval;
+      } else {
+        if (discountRow) discountRow.style.display = 'none';
+        document.getElementById('summary-total').textContent = formatted + ' ' + curr;
+        document.getElementById('submit-text').textContent = 'Pagar ahora \u2014 ' + formatted + ' ' + curr + interval;
+      }
+    }
+
+    function initReferral() {
+      // Check localStorage for stored referral code
+      var storedCode = '';
+      try { storedCode = localStorage.getItem('referral_code') || ''; } catch (e) {}
+
+      // Also check URL param (?ref=CODE)
+      var urlCode = urlParams.get('ref') || '';
+
+      var codeToCheck = urlCode || storedCode;
+      if (codeToCheck) {
+        document.getElementById('field-referral').value = codeToCheck.toUpperCase();
+        applyReferralCode(codeToCheck);
+      }
+
+      // Bind apply button
+      var applyBtn = document.getElementById('btn-apply-referral');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+          var code = document.getElementById('field-referral').value.trim();
+          if (code) applyReferralCode(code);
+        });
+      }
+
+      // Also apply on Enter key in the referral input
+      var referralInput = document.getElementById('field-referral');
+      if (referralInput) {
+        referralInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            var code = referralInput.value.trim();
+            if (code) applyReferralCode(code);
+          }
+        });
+      }
+    }
+
+    async function applyReferralCode(code) {
+      var msgEl = document.getElementById('referral-msg');
+      var applyBtn = document.getElementById('btn-apply-referral');
+      var banner = document.getElementById('referral-banner');
+
+      if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '...'; }
+
+      try {
+        var res = await fetch('/api/referrals/validate?code=' + encodeURIComponent(code));
+        var data = await res.json();
+
+        if (data.valid) {
+          activeReferralCode = code.toUpperCase();
+          // Store in localStorage for persistence
+          try { localStorage.setItem('referral_code', activeReferralCode); } catch (e) {}
+
+          if (msgEl) { msgEl.textContent = '\u2713 C\u00f3digo v\u00e1lido \u2014 50% de descuento en los primeros 2 meses'; msgEl.className = 'referral-msg success'; msgEl.style.display = ''; }
+          if (banner) {
+            var bannerSub = document.getElementById('referral-banner-sub');
+            if (data.referrerBusinessName && bannerSub) {
+              bannerSub.textContent = 'Recomendado por ' + data.referrerBusinessName + ' \u2014 50% off primeros 2 meses';
+            }
+            banner.style.display = '';
+          }
+
+          // Disable the input and button to indicate it's applied
+          document.getElementById('field-referral').readOnly = true;
+          if (applyBtn) { applyBtn.textContent = '\u2713 Aplicado'; applyBtn.disabled = true; }
+
+          // Re-render order summary with discount
+          if (selectedProduct) renderOrderSummary(selectedProduct);
+        } else {
+          activeReferralCode = null;
+          if (msgEl) { msgEl.textContent = 'C\u00f3digo no v\u00e1lido. Verifica e intenta de nuevo.'; msgEl.className = 'referral-msg error'; msgEl.style.display = ''; }
+          if (banner) banner.style.display = 'none';
+          if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Aplicar'; }
+          if (selectedProduct) renderOrderSummary(selectedProduct);
+        }
+      } catch (err) {
+        console.error('Referral validation error:', err);
+        if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = 'Aplicar'; }
+      }
     }
 
     async function handleSubmit(e) {
@@ -284,9 +412,21 @@
       try {
         var submitResult = await elements.submit();
         if (submitResult.error) throw new Error(submitResult.error.message);
+        var custEmail = document.getElementById('field-email').value.trim();
+        var custPhone = document.getElementById('field-phone').value.trim() || null;
+        var custBusiness = document.getElementById('field-business').value.trim() || null;
+        // Ensure referral record exists before creating subscription (so server can find it)
+        if (activeReferralCode && custEmail) {
+          try {
+            await fetch('/api/referrals/submit', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ referralCode: activeReferralCode, businessName: custBusiness || 'N/A', phone: custPhone || '', email: custEmail, city: null })
+            });
+          } catch (e) { /* non-blocking */ }
+        }
         var res = await fetch('/api/stripe/create-subscription', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: document.getElementById('field-email').value.trim(), customerPhone: document.getElementById('field-phone').value.trim() || null, businessName: document.getElementById('field-business').value.trim() || null, websiteId: websiteId })
+          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: custEmail, customerPhone: custPhone, businessName: custBusiness, websiteId: websiteId })
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || data.detail || 'Error al procesar el pago.');
@@ -296,6 +436,8 @@
           redirect: 'if_required'
         });
         if (confirmResult.error) throw new Error(confirmResult.error.message);
+        // Clear referral code after successful purchase
+        try { localStorage.removeItem('referral_code'); localStorage.removeItem('referral_code_at'); localStorage.removeItem('referral_referrer'); } catch (e) {}
         redirectToConfirmation();
       } catch (err) { messageEl.textContent = err.message; messageEl.classList.add('visible'); submitBtn.disabled = false; submitBtn.classList.remove('loading'); }
     }

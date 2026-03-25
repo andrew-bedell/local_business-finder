@@ -24,6 +24,7 @@
     { "source": "/checkout/confirmacion", "destination": "/checkout/confirmacion.html" },
     { "source": "/checkout/:id", "destination": "/checkout/index.html" },
     { "source": "/sitio/:slug", "destination": "/api/sitio/serve?slug=:slug" },
+    { "source": "/ref/:code", "destination": "/referral/index.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
     {
       "source": "/:path*",

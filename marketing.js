@@ -390,6 +390,33 @@
     }
   });
 
+  // ── Referral Detection ──
+  // Check for referral code in localStorage (set by /ref/:code landing page)
+  var storedReferralCode = '';
+  try { storedReferralCode = localStorage.getItem('referral_code') || ''; } catch (e) {}
+
+  // Show referral banner if code exists
+  if (storedReferralCode) {
+    var referrerName = '';
+    try { referrerName = localStorage.getItem('referral_referrer') || ''; } catch (e) {}
+    showReferralBanner(referrerName);
+  }
+
+  function showReferralBanner(referrerName) {
+    // Don't add duplicate
+    if (document.getElementById('m-referral-banner')) return;
+    var banner = document.createElement('div');
+    banner.id = 'm-referral-banner';
+    banner.style.cssText = 'background:linear-gradient(135deg,#dcfce7,#d1fae5);border-bottom:1px solid #86efac;padding:10px 20px;text-align:center;font-size:14px;font-weight:600;color:#166534;';
+    var text = '\ud83c\udf89 50% de descuento aplicado a tu compra';
+    if (referrerName) text += ' \u2014 recomendado por ' + referrerName;
+    banner.textContent = text;
+    var nav = document.getElementById('m-nav');
+    if (nav && nav.parentNode) {
+      nav.parentNode.insertBefore(banner, nav.nextSibling);
+    }
+  }
+
   // ── Lead Form Submission ──
   var WHATSAPP_NUMBER = '529991095806'; // Our business WhatsApp number
 
@@ -417,35 +444,61 @@
     if (formError) formError.style.display = 'none';
 
     // Call free-signup API to create customer record with matching
+    var signupPayload = {
+      businessName: businessName,
+      customerName: customerName,
+      customerEmail: customerEmail,
+      customerPhone: whatsappNumber,
+      address: businessAddress,
+      countryCode: countryCode,
+    };
+    if (storedReferralCode) {
+      signupPayload.referralCode = storedReferralCode;
+    }
     fetch('/api/free-signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        businessName: businessName,
-        customerName: customerName,
-        customerEmail: customerEmail,
-        customerPhone: whatsappNumber,
-        address: businessAddress,
-        countryCode: countryCode,
-      }),
+      body: JSON.stringify(signupPayload),
     }).then(function(res) {
       if (res.ok || res.status === 409) {
-        // Success or already exists — save lead (non-blocking) and open WhatsApp
+        // Success or already exists — save lead with referral code if present (non-blocking)
+        var leadPayload = {
+          business_name: businessName,
+          whatsapp_number: whatsappNumber,
+          email: customerEmail,
+          name: customerName,
+          address: businessAddress,
+        };
+        if (storedReferralCode) {
+          leadPayload.referral_code = storedReferralCode;
+        }
         fetch('/api/leads/capture', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            business_name: businessName,
-            whatsapp_number: whatsappNumber,
-            email: customerEmail,
-            name: customerName,
-            address: businessAddress,
-          }),
+          body: JSON.stringify(leadPayload),
         }).catch(function(err) {
           console.warn('Lead capture error (non-blocking):', err);
         });
 
+        // Also submit referral if code exists (non-blocking)
+        if (storedReferralCode) {
+          fetch('/api/referrals/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              referralCode: storedReferralCode,
+              businessName: businessName,
+              phone: whatsappNumber,
+              email: customerEmail || null,
+              city: null,
+            }),
+          }).catch(function(err) {
+            console.warn('Referral submit error (non-blocking):', err);
+          });
+        }
+
         var message = 'Hola! Soy ' + customerName + '. Quiero crear mi página web para mi negocio: ' + businessName;
+        if (storedReferralCode) message += ' (Código de referido: ' + storedReferralCode + ')';
         var waUrl = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(message);
         window.open(waUrl, '_blank');
         closeModal();
@@ -503,8 +556,9 @@
 
   if (waFloatBtn) {
     waFloatBtn.addEventListener('click', function() {
-      var defaultMsg = encodeURIComponent('Hola! Quiero más información sobre sus servicios de páginas web');
-      window.open('https://wa.me/' + WHATSAPP_WIDGET_NUMBER + '?text=' + defaultMsg, '_blank');
+      var msg = 'Hola! Quiero más información sobre sus servicios de páginas web';
+      if (storedReferralCode) msg += ' (Código de referido: ' + storedReferralCode + ')';
+      window.open('https://wa.me/' + WHATSAPP_WIDGET_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
     });
 
     // Hide float button near footer

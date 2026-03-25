@@ -107,13 +107,81 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'Failed to create Stripe customer', detail: stripeCustomer.error?.message });
     }
 
-    // 4. Create Stripe Subscription (incomplete — Payment Element will confirm payment)
+    // 4. Check for pending referral — attach coupon if found
+    let referralCouponId = null;
+    let matchedReferralId = null;
+    try {
+      // Look for a pending referral matching this customer's email or phone
+      let referralQuery = `${supabaseUrl}/rest/v1/referrals?status=in.(pending,contacted)&select=id,referred_stripe_coupon_id,referral_code_id&or=(referred_email.eq.${encodeURIComponent(customerEmail)}`;
+      if (customerPhone) {
+        referralQuery += `,referred_phone.eq.${encodeURIComponent(customerPhone)}`;
+      }
+      referralQuery += ')&order=created_at.desc&limit=1';
+
+      const pendingRefRes = await fetch(referralQuery, { headers: supabaseHeaders });
+      if (pendingRefRes.ok) {
+        const pendingRefs = await pendingRefRes.json();
+        if (pendingRefs && pendingRefs.length > 0) {
+          matchedReferralId = pendingRefs[0].id;
+
+          // If coupon was already created by convert endpoint, use it
+          if (pendingRefs[0].referred_stripe_coupon_id) {
+            referralCouponId = pendingRefs[0].referred_stripe_coupon_id;
+          } else {
+            // Create 50% off coupon for 2 months
+            const couponParams = new URLSearchParams();
+            couponParams.append('percent_off', '50');
+            couponParams.append('duration', 'repeating');
+            couponParams.append('duration_in_months', '2');
+            couponParams.append('name', 'Referral: 50% off first 2 months');
+            couponParams.append('metadata[referral_id]', matchedReferralId);
+
+            const couponRes = await fetch('https://api.stripe.com/v1/coupons', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${stripeSecretKey}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: couponParams.toString(),
+            });
+            const couponData = await couponRes.json();
+            if (couponRes.ok) {
+              referralCouponId = couponData.id;
+              // Save coupon ID to referral
+              await fetch(
+                `${supabaseUrl}/rest/v1/referrals?id=eq.${encodeURIComponent(matchedReferralId)}`,
+                {
+                  method: 'PATCH',
+                  headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+                  body: JSON.stringify({
+                    referred_stripe_coupon_id: couponData.id,
+                    referred_reward_status: 'created',
+                    status: 'converted',
+                    converted_at: new Date().toISOString(),
+                    last_updated_at: new Date().toISOString(),
+                  }),
+                }
+              );
+            }
+          }
+        }
+      }
+    } catch (refErr) {
+      console.warn('Referral lookup error (non-blocking):', refErr.message);
+    }
+
+    // 5. Create Stripe Subscription (incomplete — Payment Element will confirm payment)
     const subParams = new URLSearchParams();
     subParams.append('customer', stripeCustomer.id);
     subParams.append('items[0][price]', product.stripe_price_id);
     subParams.append('payment_behavior', 'default_incomplete');
     subParams.append('payment_settings[save_default_payment_method]', 'on_subscription');
     subParams.append('expand[]', 'latest_invoice.payment_intent');
+
+    // Attach referral coupon if found
+    if (referralCouponId) {
+      subParams.append('coupon', referralCouponId);
+    }
 
     // Enable card and Link payments
     subParams.append('payment_settings[payment_method_types][]', 'card');
@@ -134,7 +202,7 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'Failed to create subscription', detail: stripeSub.error?.message });
     }
 
-    // 5. Save customer record to Supabase
+    // 6. Save customer record to Supabase
     if (businessId) {
       const customerPayload = {
         business_id: businessId,
@@ -145,13 +213,37 @@ export default async function handler(req, res) {
         currency: product.currency,
       };
 
+      // Store referral code permanently if a referral was matched
+      if (matchedReferralId) {
+        // Look up the referral to get the code
+        try {
+          const refCodeRes = await fetch(
+            `${supabaseUrl}/rest/v1/referrals?id=eq.${encodeURIComponent(matchedReferralId)}&select=referral_code_id`,
+            { headers: supabaseHeaders }
+          );
+          const refCodeData = refCodeRes.ok ? await refCodeRes.json() : [];
+          if (refCodeData.length > 0) {
+            const codeRes = await fetch(
+              `${supabaseUrl}/rest/v1/referral_codes?id=eq.${encodeURIComponent(refCodeData[0].referral_code_id)}&select=code`,
+              { headers: supabaseHeaders }
+            );
+            const codeData = codeRes.ok ? await codeRes.json() : [];
+            if (codeData.length > 0) {
+              customerPayload.referral_code = codeData[0].code;
+            }
+          }
+        } catch (e) {
+          console.warn('Referral code lookup error (non-blocking):', e.message);
+        }
+      }
+
       const custRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
         method: 'POST',
         headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
         body: JSON.stringify(customerPayload),
       });
 
-      // 6. Save subscription record (as incomplete — webhook will update to active)
+      // 7. Save subscription record (as incomplete — webhook will update to active)
       if (!custRes.ok) {
         console.error('Customer insert error:', await custRes.text().catch(() => ''));
       }
@@ -179,7 +271,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 7. If websiteId provided and subscription is already active, publish the website
+    // 8. If websiteId provided and subscription is already active, publish the website
     if (websiteId && stripeSub.status === 'active' && businessId) {
       const bizLookupRes = await fetch(
         `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=id,name,slug`,
@@ -250,7 +342,7 @@ export default async function handler(req, res) {
       );
     }
 
-    // 8. Update pipeline status to active_customer (if not already done by websiteId flow above)
+    // 9. Update pipeline status to active_customer (if not already done by websiteId flow above)
     if (businessId && !(websiteId && stripeSub.status === 'active')) {
       await fetch(
         `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`,

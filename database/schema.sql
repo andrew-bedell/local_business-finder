@@ -135,6 +135,9 @@ CREATE TABLE IF NOT EXISTS business_contacts (
 CREATE INDEX IF NOT EXISTS idx_business_contacts_business_id ON business_contacts (business_id);
 CREATE INDEX IF NOT EXISTS idx_business_contacts_code ON business_contacts (contact_code);
 
+ALTER TABLE business_contacts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON business_contacts FOR ALL USING (true) WITH CHECK (true);
+
 
 -- ============================================================================
 -- 2. BUSINESS_SOCIAL_PROFILES — Social media & platform links
@@ -1097,6 +1100,9 @@ CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON analytics_events (
 CREATE INDEX IF NOT EXISTS idx_analytics_events_business_date ON analytics_events (business_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events (event_type);
 
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON analytics_events FOR ALL USING (true) WITH CHECK (true);
+
 
 -- ============================================================================
 -- 21. ANALYTICS_SUMMARIES — Daily pre-aggregated metrics
@@ -1124,6 +1130,9 @@ CREATE TABLE IF NOT EXISTS analytics_summaries (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_analytics_summaries_unique ON analytics_summaries (business_id, date);
 CREATE INDEX IF NOT EXISTS idx_analytics_summaries_business_date ON analytics_summaries (business_id, date);
+
+ALTER TABLE analytics_summaries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON analytics_summaries FOR ALL USING (true) WITH CHECK (true);
 
 
 -- ============================================================================
@@ -1218,6 +1227,10 @@ CREATE TRIGGER referrals_updated_at
 
 ALTER TABLE marketing_leads ADD COLUMN IF NOT EXISTS referral_code TEXT;
 ALTER TABLE marketing_leads ADD COLUMN IF NOT EXISTS referral_id UUID REFERENCES referrals(id) ON DELETE SET NULL;
+
+-- Permanent referral attribution on customer record
+-- Stored at signup time so we never lose who referred this customer
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS referral_code TEXT;
 
 
 -- ============================================================================

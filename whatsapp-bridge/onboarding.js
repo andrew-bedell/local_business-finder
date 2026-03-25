@@ -119,6 +119,9 @@ async function handleOnboardingMessage(flowId, message, conversationId, phone, e
         // User shouldn't message during auto search, but handle gracefully
         return '🔍 Estamos buscando tu negocio, un momento por favor...';
 
+      case 'collect_social':
+        return await handleCollectSocial(flowId, flow, message);
+
       case 'verify_business':
         return await handleVerifyBusiness(flowId, flow, message);
 
@@ -227,10 +230,13 @@ async function handleSearchBusiness(flowId, flowData) {
 
       if (flowData.retryCount >= 3) {
         await updateFlow(flowId, {
-          step: 'error',
-          flow_data: flowData,
+          step: 'collect_social',
+          flow_data: { ...flowData, retryCount: 0 },
         });
-        return 'No pudimos encontrar tu negocio en Google Maps después de varios intentos. Un asesor te contactará para ayudarte. 🙏';
+        return `No pudimos encontrar "${collected.businessName}" en Google Maps. 🤔\n\n` +
+          `¿Tu negocio tiene página de *Facebook* o *Instagram*? ` +
+          `Compártenos el link o el nombre de usuario para usar esa información. 📱\n\n` +
+          `Si no tienes redes sociales, responde *NO TENGO* y crearemos tu página con la información básica.`;
       }
 
       await updateFlow(flowId, { step: 'collect_info', flow_data: flowData });
@@ -267,6 +273,19 @@ async function handleSearchBusiness(flowId, flowData) {
     return msg;
   } catch (err) {
     console.error('Search business error:', err);
+    flowData.retryCount = (flowData.retryCount || 0) + 1;
+
+    if (flowData.retryCount >= 2) {
+      await updateFlow(flowId, {
+        step: 'collect_social',
+        flow_data: { ...flowData, retryCount: 0 },
+      });
+      return `No pudimos buscar tu negocio en Google Maps en este momento. 🤔\n\n` +
+        `¿Tu negocio tiene página de *Facebook* o *Instagram*? ` +
+        `Compártenos el link o el nombre de usuario para usar esa información. 📱\n\n` +
+        `Si no tienes redes sociales, responde *NO TENGO* y crearemos tu página con la información básica.`;
+    }
+
     await updateFlow(flowId, { step: 'collect_info', flow_data: flowData });
     return `No pudimos buscar tu negocio en este momento. ¿Podrías darme el nombre exacto y la ciudad?`;
   }
@@ -373,6 +392,46 @@ async function handleEnrich(flowId, flowData) {
         if (error) throw new Error(`Failed to create business: ${error.message}`);
         businessId = newBiz.id;
       }
+    } else if (flowData.isFromSocial) {
+      // Business found via social media (no Google Places listing)
+      const crypto = require('crypto');
+      const syntheticPlaceId = 'whatsapp-' + crypto.randomUUID();
+      const socialPlace = flowData.selectedPlace || {};
+      const fbData = flowData.socialScrapeResults?.facebook;
+      const igData = flowData.socialScrapeResults?.instagram;
+
+      const insertData = {
+        name: socialPlace.name || collected.businessName,
+        place_id: syntheticPlaceId,
+        address_full: socialPlace.address || null,
+        phone: socialPlace.phone || null,
+        rating: socialPlace.rating || null,
+        review_count: socialPlace.reviewCount || 0,
+        pipeline_status: 'prospect',
+        address_city: collected.businessCity || null,
+      };
+
+      if (collected.contactName) insertData.contact_name = collected.contactName;
+      if (collected.email) insertData.contact_email = collected.email;
+      if (flowData.chatId) insertData.contact_whatsapp = flowData.chatId.replace(/@c\.us$/, '');
+
+      // Use description from Facebook about or Instagram bio
+      if (fbData?.name) insertData.name = fbData.name;
+      if (fbData?.address) insertData.address_full = fbData.address;
+      if (fbData?.phone) insertData.phone = fbData.phone;
+
+      const { data: newBiz, error } = await sb
+        .from('businesses')
+        .insert(insertData)
+        .select('id')
+        .single();
+
+      if (error) throw new Error(`Failed to create business: ${error.message}`);
+      businessId = newBiz.id;
+
+      // Save social profiles and scraped data
+      await saveSocialProfiles(sb, businessId, flowData);
+      await saveSocialEnrichmentData(sb, businessId, flowData);
     } else {
       await updateFlow(flowId, { step: 'error', flow_data: flowData });
       return 'Hubo un problema al procesar tu negocio. Un asesor te contactará pronto.';
@@ -382,28 +441,32 @@ async function handleEnrich(flowId, flowData) {
     flowData.businessId = businessId;
     await updateFlow(flowId, { business_id: businessId, flow_data: flowData });
 
-    // Trigger enrichment
-    const enrichResp = await fetch(`${API_BASE}/api/enrich/trigger`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ businessId }),
-    });
+    if (!flowData.isFromSocial) {
+      // Trigger Google enrichment for normal flow
+      const enrichResp = await fetch(`${API_BASE}/api/enrich/trigger`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId }),
+      });
 
-    if (!enrichResp.ok) {
-      console.warn(`Enrichment trigger returned ${enrichResp.status} — proceeding anyway`);
-    } else {
-      const enrichResult = await enrichResp.json();
-      if (enrichResult.dataId) {
-        if (flowData.selectedPlace) {
-          flowData.selectedPlace.dataId = enrichResult.dataId;
+      if (!enrichResp.ok) {
+        console.warn(`Enrichment trigger returned ${enrichResp.status} — proceeding anyway`);
+      } else {
+        const enrichResult = await enrichResp.json();
+        if (enrichResult.dataId) {
+          if (flowData.selectedPlace) {
+            flowData.selectedPlace.dataId = enrichResult.dataId;
+          }
+          flowData.dataId = enrichResult.dataId;
+          await updateFlow(flowId, { flow_data: flowData });
         }
-        flowData.dataId = enrichResult.dataId;
-        await updateFlow(flowId, { flow_data: flowData });
       }
-    }
 
-    // Wait briefly for enrichment to populate, then fetch summary
-    await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait briefly for enrichment to populate, then fetch summary
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } else {
+      console.log(`[Onboarding] Skipping Google enrichment for social-only business ${businessId}`);
+    }
 
     return await buildConfirmDataMessage(flowId, flowData, businessId);
   } catch (err) {
@@ -516,6 +579,343 @@ async function handleConfirmData(flowId, flow, message, extras) {
   }
 
   return 'No entendí tu respuesta. ¿Creamos tu página web con esta información? Responde *SI* o *NO*.';
+}
+
+
+// ── Social media fallback step ──
+
+/**
+ * COLLECT_SOCIAL: Ask for Facebook/Instagram when Google search fails.
+ */
+async function handleCollectSocial(flowId, flow, message) {
+  const flowData = flow.flow_data || {};
+  const collected = flowData.collected || {};
+  const normalized = (message || '').toLowerCase().trim();
+
+  // Check if user says they have no social media
+  if (/no tengo|no tiene|sin redes|ninguna|nada/.test(normalized)) {
+    // Proceed with minimal data — just name + city
+    flowData.isFromSocial = true;
+    flowData.selectedPlace = {
+      name: collected.businessName,
+      address: collected.businessCity || collected.businessAddress || null,
+    };
+    flowData.socialScrapeResults = {};
+
+    await updateFlow(flowId, { step: 'verify_business', flow_data: flowData });
+
+    let msg = `📋 Crearemos tu página con la información básica:\n\n`;
+    msg += `*${collected.businessName}*\n`;
+    if (collected.businessCity) msg += `📍 ${collected.businessCity}\n`;
+    msg += `\n¿Es correcto? Responde *SI* o *NO*`;
+    return msg;
+  }
+
+  // Try to extract social URLs from the message
+  const extracted = await extractSocialUrlsWithClaude(message);
+
+  if (!extracted.facebookUrl && !extracted.instagramUrl) {
+    flowData.retryCount = (flowData.retryCount || 0) + 1;
+
+    if (flowData.retryCount >= 3) {
+      // Give up on social — offer to proceed with minimal data
+      flowData.isFromSocial = true;
+      flowData.selectedPlace = {
+        name: collected.businessName,
+        address: collected.businessCity || collected.businessAddress || null,
+      };
+      flowData.socialScrapeResults = {};
+      await updateFlow(flowId, { step: 'verify_business', flow_data: flowData });
+
+      return `No pudimos identificar un perfil de redes sociales. No te preocupes, crearemos tu página con la información básica. 👍\n\n` +
+        `*${collected.businessName}*` +
+        (collected.businessCity ? `\n📍 ${collected.businessCity}` : '') +
+        `\n\n¿Procedemos? Responde *SI* o *NO*`;
+    }
+
+    await updateFlow(flowId, { flow_data: flowData });
+    return extracted.reply || 'No pude identificar un link de Facebook o Instagram. ¿Podrías enviar el link directo o el nombre de usuario? Por ejemplo: *facebook.com/tunegocio* o *@tunegocio*';
+  }
+
+  // Scrape the social profiles
+  const scrapeResults = await scrapeSocialProfiles(extracted.facebookUrl, extracted.instagramUrl);
+
+  if (!scrapeResults.facebook && !scrapeResults.instagram) {
+    flowData.retryCount = (flowData.retryCount || 0) + 1;
+    await updateFlow(flowId, { flow_data: flowData });
+    return 'No pudimos acceder a ese perfil. ¿Podrías verificar el link o nombre de usuario? También puedes enviar otro perfil o responder *NO TENGO* para continuar sin redes sociales.';
+  }
+
+  // Build a selectedPlace-compatible object from social data
+  const fb = scrapeResults.facebook;
+  const ig = scrapeResults.instagram;
+
+  const socialPlace = {
+    name: fb?.name || ig?.name || collected.businessName,
+    address: fb?.address || collected.businessCity || null,
+    phone: fb?.phone || null,
+    rating: fb?.rating || null,
+    reviewCount: fb?.reviewsCount || 0,
+  };
+
+  flowData.isFromSocial = true;
+  flowData.selectedPlace = socialPlace;
+  flowData.socialScrapeResults = scrapeResults;
+  flowData.retryCount = 0;
+
+  await updateFlow(flowId, { step: 'verify_business', flow_data: flowData });
+
+  // Build verification message with social data
+  let msg = `📱 Encontramos tu negocio en redes sociales:\n\n`;
+  msg += `*${socialPlace.name}*\n`;
+  if (socialPlace.address) msg += `📍 ${socialPlace.address}\n`;
+  if (fb?.followers) msg += `👥 ${fb.followers.toLocaleString()} seguidores en Facebook\n`;
+  if (ig?.followerCount) msg += `📸 ${ig.followerCount.toLocaleString()} seguidores en Instagram\n`;
+  if (socialPlace.rating) msg += `⭐ ${socialPlace.rating} en Facebook\n`;
+  if (fb?.link) msg += `\n🔗 Facebook: ${fb.link}\n`;
+  if (ig?.username) msg += `📷 Instagram: @${ig.username}\n`;
+  msg += `\n¿Es este tu negocio? Responde *SI* o *NO*`;
+
+  return msg;
+}
+
+
+/**
+ * Use Claude to extract Facebook/Instagram URLs or usernames from free-form Spanish text.
+ */
+async function extractSocialUrlsWithClaude(message) {
+  const ai = getAnthropic();
+
+  const prompt = `Eres un asistente que extrae links de redes sociales de mensajes de WhatsApp en español.
+
+Del siguiente mensaje, extrae URLs o nombres de usuario de Facebook e Instagram. Responde SOLO con un JSON válido:
+
+{
+  "facebookUrl": "URL completa o username de Facebook (null si no hay)",
+  "instagramUrl": "URL completa o username de Instagram (null si no hay)",
+  "reply": "respuesta amigable si no encuentras ningún link/username (null si encontraste algo)"
+}
+
+REGLAS:
+- Acepta URLs completas (facebook.com/negocio), URLs cortas (fb.com/negocio), @usernames, o nombres de páginas
+- Si el usuario dice algo como "mi facebook es instinto gym", extrae "instinto gym" como facebookUrl
+- Si el usuario dice "@instintogym en instagram", extrae "instintogym" como instagramUrl
+- Si no encuentras nada, el reply debe pedir el link de forma amable
+
+MENSAJE DEL USUARIO: "${message}"`;
+
+  try {
+    const response = await ai.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 200,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const text = response.content.find(b => b.type === 'text')?.text || '{}';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { facebookUrl: null, instagramUrl: null, reply: 'No pude identificar un perfil. ¿Podrías enviar el link directo?' };
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return {
+      facebookUrl: parsed.facebookUrl || null,
+      instagramUrl: parsed.instagramUrl || null,
+      reply: parsed.reply || null,
+    };
+  } catch (err) {
+    console.error('Claude social extraction error:', err);
+    return { facebookUrl: null, instagramUrl: null, reply: '¿Podrías enviar el link de tu Facebook o Instagram?' };
+  }
+}
+
+
+/**
+ * Extract a username from a social media URL or raw input.
+ */
+function extractUsername(input) {
+  if (!input) return null;
+  let cleaned = input.trim();
+  // Strip protocol and www
+  cleaned = cleaned.replace(/^https?:\/\//, '').replace(/^www\./, '');
+  // Strip known domain prefixes
+  cleaned = cleaned.replace(/^(facebook\.com|fb\.com|instagram\.com|instagr\.am)\/?/, '');
+  // Strip trailing slashes and query params
+  cleaned = cleaned.replace(/[?#].*$/, '').replace(/\/+$/, '');
+  // Strip @ prefix
+  cleaned = cleaned.replace(/^@/, '');
+  // If it looks like a path with segments, take the first
+  if (cleaned.includes('/')) cleaned = cleaned.split('/')[0];
+  return cleaned || null;
+}
+
+
+/**
+ * Scrape Facebook and/or Instagram profiles using existing API endpoints.
+ */
+async function scrapeSocialProfiles(facebookUrl, instagramUrl) {
+  const results = { facebook: null, instagram: null };
+
+  const fbUsername = extractUsername(facebookUrl);
+  const igUsername = extractUsername(instagramUrl);
+
+  const fetches = [];
+
+  if (fbUsername) {
+    fetches.push(
+      fetch(`${API_BASE}/api/enrich/facebook?username=${encodeURIComponent(fbUsername)}`)
+        .then(async r => {
+          if (r.ok) {
+            results.facebook = await r.json();
+          } else {
+            console.warn(`Facebook scrape failed for "${fbUsername}": ${r.status}`);
+          }
+        })
+        .catch(err => console.error('Facebook scrape error:', err))
+    );
+  }
+
+  if (igUsername) {
+    fetches.push(
+      fetch(`${API_BASE}/api/enrich/instagram?username=${encodeURIComponent(igUsername)}`)
+        .then(async r => {
+          if (r.ok) {
+            results.instagram = await r.json();
+          } else {
+            console.warn(`Instagram scrape failed for "${igUsername}": ${r.status}`);
+          }
+        })
+        .catch(err => console.error('Instagram scrape error:', err))
+    );
+  }
+
+  await Promise.all(fetches);
+  return results;
+}
+
+
+/**
+ * Save social profile links to business_social_profiles table.
+ */
+async function saveSocialProfiles(sb, businessId, flowData) {
+  const scrape = flowData.socialScrapeResults || {};
+  const profiles = [];
+
+  if (scrape.facebook) {
+    profiles.push({
+      business_id: businessId,
+      platform: 'facebook',
+      url: scrape.facebook.link || null,
+      handle: extractUsername(scrape.facebook.link) || null,
+      follower_count: scrape.facebook.followers || null,
+    });
+  }
+
+  if (scrape.instagram) {
+    profiles.push({
+      business_id: businessId,
+      platform: 'instagram',
+      url: scrape.instagram.username ? `https://instagram.com/${scrape.instagram.username}` : null,
+      handle: scrape.instagram.username || null,
+      follower_count: scrape.instagram.followerCount || null,
+    });
+  }
+
+  if (profiles.length > 0) {
+    const { error } = await sb.from('business_social_profiles').insert(profiles);
+    if (error) console.warn('Failed to save social profiles:', error.message);
+  }
+}
+
+
+/**
+ * Save scraped social media data (reviews, photos) to business tables.
+ */
+async function saveSocialEnrichmentData(sb, businessId, flowData) {
+  const scrape = flowData.socialScrapeResults || {};
+  const fb = scrape.facebook;
+  const ig = scrape.instagram;
+
+  // Save Facebook reviews
+  if (fb?.reviews?.length > 0) {
+    const reviews = fb.reviews.map(r => ({
+      business_id: businessId,
+      source: 'facebook',
+      author_name: r.authorName || 'Anónimo',
+      text: r.text,
+      rating: r.rating || null,
+      published_at: r.date || null,
+    }));
+
+    const { error } = await sb.from('business_reviews').insert(reviews);
+    if (error) console.warn('Failed to save FB reviews:', error.message);
+  }
+
+  // Save Facebook photos (profile + cover)
+  const photos = [];
+
+  if (fb?.profilePhoto) {
+    photos.push({
+      business_id: businessId,
+      source: 'facebook',
+      photo_type: 'logo',
+      url: fb.profilePhoto,
+      is_primary: false,
+    });
+  }
+
+  if (fb?.coverPhoto) {
+    photos.push({
+      business_id: businessId,
+      source: 'facebook',
+      photo_type: 'exterior',
+      url: fb.coverPhoto,
+      is_primary: true,
+    });
+  }
+
+  // Save Instagram post images
+  if (ig?.posts?.length > 0) {
+    ig.posts.forEach((post, i) => {
+      if (post.imageUrl) {
+        photos.push({
+          business_id: businessId,
+          source: 'instagram',
+          photo_type: 'product',
+          url: post.imageUrl,
+          is_primary: photos.length === 0 && i === 0,
+        });
+      }
+    });
+  }
+
+  if (ig?.avatar) {
+    photos.push({
+      business_id: businessId,
+      source: 'instagram',
+      photo_type: 'logo',
+      url: ig.avatar,
+      is_primary: false,
+    });
+  }
+
+  if (photos.length > 0) {
+    const { error } = await sb.from('business_photos').insert(photos);
+    if (error) console.warn('Failed to save social photos:', error.message);
+  }
+
+  // Update business record with additional social data
+  const updates = {};
+  if (fb?.category && Array.isArray(fb.category) && fb.category.length > 0) {
+    updates.category = fb.category[0];
+  }
+  if (ig?.bio) {
+    updates.description = ig.bio;
+  } else if (fb?.name && !fb?.address) {
+    // No extra description to add
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await sb.from('businesses').update(updates).eq('id', businessId);
+  }
 }
 
 

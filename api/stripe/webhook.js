@@ -170,6 +170,51 @@ export default async function handler(req, res) {
           } catch (authErr) {
             console.error('Customer auth/email error (non-blocking):', authErr);
           }
+
+          // Check for pending referral and trigger conversion (non-blocking)
+          try {
+            const customer = await getCustomerFromSubscription(subscriptionId, supabaseUrl, supabaseHeaders);
+            if (customer) {
+              // Find pending referral matching this customer's email
+              let refQuery = `${supabaseUrl}/rest/v1/referrals?status=in.(pending,contacted,converted)&referrer_reward_status=eq.pending&select=id&or=(referred_email.eq.${encodeURIComponent(customer.email)}`;
+              if (customer.contact_phone) {
+                refQuery += `,referred_phone.eq.${encodeURIComponent(customer.contact_phone)}`;
+              }
+              refQuery += ')&limit=1';
+
+              const pendingRefRes = await fetch(refQuery, { headers: supabaseHeaders });
+              if (pendingRefRes.ok) {
+                const pendingRefs = await pendingRefRes.json();
+                if (pendingRefs && pendingRefs.length > 0) {
+                  // Link referred customer and business to the referral
+                  await fetch(
+                    `${supabaseUrl}/rest/v1/referrals?id=eq.${encodeURIComponent(pendingRefs[0].id)}`,
+                    {
+                      method: 'PATCH',
+                      headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+                      body: JSON.stringify({
+                        referred_customer_id: customer.id,
+                        referred_business_id: customer.business_id || null,
+                        status: 'converted',
+                        converted_at: new Date().toISOString(),
+                        last_updated_at: new Date().toISOString(),
+                      }),
+                    }
+                  );
+
+                  // Fire-and-forget: trigger reward application
+                  const convertUrl = `https://${req.headers?.host || 'ahoratengopagina.com'}/api/referrals/convert`;
+                  fetch(convertUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ referralId: pendingRefs[0].id }),
+                  }).catch(err => console.warn('Referral convert trigger error:', err.message));
+                }
+              }
+            }
+          } catch (refErr) {
+            console.warn('Referral conversion check error (non-blocking):', refErr.message);
+          }
         }
         break;
       }
