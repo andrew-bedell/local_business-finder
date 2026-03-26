@@ -2042,7 +2042,7 @@
         <td class="td-center col-sticky col-sticky-1">${offset + i + 1}</td>
         <td class="td-editable col-sticky col-sticky-2" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
         <td class="td-center" style="font-size:11px;color:var(--text-dim);font-family:monospace" title="${escapeHtml(b.business_code || '')}">${escapeHtml(b.business_code || '—')}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(extractCity(b.address_full))}</td>
+        <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(b.address_full || '—')}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
@@ -2353,8 +2353,6 @@
       td.innerHTML = getStageBadgeHtml(originalValue);
     } else if (field === 'name') {
       td.innerHTML = originalValue ? `<strong>${escapeHtml(originalValue)}</strong>` : '<span class="td-empty-placeholder">+</span>';
-    } else if (field === 'address_full') {
-      td.innerHTML = originalValue ? escapeHtml(extractCity(originalValue)) : '<span class="td-empty-placeholder">+</span>';
     } else {
       td.innerHTML = originalValue ? escapeHtml(originalValue) : '<span class="td-empty-placeholder">+</span>';
     }
@@ -2377,8 +2375,6 @@
       td.innerHTML = getStageBadgeHtml(newValue);
     } else if (field === 'name') {
       td.innerHTML = newValue ? `<strong>${escapeHtml(newValue)}</strong>` : '<span class="td-empty-placeholder">+</span>';
-    } else if (field === 'address_full') {
-      td.innerHTML = newValue ? escapeHtml(extractCity(newValue)) : '<span class="td-empty-placeholder">+</span>';
     } else {
       td.innerHTML = newValue ? escapeHtml(newValue) : '<span class="td-empty-placeholder">+</span>';
     }
@@ -2426,8 +2422,6 @@
         td.innerHTML = getStageBadgeHtml(originalValue);
       } else if (field === 'name') {
         td.innerHTML = originalValue ? `<strong>${escapeHtml(originalValue)}</strong>` : '<span class="td-empty-placeholder">+</span>';
-      } else if (field === 'address_full') {
-        td.innerHTML = originalValue ? escapeHtml(extractCity(originalValue)) : '<span class="td-empty-placeholder">+</span>';
       } else {
         td.innerHTML = originalValue ? escapeHtml(originalValue) : '<span class="td-empty-placeholder">+</span>';
       }
