@@ -3148,6 +3148,52 @@
     }));
   }
 
+  // ── Persist External Photos ──
+  // Ensures Instagram/Facebook photos are copied to Supabase Storage before website generation
+  // so that generated websites use stable URLs instead of expiring CDN links.
+  async function persistExternalPhotos(businessId) {
+    const { data: unpersisted } = await supabaseClient
+      .from('business_photos')
+      .select('id')
+      .eq('business_id', businessId)
+      .in('source', ['instagram', 'facebook'])
+      .is('storage_path', null);
+
+    if (!unpersisted || unpersisted.length === 0) return 0;
+
+    const ids = unpersisted.map(p => p.id);
+    let persisted = 0;
+
+    // Persist API accepts max 20 per request — batch if needed
+    for (let i = 0; i < ids.length; i += 20) {
+      const batch = ids.slice(i, i + 20);
+      try {
+        const res = await withTimeout(
+          fetch('/api/photos/persist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoIds: batch }),
+          }),
+          30000,
+          'Photo persistence'
+        );
+        if (res.ok) {
+          const result = await res.json();
+          persisted += result.persisted || 0;
+        }
+      } catch (err) {
+        console.warn('Photo persist batch error:', err.message);
+      }
+    }
+
+    // Invalidate detail cache so buildPhotoInventory picks up new storage_path values
+    if (persisted > 0) {
+      delete detailCache[businessId];
+    }
+
+    return persisted;
+  }
+
   // ── Build Photo Manifest ──
   function buildPhotoManifest(photoAssetPlan, photoInventory) {
     const usedUrls = new Set();
@@ -3581,6 +3627,10 @@
       btn.textContent = `${t('generatingWebsite')} ${elapsed}s`;
     }, 1000);
     try {
+      // Persist external photos before building inventory
+      await persistExternalPhotos(business.id).catch(err =>
+        console.warn('Photo persistence error (non-fatal):', err.message)
+      );
       const details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
       const photoInventory = buildPhotoInventory(details);
@@ -3819,6 +3869,14 @@
         }
       }
       popup.setStep('photos', 'done');
+
+      // Step 2.5: Persist external photos to Supabase Storage (prevents expired CDN URLs)
+      try {
+        const persistCount = await persistExternalPhotos(business.id);
+        if (persistCount > 0) console.log(`Persisted ${persistCount} external photos for ${business.name}`);
+      } catch (err) {
+        console.warn('Photo persistence step error (non-fatal):', err.message);
+      }
 
       // Step 3: Generate website
       popup.setStep('website', 'running');
@@ -4120,6 +4178,13 @@
     container.innerHTML = `<div class="report-loading"><span class="spinner"></span><p>${t('websiteGenerating')}</p></div>`;
 
     try {
+      // Persist external photos before building inventory
+      await persistExternalPhotos(business.id).catch(err =>
+        console.warn('Photo persistence error (non-fatal):', err.message)
+      );
+      // Re-load details to pick up updated storage_path values
+      delete detailCache[business.id];
+      details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
       const photoInventory = buildPhotoInventory(details);
       const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
