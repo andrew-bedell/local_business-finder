@@ -2221,6 +2221,9 @@
         .eq('business_id', businessId)
         .eq('platform', 'facebook');
     }
+
+    // Fire-and-forget: persist Facebook photos to Supabase Storage
+    triggerPhotoPersistence(businessId, 'facebook');
   }
 
   // Save Instagram data (photos from posts) to Supabase
@@ -2302,6 +2305,30 @@
         })
         .eq('business_id', businessId)
         .eq('platform', 'instagram');
+    }
+
+    // Fire-and-forget: persist Instagram photos to Supabase Storage
+    triggerPhotoPersistence(businessId, 'instagram');
+  }
+
+  // Trigger server-side persistence of external photos (Instagram/Facebook CDN → Supabase Storage)
+  // Called fire-and-forget after saving social media photos to business_photos
+  async function triggerPhotoPersistence(businessId, source) {
+    try {
+      const { data } = await supabaseClient
+        .from('business_photos')
+        .select('id')
+        .eq('business_id', businessId)
+        .eq('source', source)
+        .is('storage_path', null);
+      if (!data || data.length === 0) return;
+      fetch('/api/photos/persist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoIds: data.map(p => p.id) }),
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('Photo persist trigger error:', e.message);
     }
   }
 

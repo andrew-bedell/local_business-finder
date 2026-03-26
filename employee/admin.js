@@ -3152,7 +3152,9 @@
       id: `${p.source}_photo_${i}`,
       source: p.source,
       type: p.photo_type || 'unclassified',
-      url: p.url,
+      url: p.storage_path
+        ? (supabaseClient.supabaseUrl + '/storage/v1/object/public/photos/' + p.storage_path)
+        : p.url,
     }));
   }
 

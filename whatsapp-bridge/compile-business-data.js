@@ -185,7 +185,9 @@ function buildPhotoInventory(photos) {
   return (photos || []).map((p, i) => ({
     id: `${p.source || 'unknown'}_photo_${i}`,
     type: p.photo_type || 'unclassified',
-    url: p.url,
+    url: p.storage_path
+      ? (process.env.SUPABASE_URL + '/storage/v1/object/public/photos/' + p.storage_path)
+      : p.url,
   }));
 }
 
