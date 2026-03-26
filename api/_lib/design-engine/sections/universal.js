@@ -377,9 +377,12 @@ export function navHTML(business, ctaLabel) {
 export function whatsappFAB(business) {
   if (!business.whatsapp && !business.phone) return '';
 
-  const number = (business.whatsapp || business.phone || '').replace(/[\s\-()]/g, '');
-  const message = encodeURIComponent('Hola! Me gustaría más información sobre sus servicios.');
-  const href = `https://wa.me/${number}?text=${message}`;
+  // wa.me requires international format digits only (no +, spaces, dashes)
+  const raw = (business.whatsapp || business.phone || '').replace(/[^\d]/g, '');
+  // If number doesn't look international (too short), skip — wa.me won't resolve it
+  if (raw.length < 10) return '';
+  const message = encodeURIComponent(`Hola! Me gustaría más información sobre ${business.name || 'sus servicios'}.`);
+  const href = `https://wa.me/${raw}?text=${message}`;
 
   return `
   <a href="${href}" target="_blank" rel="noopener" class="whatsapp-fab" aria-label="WhatsApp">
