@@ -80,6 +80,23 @@ LOGO & HEADER:
 - Header: text logo on the left, simple navigation links on the right
 - Hero section: full-width background image with a dark overlay and headline text on top
 
+MOBILE NAVIGATION — CRITICAL:
+- On screens ≤ 768px, HIDE the desktop nav links and show a hamburger menu button (☰) in the header
+- Hamburger button: three horizontal lines (span elements), positioned top-right of header
+- On click, toggle a mobile menu that slides down from below the header
+- Mobile menu: full-width, vertical stack of nav links, styled with the site's color palette
+- Include this inline JavaScript (no external dependencies):
+  * Toggle a class (e.g., "nav-open") on the hamburger button and mobile menu on click
+  * Close the menu when any nav link is clicked (smooth scroll to section)
+  * Animate the hamburger icon to an X shape when open (CSS transforms on the spans)
+- CSS requirements:
+  * Desktop (> 768px): hamburger hidden, nav links displayed inline
+  * Mobile (≤ 768px): nav links hidden, hamburger visible, mobile menu initially hidden
+  * Mobile menu background should use the site's palette (e.g., white or dark depending on header style)
+  * Menu items should have generous padding (14-16px) for touch targets
+  * Add a smooth transition on the menu (max-height or transform)
+- NEVER let nav links wrap to multiple lines on mobile — the hamburger replaces them entirely
+
 PHOTO USAGE — CRITICAL:
 - Each line in the photo manifest is section|slot|url — use the exact URL for each section
 - Embed photos as <img> src attributes or CSS background-image url()
@@ -145,6 +162,23 @@ LOGO & HEADER:
 - Use a text-based logo: the business name in a distinctive, well-styled font (large, bold, with appropriate letter-spacing)
 - The header should have: text logo on the left, simple navigation links on the right
 - Hero section below the header: full-width background image with a dark overlay and the business tagline/summary text on top
+
+MOBILE NAVIGATION — CRITICAL:
+- On screens ≤ 768px, HIDE the desktop nav links and show a hamburger menu button (☰) in the header
+- Hamburger button: three horizontal lines (span elements), positioned top-right of header
+- On click, toggle a mobile menu that slides down from below the header
+- Mobile menu: full-width, vertical stack of nav links, styled with the site's color palette
+- Include this inline JavaScript (no external dependencies):
+  * Toggle a class (e.g., "nav-open") on the hamburger button and mobile menu on click
+  * Close the menu when any nav link is clicked (smooth scroll to section)
+  * Animate the hamburger icon to an X shape when open (CSS transforms on the spans)
+- CSS requirements:
+  * Desktop (> 768px): hamburger hidden, nav links displayed inline
+  * Mobile (≤ 768px): nav links hidden, hamburger visible, mobile menu initially hidden
+  * Mobile menu background should use the site's palette (e.g., white or dark depending on header style)
+  * Menu items should have generous padding (14-16px) for touch targets
+  * Add a smooth transition on the menu (max-height or transform)
+- NEVER let nav links wrap to multiple lines on mobile — the hamburger replaces them entirely
 
 PHOTO USAGE — CRITICAL:
 - Use the photo URLs from the PHOTO INVENTORY — embed them directly as <img> src attributes or CSS background-image
