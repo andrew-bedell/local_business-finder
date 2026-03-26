@@ -3197,15 +3197,22 @@
     let details = detailCache[business.id];
     if (!details) {
       try {
-        const [reviewsRes, photosRes] = await Promise.all([
+        const [reviewsRes, photosRes, menusRes, socialsRes] = await Promise.all([
           supabaseClient.from('business_reviews').select('*').eq('business_id', business.id).order('sentiment_score', { ascending: false, nullsFirst: false }).limit(20),
           supabaseClient.from('business_photos').select('*').eq('business_id', business.id).limit(30),
+          supabaseClient.from('business_menus').select('*').eq('business_id', business.id),
+          supabaseClient.from('business_social_profiles').select('*').eq('business_id', business.id),
         ]);
-        details = { reviews: reviewsRes.data || [], photos: photosRes.data || [] };
+        details = {
+          reviews: reviewsRes.data || [],
+          photos: photosRes.data || [],
+          menus: menusRes.data || [],
+          socialProfiles: (socialsRes.data || []).map(s => ({ platform: s.platform, url: s.url })),
+        };
         detailCache[business.id] = details;
       } catch (err) {
         console.error('Detail load error:', err);
-        details = { reviews: [], photos: [] };
+        details = { reviews: [], photos: [], menus: [], socialProfiles: [] };
       }
     }
     return details;
@@ -3603,7 +3610,14 @@
         fetch('/api/ai/write-content', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ researchReport: report, businessData, photoManifest, language }),
+          body: JSON.stringify({
+            researchReport: report,
+            businessData,
+            photoManifest,
+            language,
+            category: business.category || '',
+            subcategory: business.subcategory || '',
+          }),
         }),
         120000, 'Content writing'
       );
@@ -3613,7 +3627,7 @@
       }
       const websiteContent = await contentResp.json();
 
-      // Generate HTML (Haiku) — with pre-written content
+      // Generate HTML (V2 deterministic assembly)
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
           method: 'POST',
@@ -3624,9 +3638,18 @@
             photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
             name: business.name,
             language,
+            category: business.category || '',
+            subcategory: business.subcategory || '',
+            phone: business.phone || '',
+            whatsapp: business.whatsapp || '',
+            address: business.address_full || '',
+            mapsUrl: business.maps_url || '',
+            socialProfiles: details.socialProfiles || [],
+            menuItems: details.menus || [],
+            staffMembers: [],
           }),
         }),
-        310000,
+        60000,
         'Website generation'
       );
       clearInterval(timerInterval);
@@ -3636,7 +3659,7 @@
       }
       const data = await res.json();
       // Save to DB and wait for it to complete before showing ✓
-      await saveGeneratedWebsite(business, data.html, report);
+      await saveGeneratedWebsite(business, data.html, report, data.variation || data.engine);
       btn.disabled = false;
       btn.textContent = '\u2713';
       btn.title = t('generateWebsite');
@@ -3895,7 +3918,14 @@
         fetch('/api/ai/write-content', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ researchReport: report, businessData, photoManifest, language }),
+          body: JSON.stringify({
+            researchReport: report,
+            businessData,
+            photoManifest,
+            language,
+            category: business.category || '',
+            subcategory: business.subcategory || '',
+          }),
         }),
         120000, 'Content writing'
       );
@@ -3905,7 +3935,7 @@
       }
       const websiteContent = await contentResp.json();
 
-      // Generate HTML (Haiku) — with pre-written content
+      // Generate HTML (V2 deterministic assembly)
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
           method: 'POST',
@@ -3916,9 +3946,18 @@
             photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
             name: business.name,
             language,
+            category: business.category || '',
+            subcategory: business.subcategory || '',
+            phone: business.phone || '',
+            whatsapp: business.whatsapp || '',
+            address: business.address_full || '',
+            mapsUrl: business.maps_url || '',
+            socialProfiles: details.socialProfiles || [],
+            menuItems: details.menus || [],
+            staffMembers: [],
           }),
         }),
-        310000,
+        60000,
         'Website generation'
       );
 
@@ -3935,7 +3974,7 @@
       renderWebsitePreview(modal, data.html, business);
 
       // Save to Supabase
-      saveGeneratedWebsite(business, data.html, report).catch(err =>
+      saveGeneratedWebsite(business, data.html, report, data.variation || data.engine).catch(err =>
         console.warn('Failed to save generated website:', err)
       );
     } catch (err) {
@@ -4170,15 +4209,16 @@
     }
   }
 
-  async function saveGeneratedWebsite(business, html, report) {
+  async function saveGeneratedWebsite(business, html, report, engine) {
     if (!supabaseClient) return;
 
     try {
+      const templateName = engine && engine !== 'v1' ? `v2_${engine}` : 'ai_generated_single_page';
       const { data, error } = await supabaseClient
         .from('generated_websites')
         .insert({
           business_id: business.id,
-          template_name: 'ai_generated_single_page',
+          template_name: templateName,
           status: 'draft',
           config: {
             html: html,
