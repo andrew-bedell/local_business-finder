@@ -3440,9 +3440,15 @@
       var res = await fetch('/api/scheduling/config', {
         headers: { 'Authorization': 'Bearer ' + token },
       });
+
+      if (!res.ok) {
+        console.error('Load scheduling config failed:', res.status, await res.text().catch(function () { return ''; }));
+        return;
+      }
+
       var data = await res.json();
 
-      if (res.ok) {
+      if (data) {
         // Set type cards
         if (data.scheduling_type) {
           var card = document.querySelector('.c-sched-type-card[data-type="' + data.scheduling_type + '"]');
@@ -3502,10 +3508,13 @@
       });
 
       if (!res.ok) {
-        var err = await res.json();
-        throw new Error(err.error || 'Error');
+        var errText = await res.text().catch(function () { return ''; });
+        console.error('Scheduling config API error:', res.status, errText);
+        try { var errObj = JSON.parse(errText); throw new Error(errObj.error || 'Error ' + res.status); } catch (parseErr) { throw new Error('Error ' + res.status); }
       }
 
+      var result = await res.json();
+      console.log('Scheduling config saved:', result);
       showToast(t('sched_config_saved'), 'success');
     } catch (err) {
       console.error('Save scheduling config error:', err);
