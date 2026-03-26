@@ -64,6 +64,7 @@ Respond with ONLY valid JSON (no markdown fences, no extra text) matching this e
     "primaryColor": "hex color that fits the business brand/category (e.g., #D4768B for nail salon)",
     "secondaryColor": "complementary hex color for alternating section backgrounds",
     "accentColor": "highlight/CTA hex color for buttons and interactive elements",
+    "mood": "luxury | professional | warm | modern | clean | artisan — pick the one that best fits the business personality",
     "sectionStyle": "light-alternating | dark-themed | warm-toned | cool-toned",
     "rationale": "why these colors fit this business category and personality"
   },
@@ -90,6 +91,14 @@ Choose colors that match the business CATEGORY and personality:
 - Healthcare / dental: clean blues, teals, soft greens — calming and clinical
 - Automotive: metallic dark tones — gunmetal, red or blue accents
 - Hotels / hospitality: elegant neutrals — cream, champagne, gold, navy
+
+The mood should be:
+- "luxury" for salons, nail salons, spas, jewelry, boutique hotels
+- "professional" for lawyers, accountants, real estate, insurance, consulting
+- "warm" for restaurants, cafes, bakeries, florists, family businesses
+- "modern" for gyms, tech companies, coworking spaces, startups
+- "clean" for doctors, dentists, pharmacies, veterinarians, clinics
+- "artisan" for plumbers, electricians, auto repair, painters, contractors
 
 The sectionStyle should be:
 - "dark-themed" for gyms, bars, nightlife, studios

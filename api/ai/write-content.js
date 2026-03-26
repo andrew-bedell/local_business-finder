@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Anthropic API key not configured' });
   }
 
-  const { researchReport, businessData: rawBusinessData, photoManifest, language } = req.body || {};
+  const { researchReport, businessData: rawBusinessData, photoManifest, language, category, subcategory } = req.body || {};
 
   if (!researchReport || !rawBusinessData) {
     return res.status(400).json({ error: 'Missing required fields: researchReport, businessData' });
@@ -31,6 +31,123 @@ export default async function handler(req, res) {
   const businessData = rawBusinessData.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 
   const langName = language === 'es' ? 'Spanish' : 'English';
+  const cat = (category || '').toLowerCase();
+
+  // Build category-specific schema additions
+  let categorySchema = '';
+  let categoryInstructions = '';
+
+  if (['restaurant', 'restaurante', 'food', 'comida'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "menuHighlights": {
+    "heading": "Menu section heading",
+    "categories": [{ "name": "Category name (e.g., Entradas, Platos Fuertes)", "items": [{ "name": "Dish name", "description": "Brief description", "price": "Price or price range" }] }]
+  },
+  "ambiance": {
+    "heading": "Ambiance section heading",
+    "description": "1-2 paragraphs describing the restaurant atmosphere, decor, and dining experience"
+  }`;
+    categoryInstructions = `\n- RESTAURANT: Include 2-3 menu categories with 3-4 items each. Use actual menu items if available in the data. Describe the ambiance based on reviews and photos.`;
+  } else if (['salon', 'salón', 'beauty', 'belleza', 'spa', 'peluquería'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "treatments": {
+    "heading": "Treatments section heading",
+    "categories": [{ "name": "Category name (e.g., Hair, Nails, Facials)", "items": [{ "name": "Treatment name", "description": "Brief description", "priceRange": "Price range (optional)", "duration": "Duration (optional)" }] }]
+  },
+  "team": {
+    "heading": "Team section heading",
+    "members": [{ "name": "Stylist/specialist name", "title": "Role/specialty", "bio": "Short bio (1-2 sentences)" }]
+  }`;
+    categoryInstructions = `\n- BEAUTY SALON: Include 2-3 treatment categories with 3-4 items each. If staff/team data is available, include team members. Otherwise include 2-3 based on what reviews mention.`;
+  } else if (['nail', 'uñas', 'manicur', 'pedicur'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "treatments": {
+    "heading": "Services & pricing section heading",
+    "categories": [{ "name": "Category name (e.g., Manicure, Pedicure, Nail Art)", "items": [{ "name": "Service name", "description": "Brief description", "priceRange": "Price range (optional)", "duration": "Duration (optional)" }] }]
+  },
+  "designGallery": {
+    "heading": "Nail art gallery section heading"
+  }`;
+    categoryInstructions = `\n- NAIL SALON: Include 2-3 service categories (manicure, pedicure, nail art, etc.) with 3-4 items each. Include pricing if available.`;
+  } else if (['doctor', 'médico', 'clinic', 'clínica', 'medical', 'health'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "credentials": {
+    "heading": "Credentials section heading",
+    "items": [{ "name": "Doctor name", "title": "Specialty", "credentials": "Certifications and qualifications" }]
+  },
+  "insuranceAccepted": {
+    "heading": "Insurance section heading",
+    "providers": ["Insurance provider names"]
+  }`;
+    categoryInstructions = `\n- DOCTOR/CLINIC: Include credentials for each doctor mentioned in the data. List accepted insurance providers if available.`;
+  } else if (['dentist', 'dental', 'odontol'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "dentalServices": {
+    "heading": "Dental services section heading",
+    "items": [{ "name": "Service name", "description": "Brief description of the procedure" }]
+  },
+  "insuranceAccepted": {
+    "heading": "Insurance section heading",
+    "providers": ["Insurance/dental plan names"]
+  }`;
+    categoryInstructions = `\n- DENTIST: Include 4-6 dental services (cleanings, whitening, implants, etc.). List accepted insurance if available.`;
+  } else if (['lawyer', 'abogad', 'legal', 'attorney', 'law firm'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "practiceAreas": {
+    "heading": "Practice areas section heading",
+    "areas": [{ "name": "Practice area name", "description": "Brief description of this legal specialty" }]
+  }`;
+    categoryInstructions = `\n- LAWYER: Include 3-5 practice areas based on the firm's specialties mentioned in the data.`;
+  } else if (['gym', 'gimnasio', 'fitness', 'crossfit', 'workout'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "memberships": {
+    "heading": "Membership section heading",
+    "tiers": [{ "name": "Tier name", "price": "Monthly price", "features": ["Feature 1", "Feature 2"] }]
+  },
+  "classSchedule": {
+    "heading": "Classes section heading",
+    "classes": [{ "name": "Class name", "schedule": "When it meets", "description": "Brief description" }]
+  }`;
+    categoryInstructions = `\n- GYM: Include 2-3 membership tiers with pricing if available. Include popular classes if mentioned in the data.`;
+  } else if (['cafe', 'café', 'coffee', 'bakery', 'panadería'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "menuHighlights": {
+    "heading": "Menu section heading",
+    "categories": [{ "name": "Category name (e.g., Bebidas, Pasteles)", "items": [{ "name": "Item name", "description": "Brief description", "price": "Price (optional)" }] }]
+  },
+  "dailySpecials": {
+    "heading": "Daily specials section heading",
+    "items": [{ "name": "Special name", "description": "Brief description" }]
+  }`;
+    categoryInstructions = `\n- CAFE/BAKERY: Include 2-3 menu categories with popular items. Include daily specials if mentioned.`;
+  } else if (['auto', 'mechanic', 'mecánic', 'taller', 'car repair'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "autoServices": {
+    "heading": "Services section heading",
+    "items": [{ "name": "Service name", "description": "Brief description" }],
+    "certifications": ["Certification or brand names serviced"]
+  },
+  "estimateCTA": {
+    "heading": "Get estimate section heading",
+    "description": "Supporting text for estimate request",
+    "buttonText": "Button label for estimate"
+  }`;
+    categoryInstructions = `\n- AUTO REPAIR: Include 4-6 auto services. List certifications and brands serviced if available.`;
+  } else if (['plumber', 'plomero', 'electrician', 'electricista', 'contractor', 'contratista', 'painter', 'pintor', 'handyman'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "emergencyCTA": {
+    "heading": "Emergency section heading",
+    "description": "Description of emergency availability",
+    "available247": true,
+    "buttonText": "Emergency call button text"
+  },
+  "coverageArea": {
+    "heading": "Service area section heading",
+    "areas": ["Area/neighborhood names"],
+    "description": "Brief description of service coverage"
+  }`;
+    categoryInstructions = `\n- CONTRACTOR/TRADES: Include emergency availability info if applicable. List service areas/neighborhoods covered.`;
+  }
 
   const systemPrompt = `You are an expert copywriter specializing in local business websites. Given a research report and business data, write ALL the text content for a business website.
 
@@ -93,7 +210,7 @@ Respond with ONLY valid JSON (no markdown fences, no extra text) matching this s
   "footer": {
     "tagline": "Short brand tagline",
     "copyright": "Copyright line"
-  }
+  }${categorySchema}
 }
 
 IMPORTANT:
@@ -101,7 +218,7 @@ IMPORTANT:
 - If there are no reviews, use the quotableReviews from the research report
 - Include 3-5 services based on the business category and data
 - Include 3-4 whyChooseUs points based on the keySellingPoints
-- Include 2-3 testimonials with real review quotes`;
+- Include 2-3 testimonials with real review quotes${categoryInstructions}`;
 
   const userMessage = `=== RESEARCH REPORT ===
 ${JSON.stringify(researchReport)}
