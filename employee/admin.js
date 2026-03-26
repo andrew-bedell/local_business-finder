@@ -183,9 +183,15 @@
       photosNoneNeeded: 'All photos are existing — no AI generation needed',
       needsPhotos: 'Generate photos first',
       btnWebsite: 'Website',
+      btnCreateWebsite: 'Create Website',
+      creatingWebsite: 'Creating...',
       reportSuccess: 'Research report generated for {0}',
-      websiteSuccess: 'Website generated for {0}',
+      websiteSuccess: 'Website created for {0}',
+      websiteReady: 'Website ready for {0}!',
       needsReport: 'Generate report first to see photo plan',
+      bulkCreateWebsites: 'Create Websites',
+      bulkWebsitesStarted: 'Creating websites for {0} businesses...',
+      bulkWebsitesComplete: '{0} of {1} websites created successfully.',
       noData: 'No Data',
       // Modal detail sections
       modalDescription: 'Description',
@@ -762,9 +768,15 @@
       photosNoneNeeded: 'Todas las fotos son existentes — no se necesita generación IA',
       needsPhotos: 'Genera las fotos primero',
       btnWebsite: 'Sitio',
+      btnCreateWebsite: 'Crear Sitio',
+      creatingWebsite: 'Creando...',
       reportSuccess: 'Informe generado para {0}',
-      websiteSuccess: 'Sitio web generado para {0}',
+      websiteSuccess: 'Sitio web creado para {0}',
+      websiteReady: '¡Sitio web listo para {0}!',
       needsReport: 'Genera el informe primero para ver el plan de fotos',
+      bulkCreateWebsites: 'Crear Sitios Web',
+      bulkWebsitesStarted: 'Creando sitios web para {0} negocios...',
+      bulkWebsitesComplete: '{0} de {1} sitios web creados exitosamente.',
       noData: 'Sin Datos',
       modalDescription: 'Descripción',
       modalServiceOptions: 'Opciones de Servicio',
@@ -1594,6 +1606,8 @@
     if (btnBulkDelete) btnBulkDelete.addEventListener('click', bulkDelete);
     const btnBulkEnrich = document.getElementById('btn-bulk-enrich');
     if (btnBulkEnrich) btnBulkEnrich.addEventListener('click', bulkEnrich);
+    const btnBulkCreateWebsites = document.getElementById('btn-bulk-create-websites');
+    if (btnBulkCreateWebsites) btnBulkCreateWebsites.addEventListener('click', bulkCreateWebsites);
     const btnBulkClear = document.getElementById('btn-bulk-clear');
     if (btnBulkClear) btnBulkClear.addEventListener('click', clearSelection);
 
@@ -2003,12 +2017,8 @@
 
       const socialCellHtml = buildSocialCellHtml(profiles);
 
-      const hasReport = (b.generated_websites || []).some(w => w.config && w.config.researchReport);
-      const reportBtnLabel = hasReport ? '\u2713' : t('btnReport');
       const existingWebsiteRecord = (b.generated_websites || []).find(w => w.config && w.config.html);
-      const websiteBtnLabel = existingWebsiteRecord ? '\u2713' : t('btnWebsite');
-      const photosDisabled = hasReport ? '' : 'disabled';
-      const websiteDisabled = hasReport ? '' : 'disabled';
+      const createWebsiteBtnLabel = existingWebsiteRecord ? '\u2713' : t('btnCreateWebsite');
 
       // Website URL column
       let websiteUrlHtml = '<span style="color:var(--text-dim)">—</span>';
@@ -2054,9 +2064,7 @@
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
         <td class="td-center">${socialCellHtml}</td>
-        <td class="td-center"><button class="btn btn-view btn-report" data-id="${b.id}">${reportBtnLabel}</button></td>
-        <td class="td-center"><button class="btn btn-view btn-photos" data-id="${b.id}" ${photosDisabled}>${t('btnPhotos')}</button></td>
-        <td class="td-center"><button class="btn btn-view btn-website" data-id="${b.id}" ${websiteDisabled}>${websiteBtnLabel}</button></td>
+        <td class="td-center"><button class="btn btn-view btn-create-website" data-id="${b.id}">${createWebsiteBtnLabel}</button></td>
         <td class="td-center">${websiteUrlHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
@@ -2066,30 +2074,12 @@
       </tr>`;
     }).join('');
 
-    // Bind report buttons
-    resultsBody.querySelectorAll('.btn-report').forEach((btn) => {
+    // Bind create website buttons (full pipeline: report → photos → website)
+    resultsBody.querySelectorAll('.btn-create-website').forEach((btn) => {
       btn.addEventListener('click', () => {
         const businessId = btn.getAttribute('data-id');
         const business = currentResults.find(b => String(b.id) === businessId);
-        if (business) handleAdminTableReport(business, btn);
-      });
-    });
-
-    // Bind photos buttons
-    resultsBody.querySelectorAll('.btn-photos').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const businessId = btn.getAttribute('data-id');
-        const business = currentResults.find(b => String(b.id) === businessId);
-        if (business) handleAdminTableAiPhotos(business, btn);
-      });
-    });
-
-    // Bind website buttons
-    resultsBody.querySelectorAll('.btn-website').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const businessId = btn.getAttribute('data-id');
-        const business = currentResults.find(b => String(b.id) === businessId);
-        if (business) handleAdminTableWebsite(business, btn);
+        if (business) handleCreateWebsite(business, btn);
       });
     });
 
@@ -3669,7 +3659,7 @@
       console.error('Website generation error:', err);
       showToast(t('websiteError'), 'error');
       btn.disabled = false;
-      btn.textContent = t('btnWebsite');
+      btn.textContent = t('btnCreateWebsite');
     }
   }
 
@@ -3699,12 +3689,238 @@
         if (business.generated_websites) {
           business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.html));
         }
-        btn.textContent = t('btnWebsite');
+        btn.textContent = t('btnCreateWebsite');
         generateWebsiteFromTable(business, btn);
       });
       return;
     }
     generateWebsiteFromTable(business, btn);
+  }
+
+  // ── Create Website (full pipeline: report → photos → website) ──
+  async function handleCreateWebsite(business, btn) {
+    // If website already exists, show open/regenerate popup (same as before)
+    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
+    if (existingWebsite) {
+      const popup = document.createElement('div');
+      popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:1500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
+      const url = existingWebsite.published_url || '/ver/' + existingWebsite.id;
+      popup.innerHTML = `
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:340px;width:90%;text-align:center">
+          <h3 style="margin:0 0 16px;color:var(--text);font-size:16px">${escapeHtml(business.name)}</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <a href="${escapeHtml(url)}" target="_blank" class="btn btn-primary" style="text-decoration:none;text-align:center">${t('openWebsite')}</a>
+            <button class="btn btn-secondary" id="website-popup-regenerate">${t('regenerateWebsite')}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(popup);
+      popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
+      popup.querySelector('#website-popup-regenerate').addEventListener('click', () => {
+        popup.remove();
+        business._cachedReport = null;
+        business._cachedGeneratedPhotos = null;
+        if (business.generated_websites) {
+          business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.html));
+          business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.researchReport));
+        }
+        btn.textContent = t('btnCreateWebsite');
+        runFullWebsitePipeline(business, btn);
+      });
+      return;
+    }
+    runFullWebsitePipeline(business, btn);
+  }
+
+  async function runFullWebsitePipeline(business, btn) {
+    const popup = showPipelinePopup(business.name);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = t('creatingWebsite');
+    }
+    const startTime = Date.now();
+    const timerInterval = setInterval(() => {
+      if (!btn) return;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      btn.textContent = `${t('creatingWebsite')} ${elapsed}s`;
+    }, 1000);
+
+    try {
+      // Step 1: Research report (skip if already cached)
+      let report = business._cachedReport ||
+        ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+
+      if (!report) {
+        popup.setStep('report', 'running');
+        const details = await loadDetailsForBusiness(business);
+        const businessData = compileBusinessDataForPrompt(business, details);
+        const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
+        const res = await withTimeout(
+          fetch('/api/ai/research-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessData, name: business.name, language }),
+          }),
+          310000,
+          'Research report'
+        );
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          let errMsg = 'Request failed';
+          try { errMsg = JSON.parse(errText).error || errMsg; } catch (e) {}
+          throw new Error(errMsg);
+        }
+        report = await parseSSEReportResponse(res);
+        if (report.parseError) throw new Error('Failed to parse report response');
+        business._cachedReport = report;
+        saveResearchReport(business, report).catch(err =>
+          console.warn('Failed to save research report:', err)
+        );
+      }
+      popup.setStep('report', 'done');
+
+      // Step 2: AI photos (skip if already cached)
+      if (!business._cachedGeneratedPhotos) {
+        popup.setStep('photos', 'running');
+        const plan = report.photoAssetPlan || [];
+        const aiItems = plan.filter(item => item.recommendation === 'generate_ai' && item.aiPrompt);
+
+        if (aiItems.length > 0) {
+          const results = await Promise.allSettled(
+            aiItems.map((item, i) =>
+              withTimeout(
+                fetch('/api/ai/generate-photos', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prompt: item.aiPrompt, section: item.section, slot: item.slot }),
+                }),
+                30000,
+                'Photo generation'
+              ).then(async (res) => {
+                if (!res.ok) return null;
+                const data = await res.json();
+                return {
+                  id: `ai_${(item.section || 'photo').replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${i}`,
+                  section: item.section, slot: item.slot, url: data.url,
+                  source: 'ai_generated', type: 'ai_generated',
+                };
+              })
+            )
+          );
+          const generated = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
+          business._cachedGeneratedPhotos = generated;
+          if (generated.length > 0) {
+            saveAiPhotosToDb(business, generated).catch(err =>
+              console.warn('Failed to save AI photos:', err)
+            );
+          }
+        } else {
+          business._cachedGeneratedPhotos = [];
+        }
+      }
+      popup.setStep('photos', 'done');
+
+      // Step 3: Generate website
+      popup.setStep('website', 'running');
+      const details = await loadDetailsForBusiness(business);
+      const businessData = compileBusinessDataForPrompt(business, details);
+      const photoInventory = buildPhotoInventory(details);
+      if (business._cachedGeneratedPhotos) {
+        photoInventory.push(...business._cachedGeneratedPhotos);
+      }
+      const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
+      const photoManifest = buildPhotoManifest(report.photoAssetPlan || [], photoInventory);
+
+      const contentResp = await withTimeout(
+        fetch('/api/ai/write-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            researchReport: report, businessData, photoManifest, language,
+            category: business.category || '', subcategory: business.subcategory || '',
+          }),
+        }),
+        120000, 'Content writing'
+      );
+      if (!contentResp.ok) {
+        const errData = await contentResp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Content writing failed');
+      }
+      const websiteContent = await contentResp.json();
+
+      const genRes = await withTimeout(
+        fetch('/api/ai/generate-website', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            websiteContent,
+            designPalette: report?.designPalette,
+            photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
+            name: business.name, language,
+            category: business.category || '', subcategory: business.subcategory || '',
+            phone: business.phone || '', whatsapp: business.whatsapp || '',
+            address: business.address_full || '', mapsUrl: business.maps_url || '',
+            socialProfiles: details.socialProfiles || [],
+            menuItems: details.menus || [], staffMembers: [],
+          }),
+        }),
+        60000, 'Website generation'
+      );
+      if (!genRes.ok) {
+        const errData = await genRes.json().catch(() => ({}));
+        throw new Error(errData.error || 'Website generation failed');
+      }
+      const data = await genRes.json();
+      await saveGeneratedWebsite(business, data.html, report, data.variation || data.engine);
+      popup.setStep('website', 'done');
+
+      clearInterval(timerInterval);
+      popup.showClose();
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '\u2713';
+      }
+      showToast(t('websiteReady', business.name), 'success');
+    } catch (err) {
+      clearInterval(timerInterval);
+      console.error('Website creation pipeline error:', err);
+      popup.showClose();
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = t('btnCreateWebsite');
+      }
+      showToast(t('websiteError'), 'error');
+    }
+  }
+
+  async function bulkCreateWebsites() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    showToast(t('bulkWebsitesStarted', ids.length), 'success');
+
+    let successCount = 0;
+    // Process sequentially to avoid rate limits
+    for (const id of ids) {
+      const business = currentResults.find(b => String(b.id) === id);
+      if (!business) continue;
+      // Skip if website already exists
+      const hasWebsite = (business.generated_websites || []).some(w => w.config && w.config.html);
+      if (hasWebsite) {
+        successCount++;
+        continue;
+      }
+      // Find the button in the table row to update its state
+      const row = resultsBody.querySelector(`[data-id="${id}"]`);
+      const btn = row ? row.closest('tr')?.querySelector('.btn-create-website') : null;
+      try {
+        await runFullWebsitePipeline(business, btn);
+        successCount++;
+      } catch (err) {
+        console.error('Bulk website creation failed for', business.name, err);
+      }
+    }
+    showToast(t('bulkWebsitesComplete', successCount, ids.length), 'success');
+    clearSelection();
   }
 
   // ── Research Report (Modal) ──
