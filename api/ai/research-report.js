@@ -124,7 +124,7 @@ BE GENEROUS WITH PHOTOS — every visual slot on the website MUST have a photo. 
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 6144,
+        max_tokens: 8192,
         stream: true,
         system: systemPrompt,
         messages: [

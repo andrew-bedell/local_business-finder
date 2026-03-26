@@ -1306,10 +1306,40 @@
     if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
+    // Clean trailing commas before ] or }
+    jsonText = jsonText.replace(/,\s*([\]}])/g, '$1');
+
     try {
       return JSON.parse(jsonText);
     } catch (parseErr) {
       console.warn('Report JSON parse failed:', parseErr.message);
+
+      // Try to recover truncated JSON by finding the last complete top-level brace
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const matched = jsonMatch[0].replace(/,\s*([\]}])/g, '$1');
+        try {
+          return JSON.parse(matched);
+        } catch (e) { /* fall through */ }
+      }
+
+      // Try to find last valid closing brace
+      let braceDepth = 0;
+      let lastValidEnd = -1;
+      for (let i = 0; i < jsonText.length; i++) {
+        if (jsonText[i] === '{') braceDepth++;
+        else if (jsonText[i] === '}') {
+          braceDepth--;
+          if (braceDepth === 0) { lastValidEnd = i; break; }
+        }
+      }
+      if (lastValidEnd > 0) {
+        const trimmed = jsonText.substring(0, lastValidEnd + 1).replace(/,\s*([\]}])/g, '$1');
+        try {
+          return JSON.parse(trimmed);
+        } catch (e) { /* fall through */ }
+      }
+
       return { rawText: fullText, parseError: true };
     }
   }
