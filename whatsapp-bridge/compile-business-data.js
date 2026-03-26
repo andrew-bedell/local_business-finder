@@ -76,10 +76,33 @@ function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles)
   sections.push(`Name: ${business.name || 'Unknown'}`);
   if (business.address_full) sections.push(`Address: ${business.address_full}`);
   if (business.phone) sections.push(`Phone: ${business.phone}`);
+  if (business.category) sections.push(`Category: ${business.category}`);
+  if (business.subcategory) sections.push(`Subcategory: ${business.subcategory}`);
   if (business.types && business.types.length > 0) {
-    sections.push(`Categories: ${business.types.join(', ')}`);
+    sections.push(`Google Types: ${business.types.join(', ')}`);
   }
   if (business.business_status) sections.push(`Status: ${business.business_status}`);
+
+  // Business details
+  const detailFields = [
+    ['Description', business.description],
+    ['Price Level', business.price_level ? '$'.repeat(business.price_level) : null],
+    ['Service Options', business.service_options?.join(', ')],
+    ['Amenities', business.amenities?.join(', ')],
+    ['Highlights', business.highlights?.join(', ')],
+    ['Payment Methods', business.payment_methods?.join(', ')],
+    ['Languages Spoken', business.languages_spoken?.join(', ')],
+    ['Accessibility', business.accessibility_info],
+    ['Parking', business.parking_info],
+    ['Year Established', business.year_established],
+    ['Owner', business.owner_name],
+  ];
+  const activeDetails = detailFields.filter(([, v]) => v);
+  if (activeDetails.length > 0) {
+    sections.push('');
+    sections.push('=== BUSINESS DETAILS ===');
+    activeDetails.forEach(([label, val]) => sections.push(`${label}: ${val}`));
+  }
 
   // Ratings overview
   if (business.rating || business.review_count) {
@@ -167,8 +190,29 @@ function buildPhotoInventory(photos) {
 }
 
 
+/**
+ * Calculate a data completeness score (0-100) for a business.
+ * Used as a quality gate before website generation.
+ */
+function calculateCompleteness(business, reviews, photos, socialProfiles) {
+  let score = 0;
+  if (business.name && business.address_full) score += 10;
+  if (business.phone) score += 10;
+  if (business.hours?.length > 0) score += 10;
+  if (business.category || business.types?.length > 0) score += 5;
+  if (reviews.length >= 3) score += 15;
+  if (reviews.length >= 5) score += 10;
+  if (photos.length >= 3) score += 15;
+  if (photos.length >= 5) score += 10;
+  if (socialProfiles.length > 0) score += 5;
+  if (business.description || business.highlights?.length > 0) score += 10;
+  return Math.min(score, 100);
+}
+
+
 module.exports = {
   fetchBusinessDetails,
   compileBusinessDataForPrompt,
   buildPhotoInventory,
+  calculateCompleteness,
 };
