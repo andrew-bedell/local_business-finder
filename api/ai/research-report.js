@@ -60,6 +60,13 @@ Respond with ONLY valid JSON (no markdown fences, no extra text) matching this e
   "contentGaps": ["what data is missing that would strengthen the website — actionable items"],
   "socialMediaInsights": "what their social media presence reveals about their brand and audience (or null if no social data)",
   "localSeoKeywords": ["8-12 suggested keywords for local SEO based on the business type, location, and services"],
+  "designPalette": {
+    "primaryColor": "hex color that fits the business brand/category (e.g., #D4768B for nail salon)",
+    "secondaryColor": "complementary hex color for alternating section backgrounds",
+    "accentColor": "highlight/CTA hex color for buttons and interactive elements",
+    "sectionStyle": "light-alternating | dark-themed | warm-toned | cool-toned",
+    "rationale": "why these colors fit this business category and personality"
+  },
   "photoAssetPlan": [
     {
       "section": "website section name (e.g., Hero, About, Menu, Gallery, Testimonials)",
@@ -71,6 +78,26 @@ Respond with ONLY valid JSON (no markdown fences, no extra text) matching this e
     }
   ]
 }
+
+IMPORTANT — Design Palette instructions:
+Choose colors that match the business CATEGORY and personality:
+- Nail salons / beauty: soft pinks, mauves, rose gold accents, blush tones
+- Restaurants / food: warm earthy tones — terracotta, olive, cream, deep burgundy
+- Gyms / fitness: bold dark themes — charcoal, deep blue, electric accents (lime, orange)
+- Professional services (legal, accounting): navy, slate, gold accents — trust/authority
+- Contractors / trades: industrial tones — steel gray, safety orange/yellow, dark blue
+- Retail / shops: vibrant category-appropriate colors — jewel tones for jewelry, earth for florist
+- Healthcare / dental: clean blues, teals, soft greens — calming and clinical
+- Automotive: metallic dark tones — gunmetal, red or blue accents
+- Hotels / hospitality: elegant neutrals — cream, champagne, gold, navy
+
+The sectionStyle should be:
+- "dark-themed" for gyms, bars, nightlife, studios
+- "warm-toned" for restaurants, cafes, bakeries
+- "cool-toned" for healthcare, professional services
+- "light-alternating" for salons, retail, general services
+
+NEVER recommend an all-white palette. Every website must have visual variety between sections.
 
 IMPORTANT — Photo Asset Plan instructions:
 Examine the PHOTO INVENTORY section in the business data. For each website section that needs an image:

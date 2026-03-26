@@ -3047,6 +3047,26 @@
     if (business.types && business.types.length > 0) sections.push(`Categories: ${business.types.join(', ')}`);
     if (business.business_status) sections.push(`Status: ${business.business_status}`);
 
+    // Business details
+    const detailFields = [
+      ['Description', business.description],
+      ['Price Level', business.price_level ? '$'.repeat(business.price_level) : null],
+      ['Service Options', business.service_options?.join(', ')],
+      ['Amenities', business.amenities?.join(', ')],
+      ['Highlights', business.highlights?.join(', ')],
+      ['Payment Methods', business.payment_methods?.join(', ')],
+      ['Languages Spoken', business.languages_spoken?.join(', ')],
+      ['Accessibility', business.accessibility_info],
+      ['Parking', business.parking_info],
+      ['Year Established', business.year_established],
+      ['Owner', business.owner_name],
+    ];
+    const activeDetails = detailFields.filter(([, v]) => v);
+    if (activeDetails.length > 0) {
+      sections.push('\n=== BUSINESS DETAILS ===');
+      activeDetails.forEach(([label, val]) => sections.push(`${label}: ${val}`));
+    }
+
     sections.push('\n=== RATINGS & REVIEWS OVERVIEW ===');
     sections.push(`Google Rating: ${business.rating || 'N/A'} / 5`);
     sections.push(`Total Reviews: ${business.review_count || 0}`);
@@ -3110,6 +3130,40 @@
       type: p.photo_type || 'unclassified',
       url: p.url,
     }));
+  }
+
+  // ── Build Photo Manifest ──
+  function buildPhotoManifest(photoAssetPlan, photoInventory) {
+    const usedUrls = new Set();
+    const manifest = [];
+
+    for (const item of photoAssetPlan) {
+      let url = null;
+
+      if (item.recommendation === 'use_existing' && item.existingPhotoId) {
+        const match = photoInventory.find(p => p.id === item.existingPhotoId);
+        url = match?.url || null;
+      }
+
+      if (!url && item.recommendation === 'generate_ai') {
+        const section = (item.section || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const match = photoInventory.find(p => p.id.startsWith(`ai_${section}_`));
+        url = match?.url || null;
+      }
+
+      // Fallback: any unused photo
+      if (!url) {
+        const fallback = photoInventory.find(p => !usedUrls.has(p.url));
+        url = fallback?.url || (photoInventory[0]?.url || null);
+      }
+
+      if (url) {
+        usedUrls.add(url);
+        manifest.push({ section: item.section, slot: item.slot, url });
+      }
+    }
+
+    return manifest;
   }
 
   // ── Table Action Handlers ──
@@ -3514,14 +3568,34 @@
       const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
       const report = business._cachedReport ||
         ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+
+      // Build photo manifest
+      const photoManifest = buildPhotoManifest(report?.photoAssetPlan || [], photoInventory);
+
+      // Write content (Sonnet)
+      const contentResp = await withTimeout(
+        fetch('/api/ai/write-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ researchReport: report, businessData, photoManifest, language }),
+        }),
+        120000, 'Content writing'
+      );
+      if (!contentResp.ok) {
+        const errData = await contentResp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Content writing failed');
+      }
+      const websiteContent = await contentResp.json();
+
+      // Generate HTML (Haiku) — with pre-written content
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            businessData,
-            researchReport: report || null,
-            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            websiteContent,
+            designPalette: report?.designPalette,
+            photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
             name: business.name,
             language,
           }),
@@ -3787,14 +3861,33 @@
       const report = business._cachedReport ||
         ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
 
+      // Build photo manifest
+      const photoManifest = buildPhotoManifest(report?.photoAssetPlan || [], photoInventory);
+
+      // Write content (Sonnet)
+      const contentResp = await withTimeout(
+        fetch('/api/ai/write-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ researchReport: report, businessData, photoManifest, language }),
+        }),
+        120000, 'Content writing'
+      );
+      if (!contentResp.ok) {
+        const errData = await contentResp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Content writing failed');
+      }
+      const websiteContent = await contentResp.json();
+
+      // Generate HTML (Haiku) — with pre-written content
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            businessData,
-            researchReport: report || null,
-            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            websiteContent,
+            designPalette: report?.designPalette,
+            photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
             name: business.name,
             language,
           }),

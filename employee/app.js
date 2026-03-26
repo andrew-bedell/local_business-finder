@@ -3780,6 +3780,39 @@
     return inventory;
   }
 
+  function buildPhotoManifest(photoAssetPlan, photoInventory) {
+    const usedUrls = new Set();
+    const manifest = [];
+
+    for (const item of photoAssetPlan) {
+      let url = null;
+
+      if (item.recommendation === 'use_existing' && item.existingPhotoId) {
+        const match = photoInventory.find(p => p.id === item.existingPhotoId);
+        url = match?.url || null;
+      }
+
+      if (!url && item.recommendation === 'generate_ai') {
+        const section = (item.section || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const match = photoInventory.find(p => p.id.startsWith(`ai_${section}_`));
+        url = match?.url || null;
+      }
+
+      // Fallback: any unused photo
+      if (!url) {
+        const fallback = photoInventory.find(p => !usedUrls.has(p.url));
+        url = fallback?.url || (photoInventory[0]?.url || null);
+      }
+
+      if (url) {
+        usedUrls.add(url);
+        manifest.push({ section: item.section, slot: item.slot, url });
+      }
+    }
+
+    return manifest;
+  }
+
   function compileBusinessDataForPrompt(place) {
     const sections = [];
 
@@ -3833,6 +3866,21 @@
     }
     if (place.accessibility && place.accessibility.length > 0) {
       sections.push(`\n=== ACCESSIBILITY ===\n${place.accessibility.join(', ')}`);
+    }
+    if (place.paymentMethods && place.paymentMethods.length > 0) {
+      sections.push(`\n=== PAYMENT METHODS ===\n${place.paymentMethods.join(', ')}`);
+    }
+    if (place.languagesSpoken && place.languagesSpoken.length > 0) {
+      sections.push(`\n=== LANGUAGES SPOKEN ===\n${place.languagesSpoken.join(', ')}`);
+    }
+    if (place.parkingInfo) {
+      sections.push(`\n=== PARKING ===\n${place.parkingInfo}`);
+    }
+    if (place.yearEstablished) {
+      sections.push(`Year Established: ${place.yearEstablished}`);
+    }
+    if (place.ownerName) {
+      sections.push(`Owner: ${place.ownerName}`);
     }
 
     // Social profiles
@@ -4099,19 +4147,40 @@
       // Include AI-generated photos in the inventory
       const photoInventory = [...baseInventory, ...(place.generatedPhotos || [])];
       const language = getSearchLanguage();
+      const report = place.researchReport;
+
+      // Build photo manifest
+      const photoManifest = buildPhotoManifest(report?.photoAssetPlan || [], photoInventory);
+
+      // Write content (Sonnet)
+      const contentResp = await withTimeout(
+        fetch('/api/ai/write-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ researchReport: report, businessData, photoManifest, language }),
+        }),
+        120000, 'Content writing'
+      );
+      if (!contentResp.ok) {
+        const errData = await contentResp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Content writing failed');
+      }
+      const websiteContent = await contentResp.json();
+
+      // Generate HTML (Haiku) — with pre-written content
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            businessData,
-            researchReport: place.researchReport,
-            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            websiteContent,
+            designPalette: report?.designPalette,
+            photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
             name: place.name,
             language,
           }),
         }),
-        130000,
+        310000,
         'Website generation'
       );
       if (!res.ok) {
@@ -4364,20 +4433,40 @@
       const businessData = compileBusinessDataForPrompt(place);
       const photoInventory = place._photoInventory || buildPhotoInventoryMap(place);
       const language = getSearchLanguage();
+      const report = place.researchReport;
 
+      // Build photo manifest
+      const photoManifest = buildPhotoManifest(report?.photoAssetPlan || [], photoInventory);
+
+      // Write content (Sonnet)
+      const contentResp = await withTimeout(
+        fetch('/api/ai/write-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ researchReport: report, businessData, photoManifest, language }),
+        }),
+        120000, 'Content writing'
+      );
+      if (!contentResp.ok) {
+        const errData = await contentResp.json().catch(() => ({}));
+        throw new Error(errData.error || 'Content writing failed');
+      }
+      const websiteContent = await contentResp.json();
+
+      // Generate HTML (Haiku) — with pre-written content
       const res = await withTimeout(
         fetch('/api/ai/generate-website', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            businessData,
-            researchReport: place.researchReport,
-            photoInventory: photoInventory.map(p => ({ id: p.id, type: p.type, url: p.url })),
+            websiteContent,
+            designPalette: report?.designPalette,
+            photoManifest: photoManifest.map(p => ({ section: p.section, slot: p.slot, url: p.url })),
             name: place.name,
             language,
           }),
         }),
-        130000,
+        310000,
         'Website generation'
       );
 

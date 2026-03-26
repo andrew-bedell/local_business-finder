@@ -1,5 +1,6 @@
 // Vercel serverless function: Claude API website generation (streaming)
-// Receives research report + business data + photo URLs, streams HTML response to avoid timeout
+// Receives pre-written content + design palette + photo manifest, assembles into HTML/CSS
+// Supports both new format (websiteContent) and legacy format (businessData + researchReport)
 
 export const config = { maxDuration: 300 };
 
@@ -21,18 +22,98 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Anthropic API key not configured' });
   }
 
-  const { businessData: rawBusinessData, researchReport, photoInventory, name, language } = req.body || {};
+  const {
+    // New format
+    websiteContent,
+    designPalette,
+    photoManifest,
+    // Legacy format
+    businessData: rawBusinessData,
+    researchReport,
+    photoInventory,
+    // Shared
+    name,
+    language,
+  } = req.body || {};
 
-  if (!rawBusinessData || !name || !researchReport) {
-    return res.status(400).json({ error: 'Missing required fields: businessData, name, researchReport' });
+  const isNewFormat = !!websiteContent;
+
+  // Validate based on format
+  if (isNewFormat) {
+    if (!websiteContent || !name) {
+      return res.status(400).json({ error: 'Missing required fields: websiteContent, name' });
+    }
+  } else {
+    if (!rawBusinessData || !name || !researchReport) {
+      return res.status(400).json({ error: 'Missing required fields: businessData, name, researchReport' });
+    }
   }
-
-  // Strip unpaired Unicode surrogates that break JSON serialization
-  const businessData = rawBusinessData.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 
   const langName = language === 'es' ? 'Spanish' : 'English';
 
-  const systemPrompt = `You are an expert web developer who creates beautiful, modern, single-page business websites. Given a research report and business data, generate a COMPLETE, self-contained HTML file.
+  let systemPrompt, userMessage;
+
+  if (isNewFormat) {
+    // New format: pre-written content + manifest — Haiku just does layout
+    systemPrompt = `You are an expert web developer who creates beautiful, modern, single-page business websites. You are given PRE-WRITTEN website content, a design palette, and a photo manifest. Your job is to ASSEMBLE these into a complete, beautiful HTML/CSS page.
+
+DESIGN REQUIREMENTS:
+- Output a single HTML file starting with <!DOCTYPE html> and ending with </html>
+- All CSS must be in a single <style> tag in the <head> — no external stylesheets
+- Responsive design with media queries for mobile (max-width: 768px) and tablet
+- Use semantic HTML5 elements (header, nav, main, section, footer)
+- Include <meta name="viewport" content="width=device-width, initial-scale=1.0">
+- Use Google Fonts (Inter or a font that matches the tone) via @import in the style tag
+- All text content must be in ${langName}
+- Keep the HTML under 15KB — be concise with CSS, avoid repetition
+
+COLOR & VISUAL DESIGN:
+- Use the provided design palette colors for all styling
+- Define CSS custom properties: --primary, --secondary, --accent, --bg-alt, --bg-dark
+- NEVER make the entire page white — alternate section backgrounds between white, a tinted version of the secondary color, and optionally a dark section
+- Cards and feature boxes should have subtle background fills
+- The testimonials section should have a colored/dark background to stand out
+- The footer should be dark (dark gray or dark version of primary color)
+
+LOGO & HEADER:
+- Use a text-based logo: the business name in a distinctive, well-styled font
+- Header: text logo on the left, simple navigation links on the right
+- Hero section: full-width background image with a dark overlay and headline text on top
+
+PHOTO USAGE — CRITICAL:
+- Each line in the photo manifest is section|slot|url — use the exact URL for each section
+- Embed photos as <img> src attributes or CSS background-image url()
+- NEVER use solid color blocks, CSS gradients, or colored rectangles as image placeholders
+- Every <img> tag must use object-fit: cover and have proper aspect ratios
+- Include a photo gallery section with a CSS grid
+
+CONTENT — CRITICAL:
+- Use the pre-written content EXACTLY as provided — do not rewrite or paraphrase it
+- Place each content section in the corresponding HTML section
+- Include clickable phone (tel:) and directions (Google Maps) links
+- Include the meta title and description in the <head>
+
+CRITICAL: Output ONLY the complete HTML document. No markdown fences, no explanation text. Start with <!DOCTYPE html> and end with </html>.`;
+
+    const photoLines = (photoManifest || []).map(p =>
+      `${p.section}|${p.slot}|${p.url}`
+    ).join('\n');
+
+    userMessage = `=== WEBSITE CONTENT (pre-written, use exactly as provided) ===
+${JSON.stringify(websiteContent)}
+
+=== DESIGN PALETTE ===
+${JSON.stringify(designPalette || {})}
+
+=== PHOTO MANIFEST (section|slot|url — use these exact URLs) ===
+${photoLines || 'No photos available'}
+
+Generate the website HTML now.`;
+  } else {
+    // Legacy format: raw business data + full research report
+    const businessData = rawBusinessData.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
+
+    systemPrompt = `You are an expert web developer who creates beautiful, modern, single-page business websites. Given a research report and business data, generate a COMPLETE, self-contained HTML file.
 
 DESIGN REQUIREMENTS:
 - Output a single HTML file starting with <!DOCTYPE html> and ending with </html>
@@ -45,6 +126,20 @@ DESIGN REQUIREMENTS:
 - All text content must be in ${langName}
 - Keep the HTML under 15KB — be concise with CSS, avoid repetition
 
+COLOR & VISUAL DESIGN — CRITICAL:
+- The research report includes a "designPalette" with primaryColor, secondaryColor, accentColor, and sectionStyle — USE THESE COLORS
+- Primary color: main brand color for headings, buttons, CTAs, nav highlights
+- Secondary color: used for alternating section backgrounds, card backgrounds, borders
+- Accent color: hover states, badges, decorative elements
+- NEVER make the entire page white — alternate section backgrounds between white, a tinted version of the secondary color, and optionally a dark section
+- Every other section should have a different background (e.g., white → light tint → white → dark accent → white)
+- Cards and feature boxes should have subtle background fills, not just borders on white
+- The testimonials or reviews section should have a colored/dark background to stand out
+- The footer should be dark (dark gray or dark version of primary color)
+- Use CSS custom properties for colors: --primary, --secondary, --accent, --bg-alt, --bg-dark
+- The "Why Choose Us" / differentiators section should use colored icon containers or card backgrounds, not white cards with thin borders
+- Price/service sections should have light tinted backgrounds for visual hierarchy
+
 LOGO & HEADER:
 - NEVER use a small circular profile photo as the logo — it looks unprofessional
 - Use a text-based logo: the business name in a distinctive, well-styled font (large, bold, with appropriate letter-spacing)
@@ -55,7 +150,7 @@ PHOTO USAGE — CRITICAL:
 - Use the photo URLs from the PHOTO INVENTORY — embed them directly as <img> src attributes or CSS background-image
 - The inventory includes original photos (google, facebook, instagram) AND AI-generated photos (source: ai_generated, IDs starting with "ai_")
 - For photoAssetPlan items with "use_existing", use the corresponding URL from the inventory
-- For items with "generate_ai", look for matching AI-generated photos in the inventory (IDs starting with "ai_")
+- For items with "generate_ai", look for matching AI-generated photos in the inventory (IDs like "ai_hero_0", "ai_gallery_0", "ai_about_0" — named by section)
 - NEVER use solid color blocks, CSS gradients, or colored rectangles as image placeholders — they look broken and unprofessional
 - If a planned AI photo is not in the inventory, REUSE another suitable photo from the inventory instead — any real photo is better than a colored block
 - Every <img> tag must use object-fit: cover and have proper aspect ratios
@@ -70,13 +165,11 @@ CONTENT:
 
 CRITICAL: Output ONLY the complete HTML document. No markdown fences, no explanation text, no comments before or after. Start with <!DOCTYPE html> and end with </html>.`;
 
-  // Build the photo URL lookup — compact format
-  const photoLines = (photoInventory || []).map(p =>
-    `${p.id}|${p.type}|${p.url}`
-  ).join('\n');
+    const photoLines = (photoInventory || []).map(p =>
+      `${p.id}|${p.type}|${p.url}`
+    ).join('\n');
 
-  // Compact the research report (no pretty-printing)
-  const userMessage = `=== RESEARCH REPORT ===
+    userMessage = `=== RESEARCH REPORT ===
 ${JSON.stringify(researchReport)}
 
 === PHOTO INVENTORY (id|type|url) ===
@@ -86,6 +179,7 @@ ${photoLines || 'No photos available'}
 ${businessData}
 
 Generate the website HTML now.`;
+  }
 
   try {
     // Use streaming to keep the connection alive and avoid Vercel gateway timeout
