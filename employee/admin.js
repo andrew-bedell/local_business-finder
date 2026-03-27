@@ -2484,7 +2484,12 @@
     // Build photo gallery HTML
     let photosHtml = '';
     if (photos.length > 0) {
-      const imgs = photos.map(p => `<div class="photo-item"><img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.caption || '')}" loading="lazy"></div>`).join('');
+      const imgs = photos.map(p => {
+        const src = p.storage_path
+          ? (supabaseClient.supabaseUrl + '/storage/v1/object/public/photos/' + p.storage_path)
+          : p.url;
+        return `<div class="photo-item"><img src="${escapeHtml(src)}" alt="${escapeHtml(p.caption || '')}" loading="lazy"></div>`;
+      }).join('');
       photosHtml = `<div class="modal-section"><h3>${t('modalPhotos')}</h3><div class="photo-gallery">${imgs}</div></div>`;
     }
 
