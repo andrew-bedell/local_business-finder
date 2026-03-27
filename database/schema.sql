@@ -214,6 +214,7 @@ CREATE TABLE IF NOT EXISTS business_photos (
   storage_path            TEXT,                -- path in Supabase Storage bucket (for persisted copies)
   caption                 TEXT,
   is_primary              BOOLEAN DEFAULT FALSE, -- featured image for the business
+  has_text_overlay        BOOLEAN DEFAULT NULL,  -- NULL = not scanned, TRUE = has promotional/decorative text
   width                   INTEGER,
   height                  INTEGER,
 
