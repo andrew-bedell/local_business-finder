@@ -3138,14 +3138,16 @@
   // ── Build Photo Inventory ──
   function buildPhotoInventory(details) {
     const photos = details.photos || [];
-    return photos.map((p, i) => ({
-      id: `${p.source}_photo_${i}`,
-      source: p.source,
-      type: p.photo_type || 'unclassified',
-      url: p.storage_path
-        ? (supabaseClient.supabaseUrl + '/storage/v1/object/public/photos/' + p.storage_path)
-        : p.url,
-    }));
+    return photos
+      .filter(p => p.has_text_overlay !== true)
+      .map((p, i) => ({
+        id: `${p.source}_photo_${i}`,
+        source: p.source,
+        type: p.photo_type || 'unclassified',
+        url: p.storage_path
+          ? (supabaseClient.supabaseUrl + '/storage/v1/object/public/photos/' + p.storage_path)
+          : p.url,
+      }));
   }
 
   // ── Persist External Photos ──
@@ -3192,6 +3194,31 @@
     }
 
     return persisted;
+  }
+
+  // ── Scan Photos for Text Overlays ──
+  // Uses Claude vision to detect promotional text, sale announcements, etc. on photos.
+  // Photos flagged with has_text_overlay=true are excluded from website generation.
+  async function scanPhotosForText(businessId) {
+    const res = await withTimeout(
+      fetch('/api/photos/scan-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId }),
+      }),
+      130000,
+      'Photo text scan'
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Scan failed');
+    }
+    const result = await res.json();
+    // Invalidate cache so buildPhotoInventory picks up has_text_overlay values
+    if (result.scanned > 0) {
+      delete detailCache[businessId];
+    }
+    return result;
   }
 
   // ── Build Photo Manifest ──
@@ -3631,6 +3658,10 @@
       await persistExternalPhotos(business.id).catch(err =>
         console.warn('Photo persistence error (non-fatal):', err.message)
       );
+      // Scan for text overlays
+      await scanPhotosForText(business.id).catch(err =>
+        console.warn('Photo text scan error (non-fatal):', err.message)
+      );
       const details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
       const photoInventory = buildPhotoInventory(details);
@@ -3876,6 +3907,14 @@
         if (persistCount > 0) console.log(`Persisted ${persistCount} external photos for ${business.name}`);
       } catch (err) {
         console.warn('Photo persistence step error (non-fatal):', err.message);
+      }
+
+      // Step 2.6: Scan photos for text overlays (exclude promotional images)
+      try {
+        const scanResult = await scanPhotosForText(business.id);
+        if (scanResult.flagged > 0) console.log(`Flagged ${scanResult.flagged}/${scanResult.scanned} photos with text overlays for ${business.name}`);
+      } catch (err) {
+        console.warn('Photo text scan error (non-fatal):', err.message);
       }
 
       // Step 3: Generate website
@@ -4182,7 +4221,11 @@
       await persistExternalPhotos(business.id).catch(err =>
         console.warn('Photo persistence error (non-fatal):', err.message)
       );
-      // Re-load details to pick up updated storage_path values
+      // Scan for text overlays
+      await scanPhotosForText(business.id).catch(err =>
+        console.warn('Photo text scan error (non-fatal):', err.message)
+      );
+      // Re-load details to pick up updated values
       delete detailCache[business.id];
       details = await loadDetailsForBusiness(business);
       const businessData = compileBusinessDataForPrompt(business, details);
