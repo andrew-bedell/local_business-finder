@@ -39,9 +39,12 @@ export default async function handler(req, res) {
     return res.status(status).json({ error: authErr.message });
   }
 
+  const { mode, existingWebsiteId } = req.body || {};
+  const isUpdate = mode === 'update' && existingWebsiteId;
+
   try {
     // Step 2: Fetch business data
-    console.log(`[GenerateWebsite] Starting for business ${businessId}, customer ${customerId}`);
+    console.log(`[GenerateWebsite] Starting ${isUpdate ? 'UPDATE' : 'NEW'} for business ${businessId}, customer ${customerId}`);
     const bizRes = await fetch(
       `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=*`,
       { headers: supabaseHeaders }
@@ -82,22 +85,40 @@ export default async function handler(req, res) {
     const menus = (await menusRes.json()) || [];
     const services = (await servicesRes.json()) || [];
 
-    // Step 4: Check if website already exists (rate limit: one per 24 hours)
+    // Step 4: Rate limit check
+    // Updates: 1 per hour. New generation: 1 per 24 hours.
     const existingWebRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&select=id,created_at&order=created_at.desc&limit=1`,
+      `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&select=id,created_at,last_edited_at,version&order=created_at.desc&limit=1`,
       { headers: supabaseHeaders }
     );
     const existingWebData = await existingWebRes.json();
     if (Array.isArray(existingWebData) && existingWebData.length > 0) {
-      const lastCreated = new Date(existingWebData[0].created_at);
-      const hoursSince = (Date.now() - lastCreated.getTime()) / (1000 * 60 * 60);
-      if (hoursSince < 24) {
-        return res.status(429).json({
-          error: 'Website generation limit: one per 24 hours',
-          existingWebsiteId: existingWebData[0].id,
-          hoursRemaining: Math.ceil(24 - hoursSince),
-        });
+      const existing = existingWebData[0];
+      const lastTime = new Date(existing.last_edited_at || existing.created_at);
+      const hoursSince = (Date.now() - lastTime.getTime()) / (1000 * 60 * 60);
+
+      if (isUpdate) {
+        // Updates rate limit: 1 per hour
+        if (hoursSince < 1) {
+          return res.status(429).json({
+            error: 'Puedes actualizar tu página web una vez por hora.',
+            existingWebsiteId: existing.id,
+            minutesRemaining: Math.ceil(60 - hoursSince * 60),
+          });
+        }
+      } else {
+        // New generation rate limit: 1 per 24 hours
+        if (hoursSince < 24) {
+          return res.status(429).json({
+            error: 'Website generation limit: one per 24 hours',
+            existingWebsiteId: existing.id,
+            hoursRemaining: Math.ceil(24 - hoursSince),
+          });
+        }
       }
+    } else if (isUpdate) {
+      // Can't update if no website exists
+      return res.status(400).json({ error: 'No existing website to update' });
     }
 
     // Step 5: Compile business data into a text prompt
@@ -115,28 +136,55 @@ export default async function handler(req, res) {
     console.log('[GenerateWebsite] Step 7: Generating research report...');
     const researchReport = await generateResearchReport(businessData, business.name, language);
 
-    // Step 8: Create generated_websites row (status: draft)
-    console.log('[GenerateWebsite] Step 8: Creating website record...');
-    const insertWebRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites`,
-      {
-        method: 'POST',
-        headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-        body: JSON.stringify({
-          business_id: businessId,
-          template_name: 'ai_generated',
-          status: 'draft',
-          version: 1,
-          config: { researchReport },
-        }),
+    // Step 8: Create or update generated_websites row
+    let websiteId;
+    if (isUpdate) {
+      // Update existing website record
+      console.log(`[GenerateWebsite] Step 8: Updating website record ${existingWebsiteId}...`);
+      const existingVersion = (Array.isArray(existingWebData) && existingWebData.length > 0) ? (existingWebData[0].version || 1) : 1;
+      const updateWebRes = await fetch(
+        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${existingWebsiteId}`,
+        {
+          method: 'PATCH',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+          body: JSON.stringify({
+            status: 'draft',
+            version: existingVersion + 1,
+            last_edited_at: new Date().toISOString(),
+            config: { researchReport },
+          }),
+        }
+      );
+      const updateWebData = await updateWebRes.json();
+      if (!updateWebRes.ok || !Array.isArray(updateWebData) || updateWebData.length === 0) {
+        console.error('[GenerateWebsite] Failed to update website record:', updateWebData);
+        return res.status(502).json({ error: 'Failed to update website record' });
       }
-    );
-    const insertWebData = await insertWebRes.json();
-    if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
-      console.error('[GenerateWebsite] Failed to create website record:', insertWebData);
-      return res.status(502).json({ error: 'Failed to create website record' });
+      websiteId = existingWebsiteId;
+    } else {
+      // Create new website record
+      console.log('[GenerateWebsite] Step 8: Creating website record...');
+      const insertWebRes = await fetch(
+        `${supabaseUrl}/rest/v1/generated_websites`,
+        {
+          method: 'POST',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+          body: JSON.stringify({
+            business_id: businessId,
+            template_name: 'ai_generated',
+            status: 'draft',
+            version: 1,
+            config: { researchReport },
+          }),
+        }
+      );
+      const insertWebData = await insertWebRes.json();
+      if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
+        console.error('[GenerateWebsite] Failed to create website record:', insertWebData);
+        return res.status(502).json({ error: 'Failed to create website record' });
+      }
+      websiteId = insertWebData[0].id;
     }
-    const websiteId = insertWebData[0].id;
 
     // Step 9: Generate AI photos for generate_ai slots (max 3 parallel)
     console.log('[GenerateWebsite] Step 9: Generating AI photos...');

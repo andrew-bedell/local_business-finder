@@ -37,6 +37,11 @@ export function getAnimationCSS() {
       transform: translateX(0);
     }
 
+    /* Fallback: if JS/IntersectionObserver fails, show content after 2s */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .reveal-left, .reveal-right { opacity: 1; transform: none; transition: none; }
+    }
+
     /* Stagger delays */
     .stagger-1 { transition-delay: 0.1s; }
     .stagger-2 { transition-delay: 0.2s; }

@@ -51,6 +51,13 @@ export function getRuntimeJS() {
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
     reveals.forEach(function(el) { observer.observe(el); });
+
+    // Safety fallback: if IO doesn't fire (e.g. iframe contexts), reveal all after 3s
+    setTimeout(function() {
+      reveals.forEach(function(el) {
+        if (!el.classList.contains('visible')) el.classList.add('visible');
+      });
+    }, 3000);
   } else {
     // Fallback: show everything
     reveals.forEach(function(el) { el.classList.add('visible'); });
