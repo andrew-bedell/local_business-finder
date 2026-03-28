@@ -2979,7 +2979,7 @@
 
     // Load auto-reply disabled state
     if (phone) {
-      loadAutoReplyState(phone, overlay.querySelector('#outreach-auto-reply-cb'));
+      loadAutoReplyState(phone, overlay.querySelector('#outreach-auto-reply-cb'), business.id);
     }
 
     // Copy buttons (phone, url)
@@ -3008,6 +3008,13 @@
         const cleanPhone = phone.replace(/\+/g, '');
         const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(templates[stepKey])}`;
         window.open(waUrl, '_blank');
+
+        // Auto-disable auto-reply for this business when sending outreach
+        fetch('/api/whatsapp/toggle-auto-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, disabled: true, businessId: business.id }),
+        }).catch(err => console.warn('Auto-disable auto-reply failed:', err));
 
         btn.disabled = true;
         btn.textContent = t('outreachSending');
@@ -3133,9 +3140,23 @@
     });
   }
 
-  async function loadAutoReplyState(phone, checkbox) {
+  async function loadAutoReplyState(phone, checkbox, businessId) {
     if (!phone || !checkbox) return;
     try {
+      // Look up by business_id first (avoids phone format mismatch)
+      if (businessId) {
+        const { data } = await supabaseClient
+          .from('whatsapp_conversations')
+          .select('auto_reply_disabled')
+          .eq('business_id', businessId)
+          .eq('auto_reply_disabled', true)
+          .limit(1);
+        if (data && data.length > 0) {
+          checkbox.checked = true;
+          return;
+        }
+      }
+      // Fallback to phone lookup
       const normalizedPhone = phone.replace(/[^\d+]/g, '').replace(/^(?!\+)/, '+');
       const { data } = await supabaseClient
         .from('whatsapp_conversations')
