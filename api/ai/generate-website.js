@@ -33,6 +33,9 @@ export default async function handler(req, res) {
     socialProfiles,
     menuItems,
     staffMembers,
+    services,
+    founderName,
+    founderDescription,
     // Legacy format fields
     businessData: rawBusinessData,
     researchReport,
@@ -77,6 +80,9 @@ export default async function handler(req, res) {
         language: language || 'es',
         menuItems: menuItems || [],
         staffMembers: staffMembers || [],
+        services: services || [],
+        founderName: founderName || '',
+        founderDescription: founderDescription || '',
       },
     });
 

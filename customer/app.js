@@ -190,7 +190,24 @@
       wiz_day_sun: 'Domingo',
       wiz_founder_title: 'Sobre el Fundador',
       wiz_founder_name_label: 'Nombre del fundador / dueño',
+      wiz_founder_photo_label: 'Foto del fundador',
+      wiz_founder_photo_btn: 'Subir foto',
       wiz_founder_story_label: 'Historia del fundador (100-300 caracteres)',
+      wiz_optional: '(opcional)',
+      wiz_services_title: 'Servicios / Productos',
+      wiz_svc_name: 'Nombre del servicio / producto',
+      wiz_svc_price: 'Precio',
+      wiz_svc_currency: 'Moneda',
+      wiz_svc_photo: 'Foto',
+      wiz_svc_photo_btn: 'Subir foto',
+      wiz_svc_description: 'Descripción',
+      wiz_svc_save: 'Guardar Servicio',
+      wiz_svc_saved: 'Servicio guardado.',
+      wiz_svc_deleted: 'Servicio eliminado.',
+      wiz_svc_error: 'Error al guardar el servicio.',
+      wiz_svc_name_required: 'Escribe el nombre del servicio.',
+      wiz_svc_confirm_delete: '¿Eliminar este servicio?',
+      wiz_hint_services: 'Agrega servicios o productos para ganar hasta {0} puntos.',
       wiz_saved: 'Guardado',
       wiz_saving: 'Guardando...',
       wiz_uploading: 'Subiendo...',
@@ -383,7 +400,24 @@
       wiz_day_sun: 'Sunday',
       wiz_founder_title: 'About the Founder',
       wiz_founder_name_label: 'Founder / owner name',
+      wiz_founder_photo_label: 'Founder photo',
+      wiz_founder_photo_btn: 'Upload photo',
       wiz_founder_story_label: 'Founder story (100-300 characters)',
+      wiz_optional: '(optional)',
+      wiz_services_title: 'Services / Products',
+      wiz_svc_name: 'Service / product name',
+      wiz_svc_price: 'Price',
+      wiz_svc_currency: 'Currency',
+      wiz_svc_photo: 'Photo',
+      wiz_svc_photo_btn: 'Upload photo',
+      wiz_svc_description: 'Description',
+      wiz_svc_save: 'Save Service',
+      wiz_svc_saved: 'Service saved.',
+      wiz_svc_deleted: 'Service deleted.',
+      wiz_svc_error: 'Error saving service.',
+      wiz_svc_name_required: 'Enter the service name.',
+      wiz_svc_confirm_delete: 'Delete this service?',
+      wiz_hint_services: 'Add services or products to gain up to {0} points.',
       wiz_saved: 'Saved',
       wiz_saving: 'Saving...',
       wiz_uploading: 'Uploading...',
@@ -4052,7 +4086,10 @@
 
   var wizardPhotos = [];
   var wizardReviews = [];
+  var wizardServices = [];
   var wizardStarRating = 5;
+  var wizardSvcPhotoId = null;  // temp photo ID for service being edited
+  var wizardSvcPhotoUrl = null; // temp photo URL for service being edited
 
   function tArgs(key) {
     var str = t(key);
@@ -4067,14 +4104,16 @@
     if (!businessData || !businessData.id) return;
 
     try {
-      // Load photos and reviews in parallel
+      // Load photos, reviews, and services in parallel
       var results = await Promise.all([
         supabase.from('business_photos').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false }),
-        supabase.from('business_reviews').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false })
+        supabase.from('business_reviews').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false }),
+        supabase.from('business_services').select('*').eq('business_id', businessData.id).order('sort_order', { ascending: true })
       ]);
 
       wizardPhotos = (results[0].data || []);
       wizardReviews = (results[1].data || []);
+      wizardServices = (results[2].data || []);
 
       var scoreData = calculateWizardScore(businessData, wizardPhotos, wizardReviews);
       renderWizardScore(scoreData);
@@ -4132,15 +4171,21 @@
     breakdown.founder = { score: founderScore, max: 10, hasName: hasOwnerName, hasStory: hasFounderDesc };
     total += founderScore;
 
-    // Bonus from other fields (name, phone, email, rating, etc.) fill remaining 20 pts
+    // Services: 10 pts (5 pts per service up to 2)
+    var svcCount = wizardServices.length;
+    var svcScore = Math.min(svcCount * 5, 10);
+    breakdown.services = { score: svcScore, max: 10, count: svcCount, target: 2 };
+    total += svcScore;
+
+    // Bonus from other fields (name, phone, email, rating, etc.) fill remaining 10 pts
     var bonusScore = 0;
-    if (business.name) bonusScore += 4;
-    if (business.phone) bonusScore += 4;
-    if (business.email) bonusScore += 4;
-    if (business.rating) bonusScore += 4;
-    if (business.category) bonusScore += 4;
-    bonusScore = Math.min(bonusScore, 20);
-    breakdown.bonus = { score: bonusScore, max: 20 };
+    if (business.name) bonusScore += 2;
+    if (business.phone) bonusScore += 2;
+    if (business.email) bonusScore += 2;
+    if (business.rating) bonusScore += 2;
+    if (business.category) bonusScore += 2;
+    bonusScore = Math.min(bonusScore, 10);
+    breakdown.bonus = { score: bonusScore, max: 10 };
     total += bonusScore;
 
     total = Math.min(total, 100);
@@ -4206,6 +4251,8 @@
     if (!bd.hours.filled) return tArgs('wiz_hint_hours', bd.hours.max);
     // Founder
     if (bd.founder.score < bd.founder.max) return tArgs('wiz_hint_founder', bd.founder.max - bd.founder.score);
+    // Services
+    if (bd.services.count < bd.services.target) return tArgs('wiz_hint_services', bd.services.max - bd.services.score);
 
     return t('wiz_hint_default');
   }
@@ -4255,10 +4302,21 @@
       founderStatus.setAttribute('data-complete', bd.founder.score >= bd.founder.max ? 'true' : 'false');
     }
 
+    // Services status
+    var svcStatus = document.getElementById('wiz-status-services');
+    if (svcStatus) {
+      svcStatus.textContent = bd.services.count > 0 ? String(bd.services.count) : '0';
+      svcStatus.setAttribute('data-complete', bd.services.score >= bd.services.max ? 'true' : 'false');
+    }
+
     // Render photo grid
     renderWizardPhotos();
     // Render review list
     renderWizardReviews();
+    // Render services list
+    renderWizardServices();
+    // Render founder photo
+    renderFounderPhoto();
     // Fill form fields
     fillWizardFields();
   }
@@ -4385,6 +4443,237 @@
     }
   }
 
+  function renderFounderPhoto() {
+    var preview = document.getElementById('wiz-founder-photo-preview');
+    if (!preview) return;
+
+    var founderPhoto = wizardPhotos.filter(function (p) { return p.photo_type === 'founder'; })[0];
+    if (founderPhoto) {
+      var url = founderPhoto.url || '';
+      preview.innerHTML = '<img src="' + escapeHtml(url) + '" alt="">';
+      preview.classList.add('has-photo');
+    } else {
+      preview.innerHTML = '\u{1F464}';
+      preview.classList.remove('has-photo');
+    }
+  }
+
+  function renderWizardServices() {
+    var list = document.getElementById('wiz-service-list');
+    if (!list) return;
+
+    if (wizardServices.length === 0) {
+      list.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < wizardServices.length; i++) {
+      var svc = wizardServices[i];
+      var photoUrl = '';
+      if (svc.photo_id) {
+        var photo = wizardPhotos.filter(function (p) { return p.id === svc.photo_id; })[0];
+        if (photo) photoUrl = photo.url || '';
+      }
+      var priceStr = svc.price ? ('$' + Number(svc.price).toLocaleString(undefined, { minimumFractionDigits: 0 }) + ' ' + (svc.currency || '')) : '';
+
+      html += '<div class="c-wizard-service-item">';
+      html += '<div class="c-wizard-service-item-photo">';
+      if (photoUrl) {
+        html += '<img src="' + escapeHtml(photoUrl) + '" alt="" loading="lazy">';
+      } else {
+        html += '\u{1F4BC}';
+      }
+      html += '</div>';
+      html += '<div class="c-wizard-service-item-body">';
+      html += '<div class="c-wizard-service-item-name">' + escapeHtml(svc.name) + '</div>';
+      if (svc.description) html += '<div class="c-wizard-service-item-desc">' + escapeHtml(svc.description) + '</div>';
+      html += '</div>';
+      if (priceStr) html += '<div class="c-wizard-service-item-price">' + escapeHtml(priceStr) + '</div>';
+      html += '<div class="c-wizard-service-item-actions">';
+      html += '<button type="button" class="c-wizard-svc-delete" data-svc-id="' + escapeHtml(svc.id) + '">&times;</button>';
+      html += '</div>';
+      html += '</div>';
+    }
+    list.innerHTML = html;
+
+    // Bind delete buttons
+    var deleteButtons = list.querySelectorAll('.c-wizard-svc-delete');
+    deleteButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var svcId = btn.getAttribute('data-svc-id');
+        if (confirm(t('wiz_svc_confirm_delete'))) {
+          deleteWizardService(svcId);
+        }
+      });
+    });
+  }
+
+  async function uploadFounderPhoto(file) {
+    var token = await getAuthToken();
+    if (!token) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      showToast(t('wiz_upload_too_large'), 'warning');
+      return;
+    }
+
+    try {
+      // Remove existing founder photo first
+      var existing = wizardPhotos.filter(function (p) { return p.photo_type === 'founder'; })[0];
+      if (existing) {
+        await fetch('/api/wizard/delete-photo?photoId=' + encodeURIComponent(existing.id), {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
+        wizardPhotos = wizardPhotos.filter(function (p) { return p.id !== existing.id; });
+      }
+
+      var buffer = await file.arrayBuffer();
+      var res = await fetch('/api/wizard/upload-photo?photo_type=founder', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': file.type,
+        },
+        body: buffer,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      var data = await res.json();
+
+      wizardPhotos.unshift({
+        id: data.id,
+        source: 'customer_upload',
+        photo_type: 'founder',
+        url: data.public_url,
+        storage_path: data.storage_path,
+        business_id: businessData.id,
+      });
+
+      renderFounderPhoto();
+    } catch (err) {
+      console.error('Founder photo upload error:', err);
+      showToast(t('wiz_upload_error'), 'error');
+    }
+  }
+
+  async function uploadServicePhoto(file) {
+    var token = await getAuthToken();
+    if (!token) return null;
+
+    if (file.size > 4 * 1024 * 1024) {
+      showToast(t('wiz_upload_too_large'), 'warning');
+      return null;
+    }
+
+    try {
+      var buffer = await file.arrayBuffer();
+      var res = await fetch('/api/wizard/upload-photo?photo_type=service', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': file.type,
+        },
+        body: buffer,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      var data = await res.json();
+
+      wizardPhotos.unshift({
+        id: data.id,
+        source: 'customer_upload',
+        photo_type: 'service',
+        url: data.public_url,
+        storage_path: data.storage_path,
+        business_id: businessData.id,
+      });
+
+      return { id: data.id, url: data.public_url };
+    } catch (err) {
+      console.error('Service photo upload error:', err);
+      showToast(t('wiz_upload_error'), 'error');
+      return null;
+    }
+  }
+
+  async function saveWizardService() {
+    if (!businessData) return;
+
+    var nameInput = document.getElementById('wiz-svc-name');
+    var priceInput = document.getElementById('wiz-svc-price');
+    var currencyInput = document.getElementById('wiz-svc-currency');
+    var descInput = document.getElementById('wiz-svc-description');
+    var saveBtn = document.getElementById('wiz-svc-save');
+
+    var name = nameInput ? nameInput.value.trim() : '';
+    if (!name) { showToast(t('wiz_svc_name_required'), 'warning'); return; }
+
+    var price = priceInput && priceInput.value ? parseFloat(priceInput.value) : null;
+    var currency = currencyInput ? currencyInput.value : 'MXN';
+    var description = descInput ? descInput.value.trim() : null;
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('wiz_saving'); }
+
+    try {
+      var insertData = {
+        business_id: businessData.id,
+        name: name,
+        description: description || null,
+        price: price,
+        currency: currency,
+        photo_id: wizardSvcPhotoId || null,
+        sort_order: wizardServices.length,
+      };
+
+      var result = await supabase.from('business_services').insert(insertData).select();
+      if (result.error) throw result.error;
+
+      if (result.data && result.data[0]) {
+        wizardServices.push(result.data[0]);
+      }
+
+      // Clear form
+      if (nameInput) nameInput.value = '';
+      if (priceInput) priceInput.value = '';
+      if (descInput) descInput.value = '';
+      clearSvcPhotoPreview();
+
+      showToast(t('wiz_svc_saved'), 'success');
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Save service error:', err);
+      showToast(t('wiz_svc_error'), 'error');
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = t('wiz_svc_save'); }
+    }
+  }
+
+  function clearSvcPhotoPreview() {
+    wizardSvcPhotoId = null;
+    wizardSvcPhotoUrl = null;
+    var preview = document.getElementById('wiz-svc-photo-preview');
+    if (preview) {
+      preview.innerHTML = '\u{1F4F7}';
+      preview.classList.remove('has-photo');
+    }
+  }
+
+  async function deleteWizardService(svcId) {
+    try {
+      var result = await supabase.from('business_services').delete().eq('id', svcId);
+      if (result.error) throw result.error;
+
+      wizardServices = wizardServices.filter(function (s) { return s.id !== svcId; });
+      showToast(t('wiz_svc_deleted'), 'success');
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Delete service error:', err);
+      showToast(t('wiz_svc_error'), 'error');
+    }
+  }
+
   function bindWizardEvents() {
     if (wizardEventsFound) return;
     wizardEventsFound = true;
@@ -4505,6 +4794,57 @@
       founderStoryInput.addEventListener('input', updateFounderCharCount);
       founderStoryInput.addEventListener('blur', function () {
         saveWizardField('founder_description', founderStoryInput.value.trim());
+      });
+    }
+
+    // Founder photo upload
+    var founderPhotoBtn = document.getElementById('wiz-founder-photo-btn');
+    var founderPhotoInput = document.getElementById('wiz-founder-photo-input');
+    if (founderPhotoBtn && founderPhotoInput) {
+      founderPhotoBtn.addEventListener('click', function () {
+        founderPhotoInput.click();
+      });
+      founderPhotoInput.addEventListener('change', function () {
+        if (founderPhotoInput.files && founderPhotoInput.files[0]) {
+          uploadFounderPhoto(founderPhotoInput.files[0]);
+          founderPhotoInput.value = '';
+        }
+      });
+    }
+
+    // Service photo upload
+    var svcPhotoBtn = document.getElementById('wiz-svc-photo-btn');
+    var svcPhotoInput = document.getElementById('wiz-svc-photo-input');
+    if (svcPhotoBtn && svcPhotoInput) {
+      svcPhotoBtn.addEventListener('click', function () {
+        svcPhotoInput.click();
+      });
+      svcPhotoInput.addEventListener('change', async function () {
+        if (svcPhotoInput.files && svcPhotoInput.files[0]) {
+          svcPhotoBtn.disabled = true;
+          svcPhotoBtn.textContent = t('wiz_uploading');
+          var result = await uploadServicePhoto(svcPhotoInput.files[0]);
+          svcPhotoBtn.disabled = false;
+          svcPhotoBtn.textContent = t('wiz_svc_photo_btn');
+          svcPhotoInput.value = '';
+          if (result) {
+            wizardSvcPhotoId = result.id;
+            wizardSvcPhotoUrl = result.url;
+            var preview = document.getElementById('wiz-svc-photo-preview');
+            if (preview) {
+              preview.innerHTML = '<img src="' + escapeHtml(result.url) + '" alt="">';
+              preview.classList.add('has-photo');
+            }
+          }
+        }
+      });
+    }
+
+    // Save service button
+    var svcSaveBtn = document.getElementById('wiz-svc-save');
+    if (svcSaveBtn) {
+      svcSaveBtn.addEventListener('click', function () {
+        saveWizardService();
       });
     }
   }

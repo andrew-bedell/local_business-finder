@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
     // Validate photo_type
     const photoType = req.query.photo_type || 'product';
-    const validTypes = ['exterior', 'interior', 'product', 'food', 'team', 'logo', 'menu'];
+    const validTypes = ['exterior', 'interior', 'product', 'food', 'team', 'logo', 'menu', 'founder', 'service'];
     if (!validTypes.includes(photoType)) {
       return res.status(400).json({ error: 'Invalid photo_type. Must be one of: ' + validTypes.join(', ') });
     }
