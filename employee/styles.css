@@ -3592,6 +3592,77 @@ select.input {
   }
 }
 
+/* === Demo Analytics === */
+.da-stats-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.da-stat-card {
+  flex: 1;
+  min-width: 120px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.da-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.da-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.da-filters-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.da-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+}
+
+.da-pagination {
+  text-align: center;
+  padding: 16px 0;
+}
+
+@media (max-width: 480px) {
+  .da-stats-row {
+    gap: 8px;
+  }
+  .da-stat-card {
+    min-width: 80px;
+    padding: 12px 8px;
+  }
+  .da-stat-value {
+    font-size: 20px;
+  }
+  .da-filters-row {
+    flex-direction: column;
+  }
+  .da-filters-row .input {
+    max-width: 100% !important;
+    width: 100%;
+  }
+}
+
 /* === Email Section === */
 .email-view-toggle {
   display: flex;

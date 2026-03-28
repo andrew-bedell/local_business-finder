@@ -36,6 +36,7 @@
                 </a>
                 <div class="nav-dropdown">
                   <a href="#" class="nav-dropdown-item active" id="nav-saved" data-tab="saved" data-i18n="navPipeline">Pipeline</a>
+                  <a href="#" class="nav-dropdown-item" id="nav-demo-analytics" data-tab="demo_analytics" data-i18n="navDemoAnalytics">Demo Analytics</a>
                 </div>
               </div>
               <div class="nav-group" data-group="messaging">
@@ -1107,6 +1108,61 @@
             <h2 id="er-detail-title" data-i18n="erDetailTitle">Edit Request</h2>
           </div>
           <div id="er-detail-content" style="padding:24px;"></div>
+        </div>
+      </section>
+
+      <!-- Demo Analytics -->
+      <section id="demo-analytics-section" class="card" style="display:none">
+        <div class="card-header">
+          <h2 data-i18n="demoAnalyticsTitle">Demo Page Analytics</h2>
+        </div>
+        <div class="da-stats-row" id="da-stats-row">
+          <div class="da-stat-card">
+            <div class="da-stat-value" id="da-total-views">—</div>
+            <div class="da-stat-label" data-i18n="daTotalViews">Total Views</div>
+          </div>
+          <div class="da-stat-card">
+            <div class="da-stat-value" id="da-unique-visitors">—</div>
+            <div class="da-stat-label" data-i18n="daUniqueVisitors">Unique Visitors</div>
+          </div>
+          <div class="da-stat-card">
+            <div class="da-stat-value" id="da-avg-duration">—</div>
+            <div class="da-stat-label" data-i18n="daAvgDuration">Avg. Time on Site</div>
+          </div>
+          <div class="da-stat-card">
+            <div class="da-stat-value" id="da-businesses-viewed">—</div>
+            <div class="da-stat-label" data-i18n="daBusinessesViewed">Businesses Viewed</div>
+          </div>
+        </div>
+        <div class="da-filters-row" id="da-filters-row">
+          <select class="input input-sort" id="da-days-filter">
+            <option value="7">7 days</option>
+            <option value="14">14 days</option>
+            <option value="30" selected>30 days</option>
+            <option value="90">90 days</option>
+          </select>
+          <input type="text" class="input" id="da-search" data-i18n-placeholder="daSearchPlaceholder" placeholder="Search by business name..." style="max-width:260px">
+        </div>
+        <div class="results-table-wrapper">
+          <table class="results-table" id="da-sessions-table">
+            <thead>
+              <tr>
+                <th data-i18n="daColTime">Time</th>
+                <th data-i18n="daColBusiness">Business</th>
+                <th data-i18n="daColVisitor">Visitor</th>
+                <th data-i18n="daColDuration">Duration</th>
+                <th data-i18n="daColDevice">Device</th>
+                <th data-i18n="daColSource">Source</th>
+              </tr>
+            </thead>
+            <tbody id="da-sessions-body"></tbody>
+          </table>
+        </div>
+        <div class="da-empty" id="da-empty" style="display:none">
+          <p data-i18n="daNoSessions">No demo views recorded yet.</p>
+        </div>
+        <div class="da-pagination" id="da-pagination" style="display:none">
+          <button class="btn btn-secondary" id="da-load-more" data-i18n="daLoadMore">Load More</button>
         </div>
       </section>
 

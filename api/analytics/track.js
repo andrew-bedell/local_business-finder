@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  const validTypes = ['page_view', 'click_phone', 'click_email', 'click_directions', 'click_social', 'form_submit'];
+  const validTypes = ['page_view', 'click_phone', 'click_email', 'click_directions', 'click_social', 'form_submit', 'demo_view', 'demo_leave'];
   if (!validTypes.includes(event_type)) {
     return res.status(204).end();
   }
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   try {
     const payload = {
       business_id: parseInt(business_id, 10),
-      website_id: website_id ? parseInt(website_id, 10) : null,
+      website_id: website_id || null,
       event_type,
       page_url: page_url ? String(page_url).substring(0, 2000) : null,
       referrer: referrer ? String(referrer).substring(0, 500) : null,

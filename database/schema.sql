@@ -1114,7 +1114,9 @@ CREATE TABLE IF NOT EXISTS analytics_events (
                               'click_email',
                               'click_directions',
                               'click_social',
-                              'form_submit'
+                              'form_submit',
+                              'demo_view',
+                              'demo_leave'
                             )),
   page_url                TEXT,
   referrer                TEXT,                -- domain only, not full URL

@@ -7,7 +7,8 @@
   const NAV_GROUPS = {
     pipeline: {
       items: [
-        { label: 'navPipeline', tab: 'saved' }
+        { label: 'navPipeline', tab: 'saved' },
+        { label: 'navDemoAnalytics', tab: 'demo_analytics' }
       ],
       defaultTab: 'saved'
     },
@@ -687,6 +688,25 @@
       thOutreach: 'Outreach',
       thOutreachSent: 'Sent',
       outreachSentLabel: 'Sent',
+      // Demo Analytics
+      navDemoAnalytics: 'Demo Analytics',
+      demoAnalyticsTitle: 'Demo Page Analytics',
+      daTotalViews: 'Total Views',
+      daUniqueVisitors: 'Unique Visitors',
+      daAvgDuration: 'Avg. Time on Site',
+      daBusinessesViewed: 'Businesses Viewed',
+      daSearchPlaceholder: 'Search by business name...',
+      daColTime: 'Time',
+      daColBusiness: 'Business',
+      daColVisitor: 'Visitor',
+      daColDuration: 'Duration',
+      daColDevice: 'Device',
+      daColSource: 'Source',
+      daNoSessions: 'No demo views recorded yet.',
+      daLoadMore: 'Load More',
+      daDays: '{0} days',
+      daLoading: 'Loading...',
+      daError: 'Failed to load demo analytics.',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -1320,6 +1340,25 @@
       thOutreach: 'Contacto',
       thOutreachSent: 'Enviado',
       outreachSentLabel: 'Enviado',
+      // Demo Analytics
+      navDemoAnalytics: 'Analíticas Demo',
+      demoAnalyticsTitle: 'Analíticas de Páginas Demo',
+      daTotalViews: 'Vistas Totales',
+      daUniqueVisitors: 'Visitantes Únicos',
+      daAvgDuration: 'Tiempo Prom. en Sitio',
+      daBusinessesViewed: 'Negocios Vistos',
+      daSearchPlaceholder: 'Buscar por nombre de negocio...',
+      daColTime: 'Hora',
+      daColBusiness: 'Negocio',
+      daColVisitor: 'Visitante',
+      daColDuration: 'Duración',
+      daColDevice: 'Dispositivo',
+      daColSource: 'Fuente',
+      daNoSessions: 'Aún no hay vistas de demo registradas.',
+      daLoadMore: 'Cargar Más',
+      daDays: '{0} días',
+      daLoading: 'Cargando...',
+      daError: 'Error al cargar analíticas demo.',
     },
   };
 
@@ -2591,7 +2630,7 @@
       const n = name || '';
       const u = url || '';
       if (idx === 0) {
-        return `Hola, soy ${n}. Vi que tu negocio no tiene página web y quise mostrarte algo: hice este sitio de ejemplo para ti en minutos usando inteligencia artificial.\n\n👉 ${u}\n\nAhora mismo, hay clientes buscándote en Google y no te encuentran. Con una página como esta, aunque sea uno o dos clientes nuevos al mes, ya se paga sola — y el costo es solo $299 pesos al mes, todo incluido.\n\n¿Te gustaría activarla? Puedo tenerla lista hoy mismo.`;
+        return `Hola, soy ${n}. Vi que tu negocio no tiene página web y quise mostrarte algo: hice este sitio de ejemplo para ti en minutos usando inteligencia artificial.\n\n👉 ${u}\n\nAhora mismo, hay clientes buscándote en Google y no te encuentran. Los negocios que usan nuestro servicio reportan en promedio entre 5 y 10 clientes nuevos al mes, lo cual fácilmente cubre el costo de $299 pesos mensuales, todo incluido.\n\nSi te interesa, escríbeme y con mucho gusto te explico cómo funciona todo y respondo cualquier duda que tengas.`;
       } else if (idx === 1) {
         return `Hola, soy ${n}. Sin compromiso, te hice una página web para tu negocio. Échale un ojo:\n\n👉 ${u}\n\nSi te gusta, la puedo publicar por $299 al mes — eso incluye todo: dominio, diseño, y tú puedes editarla cuando quieras sin saber nada de tecnología. Si no te interesa, no pasa nada. Solo quería que vieras cómo se vería tu negocio en línea.`;
       } else {
@@ -5123,11 +5162,12 @@
       products: ['products-section'],
       customers: ['customers-section'],
       edit_requests: ['edit-requests-section'],
+      demo_analytics: ['demo-analytics-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -5147,11 +5187,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-demo-analytics', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -5175,6 +5215,7 @@
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
+    if (tab === 'demo_analytics') loadDemoAnalytics();
     if (tab === 'team') loadTeamEmployees();
   }
 
@@ -8956,6 +8997,149 @@
   // Team event listeners
   const btnInvite = document.getElementById('btn-invite-employee');
   if (btnInvite) btnInvite.addEventListener('click', inviteEmployee);
+
+  // ── Demo Analytics ──
+  let daCurrentOffset = 0;
+  let daSessions = [];
+  let daDebounceTimer = null;
+
+  async function loadDemoAnalytics() {
+    daCurrentOffset = 0;
+    daSessions = [];
+    var daysEl = document.getElementById('da-days-filter');
+    var searchEl = document.getElementById('da-search');
+    var days = daysEl ? daysEl.value : '30';
+    var search = searchEl ? searchEl.value.trim() : '';
+
+    // Show loading state
+    var tbody = document.getElementById('da-sessions-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-muted)">' + t('daLoading') + '</td></tr>';
+    document.getElementById('da-empty').style.display = 'none';
+    document.getElementById('da-pagination').style.display = 'none';
+
+    try {
+      var url = '/api/analytics/demo-stats?days=' + encodeURIComponent(days) + '&limit=50&offset=0';
+      if (search) url += '&search=' + encodeURIComponent(search);
+      var res = await fetch(url);
+      if (!res.ok) throw new Error('API error');
+      var data = await res.json();
+
+      renderDemoAnalyticsStats(data.totals);
+      daSessions = data.sessions;
+      daCurrentOffset = daSessions.length;
+      renderDemoAnalyticsSessions(daSessions);
+
+      // Show load more if there are more
+      var pagination = document.getElementById('da-pagination');
+      if (pagination) pagination.style.display = data.total_sessions > daSessions.length ? '' : 'none';
+    } catch (err) {
+      console.error('Demo analytics load error:', err);
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--danger)">' + t('daError') + '</td></tr>';
+    }
+  }
+
+  async function loadMoreDemoSessions() {
+    var daysEl = document.getElementById('da-days-filter');
+    var searchEl = document.getElementById('da-search');
+    var days = daysEl ? daysEl.value : '30';
+    var search = searchEl ? searchEl.value.trim() : '';
+
+    try {
+      var url = '/api/analytics/demo-stats?days=' + encodeURIComponent(days) + '&limit=50&offset=' + daCurrentOffset;
+      if (search) url += '&search=' + encodeURIComponent(search);
+      var res = await fetch(url);
+      if (!res.ok) throw new Error('API error');
+      var data = await res.json();
+
+      daSessions = daSessions.concat(data.sessions);
+      daCurrentOffset = daSessions.length;
+      renderDemoAnalyticsSessions(daSessions);
+
+      var pagination = document.getElementById('da-pagination');
+      if (pagination) pagination.style.display = data.total_sessions > daSessions.length ? '' : 'none';
+    } catch (err) {
+      console.error('Demo analytics load more error:', err);
+    }
+  }
+
+  function renderDemoAnalyticsStats(totals) {
+    var el;
+    el = document.getElementById('da-total-views');
+    if (el) el.textContent = totals.total_demo_views || 0;
+    el = document.getElementById('da-unique-visitors');
+    if (el) el.textContent = totals.unique_visitors || 0;
+    el = document.getElementById('da-avg-duration');
+    if (el) el.textContent = formatDemoDuration(totals.avg_duration_seconds || 0);
+    el = document.getElementById('da-businesses-viewed');
+    if (el) el.textContent = totals.businesses_viewed || 0;
+  }
+
+  function renderDemoAnalyticsSessions(sessions) {
+    var tbody = document.getElementById('da-sessions-body');
+    var emptyEl = document.getElementById('da-empty');
+    if (!tbody) return;
+
+    if (!sessions || sessions.length === 0) {
+      tbody.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = '';
+      return;
+    }
+
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    tbody.innerHTML = sessions.map(function(s) {
+      var time = new Date(s.timestamp);
+      var timeStr = time.toLocaleDateString(currentLang === 'es' ? 'es' : 'en', { month: 'short', day: 'numeric' })
+        + ' ' + time.toLocaleTimeString(currentLang === 'es' ? 'es' : 'en', { hour: '2-digit', minute: '2-digit' });
+      var visitorShort = s.visitor_id ? s.visitor_id.substring(0, 8) : '—';
+      var durationStr = s.duration_seconds !== null ? formatDemoDuration(s.duration_seconds) : '—';
+      var deviceIcon = s.device_type === 'mobile' ? '📱' : '💻';
+      var sourceStr = s.referrer || '—';
+      if (sourceStr === 'l.instagram.com') sourceStr = 'Instagram';
+      else if (sourceStr === 'wa.me' || sourceStr === 'web.whatsapp.com' || sourceStr === 'api.whatsapp.com') sourceStr = 'WhatsApp';
+      else if (sourceStr === 'l.facebook.com' || sourceStr === 'lm.facebook.com') sourceStr = 'Facebook';
+
+      return '<tr>'
+        + '<td>' + escapeHtml(timeStr) + '</td>'
+        + '<td>' + escapeHtml(s.business_name || '—') + '</td>'
+        + '<td><code style="font-size:12px;color:var(--text-dim)">' + escapeHtml(visitorShort) + '</code></td>'
+        + '<td>' + escapeHtml(durationStr) + '</td>'
+        + '<td>' + deviceIcon + ' ' + escapeHtml(s.device_type || 'desktop') + '</td>'
+        + '<td>' + escapeHtml(sourceStr) + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function formatDemoDuration(seconds) {
+    if (!seconds || seconds <= 0) return '0s';
+    if (seconds < 60) return seconds + 's';
+    var m = Math.floor(seconds / 60);
+    var s = seconds % 60;
+    return m + 'm ' + s + 's';
+  }
+
+  // Demo Analytics event listeners
+  var daDaysFilter = document.getElementById('da-days-filter');
+  if (daDaysFilter) {
+    daDaysFilter.addEventListener('change', function() {
+      if (activeTab === 'demo_analytics') loadDemoAnalytics();
+    });
+  }
+
+  var daSearchInput = document.getElementById('da-search');
+  if (daSearchInput) {
+    daSearchInput.addEventListener('input', function() {
+      clearTimeout(daDebounceTimer);
+      daDebounceTimer = setTimeout(function() {
+        if (activeTab === 'demo_analytics') loadDemoAnalytics();
+      }, 400);
+    });
+  }
+
+  var daLoadMoreBtn = document.getElementById('da-load-more');
+  if (daLoadMoreBtn) {
+    daLoadMoreBtn.addEventListener('click', loadMoreDemoSessions);
+  }
 
   // ── Mobile Bottom Nav ──
   let mobileActiveGroup = 'pipeline';
