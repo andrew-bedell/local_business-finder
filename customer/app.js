@@ -16,6 +16,7 @@
   let websiteData = null;
   let subscriptionData = null;
   let isRecoveryMode = false;
+  let isSetupMode = false;
   let pendingReviewEditRequestId = null;
   let reviewDraftHtml = null;
   let reviewCurrentHtml = null;
@@ -559,6 +560,15 @@
       }
       if (event === 'SIGNED_IN' && session && !currentUser) {
         currentUser = session.user;
+        // Check if this is a WhatsApp-created account needing setup
+        if (currentUser.email && currentUser.email.indexOf('@temp.ahoratengopagina.com') !== -1) {
+          isSetupMode = true;
+          if (window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+          showSetupScreen();
+          return;
+        }
         showLoading();
         loadDashboard();
       } else if (event === 'SIGNED_OUT') {
@@ -587,8 +597,14 @@
         showNewPasswordScreen();
       } else if (session) {
         currentUser = session.user;
-        showLoading();
-        loadDashboard();
+        // Check if WhatsApp-created account needing setup
+        if (currentUser.email && currentUser.email.indexOf('@temp.ahoratengopagina.com') !== -1) {
+          isSetupMode = true;
+          showSetupScreen();
+        } else {
+          showLoading();
+          loadDashboard();
+        }
       } else {
         showLoginScreen();
       }
@@ -709,6 +725,18 @@
     if (btnStripePortal) {
       btnStripePortal.addEventListener('click', function () {
         openStripePortal();
+      });
+    }
+
+    // Account setup form (WhatsApp-created accounts)
+    var setupForm = $('#setup-form');
+    if (setupForm) {
+      setupForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = ($('#setup-email') || {}).value || '';
+        var password = ($('#setup-password') || {}).value || '';
+        var confirm = ($('#setup-confirm') || {}).value || '';
+        handleAccountSetup(email.trim(), password, confirm);
       });
     }
 
@@ -1024,6 +1052,75 @@
       if (btnSet) {
         btnSet.disabled = false;
         btnSet.textContent = 'Restablecer Contraseña';
+      }
+    }
+  }
+
+  // ── Account Setup (WhatsApp-created accounts) ──
+  async function handleAccountSetup(email, password, confirmPassword) {
+    if (!email || !password || !confirmPassword) {
+      showToast('Por favor completa todos los campos.', 'warning');
+      return;
+    }
+    if (password !== confirmPassword) {
+      showToast('Las contraseñas no coinciden.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('La contraseña debe tener al menos 6 caracteres.', 'warning');
+      return;
+    }
+
+    var btnSetup = $('#btn-setup-account');
+    if (btnSetup) {
+      btnSetup.disabled = true;
+      btnSetup.textContent = 'Configurando...';
+    }
+
+    try {
+      // Update Supabase Auth user: set real email + password
+      var result = await supabase.auth.updateUser({
+        email: email,
+        password: password
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      // Also update the customers table email via API
+      try {
+        var session = (await supabase.auth.getSession()).data.session;
+        if (session) {
+          await fetch('/api/customers/update-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + session.access_token
+            },
+            body: JSON.stringify({ email: email })
+          });
+        }
+      } catch (emailErr) {
+        console.warn('Customer email update (non-blocking):', emailErr);
+      }
+
+      isSetupMode = false;
+      showToast('Cuenta configurada correctamente.', 'success');
+
+      // Load dashboard
+      showLoading();
+      await loadDashboard();
+
+      // Auto-navigate to wizard section
+      showSection('wizard');
+    } catch (err) {
+      console.error('Account setup failed:', err);
+      showToast('Error al configurar la cuenta: ' + (err.message || 'Intenta de nuevo.'), 'error');
+    } finally {
+      if (btnSetup) {
+        btnSetup.disabled = false;
+        btnSetup.textContent = 'Crear mi cuenta';
       }
     }
   }
@@ -2108,11 +2205,13 @@
     var loginScreen = $('#login-screen');
     var resetScreen = $('#reset-screen');
     var newPasswordScreen = $('#new-password-screen');
+    var setupScreen = $('#setup-screen');
     var dashboard = $('#dashboard');
 
     if (loginScreen) loginScreen.style.display = '';
     if (resetScreen) resetScreen.style.display = 'none';
     if (newPasswordScreen) newPasswordScreen.style.display = 'none';
+    if (setupScreen) setupScreen.style.display = 'none';
     if (dashboard) dashboard.style.display = 'none';
 
     hideLoading();
@@ -2130,11 +2229,29 @@
     var loginScreen = $('#login-screen');
     var resetScreen = $('#reset-screen');
     var newPasswordScreen = $('#new-password-screen');
+    var setupScreen = $('#setup-screen');
     var dashboard = $('#dashboard');
 
     if (loginScreen) loginScreen.style.display = 'none';
     if (resetScreen) resetScreen.style.display = 'none';
     if (newPasswordScreen) newPasswordScreen.style.display = '';
+    if (setupScreen) setupScreen.style.display = 'none';
+    if (dashboard) dashboard.style.display = 'none';
+
+    hideLoading();
+  }
+
+  function showSetupScreen() {
+    var loginScreen = $('#login-screen');
+    var resetScreen = $('#reset-screen');
+    var newPasswordScreen = $('#new-password-screen');
+    var setupScreen = $('#setup-screen');
+    var dashboard = $('#dashboard');
+
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (resetScreen) resetScreen.style.display = 'none';
+    if (newPasswordScreen) newPasswordScreen.style.display = 'none';
+    if (setupScreen) setupScreen.style.display = '';
     if (dashboard) dashboard.style.display = 'none';
 
     hideLoading();
@@ -2144,11 +2261,13 @@
     var loginScreen = $('#login-screen');
     var resetScreen = $('#reset-screen');
     var newPasswordScreen = $('#new-password-screen');
+    var setupScreen = $('#setup-screen');
     var dashboard = $('#dashboard');
 
     if (loginScreen) loginScreen.style.display = 'none';
     if (resetScreen) resetScreen.style.display = 'none';
     if (newPasswordScreen) newPasswordScreen.style.display = 'none';
+    if (setupScreen) setupScreen.style.display = 'none';
     if (dashboard) dashboard.style.display = '';
   }
 
@@ -4411,6 +4530,10 @@
     var addrInput = document.getElementById('wiz-address');
     if (addrInput && businessData.address_full) addrInput.value = businessData.address_full;
 
+    // Category
+    var catInput = document.getElementById('wiz-category');
+    if (catInput && businessData.category) catInput.value = businessData.category;
+
     // Hours
     if (businessData.hours && typeof businessData.hours === 'object') {
       var hours = businessData.hours;
@@ -4756,6 +4879,13 @@
       });
     }
 
+    var catInput = document.getElementById('wiz-category');
+    if (catInput) {
+      catInput.addEventListener('blur', function () {
+        saveWizardField('category', catInput.value.trim());
+      });
+    }
+
     // Hours — save on blur of any hours input
     var hourInputs = document.querySelectorAll('#wiz-hours-grid input[data-day]');
     hourInputs.forEach(function (input) {
@@ -4847,6 +4977,17 @@
         saveWizardService();
       });
     }
+
+    // Generate website button
+    var genBtn = document.getElementById('wiz-generate-btn');
+    if (genBtn) {
+      genBtn.addEventListener('click', function () {
+        showEncouragementPopup();
+      });
+    }
+
+    // Initial generate button state
+    updateGenerateButton();
   }
 
   function updateStarPicker() {
@@ -5034,6 +5175,7 @@
     var indicatorMap = {
       whatsapp: 'wiz-saved-whatsapp',
       address_full: 'wiz-saved-address',
+      category: 'wiz-saved-category',
       owner_name: 'wiz-saved-founder-name',
       founder_description: 'wiz-saved-founder-story',
     };
@@ -5099,10 +5241,205 @@
     }, 2000);
   }
 
+  // ── Generate Website from Wizard ──
+
+  function getGenerateRequirements() {
+    var reqs = [];
+    var biz = businessData || {};
+    reqs.push({ label: 'Nombre del negocio', met: !!(biz.name && biz.name.trim()) });
+    reqs.push({ label: 'Dirección', met: !!(biz.address_full && biz.address_full.trim()) });
+    reqs.push({ label: 'WhatsApp', met: !!(biz.whatsapp && biz.whatsapp.trim()) });
+    reqs.push({ label: 'Tipo de negocio', met: !!(biz.category && biz.category.trim()) });
+    return reqs;
+  }
+
+  function getEncourageChecks() {
+    var biz = businessData || {};
+    var checks = [];
+    checks.push({ label: 'Al menos 3 fotos', met: wizardPhotos.length >= 3 });
+    checks.push({ label: 'Una descripción del negocio', met: !!(biz.description && biz.description.trim()) || !!(biz.founder_description && biz.founder_description.trim()) });
+    checks.push({ label: 'Al menos 1 reseña', met: wizardReviews.length >= 1 });
+    return checks;
+  }
+
+  function updateGenerateButton() {
+    var btn = document.getElementById('wiz-generate-btn');
+    var reqsEl = document.getElementById('wiz-generate-reqs');
+    var hintEl = document.getElementById('wiz-generate-hint');
+    if (!btn) return;
+
+    var reqs = getGenerateRequirements();
+    var allMet = reqs.every(function (r) { return r.met; });
+
+    btn.disabled = !allMet;
+
+    if (reqsEl) {
+      var html = '';
+      for (var i = 0; i < reqs.length; i++) {
+        var r = reqs[i];
+        var cls = r.met ? 'met' : 'unmet';
+        var icon = r.met ? '&#10003;' : '&#9675;';
+        html += '<div class="c-wizard-generate-req ' + cls + '">';
+        html += '<span class="c-wizard-generate-req-icon">' + icon + '</span>';
+        html += '<span>' + escapeHtml(r.label) + '</span>';
+        html += '</div>';
+      }
+      reqsEl.innerHTML = html;
+    }
+
+    if (hintEl) {
+      if (allMet) {
+        hintEl.textContent = 'Mientras más información agregues, mejor será tu página web.';
+      } else {
+        var missing = reqs.filter(function (r) { return !r.met; });
+        hintEl.textContent = 'Completa los campos requeridos para habilitar la generación.';
+      }
+    }
+  }
+
+  function showEncouragementPopup() {
+    var checks = getEncourageChecks();
+    var allEncouraged = checks.every(function (c) { return c.met; });
+
+    // If all encouraged items are met, skip popup and generate directly
+    if (allEncouraged) {
+      startWebsiteGeneration();
+      return;
+    }
+
+    var html = '<div class="c-wizard-encourage-overlay" id="wiz-encourage-overlay">';
+    html += '<div class="c-wizard-encourage-card">';
+    html += '<h3>Antes de generar tu página...</h3>';
+    html += '<p>Mientras más información nos des, mejor será tu página web. Te recomendamos agregar lo siguiente:</p>';
+    html += '<div class="c-wizard-encourage-items">';
+    for (var i = 0; i < checks.length; i++) {
+      var c = checks[i];
+      var cls = c.met ? 'met' : 'unmet';
+      var icon = c.met ? '&#10003;' : '&#9888;';
+      html += '<div class="c-wizard-encourage-item ' + cls + '">';
+      html += '<span class="c-wizard-encourage-item-icon">' + icon + '</span>';
+      html += '<span>' + escapeHtml(c.label) + '</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<div class="c-wizard-encourage-actions">';
+    html += '<button type="button" class="c-btn c-btn-ghost" id="wiz-encourage-back">Volver y agregar más información</button>';
+    html += '<button type="button" class="c-btn c-btn-primary" id="wiz-encourage-proceed">Generar de todos modos</button>';
+    html += '</div>';
+    html += '</div></div>';
+
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    document.getElementById('wiz-encourage-back').addEventListener('click', function () {
+      var overlay = document.getElementById('wiz-encourage-overlay');
+      if (overlay) overlay.remove();
+    });
+    document.getElementById('wiz-encourage-proceed').addEventListener('click', function () {
+      var overlay = document.getElementById('wiz-encourage-overlay');
+      if (overlay) overlay.remove();
+      startWebsiteGeneration();
+    });
+  }
+
+  function showGenerationProgress() {
+    var steps = [
+      { id: 'step-research', label: 'Investigando tu negocio...' },
+      { id: 'step-photos', label: 'Generando imágenes...' },
+      { id: 'step-content', label: 'Escribiendo contenido...' },
+      { id: 'step-build', label: 'Construyendo tu página...' },
+      { id: 'step-publish', label: 'Publicando...' }
+    ];
+
+    var html = '<div class="c-wizard-progress-overlay" id="wiz-progress-overlay">';
+    html += '<div class="c-wizard-progress-card">';
+    html += '<h3>Generando tu página web</h3>';
+    html += '<div class="c-wizard-progress-steps">';
+    for (var i = 0; i < steps.length; i++) {
+      var s = steps[i];
+      html += '<div class="c-wizard-progress-step" id="' + s.id + '">';
+      html += '<span class="c-wizard-progress-step-icon">&#9675;</span>';
+      html += '<span>' + escapeHtml(s.label) + '</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '<p style="color:var(--c-text-dim);font-size:13px;">Esto puede tomar 1-2 minutos. No cierres esta ventana.</p>';
+    html += '</div></div>';
+
+    document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  function updateProgressStep(stepId, state) {
+    var el = document.getElementById(stepId);
+    if (!el) return;
+    var iconEl = el.querySelector('.c-wizard-progress-step-icon');
+    el.className = 'c-wizard-progress-step ' + state;
+    if (iconEl) {
+      if (state === 'active') iconEl.innerHTML = '<span class="c-wizard-progress-spinner"></span>';
+      else if (state === 'done') iconEl.innerHTML = '&#10003;';
+      else iconEl.innerHTML = '&#9675;';
+    }
+  }
+
+  function removeProgressOverlay() {
+    var overlay = document.getElementById('wiz-progress-overlay');
+    if (overlay) overlay.remove();
+  }
+
+  async function startWebsiteGeneration() {
+    showGenerationProgress();
+
+    try {
+      var session = (await supabase.auth.getSession()).data.session;
+      if (!session) throw new Error('No hay sesión activa');
+
+      updateProgressStep('step-research', 'active');
+
+      var res = await fetch('/api/customers/generate-website', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token
+        },
+        body: JSON.stringify({})
+      });
+
+      if (!res.ok) {
+        var errData = await res.json().catch(function () { return {}; });
+        throw new Error(errData.error || 'Error al generar la página web');
+      }
+
+      // Mark all steps done
+      updateProgressStep('step-research', 'done');
+      updateProgressStep('step-photos', 'done');
+      updateProgressStep('step-content', 'done');
+      updateProgressStep('step-build', 'done');
+      updateProgressStep('step-publish', 'done');
+
+      var data = await res.json();
+      removeProgressOverlay();
+
+      if (data.publishedUrl) {
+        showToast('¡Tu página web ha sido creada!', 'success');
+        // Reload website data and navigate to dashboard
+        websiteData = await loadWebsiteInfo(businessData.id);
+        renderDashboard(businessData, websiteData, subscriptionData, []);
+        showSection('home');
+      } else {
+        showToast('Tu página web fue creada en modo borrador. Un asesor la revisará.', 'success');
+        showSection('home');
+      }
+    } catch (err) {
+      console.error('Website generation error:', err);
+      removeProgressOverlay();
+      showToast('Error: ' + (err.message || 'No se pudo generar la página web.'), 'error');
+    }
+  }
+
   function refreshWizardScore() {
     var scoreData = calculateWizardScore(businessData, wizardPhotos, wizardReviews);
     renderWizardScore(scoreData);
     renderWizardAccordion(scoreData);
+    updateGenerateButton();
 
     // Also update the businesses.data_completeness_score in DB (fire and forget)
     if (businessData && businessData.id) {
