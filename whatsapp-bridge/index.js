@@ -18,6 +18,7 @@ const { generateResponse } = require('./respond');
 const express = require('express');
 const { findConversationByPhone, upsertConversation, logMessage, getConversationHistory } = require('./db');
 const onboarding = require('./onboarding');
+const { resolveLeadByPhone } = require('./lead-resolver');
 
 // ── Validate environment ──
 
@@ -127,11 +128,13 @@ client.on('message', async (msg) => {
   // Skip group messages — only handle direct (1:1) messages
   if (msg.from.endsWith('@g.us')) return;
 
-  // Skip non-text messages
-  if (msg.type !== 'chat') return;
-
   // Skip status broadcasts
   if (msg.from === 'status@broadcast') return;
+
+  // Accept text and image messages (images only during onboarding photo collection)
+  const isText = msg.type === 'chat';
+  const isImage = msg.type === 'image';
+  if (!isText && !isImage) return;
 
   // Deduplicate: skip if already processing this message
   const msgKey = `${msg.from}:${msg.timestamp}`;
@@ -157,31 +160,45 @@ client.on('message', async (msg) => {
 
   const lidNote = isLikelyLid(msg.from) && rawPhone !== msg.from.replace(/@(c\.us|lid)$/, '')
     ? ` (resolved from LID)` : '';
-  console.log(`[${new Date().toLocaleTimeString()}] Inbound from ${canonicalPhone}${lidNote}: ${messageBody.substring(0, 80)}${messageBody.length > 80 ? '...' : ''}`);
+  console.log(`[${new Date().toLocaleTimeString()}] Inbound ${isImage ? '(image) ' : ''}from ${canonicalPhone}${lidNote}: ${messageBody.substring(0, 80)}${messageBody.length > 80 ? '...' : ''}`);
 
   try {
-    // Step 0: Check for active onboarding flow (takes priority over normal flow)
-    const flowCheck = await onboarding.checkOnboardingFlow(canonicalPhone);
+    // Step 0: Resolve phone against all DB tables
+    const resolvedContext = await resolveLeadByPhone(canonicalPhone, phoneVariants);
 
-    if (flowCheck.active) {
-      console.log(`  → Active onboarding flow: ${flowCheck.flowId} (step: ${flowCheck.step})`);
+    // Step 1: Handle active onboarding flow
+    if (resolvedContext.activeFlowId) {
+      console.log(`  → Active onboarding flow: ${resolvedContext.activeFlowId} (step: ${resolvedContext.activeFlowStep})`);
 
-      // Still need conversation for logging
-      let existingConversation = await findConversationByPhone(phoneVariants);
+      // Ensure conversation exists for logging
+      let existingConversation = resolvedContext.existingConversation || await findConversationByPhone(phoneVariants);
       const conversationId = await upsertConversation({
-        businessId: existingConversation?.business_id || null,
+        businessId: resolvedContext.businessId || existingConversation?.business_id || null,
         phone: canonicalPhone,
         messagePreview: messageBody.substring(0, 200),
         direction: 'inbound',
         existingConversation,
       });
 
-      if (conversationId) {
-        await logMessage({ conversationId, businessId: existingConversation?.business_id || null, direction: 'inbound', body: messageBody });
+      if (conversationId && isText) {
+        await logMessage({ conversationId, businessId: resolvedContext.businessId || null, direction: 'inbound', body: messageBody });
+      }
+
+      // Build extras for onboarding handler
+      const extras = { client };
+      if (isImage) {
+        extras.msgType = 'image';
+        try {
+          const media = await msg.downloadMedia();
+          extras.mediaData = media ? { data: media.data, mimetype: media.mimetype } : null;
+        } catch (dlErr) {
+          console.warn('  → Failed to download image:', dlErr.message);
+          extras.mediaData = null;
+        }
       }
 
       const reply = await onboarding.handleOnboardingMessage(
-        flowCheck.flowId, messageBody, conversationId, canonicalPhone, { client }
+        resolvedContext.activeFlowId, messageBody, conversationId, canonicalPhone, extras
       );
 
       if (reply) {
@@ -189,13 +206,51 @@ client.on('message', async (msg) => {
         console.log(`  → Onboarding reply: ${reply.substring(0, 80)}${reply.length > 80 ? '...' : ''}`);
 
         if (conversationId) {
-          await logMessage({ conversationId, businessId: existingConversation?.business_id || null, direction: 'outbound', body: reply });
+          await logMessage({ conversationId, businessId: resolvedContext.businessId || null, direction: 'outbound', body: reply });
         }
       }
       return;
     }
 
-    // Step 1: Match contact to business
+    // Images outside of onboarding flow are ignored
+    if (isImage) return;
+
+    // Step 2: Check if we should start onboarding
+    if (resolvedContext.shouldStartOnboarding) {
+      console.log(`  → Starting onboarding for ${canonicalPhone} (type: ${resolvedContext.contactType}, sources: ${resolvedContext.sources.join(',')})`);
+
+      // Ensure conversation exists
+      let existingConversation = resolvedContext.existingConversation || await findConversationByPhone(phoneVariants);
+      const conversationId = await upsertConversation({
+        businessId: resolvedContext.businessId || null,
+        phone: canonicalPhone,
+        messagePreview: messageBody.substring(0, 200),
+        direction: 'inbound',
+        existingConversation,
+      });
+
+      if (conversationId) {
+        await logMessage({ conversationId, businessId: resolvedContext.businessId || null, direction: 'inbound', body: messageBody });
+      }
+
+      const chatId = msg.from;
+      const onboardingReply = await onboarding.startOnboardingFlow(
+        conversationId, canonicalPhone, chatId, resolvedContext
+      );
+
+      if (onboardingReply) {
+        await msg.reply(onboardingReply);
+        console.log(`  → Onboarding started: ${onboardingReply.substring(0, 80)}${onboardingReply.length > 80 ? '...' : ''}`);
+
+        if (conversationId) {
+          await logMessage({ conversationId, businessId: resolvedContext.businessId || null, direction: 'outbound', body: onboardingReply });
+        }
+      }
+      return;
+    }
+
+    // Step 3: Normal flow — existing customers/demos/etc.
+    // Use matchContact for full context (includes website URLs, subscription info)
     const context = await matchContact(rawPhone);
 
     if (context) {
@@ -204,8 +259,8 @@ client.on('message', async (msg) => {
       console.log('  → No match found (unknown contact)');
     }
 
-    // Step 2: Find or create conversation
-    let existingConversation = await findConversationByPhone(phoneVariants);
+    // Step 4: Find or create conversation
+    let existingConversation = resolvedContext.existingConversation || await findConversationByPhone(phoneVariants);
     const businessId = context?.businessId || existingConversation?.business_id || null;
 
     const conversationId = await upsertConversation({
@@ -216,7 +271,7 @@ client.on('message', async (msg) => {
       existingConversation,
     });
 
-    // Step 3: Log inbound message
+    // Step 5: Log inbound message
     if (conversationId) {
       await logMessage({
         conversationId,
@@ -226,64 +281,25 @@ client.on('message', async (msg) => {
       });
     }
 
-    // Step 4: Get conversation history for context
+    // Step 6: Get conversation history for context
     let history = [];
     if (conversationId) {
       history = await getConversationHistory(conversationId);
     }
 
-    // Step 5: Generate response via Claude
-    let reply = await generateResponse(context, messageBody, history);
+    // Step 7: Generate response via Claude
+    const reply = await generateResponse(context, messageBody, history);
 
     if (!reply) {
       console.log('  → No reply generated (skipped)');
       return;
     }
 
-    // Step 5.5: Check for [START_ONBOARDING] marker in Claude's response
-    const ONBOARDING_MARKER = '[START_ONBOARDING]';
-    if (reply.includes(ONBOARDING_MARKER)) {
-      // Strip the marker from the reply
-      reply = reply.replace(ONBOARDING_MARKER, '').trim();
-
-      // Send the conversational reply first
-      await msg.reply(reply);
-      console.log(`  → Replied (pre-onboarding): ${reply.substring(0, 80)}${reply.length > 80 ? '...' : ''}`);
-
-      if (conversationId) {
-        await logMessage({ conversationId, businessId, direction: 'outbound', body: reply });
-      }
-
-      // Start onboarding flow
-      const chatId = msg.from;
-      const preCollected = {};
-      // Try to carry over known data from context
-      if (context?.businessId) preCollected.businessId = context.businessId;
-      if (context?.businessName) preCollected.businessName = context.businessName;
-      if (context?.city) preCollected.businessCity = context.city;
-      if (context?.contactName) preCollected.contactName = context.contactName;
-
-      console.log(`  → Starting onboarding flow for ${canonicalPhone} (businessId: ${context?.businessId || 'none'})`);
-      const onboardingReply = await onboarding.startOnboardingFlow(
-        conversationId, canonicalPhone, chatId, preCollected
-      );
-
-      if (onboardingReply) {
-        await msg.reply(onboardingReply);
-        console.log(`  → Onboarding started: ${onboardingReply.substring(0, 80)}${onboardingReply.length > 80 ? '...' : ''}`);
-
-        if (conversationId) {
-          await logMessage({ conversationId, businessId, direction: 'outbound', body: onboardingReply });
-        }
-      }
-      return;
-    }
-
-    // Step 6: Send reply
+    // Step 8: Send reply
     await msg.reply(reply);
     console.log(`  → Replied: ${reply.substring(0, 80)}${reply.length > 80 ? '...' : ''}`);
 
-    // Step 7: Log outbound message
+    // Step 9: Log outbound message
     if (conversationId) {
       await logMessage({
         conversationId,
@@ -293,7 +309,6 @@ client.on('message', async (msg) => {
       });
 
       // Update conversation with outbound info
-      // (re-fetch conversation since upsertConversation was for inbound)
       const refreshedConv = await findConversationByPhone(phoneVariants);
       if (refreshedConv) {
         await upsertConversation({
@@ -334,7 +349,7 @@ setInterval(async () => {
       .from('onboarding_flows')
       .update({ step: 'abandoned' })
       .lt('last_activity_at', cutoff72h)
-      .not('step', 'in', '("complete","abandoned","error")')
+      .not('step', 'in', '("complete","abandoned","error","human_review")')
       .select('id, phone, flow_data');
 
     if (abandoned && abandoned.length > 0) {
@@ -347,7 +362,7 @@ setInterval(async () => {
       .select('id, phone, flow_data')
       .lt('last_activity_at', cutoff24h)
       .gte('last_activity_at', cutoff72h)
-      .not('step', 'in', '("complete","abandoned","error","generate")');
+      .not('step', 'in', '("complete","abandoned","error","generate","human_review")');
 
     if (stale && stale.length > 0) {
       for (const flow of stale) {

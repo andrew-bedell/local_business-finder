@@ -198,7 +198,7 @@ async function findActiveFlow(phone) {
     .from('onboarding_flows')
     .select('id, step, flow_data, business_id, conversation_id')
     .eq('phone', phone)
-    .not('step', 'in', '("complete","abandoned","error")')
+    .not('step', 'in', '("complete","abandoned","error","human_review")')
     .order('created_at', { ascending: false })
     .limit(1)
     .single();
@@ -312,6 +312,60 @@ async function getFlow(flowId) {
 }
 
 
+/**
+ * Find a marketing lead by phone variants.
+ * Returns the most recent lead or null.
+ *
+ * @param {string[]} phoneVariants — Phone format variants
+ * @returns {Object|null} Marketing lead record
+ */
+async function findMarketingLeadByPhone(phoneVariants) {
+  const sb = getClient();
+  const digits = (phoneVariants[0] || '').replace(/\D/g, '');
+  const lastTen = digits.slice(-10);
+
+  const filters = phoneVariants.map(v => `phone.eq.${v}`).join(',');
+  let orFilter = filters;
+  if (lastTen.length === 10) {
+    orFilter += `,phone.ilike.%${lastTen}`;
+  }
+
+  const { data, error } = await sb
+    .from('marketing_leads')
+    .select('id, business_name, name, phone, email, city, address, status, source')
+    .or(orFilter)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.warn('findMarketingLeadByPhone error:', error.message);
+  }
+
+  return data || null;
+}
+
+
+/**
+ * Update a marketing lead's status.
+ *
+ * @param {string} leadId — Marketing lead UUID
+ * @param {string} status — New status
+ */
+async function updateMarketingLeadStatus(leadId, status) {
+  const sb = getClient();
+
+  const { error } = await sb
+    .from('marketing_leads')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', leadId);
+
+  if (error) {
+    console.error('updateMarketingLeadStatus error:', error.message);
+  }
+}
+
+
 module.exports = {
   findConversationByPhone,
   upsertConversation,
@@ -321,4 +375,6 @@ module.exports = {
   createFlow,
   updateFlow,
   getFlow,
+  findMarketingLeadByPhone,
+  updateMarketingLeadStatus,
 };
