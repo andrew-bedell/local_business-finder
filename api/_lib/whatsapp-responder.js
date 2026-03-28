@@ -41,9 +41,13 @@ export async function handleAutoReply({
     'Content-Type': 'application/json',
   };
 
-  // Skip auto-reply if disabled for this conversation
+  // Skip auto-reply if disabled for this conversation or any conversation for this business
   if (conversationId) {
     const disabled = await isAutoReplyDisabled(conversationId, supabaseUrl, headers);
+    if (disabled) return;
+  }
+  if (businessId) {
+    const disabled = await isAutoReplyDisabledForBusiness(businessId, supabaseUrl, headers);
     if (disabled) return;
   }
 
@@ -292,6 +296,20 @@ async function isAutoReplyDisabled(conversationId, supabaseUrl, headers) {
     );
     const data = res.ok ? await res.json() : [];
     return data.length > 0 && data[0].auto_reply_disabled === true;
+  } catch {
+    return false;
+  }
+}
+
+
+async function isAutoReplyDisabledForBusiness(businessId, supabaseUrl, headers) {
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/whatsapp_conversations?business_id=eq.${businessId}&auto_reply_disabled=eq.true&select=id&limit=1`,
+      { headers }
+    );
+    const data = res.ok ? await res.json() : [];
+    return data.length > 0;
   } catch {
     return false;
   }
