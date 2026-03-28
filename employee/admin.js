@@ -66,6 +66,7 @@
       pipelineAll: 'All',
       pipelineSaved: 'Saved',
       pipelineLead: 'Leads',
+      pipelineColdOutreach: 'Outreach Ready',
       pipelineDemo: 'Demo',
       pipelineActive: 'Active',
       pipelineInactive: 'Inactive',
@@ -110,6 +111,7 @@
       pipelineSaveBtn: 'Save Pipeline Status',
       stageSaved: 'Saved',
       stageLead: 'Lead',
+      stageColdOutreach: 'Outreach Ready',
       stageDemo: 'Demo',
       stageActiveCustomer: 'Active',
       stageInactiveCustomer: 'Inactive',
@@ -785,6 +787,7 @@
       pipelineAll: 'Todos',
       pipelineSaved: 'Guardados',
       pipelineLead: 'Leads',
+      pipelineColdOutreach: 'Listo para Contactar',
       pipelineDemo: 'Demo',
       pipelineActive: 'Activos',
       pipelineInactive: 'Inactivos',
@@ -829,6 +832,7 @@
       pipelineSaveBtn: 'Guardar Etapa',
       stageSaved: 'Guardado',
       stageLead: 'Lead',
+      stageColdOutreach: 'Listo para Contactar',
       stageDemo: 'Demo',
       stageActiveCustomer: 'Activo',
       stageInactiveCustomer: 'Inactivo',
@@ -2110,7 +2114,7 @@
 
   // ── Pipeline Counts ──
   function updatePipelineCounts(businesses) {
-    const counts = { all: businesses.length, saved: 0, lead: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
+    const counts = { all: businesses.length, saved: 0, lead: 0, cold_outreach_ready: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
     businesses.forEach(b => {
       const status = b.pipeline_status || 'saved';
       if (counts[status] !== undefined) counts[status]++;
@@ -2119,6 +2123,7 @@
     el('pill-count-all').textContent = counts.all;
     el('pill-count-saved').textContent = counts.saved;
     el('pill-count-lead').textContent = counts.lead;
+    el('pill-count-cold-outreach').textContent = counts.cold_outreach_ready;
     el('pill-count-demo').textContent = counts.demo;
     el('pill-count-active').textContent = counts.active_customer;
     el('pill-count-inactive').textContent = counts.inactive_customer;
@@ -2183,6 +2188,7 @@
     const classMap = {
       saved: 'badge-saved',
       lead: 'badge-lead',
+      cold_outreach_ready: 'badge-cold-outreach',
       demo: 'badge-demo',
       active_customer: 'badge-active-customer',
       inactive_customer: 'badge-inactive-customer',
@@ -2190,6 +2196,7 @@
     const labelMap = {
       saved: 'stageSaved',
       lead: 'stageLead',
+      cold_outreach_ready: 'stageColdOutreach',
       demo: 'stageDemo',
       active_customer: 'stageActiveCustomer',
       inactive_customer: 'stageInactiveCustomer',
@@ -2560,6 +2567,7 @@
       const stages = [
         { value: 'saved', label: t('stageSaved') },
         { value: 'lead', label: t('stageLead') },
+        { value: 'cold_outreach_ready', label: t('stageColdOutreach') },
         { value: 'demo', label: t('stageDemo') },
         { value: 'active_customer', label: t('stageActiveCustomer') },
         { value: 'inactive_customer', label: t('stageInactiveCustomer') },
@@ -3043,7 +3051,7 @@
           const res = await fetch('/api/whatsapp/toggle-auto-reply', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, disabled }),
+            body: JSON.stringify({ phone, disabled, businessId: business.id }),
           });
           if (!res.ok) throw new Error('Failed');
           showToast(t('outreachAutoReplyToggled'), 'success');
@@ -3329,6 +3337,7 @@
                 <select class="input" id="modal-pipeline-status">
                   <option value="saved" ${(business.pipeline_status || 'saved') === 'saved' ? 'selected' : ''}>${t('stageSaved')}</option>
                   <option value="lead" ${business.pipeline_status === 'lead' ? 'selected' : ''}>${t('stageLead')}</option>
+                  <option value="cold_outreach_ready" ${business.pipeline_status === 'cold_outreach_ready' ? 'selected' : ''}>${t('stageColdOutreach')}</option>
                   <option value="demo" ${business.pipeline_status === 'demo' ? 'selected' : ''}>${t('stageDemo')}</option>
                   <option value="active_customer" ${business.pipeline_status === 'active_customer' ? 'selected' : ''}>${t('stageActiveCustomer')}</option>
                   <option value="inactive_customer" ${business.pipeline_status === 'inactive_customer' ? 'selected' : ''}>${t('stageInactiveCustomer')}</option>
