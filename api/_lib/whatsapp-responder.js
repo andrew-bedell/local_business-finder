@@ -41,6 +41,12 @@ export async function handleAutoReply({
     'Content-Type': 'application/json',
   };
 
+  // Skip auto-reply if disabled for this conversation
+  if (conversationId) {
+    const disabled = await isAutoReplyDisabled(conversationId, supabaseUrl, headers);
+    if (disabled) return;
+  }
+
   // Skip auto-reply if employee replied recently (within 30 min)
   if (conversationId) {
     const skip = await hasRecentOutbound(conversationId, supabaseUrl, headers);
@@ -272,6 +278,22 @@ function generateReply(context, inboundMessage) {
     default:
       return `¡Hola${name}! Gracias por escribirnos a AhoraTengoPagina.\n\n` +
         '¿En qué podemos ayudarte?';
+  }
+}
+
+
+// ── Auto-Reply Disabled Check ──
+
+async function isAutoReplyDisabled(conversationId, supabaseUrl, headers) {
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/whatsapp_conversations?id=eq.${conversationId}&select=auto_reply_disabled`,
+      { headers }
+    );
+    const data = res.ok ? await res.json() : [];
+    return data.length > 0 && data[0].auto_reply_disabled === true;
+  } catch {
+    return false;
   }
 }
 
