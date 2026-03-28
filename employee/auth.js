@@ -244,9 +244,9 @@
           }).catch(function () {});
         }
 
-        // First-time login → send to explainer page for onboarding
+        // First-time login → send to welcome/onboarding page
         if (isFirstLogin) {
-          window.location.href = '/employee/explainer';
+          window.location.href = '/employee/welcome';
           return;
         }
 
