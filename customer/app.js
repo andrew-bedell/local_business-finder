@@ -147,6 +147,64 @@
       sched_confirm_delete_staff: '¿Eliminar este miembro del personal?',
       sched_confirm_delete_service: '¿Eliminar este servicio?',
 
+      // Wizard
+      nav_wizard: 'Completar Datos',
+      nav_wizard_short: 'Datos',
+      wiz_title: 'Completar <span>Datos</span>',
+      wiz_score_label: 'Puntaje de datos',
+      wiz_hint_default: 'Completa las secciones para mejorar tu puntaje.',
+      wiz_hint_photos: 'Agrega {0} foto(s) más para mejorar tu puntaje en {1} puntos.',
+      wiz_hint_reviews: 'Agrega {0} reseña(s) más para mejorar tu puntaje en {1} puntos.',
+      wiz_hint_whatsapp: 'Agrega tu número de WhatsApp para ganar {0} puntos.',
+      wiz_hint_address: 'Agrega tu dirección para ganar {0} puntos.',
+      wiz_hint_hours: 'Agrega tu horario para ganar {0} puntos.',
+      wiz_hint_founder: 'Agrega la historia del fundador para ganar {0} puntos.',
+      wiz_hint_complete: '¡Excelente! Tus datos están completos.',
+      wiz_photos_title: 'Fotos',
+      wiz_photos_drop: 'Arrastra fotos aquí o haz clic para seleccionar',
+      wiz_photos_hint: 'JPG, PNG o WebP. Máximo 4MB por foto.',
+      wiz_photos_type_label: 'Tipo de foto',
+      wiz_type_exterior: 'Exterior',
+      wiz_type_interior: 'Interior',
+      wiz_type_product: 'Producto',
+      wiz_type_food: 'Comida',
+      wiz_type_team: 'Equipo',
+      wiz_type_logo: 'Logo',
+      wiz_reviews_title: 'Reseñas de Clientes',
+      wiz_review_name: 'Nombre del cliente',
+      wiz_review_rating: 'Calificación',
+      wiz_review_text: 'Reseña',
+      wiz_review_add: 'Agregar Reseña',
+      wiz_review_confirm_delete: '¿Eliminar esta reseña?',
+      wiz_whatsapp_label: 'Número de WhatsApp (con código de país)',
+      wiz_address_title: 'Dirección',
+      wiz_address_label: 'Dirección completa',
+      wiz_hours_title: 'Horario de Atención',
+      wiz_hours_same: 'Mismo horario todos los días',
+      wiz_day_mon: 'Lunes',
+      wiz_day_tue: 'Martes',
+      wiz_day_wed: 'Miércoles',
+      wiz_day_thu: 'Jueves',
+      wiz_day_fri: 'Viernes',
+      wiz_day_sat: 'Sábado',
+      wiz_day_sun: 'Domingo',
+      wiz_founder_title: 'Sobre el Fundador',
+      wiz_founder_name_label: 'Nombre del fundador / dueño',
+      wiz_founder_story_label: 'Historia del fundador (100-300 caracteres)',
+      wiz_saved: 'Guardado',
+      wiz_saving: 'Guardando...',
+      wiz_uploading: 'Subiendo...',
+      wiz_upload_error: 'Error al subir la foto. Intenta de nuevo.',
+      wiz_upload_too_large: 'La foto es muy grande. Máximo 4MB.',
+      wiz_review_error: 'Error al guardar la reseña.',
+      wiz_review_deleted: 'Reseña eliminada.',
+      wiz_save_error: 'Error al guardar. Intenta de nuevo.',
+      wiz_photo_deleted: 'Foto eliminada.',
+      wiz_photo_delete_error: 'Error al eliminar la foto.',
+      wiz_confirm_delete_photo: '¿Eliminar esta foto?',
+      wiz_review_name_required: 'Agrega el nombre del cliente.',
+      wiz_review_text_required: 'Escribe la reseña.',
+
       // Footer
       footer_copy: 'Todos los derechos reservados.',
       footer_privacy: 'Privacidad',
@@ -281,6 +339,64 @@
       sched_delete: 'Delete',
       sched_confirm_delete_staff: 'Remove this staff member?',
       sched_confirm_delete_service: 'Remove this service?',
+
+      // Wizard
+      nav_wizard: 'Complete Data',
+      nav_wizard_short: 'Data',
+      wiz_title: 'Complete Your <span>Data</span>',
+      wiz_score_label: 'Data score',
+      wiz_hint_default: 'Complete the sections to improve your score.',
+      wiz_hint_photos: 'Add {0} more photo(s) to improve your score by {1} points.',
+      wiz_hint_reviews: 'Add {0} more review(s) to improve your score by {1} points.',
+      wiz_hint_whatsapp: 'Add your WhatsApp number to gain {0} points.',
+      wiz_hint_address: 'Add your address to gain {0} points.',
+      wiz_hint_hours: 'Add your hours to gain {0} points.',
+      wiz_hint_founder: 'Add the founder story to gain {0} points.',
+      wiz_hint_complete: 'Excellent! Your data is complete.',
+      wiz_photos_title: 'Photos',
+      wiz_photos_drop: 'Drag photos here or click to select',
+      wiz_photos_hint: 'JPG, PNG or WebP. Max 4MB per photo.',
+      wiz_photos_type_label: 'Photo type',
+      wiz_type_exterior: 'Exterior',
+      wiz_type_interior: 'Interior',
+      wiz_type_product: 'Product',
+      wiz_type_food: 'Food',
+      wiz_type_team: 'Team',
+      wiz_type_logo: 'Logo',
+      wiz_reviews_title: 'Customer Reviews',
+      wiz_review_name: 'Customer name',
+      wiz_review_rating: 'Rating',
+      wiz_review_text: 'Review',
+      wiz_review_add: 'Add Review',
+      wiz_review_confirm_delete: 'Delete this review?',
+      wiz_whatsapp_label: 'WhatsApp number (with country code)',
+      wiz_address_title: 'Address',
+      wiz_address_label: 'Full address',
+      wiz_hours_title: 'Business Hours',
+      wiz_hours_same: 'Same hours every day',
+      wiz_day_mon: 'Monday',
+      wiz_day_tue: 'Tuesday',
+      wiz_day_wed: 'Wednesday',
+      wiz_day_thu: 'Thursday',
+      wiz_day_fri: 'Friday',
+      wiz_day_sat: 'Saturday',
+      wiz_day_sun: 'Sunday',
+      wiz_founder_title: 'About the Founder',
+      wiz_founder_name_label: 'Founder / owner name',
+      wiz_founder_story_label: 'Founder story (100-300 characters)',
+      wiz_saved: 'Saved',
+      wiz_saving: 'Saving...',
+      wiz_uploading: 'Uploading...',
+      wiz_upload_error: 'Error uploading photo. Please try again.',
+      wiz_upload_too_large: 'Photo too large. Max 4MB.',
+      wiz_review_error: 'Error saving review.',
+      wiz_review_deleted: 'Review deleted.',
+      wiz_save_error: 'Error saving. Please try again.',
+      wiz_photo_deleted: 'Photo deleted.',
+      wiz_photo_delete_error: 'Error deleting photo.',
+      wiz_confirm_delete_photo: 'Delete this photo?',
+      wiz_review_name_required: 'Add the customer name.',
+      wiz_review_text_required: 'Write the review.',
 
       // Footer
       footer_copy: 'All rights reserved.',
@@ -1809,6 +1925,11 @@
     // Load scheduling when section is shown
     if (normalizedId === 'scheduling') {
       loadSchedulingSection();
+    }
+
+    // Load wizard when section is shown
+    if (normalizedId === 'wizard') {
+      loadWizardData();
     }
   }
 
@@ -3924,6 +4045,733 @@
     } catch (err) {
       console.error('Delete service error:', err);
       showToast(t('sched_svc_error'), 'error');
+    }
+  }
+
+  // ── Data Wizard ──
+
+  var wizardPhotos = [];
+  var wizardReviews = [];
+  var wizardStarRating = 5;
+
+  function tArgs(key) {
+    var str = t(key);
+    var args = Array.prototype.slice.call(arguments, 1);
+    for (var i = 0; i < args.length; i++) {
+      str = str.replace('{' + i + '}', args[i]);
+    }
+    return str;
+  }
+
+  async function loadWizardData() {
+    if (!businessData || !businessData.id) return;
+
+    try {
+      // Load photos and reviews in parallel
+      var results = await Promise.all([
+        supabase.from('business_photos').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false }),
+        supabase.from('business_reviews').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false })
+      ]);
+
+      wizardPhotos = (results[0].data || []);
+      wizardReviews = (results[1].data || []);
+
+      var scoreData = calculateWizardScore(businessData, wizardPhotos, wizardReviews);
+      renderWizardScore(scoreData);
+      renderWizardAccordion(scoreData);
+
+      if (!wizardEventsFound) bindWizardEvents();
+    } catch (err) {
+      console.error('Wizard load error:', err);
+    }
+  }
+
+  var wizardEventsFound = false;
+
+  function calculateWizardScore(business, photos, reviews) {
+    var breakdown = {};
+    var total = 0;
+
+    // Photos: 20 pts, 4 pts per photo up to 5
+    var photoCount = photos.length;
+    var photoScore = Math.min(photoCount * 4, 20);
+    breakdown.photos = { score: photoScore, max: 20, count: photoCount, target: 5 };
+    total += photoScore;
+
+    // Reviews: 20 pts, ~6.67 pts per review up to 3
+    var customerReviews = reviews.filter(function (r) { return r.source === 'customer'; });
+    var allReviewCount = reviews.length;
+    var reviewScore = Math.min(Math.round(allReviewCount * 6.67), 20);
+    breakdown.reviews = { score: reviewScore, max: 20, count: allReviewCount, customerCount: customerReviews.length, target: 3 };
+    total += reviewScore;
+
+    // WhatsApp: 10 pts
+    var hasWhatsapp = !!(business.whatsapp && business.whatsapp.trim());
+    breakdown.whatsapp = { score: hasWhatsapp ? 10 : 0, max: 10, filled: hasWhatsapp };
+    total += breakdown.whatsapp.score;
+
+    // Address: 10 pts
+    var hasAddress = !!(business.address_full && business.address_full.trim());
+    breakdown.address = { score: hasAddress ? 10 : 0, max: 10, filled: hasAddress };
+    total += breakdown.address.score;
+
+    // Hours: 10 pts
+    var hasHours = !!(business.hours && typeof business.hours === 'object' && Object.keys(business.hours).length > 0);
+    // Check if any hour value is non-empty
+    if (hasHours) {
+      var hourValues = Object.values(business.hours);
+      hasHours = hourValues.some(function (v) { return v && String(v).trim() !== ''; });
+    }
+    breakdown.hours = { score: hasHours ? 10 : 0, max: 10, filled: hasHours };
+    total += breakdown.hours.score;
+
+    // Founder: 10 pts (5 for name, 5 for story)
+    var hasOwnerName = !!(business.owner_name && business.owner_name.trim());
+    var hasFounderDesc = !!(business.founder_description && business.founder_description.trim());
+    var founderScore = (hasOwnerName ? 5 : 0) + (hasFounderDesc ? 5 : 0);
+    breakdown.founder = { score: founderScore, max: 10, hasName: hasOwnerName, hasStory: hasFounderDesc };
+    total += founderScore;
+
+    // Bonus from other fields (name, phone, email, rating, etc.) fill remaining 20 pts
+    var bonusScore = 0;
+    if (business.name) bonusScore += 4;
+    if (business.phone) bonusScore += 4;
+    if (business.email) bonusScore += 4;
+    if (business.rating) bonusScore += 4;
+    if (business.category) bonusScore += 4;
+    bonusScore = Math.min(bonusScore, 20);
+    breakdown.bonus = { score: bonusScore, max: 20 };
+    total += bonusScore;
+
+    total = Math.min(total, 100);
+
+    return { total: total, breakdown: breakdown };
+  }
+
+  function renderWizardScore(scoreData) {
+    var score = scoreData.total;
+    var scoreNumEl = document.getElementById('wiz-score-num');
+    var circleEl = document.getElementById('wiz-score-circle');
+    var progressEl = document.getElementById('wiz-progress-fill');
+    var hintEl = document.getElementById('wiz-hint');
+
+    if (scoreNumEl) scoreNumEl.textContent = score;
+
+    // SVG ring: circumference = 2 * PI * 52 ≈ 326.73
+    if (circleEl) {
+      var circumference = 326.73;
+      var offset = circumference - (score / 100) * circumference;
+      circleEl.setAttribute('stroke-dashoffset', offset);
+      // Color based on score
+      var color = score < 40 ? 'var(--c-danger)' : score < 70 ? 'var(--c-warning)' : 'var(--c-success)';
+      circleEl.setAttribute('stroke', color);
+    }
+
+    if (progressEl) {
+      progressEl.style.width = score + '%';
+      var level = score < 40 ? 'low' : score < 70 ? 'mid' : 'high';
+      progressEl.setAttribute('data-level', level);
+    }
+
+    // Dynamic hint
+    if (hintEl) {
+      var hint = getWizardHint(scoreData);
+      hintEl.textContent = hint;
+    }
+  }
+
+  function getWizardHint(scoreData) {
+    var bd = scoreData.breakdown;
+
+    if (scoreData.total >= 95) return t('wiz_hint_complete');
+
+    // Find the category with the best points-to-effort ratio
+    // Photos
+    if (bd.photos.count < bd.photos.target) {
+      var remaining = bd.photos.target - bd.photos.count;
+      var potential = Math.min(remaining * 4, bd.photos.max - bd.photos.score);
+      return tArgs('wiz_hint_photos', remaining, potential);
+    }
+    // Reviews
+    if (bd.reviews.count < bd.reviews.target) {
+      var remaining = bd.reviews.target - bd.reviews.count;
+      var potential = Math.min(Math.round(remaining * 6.67), bd.reviews.max - bd.reviews.score);
+      return tArgs('wiz_hint_reviews', remaining, potential);
+    }
+    // WhatsApp
+    if (!bd.whatsapp.filled) return tArgs('wiz_hint_whatsapp', bd.whatsapp.max);
+    // Address
+    if (!bd.address.filled) return tArgs('wiz_hint_address', bd.address.max);
+    // Hours
+    if (!bd.hours.filled) return tArgs('wiz_hint_hours', bd.hours.max);
+    // Founder
+    if (bd.founder.score < bd.founder.max) return tArgs('wiz_hint_founder', bd.founder.max - bd.founder.score);
+
+    return t('wiz_hint_default');
+  }
+
+  function renderWizardAccordion(scoreData) {
+    var bd = scoreData.breakdown;
+
+    // Photo status
+    var photoStatus = document.getElementById('wiz-status-photos');
+    if (photoStatus) {
+      photoStatus.textContent = bd.photos.count + '/' + bd.photos.target;
+      photoStatus.setAttribute('data-complete', bd.photos.score >= bd.photos.max ? 'true' : 'false');
+    }
+
+    // Review status
+    var reviewStatus = document.getElementById('wiz-status-reviews');
+    if (reviewStatus) {
+      reviewStatus.textContent = bd.reviews.count + '/' + bd.reviews.target;
+      reviewStatus.setAttribute('data-complete', bd.reviews.score >= bd.reviews.max ? 'true' : 'false');
+    }
+
+    // WhatsApp status
+    var waStatus = document.getElementById('wiz-status-whatsapp');
+    if (waStatus) {
+      waStatus.textContent = bd.whatsapp.filled ? '\u2713' : '—';
+      waStatus.setAttribute('data-complete', bd.whatsapp.filled ? 'true' : 'false');
+    }
+
+    // Address status
+    var addrStatus = document.getElementById('wiz-status-address');
+    if (addrStatus) {
+      addrStatus.textContent = bd.address.filled ? '\u2713' : '—';
+      addrStatus.setAttribute('data-complete', bd.address.filled ? 'true' : 'false');
+    }
+
+    // Hours status
+    var hoursStatus = document.getElementById('wiz-status-hours');
+    if (hoursStatus) {
+      hoursStatus.textContent = bd.hours.filled ? '\u2713' : '—';
+      hoursStatus.setAttribute('data-complete', bd.hours.filled ? 'true' : 'false');
+    }
+
+    // Founder status
+    var founderStatus = document.getElementById('wiz-status-founder');
+    if (founderStatus) {
+      founderStatus.textContent = bd.founder.score >= bd.founder.max ? '\u2713' : '—';
+      founderStatus.setAttribute('data-complete', bd.founder.score >= bd.founder.max ? 'true' : 'false');
+    }
+
+    // Render photo grid
+    renderWizardPhotos();
+    // Render review list
+    renderWizardReviews();
+    // Fill form fields
+    fillWizardFields();
+  }
+
+  function renderWizardPhotos() {
+    var grid = document.getElementById('wiz-photo-grid');
+    if (!grid) return;
+
+    if (wizardPhotos.length === 0) {
+      grid.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < wizardPhotos.length; i++) {
+      var photo = wizardPhotos[i];
+      var imgUrl = photo.storage_path
+        ? photo.url || ''
+        : photo.url || '';
+      var canDelete = photo.source === 'customer_upload';
+      html += '<div class="c-wizard-photo-thumb">';
+      html += '<img src="' + escapeHtml(imgUrl) + '" alt="" loading="lazy">';
+      html += '<span class="c-wizard-photo-type-badge">' + escapeHtml(photo.photo_type || '') + '</span>';
+      if (canDelete) {
+        html += '<button type="button" class="c-wizard-photo-delete" data-photo-id="' + escapeHtml(photo.id) + '">&times;</button>';
+      }
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+
+    // Bind delete buttons
+    var deleteButtons = grid.querySelectorAll('.c-wizard-photo-delete');
+    deleteButtons.forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var photoId = btn.getAttribute('data-photo-id');
+        if (confirm(t('wiz_confirm_delete_photo'))) {
+          deleteWizardPhoto(photoId);
+        }
+      });
+    });
+  }
+
+  function renderWizardReviews() {
+    var list = document.getElementById('wiz-review-list');
+    if (!list) return;
+
+    var customerReviews = wizardReviews.filter(function (r) { return r.source === 'customer'; });
+
+    if (customerReviews.length === 0) {
+      list.innerHTML = '';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < customerReviews.length; i++) {
+      var review = customerReviews[i];
+      var stars = '';
+      for (var s = 0; s < (review.rating || 5); s++) stars += '&#9733;';
+
+      html += '<div class="c-wizard-review-card">';
+      html += '<div class="c-wizard-review-card-body">';
+      html += '<div class="c-wizard-review-author">' + escapeHtml(review.author_name || '') + '</div>';
+      html += '<div class="c-wizard-review-stars">' + stars + '</div>';
+      html += '<div class="c-wizard-review-text">' + escapeHtml(review.text || '') + '</div>';
+      html += '</div>';
+      html += '<button type="button" class="c-wizard-review-delete" data-review-id="' + escapeHtml(review.id) + '">&times;</button>';
+      html += '</div>';
+    }
+    list.innerHTML = html;
+
+    // Bind delete buttons
+    var deleteButtons = list.querySelectorAll('.c-wizard-review-delete');
+    deleteButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var reviewId = btn.getAttribute('data-review-id');
+        if (confirm(t('wiz_review_confirm_delete'))) {
+          deleteWizardReview(reviewId);
+        }
+      });
+    });
+  }
+
+  function fillWizardFields() {
+    if (!businessData) return;
+
+    // WhatsApp
+    var waInput = document.getElementById('wiz-whatsapp');
+    if (waInput && businessData.whatsapp) waInput.value = businessData.whatsapp;
+
+    // Address
+    var addrInput = document.getElementById('wiz-address');
+    if (addrInput && businessData.address_full) addrInput.value = businessData.address_full;
+
+    // Hours
+    if (businessData.hours && typeof businessData.hours === 'object') {
+      var hours = businessData.hours;
+      var hourInputs = document.querySelectorAll('#wiz-hours-grid input[data-day]');
+      hourInputs.forEach(function (input) {
+        var day = input.getAttribute('data-day');
+        if (hours[day]) input.value = hours[day];
+      });
+    }
+
+    // Founder name
+    var founderNameInput = document.getElementById('wiz-founder-name');
+    if (founderNameInput && businessData.owner_name) founderNameInput.value = businessData.owner_name;
+
+    // Founder story
+    var founderStoryInput = document.getElementById('wiz-founder-story');
+    if (founderStoryInput && businessData.founder_description) {
+      founderStoryInput.value = businessData.founder_description;
+    }
+
+    // Update char count
+    updateFounderCharCount();
+  }
+
+  function updateFounderCharCount() {
+    var textarea = document.getElementById('wiz-founder-story');
+    var countEl = document.getElementById('wiz-founder-chars');
+    if (textarea && countEl) {
+      countEl.textContent = (textarea.value || '').length;
+    }
+  }
+
+  function bindWizardEvents() {
+    if (wizardEventsFound) return;
+    wizardEventsFound = true;
+
+    // Accordion toggle
+    var toggleButtons = document.querySelectorAll('[data-wiz-toggle]');
+    toggleButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var cardId = btn.getAttribute('data-wiz-toggle');
+        var card = document.querySelector('[data-wiz-card="' + cardId + '"]');
+        if (card) card.classList.toggle('open');
+      });
+    });
+
+    // Photo upload zone — click
+    var uploadZone = document.getElementById('wiz-upload-zone');
+    var photoInput = document.getElementById('wiz-photo-input');
+    if (uploadZone && photoInput) {
+      uploadZone.addEventListener('click', function () {
+        photoInput.click();
+      });
+
+      photoInput.addEventListener('change', function () {
+        if (photoInput.files && photoInput.files.length > 0) {
+          handleWizardPhotoUpload(photoInput.files);
+          photoInput.value = '';
+        }
+      });
+
+      // Drag and drop
+      uploadZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        uploadZone.classList.add('drag-over');
+      });
+      uploadZone.addEventListener('dragleave', function () {
+        uploadZone.classList.remove('drag-over');
+      });
+      uploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleWizardPhotoUpload(e.dataTransfer.files);
+        }
+      });
+    }
+
+    // Star picker
+    var starPicker = document.getElementById('wiz-star-picker');
+    if (starPicker) {
+      var stars = starPicker.querySelectorAll('.c-wizard-star');
+      stars.forEach(function (star) {
+        star.addEventListener('click', function () {
+          wizardStarRating = parseInt(star.getAttribute('data-star'), 10);
+          updateStarPicker();
+        });
+      });
+      updateStarPicker();
+    }
+
+    // Add review button
+    var addReviewBtn = document.getElementById('wiz-add-review');
+    if (addReviewBtn) {
+      addReviewBtn.addEventListener('click', function () {
+        submitWizardReview();
+      });
+    }
+
+    // Field auto-save on blur
+    var waInput = document.getElementById('wiz-whatsapp');
+    if (waInput) {
+      waInput.addEventListener('blur', function () {
+        saveWizardField('whatsapp', waInput.value.trim());
+      });
+    }
+
+    var addrInput = document.getElementById('wiz-address');
+    if (addrInput) {
+      addrInput.addEventListener('blur', function () {
+        saveWizardField('address_full', addrInput.value.trim());
+      });
+    }
+
+    // Hours — save on blur of any hours input
+    var hourInputs = document.querySelectorAll('#wiz-hours-grid input[data-day]');
+    hourInputs.forEach(function (input) {
+      input.addEventListener('blur', function () {
+        saveWizardHours();
+      });
+    });
+
+    // Hours — "same every day" toggle
+    var sameToggle = document.getElementById('wiz-hours-same');
+    if (sameToggle) {
+      sameToggle.addEventListener('change', function () {
+        if (sameToggle.checked) {
+          // Copy first day's value to all
+          var firstInput = document.querySelector('#wiz-hours-grid input[data-day="lunes"]');
+          var value = firstInput ? firstInput.value : '';
+          hourInputs.forEach(function (input) {
+            input.value = value;
+          });
+          saveWizardHours();
+        }
+      });
+    }
+
+    // Founder name — save on blur
+    var founderNameInput = document.getElementById('wiz-founder-name');
+    if (founderNameInput) {
+      founderNameInput.addEventListener('blur', function () {
+        saveWizardField('owner_name', founderNameInput.value.trim());
+      });
+    }
+
+    // Founder story — save on blur + char count
+    var founderStoryInput = document.getElementById('wiz-founder-story');
+    if (founderStoryInput) {
+      founderStoryInput.addEventListener('input', updateFounderCharCount);
+      founderStoryInput.addEventListener('blur', function () {
+        saveWizardField('founder_description', founderStoryInput.value.trim());
+      });
+    }
+  }
+
+  function updateStarPicker() {
+    var stars = document.querySelectorAll('#wiz-star-picker .c-wizard-star');
+    stars.forEach(function (star) {
+      var val = parseInt(star.getAttribute('data-star'), 10);
+      if (val <= wizardStarRating) {
+        star.classList.add('active');
+      } else {
+        star.classList.remove('active');
+      }
+    });
+  }
+
+  async function handleWizardPhotoUpload(files) {
+    var token = await getAuthToken();
+    if (!token) return;
+
+    var typeSelect = document.getElementById('wiz-photo-type');
+    var photoType = typeSelect ? typeSelect.value : 'product';
+    var uploadZone = document.getElementById('wiz-upload-zone');
+
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+
+      // Validate type
+      if (!file.type.startsWith('image/')) continue;
+
+      // Validate size (4MB)
+      if (file.size > 4 * 1024 * 1024) {
+        showToast(t('wiz_upload_too_large'), 'warning');
+        continue;
+      }
+
+      if (uploadZone) uploadZone.classList.add('uploading');
+
+      try {
+        var buffer = await file.arrayBuffer();
+
+        var res = await fetch('/api/wizard/upload-photo?photo_type=' + encodeURIComponent(photoType), {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': file.type,
+          },
+          body: buffer,
+        });
+
+        if (!res.ok) {
+          var errData = await res.json().catch(function () { return {}; });
+          throw new Error(errData.error || 'Upload failed');
+        }
+
+        var data = await res.json();
+
+        // Add to local array and re-render
+        wizardPhotos.unshift({
+          id: data.id,
+          source: 'customer_upload',
+          photo_type: data.photo_type,
+          url: data.public_url,
+          storage_path: data.storage_path,
+          business_id: businessData.id,
+        });
+
+      } catch (err) {
+        console.error('Photo upload error:', err);
+        showToast(t('wiz_upload_error'), 'error');
+      }
+    }
+
+    if (uploadZone) uploadZone.classList.remove('uploading');
+
+    // Re-render and recalculate
+    refreshWizardScore();
+  }
+
+  async function deleteWizardPhoto(photoId) {
+    var token = await getAuthToken();
+    if (!token) return;
+
+    try {
+      var res = await fetch('/api/wizard/delete-photo?photoId=' + encodeURIComponent(photoId), {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+
+      if (!res.ok) {
+        var errData = await res.json().catch(function () { return {}; });
+        throw new Error(errData.error || 'Delete failed');
+      }
+
+      // Remove from local array
+      wizardPhotos = wizardPhotos.filter(function (p) { return p.id !== photoId; });
+
+      showToast(t('wiz_photo_deleted'), 'success');
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Photo delete error:', err);
+      showToast(t('wiz_photo_delete_error'), 'error');
+    }
+  }
+
+  async function submitWizardReview() {
+    if (!businessData) return;
+
+    var nameInput = document.getElementById('wiz-review-name');
+    var textInput = document.getElementById('wiz-review-text');
+    var addBtn = document.getElementById('wiz-add-review');
+
+    var name = nameInput ? nameInput.value.trim() : '';
+    var text = textInput ? textInput.value.trim() : '';
+
+    if (!name) { showToast(t('wiz_review_name_required'), 'warning'); return; }
+    if (!text) { showToast(t('wiz_review_text_required'), 'warning'); return; }
+
+    if (addBtn) { addBtn.disabled = true; addBtn.textContent = t('wiz_saving'); }
+
+    try {
+      // Generate review hash for dedup
+      var hashInput = 'customer|' + name + '|' + text;
+      var reviewHash = simpleHash(hashInput);
+
+      var result = await supabase.from('business_reviews').insert({
+        business_id: businessData.id,
+        source: 'customer',
+        author_name: name,
+        rating: wizardStarRating,
+        text: text,
+        sentiment_label: 'very_positive',
+        is_curated: true,
+        review_hash: reviewHash,
+      }).select();
+
+      if (result.error) throw result.error;
+
+      // Add to local array
+      if (result.data && result.data[0]) {
+        wizardReviews.unshift(result.data[0]);
+      }
+
+      // Clear form
+      if (nameInput) nameInput.value = '';
+      if (textInput) textInput.value = '';
+      wizardStarRating = 5;
+      updateStarPicker();
+
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Review submit error:', err);
+      showToast(t('wiz_review_error'), 'error');
+    } finally {
+      if (addBtn) { addBtn.disabled = false; addBtn.textContent = t('wiz_review_add'); }
+    }
+  }
+
+  function simpleHash(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      var ch = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + ch;
+      hash = hash & hash; // Convert to 32bit int
+    }
+    return 'cust_' + Math.abs(hash).toString(36);
+  }
+
+  async function deleteWizardReview(reviewId) {
+    try {
+      var result = await supabase.from('business_reviews').delete().eq('id', reviewId);
+      if (result.error) throw result.error;
+
+      wizardReviews = wizardReviews.filter(function (r) { return r.id !== reviewId; });
+      showToast(t('wiz_review_deleted'), 'success');
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Review delete error:', err);
+      showToast(t('wiz_review_error'), 'error');
+    }
+  }
+
+  async function saveWizardField(column, value) {
+    if (!businessData) return;
+
+    // Determine saved indicator ID
+    var indicatorMap = {
+      whatsapp: 'wiz-saved-whatsapp',
+      address_full: 'wiz-saved-address',
+      owner_name: 'wiz-saved-founder-name',
+      founder_description: 'wiz-saved-founder-story',
+    };
+    var indicatorId = indicatorMap[column];
+
+    try {
+      var updateData = {};
+      updateData[column] = value || null;
+
+      var result = await supabase
+        .from('businesses')
+        .update(updateData)
+        .eq('id', businessData.id);
+
+      if (result.error) throw result.error;
+
+      // Update local state
+      businessData[column] = value || null;
+
+      // Show saved indicator
+      flashSaved(indicatorId);
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Wizard save field error:', err);
+      showToast(t('wiz_save_error'), 'error');
+    }
+  }
+
+  async function saveWizardHours() {
+    if (!businessData) return;
+
+    var hourInputs = document.querySelectorAll('#wiz-hours-grid input[data-day]');
+    var hoursObj = {};
+    hourInputs.forEach(function (input) {
+      hoursObj[input.getAttribute('data-day')] = input.value.trim();
+    });
+
+    try {
+      var result = await supabase
+        .from('businesses')
+        .update({ hours: hoursObj })
+        .eq('id', businessData.id);
+
+      if (result.error) throw result.error;
+
+      businessData.hours = hoursObj;
+      flashSaved('wiz-saved-hours');
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Wizard save hours error:', err);
+      showToast(t('wiz_save_error'), 'error');
+    }
+  }
+
+  function flashSaved(indicatorId) {
+    if (!indicatorId) return;
+    var el = document.getElementById(indicatorId);
+    if (!el) return;
+    el.textContent = t('wiz_saved');
+    el.classList.add('show');
+    setTimeout(function () {
+      el.classList.remove('show');
+    }, 2000);
+  }
+
+  function refreshWizardScore() {
+    var scoreData = calculateWizardScore(businessData, wizardPhotos, wizardReviews);
+    renderWizardScore(scoreData);
+    renderWizardAccordion(scoreData);
+
+    // Also update the businesses.data_completeness_score in DB (fire and forget)
+    if (businessData && businessData.id) {
+      supabase.from('businesses').update({
+        data_completeness_score: scoreData.total,
+        last_updated_at: new Date().toISOString(),
+      }).eq('id', businessData.id).then(function () {
+        // silent
+      });
     }
   }
 
