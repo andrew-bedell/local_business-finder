@@ -3,7 +3,7 @@
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -146,9 +146,81 @@ export default async function handler(req, res) {
       return res.status(200).json(updated);
     }
 
+    if (req.method === 'DELETE') {
+      if (!isAdmin) {
+        return res.status(403).json({ error: 'Only admins can delete employees' });
+      }
+
+      const { id } = req.body || {};
+      if (!id) {
+        return res.status(400).json({ error: 'Employee id is required' });
+      }
+
+      // Prevent self-deletion
+      if (id === callerEmployee.id) {
+        return res.status(400).json({ error: 'You cannot delete yourself' });
+      }
+
+      // Look up the employee to get auth_user_id
+      const lookupRes = await fetch(
+        `${supabaseUrl}/rest/v1/employees?id=eq.${id}&select=id,auth_user_id,email`,
+        {
+          headers: {
+            'apikey': serviceKey,
+            'Authorization': `Bearer ${serviceKey}`,
+          },
+        }
+      );
+      const lookupData = await lookupRes.json();
+      if (!Array.isArray(lookupData) || lookupData.length === 0) {
+        return res.status(404).json({ error: 'Employee not found' });
+      }
+      const target = lookupData[0];
+
+      // Delete the employee record from the database
+      const deleteRes = await fetch(
+        `${supabaseUrl}/rest/v1/employees?id=eq.${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'apikey': serviceKey,
+            'Authorization': `Bearer ${serviceKey}`,
+          },
+        }
+      );
+      if (!deleteRes.ok) {
+        const errText = await deleteRes.text();
+        console.error('Employee delete error:', deleteRes.status, errText);
+        return res.status(502).json({ error: 'Failed to delete employee record' });
+      }
+
+      // Delete the Supabase Auth user (non-blocking — log but don't fail)
+      if (target.auth_user_id) {
+        try {
+          const authDeleteRes = await fetch(
+            `${supabaseUrl}/auth/v1/admin/users/${target.auth_user_id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'apikey': serviceKey,
+                'Authorization': `Bearer ${serviceKey}`,
+              },
+            }
+          );
+          if (!authDeleteRes.ok) {
+            console.warn('Auth user delete failed (non-blocking):', authDeleteRes.status);
+          }
+        } catch (authErr) {
+          console.warn('Auth user delete error (non-blocking):', authErr);
+        }
+      }
+
+      return res.status(200).json({ deleted: true, email: target.email });
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {
-    console.error('Employee list/update error:', err);
+    console.error('Employee list/update/delete error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
