@@ -691,8 +691,8 @@
       sidebarOverlay.addEventListener('click', closeMobileMenu);
     }
 
-    // Navigation
-    var navItems = $$('[data-section]');
+    // Navigation — only bind to interactive elements, not section containers
+    var navItems = $$('a[data-section], button[data-section]');
     navItems.forEach(function (item) {
       item.addEventListener('click', function (e) {
         e.preventDefault();
