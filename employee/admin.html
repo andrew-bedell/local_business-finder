@@ -37,6 +37,7 @@
                 <div class="nav-dropdown">
                   <a href="#" class="nav-dropdown-item active" id="nav-saved" data-tab="saved" data-i18n="navPipeline">Pipeline</a>
                   <a href="#" class="nav-dropdown-item" id="nav-demo-analytics" data-tab="demo_analytics" data-i18n="navDemoAnalytics">Demo Analytics</a>
+                  <a href="#" class="nav-dropdown-item" id="nav-outreach" data-tab="outreach" data-i18n="navOutreach">Outreach</a>
                 </div>
               </div>
               <div class="nav-group" data-group="messaging">
@@ -378,6 +379,7 @@
         <button class="pipeline-pill active" data-stage="all"><span data-i18n="pipelineAll">All</span> <span class="pill-count" id="pill-count-all">0</span></button>
         <button class="pipeline-pill" data-stage="saved"><span data-i18n="pipelineSaved">Saved</span> <span class="pill-count" id="pill-count-saved">0</span></button>
         <button class="pipeline-pill" data-stage="lead"><span data-i18n="pipelineLead">Leads</span> <span class="pill-count" id="pill-count-lead">0</span></button>
+        <button class="pipeline-pill" data-stage="cold_outreach_ready"><span data-i18n="pipelineColdOutreach">Outreach Ready</span> <span class="pill-count" id="pill-count-cold-outreach">0</span></button>
         <button class="pipeline-pill" data-stage="demo"><span data-i18n="pipelineDemo">Demo</span> <span class="pill-count" id="pill-count-demo">0</span></button>
         <button class="pipeline-pill" data-stage="active_customer"><span data-i18n="pipelineActive">Active</span> <span class="pill-count" id="pill-count-active">0</span></button>
         <button class="pipeline-pill" data-stage="inactive_customer"><span data-i18n="pipelineInactive">Inactive</span> <span class="pill-count" id="pill-count-inactive">0</span></button>
@@ -1164,6 +1166,137 @@
         </div>
         <div class="da-pagination" id="da-pagination" style="display:none">
           <button class="btn btn-secondary" id="da-load-more" data-i18n="daLoadMore">Load More</button>
+        </div>
+      </section>
+
+      <!-- Outreach Dashboard -->
+      <section id="outreach-section" style="display:none">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <h2 data-i18n="orDashboardTitle">Outreach Dashboard</h2>
+          </div>
+          <div class="or-stats-row" id="or-stats-row">
+            <div class="or-stat-card">
+              <div class="or-stat-value" id="or-stat-ready">--</div>
+              <div class="or-stat-label" data-i18n="orStatReady">Ready</div>
+            </div>
+            <div class="or-stat-card">
+              <div class="or-stat-value" id="or-stat-in-progress">--</div>
+              <div class="or-stat-label" data-i18n="orStatInProgress">In Progress</div>
+            </div>
+            <div class="or-stat-card or-stat-card-warning">
+              <div class="or-stat-value" id="or-stat-followup">--</div>
+              <div class="or-stat-label" data-i18n="orStatFollowup">Awaiting Followup</div>
+            </div>
+            <div class="or-stat-card or-stat-card-danger">
+              <div class="or-stat-value" id="or-stat-stale">--</div>
+              <div class="or-stat-label" data-i18n="orStatStale">Stale (3+ days)</div>
+            </div>
+            <div class="or-stat-card">
+              <div class="or-stat-value" id="or-stat-complete">--</div>
+              <div class="or-stat-label" data-i18n="orStatComplete">Complete</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card or-table-card" id="or-followup-card">
+          <div class="card-header">
+            <h2 data-i18n="orFollowupTitle">24h Followup Reminders</h2>
+            <span class="badge badge-no-site" id="or-followup-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-followup-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThTimeSince">Time Since Step 6</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-followup-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-followup-empty"><p data-i18n="orNoFollowup">No businesses awaiting followup.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-visitors-card">
+          <div class="card-header">
+            <h2 data-i18n="orVisitorsTitle">Recent Website Visitors</h2>
+            <span class="badge badge-has-site" id="or-visitors-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-visitors-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThProgress">Progress</th>
+                <th data-i18n="orThLastVisit">Last Visit</th>
+                <th data-i18n="orThVisitCount">Views</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-visitors-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-visitors-empty"><p data-i18n="orNoVisitors">No recent website visitors.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-ready-card">
+          <div class="card-header">
+            <h2 data-i18n="orReadyTitle">Ready for Outreach</h2>
+            <span class="badge badge-no-site" id="or-ready-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-ready-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThNextStep">Next Step</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-ready-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-ready-empty"><p data-i18n="orNoReady">No businesses ready for outreach.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-progress-card">
+          <div class="card-header">
+            <h2 data-i18n="orProgressTitle">Outreach In Progress</h2>
+            <span class="badge badge-no-site" id="or-progress-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-progress-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThProgress">Progress</th>
+                <th data-i18n="orThNextStep">Next Step</th>
+                <th data-i18n="orThLastSent">Last Sent</th>
+                <th data-i18n="orThStatus">Status</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-progress-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-progress-empty"><p data-i18n="orNoProgress">No outreach in progress.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-complete-card">
+          <div class="card-header">
+            <h2 data-i18n="orCompleteTitle">Outreach Complete</h2>
+            <span class="badge badge-has-site" id="or-complete-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-complete-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThCompletedAt">Completed</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-complete-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-complete-empty"><p data-i18n="orNoComplete">No outreach completed yet.</p></div>
         </div>
       </section>
 
