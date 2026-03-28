@@ -728,6 +728,11 @@
       outreachAutoReplyError: 'Failed to update auto-reply setting',
       outreachAllSent: 'All sent',
       outreachComplete: 'Complete',
+      outreachSendBtn: 'Send via WhatsApp',
+      outreachSending: 'Sending...',
+      outreachSentSuccess: 'Message sent!',
+      outreachSendError: 'Failed to send message',
+      outreachConfirmSend: 'Send this message to {0}?',
       // Demo Analytics
       navDemoAnalytics: 'Demo Analytics',
       demoAnalyticsTitle: 'Demo Page Analytics',
@@ -1419,6 +1424,11 @@
       outreachAutoReplyError: 'Error al actualizar auto-respuesta',
       outreachAllSent: 'Todo enviado',
       outreachComplete: 'Completo',
+      outreachSendBtn: 'Enviar por WhatsApp',
+      outreachSending: 'Enviando...',
+      outreachSentSuccess: '¡Mensaje enviado!',
+      outreachSendError: 'Error al enviar mensaje',
+      outreachConfirmSend: '¿Enviar este mensaje a {0}?',
       // Demo Analytics
       navDemoAnalytics: 'Analíticas Demo',
       demoAnalyticsTitle: 'Analíticas de Páginas Demo',
@@ -2786,7 +2796,7 @@
             <div class="outreach-step-body">
               <pre class="outreach-message">${escapeHtml(msg)}</pre>
               <div class="outreach-step-actions">
-                ${!isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">📋 ${t('outreachCopyMessage')}</button><button class="btn btn-primary btn-outreach-mark" data-step="${key}">${t('outreachMarkSent')}</button>` : ''}
+                ${!isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">\uD83D\uDCCB ${t('outreachCopyMessage')}</button>${phone ? `<button class="btn btn-primary btn-outreach-send" data-step="${key}">${t('outreachSendBtn')}</button>` : ''}<button class="btn btn-secondary btn-outreach-mark" data-step="${key}">${t('outreachMarkSent')}</button>` : ''}
                 ${isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">📋 ${t('outreachCopyMessage')}</button>` : ''}
               </div>
             </div>
@@ -2877,6 +2887,68 @@
       btn.addEventListener('click', () => {
         const stepKey = btn.getAttribute('data-step');
         copyToClipboard(templates[stepKey], t('outreachCopied'));
+      });
+    });
+
+    // Send via WhatsApp bridge buttons
+    overlay.querySelectorAll('.btn-outreach-send').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const stepKey = btn.getAttribute('data-step');
+        if (!confirm(t('outreachConfirmSend', phone))) return;
+
+        btn.disabled = true;
+        btn.textContent = t('outreachSending');
+
+        try {
+          // Send via bridge
+          const sendResp = await fetch('/api/whatsapp/bridge-send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: phone,
+              message: templates[stepKey],
+              businessId: business.id,
+            }),
+          });
+
+          if (!sendResp.ok) {
+            const errData = await sendResp.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.error || 'Send failed');
+          }
+
+          // Mark step as sent in DB
+          const markResp = await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: business.id, outreach_step: stepKey }),
+          });
+          if (!markResp.ok) throw new Error('Failed to mark step');
+          const result = await markResp.json();
+
+          // Update local data
+          if (result.business) {
+            const fields = ['outreach_steps', 'outreach_sent'];
+            fields.forEach(f => {
+              if (result.business[f] !== undefined) {
+                business[f] = result.business[f];
+                const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+                if (ab) ab[f] = result.business[f];
+                const cr = currentResults.find(b => String(b.id) === String(business.id));
+                if (cr) cr[f] = result.business[f];
+              }
+            });
+          }
+
+          showToast(t('outreachSentSuccess'), 'success');
+          closeOutreach();
+          renderTable();
+          openOutreachModal(business);
+        } catch (err) {
+          console.error('Bridge send error:', err);
+          showToast(t('outreachSendError'), 'error');
+          btn.disabled = false;
+          btn.textContent = t('outreachSendBtn');
+        }
       });
     });
 
