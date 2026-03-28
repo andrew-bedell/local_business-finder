@@ -668,6 +668,29 @@
       });
     }
 
+    // Mobile hamburger menu
+    var btnMobileMenu = $('#btn-mobile-menu');
+    var sidebarEl = $('#sidebar');
+    var sidebarOverlay = $('#sidebar-overlay');
+    function closeMobileMenu() {
+      if (sidebarEl) sidebarEl.classList.remove('open');
+      if (sidebarOverlay) sidebarOverlay.classList.remove('open');
+    }
+    if (btnMobileMenu) {
+      btnMobileMenu.addEventListener('click', function () {
+        var isOpen = sidebarEl && sidebarEl.classList.contains('open');
+        if (isOpen) {
+          closeMobileMenu();
+        } else {
+          if (sidebarEl) sidebarEl.classList.add('open');
+          if (sidebarOverlay) sidebarOverlay.classList.add('open');
+        }
+      });
+    }
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeMobileMenu);
+    }
+
     // Navigation
     var navItems = $$('[data-section]');
     navItems.forEach(function (item) {
@@ -675,6 +698,7 @@
         e.preventDefault();
         var sectionId = item.getAttribute('data-section');
         showSection(sectionId);
+        closeMobileMenu();
       });
     });
 

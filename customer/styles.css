@@ -381,35 +381,19 @@ body.c-body a { text-decoration: none; color: inherit; }
   padding: 4px;
 }
 
-.c-mobile-tabs {
+/* ── Sidebar Overlay (mobile) ── */
+.c-sidebar-overlay {
   display: none;
-  overflow-x: auto;
-  background: var(--c-surface);
-  border-bottom: 1px solid var(--c-border);
-  padding: 0 12px;
-  gap: 4px;
-  -webkit-overflow-scrolling: touch;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  backdrop-filter: blur(2px);
 }
 
-.c-tab {
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--c-text-muted);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-  font-family: inherit;
-  transition: all 0.15s;
+.c-sidebar-overlay.open {
+  display: block;
 }
-
-.c-tab.active {
-  color: var(--c-text);
-  border-bottom-color: var(--c-accent);
-}
-.c-tab:hover { color: var(--c-text); }
 
 
 /* ============================================================================
@@ -1890,10 +1874,20 @@ a.c-btn-white {
    RESPONSIVE
    ============================================================================ */
 @media (max-width: 900px) {
-  .c-sidebar { display: none; }
+  .c-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  .c-sidebar.open {
+    transform: translateX(0);
+  }
 
   .c-mobile-header { display: flex; }
-  .c-mobile-tabs { display: flex; }
 
   .c-main {
     margin-left: 0;
