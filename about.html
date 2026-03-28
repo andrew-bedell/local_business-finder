@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1A56DB">
+  <title>Sobre Nosotros — AhoraTengoPagina</title>
+  <meta name="description" content="Conoce la historia detrás de AhoraTengoPagina. Diseño web profesional y accesible para negocios locales en Latinoamérica por solo $299 MXN/mes.">
+
+  <meta property="og:title" content="Sobre Nosotros — AhoraTengoPagina">
+  <meta property="og:description" content="Diseño web profesional y accesible para negocios locales en Latinoamérica.">
+  <meta property="og:url" content="https://www.ahoratengopagina.com/about">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="/marketing.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .m-about {
+      padding: 120px 0 80px;
+    }
+    .m-about-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    .m-about-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .m-about-lang {
+      display: inline-flex;
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius);
+      overflow: hidden;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .m-about-lang button {
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      background: var(--m-white);
+      color: var(--m-text-muted);
+    }
+    .m-about-lang button.m-active {
+      background: var(--m-blue);
+      color: var(--m-white);
+    }
+    .m-about-lang button:not(.m-active):hover {
+      background: var(--m-bg);
+      color: var(--m-text);
+    }
+    .m-about h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .m-about-subtitle {
+      font-size: 18px;
+      color: var(--m-text-muted);
+      font-weight: 500;
+      margin-bottom: 0;
+    }
+    .m-about h2 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      margin-top: 48px;
+      margin-bottom: 20px;
+    }
+    .m-about p {
+      font-size: 16px;
+      color: var(--m-text-muted);
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .m-about-highlight {
+      background: var(--m-bg);
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius-lg);
+      padding: 32px;
+      margin: 40px 0;
+    }
+    .m-about-highlight p {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--m-text);
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+    .m-about-highlight .m-about-price {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--m-blue);
+      margin-top: 16px;
+      margin-bottom: 4px;
+    }
+    .m-about-highlight .m-about-price-sub {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--m-text-muted);
+    }
+    .m-about-cta {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 1px solid var(--m-border);
+    }
+    .m-about-cta p {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--m-text);
+      margin-bottom: 20px;
+    }
+    .m-about-cta a {
+      display: inline-block;
+      padding: 14px 32px;
+      background: var(--m-blue);
+      color: var(--m-white);
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: var(--m-radius);
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .m-about-cta a:hover {
+      background: var(--m-blue-dark);
+    }
+    [data-lang] { display: none; }
+    .m-lang-es [data-lang="es"] { display: block; }
+    .m-lang-en [data-lang="en"] { display: block; }
+    @media (max-width: 768px) {
+      .m-about { padding: 100px 0 60px; }
+      .m-about h1 { font-size: 28px; }
+      .m-about h2 { font-size: 20px; }
+      .m-about-top { flex-direction: column; }
+      .m-about-highlight { padding: 24px; }
+      .m-about-highlight .m-about-price { font-size: 24px; }
+    }
+  </style>
+</head>
+<body class="m-body">
+
+  <!-- ── Navigation ── -->
+  <nav class="m-nav m-nav--scrolled">
+    <div class="m-nav-inner">
+      <a href="/" class="m-nav-logo">AhoraTengoPagina</a>
+      <div class="m-nav-links">
+        <a href="/" class="m-nav-link">Inicio</a>
+        <a href="/#precios" class="m-nav-link">Precios</a>
+        <a href="/#faq" class="m-nav-link">FAQ</a>
+      </div>
+      <button class="m-hamburger" id="m-hamburger" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div class="m-mobile-menu" id="m-mobile-menu">
+      <a href="/" class="m-nav-link">Inicio</a>
+      <a href="/#precios" class="m-nav-link">Precios</a>
+      <a href="/#faq" class="m-nav-link">FAQ</a>
+    </div>
+  </nav>
+
+  <!-- ── About Content ── -->
+  <section class="m-about m-lang-es">
+    <div class="m-about-inner">
+
+      <div class="m-about-top">
+        <div>
+          <div data-lang="es">
+            <h1>Sobre Nosotros</h1>
+            <p class="m-about-subtitle">La historia detrás de AhoraTengoPagina</p>
+          </div>
+          <div data-lang="en">
+            <h1>About Us</h1>
+            <p class="m-about-subtitle">The story behind AhoraTengoPagina</p>
+          </div>
+        </div>
+        <div class="m-about-lang" id="m-lang-switcher">
+          <button data-set-lang="es" class="m-active">ES</button>
+          <button data-set-lang="en">EN</button>
+        </div>
+      </div>
+
+      <!-- ── Spanish ── -->
+      <div data-lang="es">
+        <p>Hola, soy Andy y recientemente me mudé a Guadalajara, México desde Estados Unidos. Mi especialidad es el diseño web y la publicidad digital, y noté que muchos negocios locales en esta zona ni siquiera tienen una página web.</p>
+
+        <p>Así que creé esta herramienta para ayudar a negocios locales a crear una página web que explique su negocio a clientes potenciales y se conecte con su ficha de Google para que sean más fáciles de encontrar.</p>
+
+        <h2>La Misión</h2>
+
+        <p>Mi meta es darles a los negocios locales en Latinoamérica las mismas herramientas que usan los negocios profesionales en Estados Unidos, a una fracción absoluta del costo.</p>
+
+        <div class="m-about-highlight">
+          <p>Tu propia página web, diseñada profesionalmente y alojada en un dominio personalizado como <strong>NombreDeTuNegocio.com</strong>.</p>
+          <div class="m-about-price">Solo $299 MXN/mes</div>
+          <div class="m-about-price-sub">Sin contratos. Cancela cuando quieras.</div>
+        </div>
+
+        <h2>Lo Que Incluye</h2>
+
+        <p>Cada página web incluye diseño profesional personalizado, optimización para celular, conexión con tu ficha de Google, botones de contacto por WhatsApp y teléfono, fotos de tu negocio, reseñas de clientes, horarios, y todo lo que tus clientes necesitan saber. Y si necesitas cambios, los hacemos nosotros.</p>
+
+        <p>Creemos que todo negocio merece tener presencia en internet. No importa si eres una taquería, una estética, un plomero o un dentista, tus clientes te buscan en Google y merecen encontrar una página profesional que los convenza de elegirte a ti.</p>
+
+        <div class="m-about-cta">
+          <p>Empieza hoy y ten tu página lista en 72 horas.</p>
+          <a href="https://wa.me/529991095806?text=Hola!%20Quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20servicios%20de%20p%C3%A1ginas%20web" target="_blank" rel="noopener">Contáctanos por WhatsApp</a>
+        </div>
+      </div>
+
+      <!-- ── English ── -->
+      <div data-lang="en">
+        <p>Hi, I'm Andy and I recently moved to Guadalajara, Mexico from the United States. My specialty is in website design and digital advertising, and I noticed that a lot of local businesses in this area don't even have a website.</p>
+
+        <p>So I created this tool to help local businesses create a website that will explain their business to potential customers and connect to their Google listing so they are more easily found.</p>
+
+        <h2>The Mission</h2>
+
+        <p>My goal is to give local businesses in Latin America the same tools that professional businesses in the United States use at an absolute fraction of the cost.</p>
+
+        <div class="m-about-highlight">
+          <p>Your own professionally designed website, hosted on a custom domain like <strong>YourBusinessName.com</strong>.</p>
+          <div class="m-about-price">Just $299 MXN/month</div>
+          <div class="m-about-price-sub">No contracts. Cancel anytime.</div>
+        </div>
+
+        <h2>What's Included</h2>
+
+        <p>Every website includes custom professional design, mobile optimization, Google listing integration, WhatsApp and phone contact buttons, photos of your business, customer reviews, business hours, and everything your customers need to know. And if you need changes, we handle them for you.</p>
+
+        <p>We believe every business deserves to have a presence on the internet. Whether you're a taco shop, a hair salon, a plumber, or a dentist, your customers are searching for you on Google and they deserve to find a professional page that convinces them to choose you.</p>
+
+        <div class="m-about-cta">
+          <p>Get started today and have your website ready in 72 hours.</p>
+          <a href="https://wa.me/529991095806?text=Hi!%20I%20want%20more%20information%20about%20your%20website%20services" target="_blank" rel="noopener">Contact us on WhatsApp</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="m-footer">
+    <div class="m-footer-inner">
+      <div class="m-footer-brand">
+        <h3>AhoraTengoPagina</h3>
+        <p>Creamos páginas web profesionales para negocios locales en Latinoamérica. Simple, rápido y sin complicaciones.</p>
+      </div>
+      <div class="m-footer-col">
+        <h4>Enlaces</h4>
+        <a href="/">Inicio</a>
+        <a href="/#precios">Precios</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/about">Sobre Nosotros</a>
+        <a href="/privacy-policy">Política de Privacidad</a>
+      </div>
+      <div class="m-footer-col">
+        <h4>Contacto</h4>
+        <a href="https://wa.me/529991095806?text=Hola!%20Quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20servicios%20de%20p%C3%A1ginas%20web" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="mailto:hola@ahoratengopagina.com">hola@ahoratengopagina.com</a>
+      </div>
+    </div>
+    <div class="m-footer-bottom">&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.</div>
+  </footer>
+
+  <script>
+    // Hamburger menu toggle
+    const hamburger = document.getElementById('m-hamburger');
+    const mobileMenu = document.getElementById('m-mobile-menu');
+    if (hamburger && mobileMenu) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('m-active');
+        mobileMenu.classList.toggle('m-active');
+      });
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          hamburger.classList.remove('m-active');
+          mobileMenu.classList.remove('m-active');
+        });
+      });
+    }
+
+    // Language switcher
+    const aboutSection = document.querySelector('.m-about');
+    const langSwitcher = document.getElementById('m-lang-switcher');
+    if (langSwitcher && aboutSection) {
+      langSwitcher.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-set-lang]');
+        if (!btn) return;
+        const lang = btn.dataset.setLang;
+        aboutSection.classList.remove('m-lang-es', 'm-lang-en');
+        aboutSection.classList.add('m-lang-' + lang);
+        langSwitcher.querySelectorAll('button').forEach(b => b.classList.remove('m-active'));
+        btn.classList.add('m-active');
+        document.documentElement.lang = lang;
+      });
+    }
+  </script>
+</body>
+</html>

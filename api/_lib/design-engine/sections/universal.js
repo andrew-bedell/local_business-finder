@@ -410,7 +410,7 @@ export function footerSection(content, business) {
         </div>
         <div class="site-footer__bottom">
           <p class="site-footer__copyright">${copyright}</p>
-          <p class="site-footer__attribution">Diseñado por <a href="https://www.ahoratengopagina.com" target="_blank">AhoraTengoPagina.com</a></p>
+          <p class="site-footer__attribution">Diseñado por <a href="https://www.ahoratengopagina.com/about" target="_blank">AhoraTengoPagina.com</a></p>
         </div>
       </div>
     </footer>`,

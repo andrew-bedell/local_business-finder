@@ -95,6 +95,7 @@
 
       footer_desc: 'Creamos páginas web profesionales para negocios locales en Latinoamérica. Simple, rápido y sin complicaciones.',
       footer_links: 'Enlaces',
+      footer_about: 'Sobre Nosotros',
       footer_contact: 'Contacto',
       footer_copy: '&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.',
 
@@ -207,6 +208,7 @@
 
       footer_desc: 'We create professional websites for local businesses in Latin America. Simple, fast, and hassle-free.',
       footer_links: 'Links',
+      footer_about: 'About Us',
       footer_contact: 'Contact',
       footer_copy: '&copy; 2026 AhoraTengoPagina. All rights reserved.',
 

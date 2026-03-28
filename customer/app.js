@@ -1280,6 +1280,9 @@
       var reviewId = urlParams.get('review');
       if (reviewId) {
         loadReviewSection(reviewId);
+      } else if (!websiteData) {
+        // No website yet — force wizard as the first thing the user sees
+        showSection('wizard');
       } else {
         showSection('dashboard');
         // Check for pending approvals (show banner)
@@ -2011,6 +2014,11 @@
   function showSection(sectionId) {
     // Normalize — support both "dashboard" and "section-dashboard"
     var normalizedId = sectionId.replace(/^section-/, '');
+
+    // Force wizard if no website exists (except account section for logout/settings)
+    if (!websiteData && normalizedId !== 'wizard' && normalizedId !== 'account') {
+      normalizedId = 'wizard';
+    }
 
     // Hide all sections
     var sections = $$('.c-section');
@@ -5266,43 +5274,65 @@
     var btn = document.getElementById('wiz-generate-btn');
     var reqsEl = document.getElementById('wiz-generate-reqs');
     var hintEl = document.getElementById('wiz-generate-hint');
+    var titleEl = document.querySelector('.c-wizard-generate-title');
+    var descEl = document.querySelector('.c-wizard-generate-desc');
     if (!btn) return;
+
+    var hasWebsite = !!(websiteData && websiteData.id);
 
     var reqs = getGenerateRequirements();
     var allMet = reqs.every(function (r) { return r.met; });
 
     btn.disabled = !allMet;
 
+    // Switch button text based on whether website already exists
+    if (hasWebsite) {
+      btn.textContent = 'Actualizar Mi Página Web';
+      if (titleEl) titleEl.textContent = 'Actualizar Tu Página Web';
+      if (descEl) descEl.textContent = 'Agrega nueva información y actualiza tu sitio web con los cambios.';
+    } else {
+      btn.textContent = 'Generar Mi Página Web';
+      if (titleEl) titleEl.textContent = 'Tu Página Web';
+      if (descEl) descEl.textContent = 'Completa los datos requeridos para generar tu página web.';
+    }
+
     if (reqsEl) {
-      var html = '';
-      for (var i = 0; i < reqs.length; i++) {
-        var r = reqs[i];
-        var cls = r.met ? 'met' : 'unmet';
-        var icon = r.met ? '&#10003;' : '&#9675;';
-        html += '<div class="c-wizard-generate-req ' + cls + '">';
-        html += '<span class="c-wizard-generate-req-icon">' + icon + '</span>';
-        html += '<span>' + escapeHtml(r.label) + '</span>';
-        html += '</div>';
+      // Hide requirements checklist when website already exists (they're already met)
+      if (hasWebsite) {
+        reqsEl.innerHTML = '';
+      } else {
+        var html = '';
+        for (var i = 0; i < reqs.length; i++) {
+          var r = reqs[i];
+          var cls = r.met ? 'met' : 'unmet';
+          var icon = r.met ? '&#10003;' : '&#9675;';
+          html += '<div class="c-wizard-generate-req ' + cls + '">';
+          html += '<span class="c-wizard-generate-req-icon">' + icon + '</span>';
+          html += '<span>' + escapeHtml(r.label) + '</span>';
+          html += '</div>';
+        }
+        reqsEl.innerHTML = html;
       }
-      reqsEl.innerHTML = html;
     }
 
     if (hintEl) {
-      if (allMet) {
+      if (hasWebsite) {
+        hintEl.textContent = 'Los cambios que hiciste se guardan automáticamente. Haz clic en "Actualizar" para aplicarlos a tu sitio web.';
+      } else if (allMet) {
         hintEl.textContent = 'Mientras más información agregues, mejor será tu página web.';
       } else {
-        var missing = reqs.filter(function (r) { return !r.met; });
         hintEl.textContent = 'Completa los campos requeridos para habilitar la generación.';
       }
     }
   }
 
   function showEncouragementPopup() {
+    var hasWebsite = !!(websiteData && websiteData.id);
     var checks = getEncourageChecks();
     var allEncouraged = checks.every(function (c) { return c.met; });
 
-    // If all encouraged items are met, skip popup and generate directly
-    if (allEncouraged) {
+    // If updating existing website or all encouraged items met, skip popup
+    if (hasWebsite || allEncouraged) {
       startWebsiteGeneration();
       return;
     }
@@ -5341,18 +5371,19 @@
     });
   }
 
-  function showGenerationProgress() {
+  function showGenerationProgress(isUpdate) {
+    var title = isUpdate ? 'Actualizando tu página web' : 'Generando tu página web';
     var steps = [
-      { id: 'step-research', label: 'Investigando tu negocio...' },
-      { id: 'step-photos', label: 'Generando imágenes...' },
-      { id: 'step-content', label: 'Escribiendo contenido...' },
-      { id: 'step-build', label: 'Construyendo tu página...' },
+      { id: 'step-research', label: isUpdate ? 'Analizando cambios...' : 'Investigando tu negocio...' },
+      { id: 'step-photos', label: isUpdate ? 'Actualizando imágenes...' : 'Generando imágenes...' },
+      { id: 'step-content', label: isUpdate ? 'Actualizando contenido...' : 'Escribiendo contenido...' },
+      { id: 'step-build', label: isUpdate ? 'Reconstruyendo tu página...' : 'Construyendo tu página...' },
       { id: 'step-publish', label: 'Publicando...' }
     ];
 
     var html = '<div class="c-wizard-progress-overlay" id="wiz-progress-overlay">';
     html += '<div class="c-wizard-progress-card">';
-    html += '<h3>Generando tu página web</h3>';
+    html += '<h3>' + escapeHtml(title) + '</h3>';
     html += '<div class="c-wizard-progress-steps">';
     for (var i = 0; i < steps.length; i++) {
       var s = steps[i];
@@ -5386,7 +5417,8 @@
   }
 
   async function startWebsiteGeneration() {
-    showGenerationProgress();
+    var isUpdate = !!(websiteData && websiteData.id);
+    showGenerationProgress(isUpdate);
 
     try {
       var session = (await supabase.auth.getSession()).data.session;
@@ -5394,13 +5426,19 @@
 
       updateProgressStep('step-research', 'active');
 
+      var payload = {};
+      if (isUpdate) {
+        payload.mode = 'update';
+        payload.existingWebsiteId = websiteData.id;
+      }
+
       var res = await fetch('/api/customers/generate-website', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + session.access_token
         },
-        body: JSON.stringify({})
+        body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
@@ -5418,16 +5456,19 @@
       var data = await res.json();
       removeProgressOverlay();
 
+      var successMsg = isUpdate ? '¡Tu página web ha sido actualizada!' : '¡Tu página web ha sido creada!';
+      var draftMsg = isUpdate ? 'Tu página web fue actualizada en modo borrador.' : 'Tu página web fue creada en modo borrador. Un asesor la revisará.';
+
       if (data.publishedUrl) {
-        showToast('¡Tu página web ha sido creada!', 'success');
-        // Reload website data and navigate to dashboard
-        websiteData = await loadWebsiteInfo(businessData.id);
-        renderDashboard(businessData, websiteData, subscriptionData, []);
-        showSection('home');
+        showToast(successMsg, 'success');
       } else {
-        showToast('Tu página web fue creada en modo borrador. Un asesor la revisará.', 'success');
-        showSection('home');
+        showToast(draftMsg, 'success');
       }
+
+      // Reload website data and navigate to dashboard
+      websiteData = await loadWebsiteInfo(businessData.id);
+      renderDashboard(businessData, websiteData, subscriptionData, []);
+      showSection('dashboard');
     } catch (err) {
       console.error('Website generation error:', err);
       removeProgressOverlay();
