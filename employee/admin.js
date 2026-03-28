@@ -610,6 +610,10 @@
       teamLoadError: 'Failed to load team members',
       teamUpdateSuccess: 'Employee updated',
       teamUpdateError: 'Failed to update employee',
+      teamDelete: 'Delete',
+      teamDeleteConfirm: 'Are you sure you want to permanently delete "{0}"? This will remove their account and cannot be undone.',
+      teamDeleteSuccess: '"{0}" has been deleted.',
+      teamDeleteError: 'Failed to delete employee',
       // Applications
       appsPendingTitle: 'Pending Applications',
       appsThName: 'Name',
@@ -1321,6 +1325,10 @@
       teamLoadError: 'Error al cargar miembros del equipo',
       teamUpdateSuccess: 'Empleado actualizado',
       teamUpdateError: 'Error al actualizar empleado',
+      teamDelete: 'Eliminar',
+      teamDeleteConfirm: 'Estas seguro de eliminar permanentemente a "{0}"? Se eliminara su cuenta y no se puede deshacer.',
+      teamDeleteSuccess: '"{0}" ha sido eliminado.',
+      teamDeleteError: 'Error al eliminar empleado',
       // Applications
       appsPendingTitle: 'Solicitudes Pendientes',
       appsThName: 'Nombre',
@@ -9344,10 +9352,11 @@
       const isCurrentUser = window.__employeeAuth && emp.auth_user_id === window.__employeeAuth.user.id;
       const isPending = emp.is_active && !emp.joined_at;
       const resendBtn = isPending ? ` <button class="btn btn-view" data-emp-id="${emp.id}" data-action="resend" style="font-size:11px;padding:3px 10px">${t('teamResend')}</button>` : '';
+      const deleteBtn = `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="delete" style="font-size:11px;padding:3px 10px;color:var(--danger)">${t('teamDelete')}</button>`;
       const actionBtn = isCurrentUser ? '<span style="color:var(--text-dim);font-size:12px">You</span>'
         : emp.is_active
-        ? `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="deactivate" style="font-size:11px;padding:3px 10px">${t('teamDeactivate')}</button>${resendBtn}`
-        : `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="activate" style="font-size:11px;padding:3px 10px">${t('teamActivate')}</button>`;
+        ? `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="deactivate" style="font-size:11px;padding:3px 10px">${t('teamDeactivate')}</button>${resendBtn} ${deleteBtn}`
+        : `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="activate" style="font-size:11px;padding:3px 10px">${t('teamActivate')}</button> ${deleteBtn}`;
 
       // Sender name: editable for current user, read-only for others
       let senderNameCell;
@@ -9379,6 +9388,8 @@
         const action = btn.dataset.action;
         if (action === 'resend') {
           resendEmployeeInvite(empId, btn);
+        } else if (action === 'delete') {
+          deleteEmployee(empId);
         } else {
           toggleEmployeeActive(empId, action === 'activate');
         }
@@ -9501,6 +9512,38 @@
     } catch (err) {
       console.error('Toggle employee error:', err);
       showToast(t('teamUpdateError'), 'error');
+    }
+  }
+
+  async function deleteEmployee(empId) {
+    const auth = window.__employeeAuth;
+    if (!auth || auth.employee.role !== 'admin') return;
+
+    const emp = teamEmployees.find(e => e.id === empId);
+    const empName = emp ? (emp.display_name || emp.email) : 'this employee';
+    if (!confirm(t('teamDeleteConfirm', empName))) return;
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch('/api/employees/list', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ id: empId }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Delete failed');
+      }
+      teamEmployees = teamEmployees.filter(e => e.id !== empId);
+      renderTeamTable();
+      showToast(t('teamDeleteSuccess', empName), 'success');
+    } catch (err) {
+      console.error('Delete employee error:', err);
+      showToast(t('teamDeleteError') + ': ' + err.message, 'error');
     }
   }
 

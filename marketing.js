@@ -4,6 +4,7 @@
   // ── Translations ──
   var translations = {
     es: {
+      nav_about: 'Sobre Nosotros',
       nav_problem: 'El Problema',
       nav_how: 'Cómo Funciona',
       nav_features: 'Funciones',
@@ -117,6 +118,7 @@
 
     },
     en: {
+      nav_about: 'About Us',
       nav_problem: 'The Problem',
       nav_how: 'How It Works',
       nav_features: 'Features',
@@ -248,6 +250,12 @@
       el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
     });
     document.documentElement.lang = currentLang;
+    // Toggle data-lang blocks (used on about page)
+    var aboutSection = document.querySelector('.m-about');
+    if (aboutSection) {
+      aboutSection.classList.remove('m-lang-es', 'm-lang-en');
+      aboutSection.classList.add('m-lang-' + currentLang);
+    }
     // Update toggle button labels
     var otherLang = currentLang === 'es' ? 'EN' : 'ES';
     var toggleDesktop = document.getElementById('m-lang-toggle');
