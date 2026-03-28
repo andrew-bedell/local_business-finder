@@ -37,33 +37,6 @@
       gap: 16px;
       margin-bottom: 48px;
     }
-    .m-about-lang {
-      display: inline-flex;
-      border: 1px solid var(--m-border);
-      border-radius: var(--m-radius);
-      overflow: hidden;
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-    .m-about-lang button {
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      font-family: inherit;
-      border: none;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-      background: var(--m-white);
-      color: var(--m-text-muted);
-    }
-    .m-about-lang button.m-active {
-      background: var(--m-blue);
-      color: var(--m-white);
-    }
-    .m-about-lang button:not(.m-active):hover {
-      background: var(--m-bg);
-      color: var(--m-text);
-    }
     .m-about h1 {
       font-size: 36px;
       font-weight: 800;
@@ -144,6 +117,22 @@
     [data-lang] { display: none; }
     .m-lang-es [data-lang="es"] { display: block; }
     .m-lang-en [data-lang="en"] { display: block; }
+    .m-about-founder {
+      display: flex;
+      align-items: flex-start;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+    .m-about-founder img {
+      width: 260px;
+      height: 260px;
+      object-fit: cover;
+      border-radius: var(--m-radius-lg);
+      flex-shrink: 0;
+    }
+    .m-about-founder p:last-child {
+      margin-bottom: 0;
+    }
     @media (max-width: 768px) {
       .m-about { padding: 100px 0 60px; }
       .m-about h1 { font-size: 28px; }
@@ -151,19 +140,26 @@
       .m-about-top { flex-direction: column; }
       .m-about-highlight { padding: 24px; }
       .m-about-highlight .m-about-price { font-size: 24px; }
+      .m-about-founder { flex-direction: column; align-items: center; }
+      .m-about-founder img { width: 200px; height: 200px; }
     }
   </style>
 </head>
 <body class="m-body">
 
   <!-- ── Navigation ── -->
-  <nav class="m-nav m-nav--scrolled">
+  <nav class="m-nav m-nav--scrolled" id="m-nav">
     <div class="m-nav-inner">
       <a href="/" class="m-nav-logo">AhoraTengoPagina</a>
       <div class="m-nav-links">
-        <a href="/" class="m-nav-link">Inicio</a>
-        <a href="/#precios" class="m-nav-link">Precios</a>
+        <a href="/about" class="m-nav-link" data-i18n="nav_about">Sobre Nosotros</a>
+        <a href="/#problema" class="m-nav-link" data-i18n="nav_problem">El Problema</a>
+        <a href="/#como-funciona" class="m-nav-link" data-i18n="nav_how">Cómo Funciona</a>
+        <a href="/#funciones" class="m-nav-link" data-i18n="nav_features">Funciones</a>
+        <a href="/#precios" class="m-nav-link" data-i18n="nav_pricing">Precios</a>
         <a href="/#faq" class="m-nav-link">FAQ</a>
+        <button class="m-nav-cta" data-open-modal data-i18n="nav_cta">Empieza gratis</button>
+        <button class="m-lang-toggle" id="m-lang-toggle" aria-label="Change language">EN</button>
       </div>
       <button class="m-hamburger" id="m-hamburger" aria-label="Menu">
         <span></span>
@@ -172,9 +168,14 @@
       </button>
     </div>
     <div class="m-mobile-menu" id="m-mobile-menu">
-      <a href="/" class="m-nav-link">Inicio</a>
-      <a href="/#precios" class="m-nav-link">Precios</a>
+      <button class="m-lang-toggle m-lang-toggle--mobile" id="m-lang-toggle-mobile" aria-label="Change language">EN</button>
+      <a href="/about" class="m-nav-link" data-i18n="nav_about">Sobre Nosotros</a>
+      <a href="/#problema" class="m-nav-link" data-i18n="nav_problem">El Problema</a>
+      <a href="/#como-funciona" class="m-nav-link" data-i18n="nav_how">Cómo Funciona</a>
+      <a href="/#funciones" class="m-nav-link" data-i18n="nav_features">Funciones</a>
+      <a href="/#precios" class="m-nav-link" data-i18n="nav_pricing">Precios</a>
       <a href="/#faq" class="m-nav-link">FAQ</a>
+      <button class="m-nav-cta" data-open-modal data-i18n="nav_cta">Empieza gratis</button>
     </div>
   </nav>
 
@@ -193,17 +194,17 @@
             <p class="m-about-subtitle">The story behind AhoraTengoPagina</p>
           </div>
         </div>
-        <div class="m-about-lang" id="m-lang-switcher">
-          <button data-set-lang="es" class="m-active">ES</button>
-          <button data-set-lang="en">EN</button>
-        </div>
       </div>
 
       <!-- ── Spanish ── -->
       <div data-lang="es">
-        <p>Hola, soy Andy y recientemente me mudé a Guadalajara, México desde Estados Unidos. Mi especialidad es el diseño web y la publicidad digital, y noté que muchos negocios locales en esta zona ni siquiera tienen una página web.</p>
-
-        <p>Así que creé esta herramienta para ayudar a negocios locales a crear una página web que explique su negocio a clientes potenciales y se conecte con su ficha de Google para que sean más fáciles de encontrar.</p>
+        <div class="m-about-founder">
+          <img src="/assets/images/founder-andy.jpeg" alt="Andy, fundador de AhoraTengoPagina, en Guadalajara">
+          <div>
+            <p>Hola, soy Andy y recientemente me mudé a Guadalajara, México desde Estados Unidos. Mi especialidad es el diseño web y la publicidad digital, y noté que muchos negocios locales en esta zona ni siquiera tienen una página web.</p>
+            <p>Así que creé esta herramienta para ayudar a negocios locales a crear una página web que explique su negocio a clientes potenciales y se conecte con su ficha de Google para que sean más fáciles de encontrar.</p>
+          </div>
+        </div>
 
         <h2>La Misión</h2>
 
@@ -229,9 +230,13 @@
 
       <!-- ── English ── -->
       <div data-lang="en">
-        <p>Hi, I'm Andy and I recently moved to Guadalajara, Mexico from the United States. My specialty is in website design and digital advertising, and I noticed that a lot of local businesses in this area don't even have a website.</p>
-
-        <p>So I created this tool to help local businesses create a website that will explain their business to potential customers and connect to their Google listing so they are more easily found.</p>
+        <div class="m-about-founder">
+          <img src="/assets/images/founder-andy.jpeg" alt="Andy, founder of AhoraTengoPagina, in Guadalajara">
+          <div>
+            <p>Hi, I'm Andy and I recently moved to Guadalajara, Mexico from the United States. My specialty is in website design and digital advertising, and I noticed that a lot of local businesses in this area don't even have a website.</p>
+            <p>So I created this tool to help local businesses create a website that will explain their business to potential customers and connect to their Google listing so they are more easily found.</p>
+          </div>
+        </div>
 
         <h2>The Mission</h2>
 
@@ -282,38 +287,62 @@
     <div class="m-footer-bottom">&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.</div>
   </footer>
 
-  <script>
-    // Hamburger menu toggle
-    const hamburger = document.getElementById('m-hamburger');
-    const mobileMenu = document.getElementById('m-mobile-menu');
-    if (hamburger && mobileMenu) {
-      hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('m-active');
-        mobileMenu.classList.toggle('m-active');
-      });
-      mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-          hamburger.classList.remove('m-active');
-          mobileMenu.classList.remove('m-active');
-        });
-      });
-    }
+  <!-- ── Lead Capture Modal ── -->
+  <div class="m-modal-overlay" id="m-lead-modal">
+    <div class="m-modal">
+      <div class="m-modal-header">
+        <div>
+          <h2 data-i18n="modal_title">Crea tu página gratis</h2>
+        </div>
+        <button class="m-modal-close" id="m-modal-close">&times;</button>
+      </div>
+      <div class="m-modal-body">
+        <form id="m-lead-form">
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-name" data-i18n="modal_name_label">Tu nombre</label>
+            <input class="m-form-input" type="text" id="lead-name" name="name" data-i18n-placeholder="modal_name_ph" placeholder="Ej: María García" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-business" data-i18n="modal_business_label">Nombre de tu negocio</label>
+            <input class="m-form-input" type="text" id="lead-business" name="business_name" data-i18n-placeholder="modal_business_ph" placeholder="Ej: Salón de Uñas María" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-address" data-i18n="modal_address_label">Dirección de tu negocio</label>
+            <input class="m-form-input" type="text" id="lead-address" name="address" data-i18n-placeholder="modal_address_ph" placeholder="Ej: Calle 60 #500, Centro, Mérida" required>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-whatsapp" data-i18n="modal_whatsapp_label">Tu WhatsApp</label>
+            <div class="m-phone-row">
+              <select class="m-form-input m-phone-code" id="lead-country-code">
+                <option value="52">&#127474;&#127485; +52</option>
+                <option value="57">&#127464;&#127476; +57</option>
+                <option value="1">&#127482;&#127480; +1</option>
+                <option value="51">&#127477;&#127466; +51</option>
+                <option value="54">&#127462;&#127479; +54</option>
+                <option value="56">&#127464;&#127473; +56</option>
+                <option value="593">&#127466;&#127464; +593</option>
+                <option value="502">&#127468;&#127481; +502</option>
+                <option value="504">&#127469;&#127475; +504</option>
+                <option value="506">&#127464;&#127479; +506</option>
+                <option value="507">&#127477;&#127462; +507</option>
+                <option value="58">&#127483;&#127466; +58</option>
+                <option value="55">&#127463;&#127479; +55</option>
+              </select>
+              <input class="m-form-input m-phone-number" type="tel" id="lead-whatsapp" name="whatsapp" data-i18n-placeholder="modal_whatsapp_ph" placeholder="999 123 4567" required>
+            </div>
+          </div>
+          <div class="m-form-group">
+            <label class="m-form-label" for="lead-email" data-i18n="modal_email_label">Tu email</label>
+            <input class="m-form-input" type="email" id="lead-email" name="email" data-i18n-placeholder="modal_email_ph" placeholder="Ej: maria@gmail.com" required>
+          </div>
+          <p class="m-form-disclaimer" data-i18n="modal_disclaimer">Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 72 horas.</p>
+          <p class="m-form-error" id="m-form-error" style="display:none"></p>
+          <button type="submit" class="m-form-submit" id="m-form-submit" data-i18n="modal_submit">Hablar con mi diseñador &rarr;</button>
+        </form>
+      </div>
+    </div>
+  </div>
 
-    // Language switcher
-    const aboutSection = document.querySelector('.m-about');
-    const langSwitcher = document.getElementById('m-lang-switcher');
-    if (langSwitcher && aboutSection) {
-      langSwitcher.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-set-lang]');
-        if (!btn) return;
-        const lang = btn.dataset.setLang;
-        aboutSection.classList.remove('m-lang-es', 'm-lang-en');
-        aboutSection.classList.add('m-lang-' + lang);
-        langSwitcher.querySelectorAll('button').forEach(b => b.classList.remove('m-active'));
-        btn.classList.add('m-active');
-        document.documentElement.lang = lang;
-      });
-    }
-  </script>
+  <script src="/marketing.js"></script>
 </body>
 </html>
