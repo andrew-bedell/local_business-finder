@@ -3511,6 +3511,60 @@ select.input {
   background: var(--danger-bg);
 }
 
+/* === Earnings Dashboard === */
+.earnings-overview {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.earnings-stat {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.earnings-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.earnings-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+}
+.earnings-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.earnings-link-row .input {
+  flex: 1;
+  font-size: 12px;
+  height: 34px;
+}
+.earnings-link-row .btn {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+@media (max-width: 768px) {
+  .earnings-overview {
+    flex-direction: column;
+  }
+  .earnings-stat {
+    min-width: 0;
+  }
+}
+
 /* === Team Management === */
 .team-table {
   width: 100%;

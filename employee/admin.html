@@ -69,6 +69,7 @@
                   <svg class="nav-chevron" viewBox="0 0 12 12" width="10" height="10"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
                 </a>
                 <div class="nav-dropdown">
+                  <a href="#" class="nav-dropdown-item" id="nav-earnings" data-tab="earnings" data-i18n="navEarnings">Earnings</a>
                   <a href="#" class="nav-dropdown-item" id="nav-team" data-tab="team" data-i18n="navTeam" style="display:none">Team</a>
                   <div class="nav-dropdown-lang">
                     <button class="lang-btn active" data-lang="en">EN</button>
@@ -1163,6 +1164,45 @@
         </div>
         <div class="da-pagination" id="da-pagination" style="display:none">
           <button class="btn btn-secondary" id="da-load-more" data-i18n="daLoadMore">Load More</button>
+        </div>
+      </section>
+
+      <!-- Earnings Dashboard -->
+      <section id="earnings-section" class="card" style="display:none">
+        <div class="card-header">
+          <h2 data-i18n="navEarnings">Earnings</h2>
+        </div>
+        <div class="earnings-overview" id="earnings-overview">
+          <div class="earnings-stat">
+            <span class="earnings-stat-label" data-i18n="earningsThisMonth">This Month</span>
+            <span class="earnings-stat-value" id="earnings-amount">$0 MXN</span>
+          </div>
+          <div class="earnings-stat">
+            <span class="earnings-stat-label" data-i18n="earningsActiveSubs">Active Subscriptions</span>
+            <span class="earnings-stat-value" id="earnings-active-count">0</span>
+          </div>
+          <div class="earnings-stat">
+            <span class="earnings-stat-label" data-i18n="earningsTrackingLink">Your Tracking Link</span>
+            <div class="earnings-link-row">
+              <input type="text" class="input" id="earnings-link-input" readonly>
+              <button class="btn btn-primary" id="btn-copy-tracking-link" data-i18n="earningsCopyLink">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div class="results-table-wrapper" style="margin-top:16px">
+          <table class="results-table" id="earnings-table">
+            <thead>
+              <tr>
+                <th data-i18n="earningsThBusiness">Business</th>
+                <th data-i18n="earningsThContact">Contact</th>
+                <th data-i18n="earningsThPlan">Plan</th>
+                <th data-i18n="earningsThCommission">Commission</th>
+                <th data-i18n="earningsThStatus">Status</th>
+                <th data-i18n="earningsThSince">Since</th>
+              </tr>
+            </thead>
+            <tbody id="earnings-table-body"></tbody>
+          </table>
         </div>
       </section>
 

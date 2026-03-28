@@ -32,10 +32,11 @@
     },
     settings: {
       items: [
+        { label: 'navEarnings', tab: 'earnings' },
         { label: 'navTeam', tab: 'team' },
         { label: 'langToggle', isLangToggle: true }
       ],
-      defaultTab: 'team'
+      defaultTab: 'earnings'
     }
   };
 
@@ -609,6 +610,26 @@
       teamLoadError: 'Failed to load team members',
       teamUpdateSuccess: 'Employee updated',
       teamUpdateError: 'Failed to update employee',
+      // Earnings
+      navEarnings: 'Earnings',
+      earningsThisMonth: 'This Month',
+      earningsActiveSubs: 'Active Subscriptions',
+      earningsTrackingLink: 'Your Tracking Link',
+      earningsCopyLink: 'Copy',
+      earningsLinkCopied: 'Link copied!',
+      earningsThBusiness: 'Business',
+      earningsThContact: 'Contact',
+      earningsThPlan: 'Plan',
+      earningsThCommission: 'Commission',
+      earningsThStatus: 'Status',
+      earningsThSince: 'Since',
+      earningsNoCustomers: 'No sales yet. Share your tracking link to start earning!',
+      earningsLoadError: 'Failed to load earnings data',
+      earningsStatusActive: 'Active',
+      earningsStatusCancelled: 'Cancelled',
+      earningsStatusPastDue: 'Past Due',
+      earningsStatusIncomplete: 'Incomplete',
+      earningsStatusNone: 'No Sub',
       // Email
       navEmail: 'Email',
       emailCustomerEmails: 'Customer Emails',
@@ -676,18 +697,37 @@
       outreachBusinessName: 'Business Name',
       outreachPhone: 'Phone',
       outreachPreviewUrl: 'Preview URL',
-      outreachMessage: 'Message',
       outreachCopied: 'Copied!',
       outreachNoPhone: 'No phone number available',
-      outreachTabUrgency: '\uD83D\uDCB8 Urgency',
-      outreachTabGift: '\uD83C\uDF81 Gift',
-      outreachTabCompetition: '\uD83C\uDFC6 Competition',
-      outreachCopyMessage: 'Copy Message',
       outreachYourName: 'Your Name',
       outreachNoName: 'Set your name in Team settings',
       thOutreach: 'Outreach',
-      thOutreachSent: 'Sent',
+      thOutreachSent: 'Progress',
       outreachSentLabel: 'Sent',
+      outreachMarkSent: 'Mark Sent',
+      outreachMarking: 'Saving...',
+      outreachStepMarked: 'Step marked as sent',
+      outreachMarkError: 'Failed to mark step',
+      outreachNoPreviewUrl: 'No preview URL — create website first',
+      outreachStep1Title: 'Step 1 — Verification',
+      outreachStep2Title: 'Step 2 — Introduction',
+      outreachStep3Title: 'Step 3 — Demo Link',
+      outreachStep4Title: 'Step 4 — Value',
+      outreachStep5Title: 'Step 5 — Price',
+      outreachStep6Title: 'Step 6 — CTA',
+      outreachStepFollowupTitle: 'Follow-up (24hr)',
+      outreachStepAboutTitle: 'About Page (optional)',
+      outreachStepSent: 'Sent',
+      outreachStepLocked: 'Locked',
+      outreachStepAvailable: 'Ready',
+      outreachFollowupWait: 'Available in {0}',
+      outreachFollowupReady: 'Ready to send',
+      outreachCopyMessage: 'Copy',
+      outreachAutoReplyOff: 'Disable auto-replies for this number',
+      outreachAutoReplyToggled: 'Auto-reply setting updated',
+      outreachAutoReplyError: 'Failed to update auto-reply setting',
+      outreachAllSent: 'All sent',
+      outreachComplete: 'Complete',
       // Demo Analytics
       navDemoAnalytics: 'Demo Analytics',
       demoAnalyticsTitle: 'Demo Page Analytics',
@@ -1261,6 +1301,26 @@
       teamLoadError: 'Error al cargar miembros del equipo',
       teamUpdateSuccess: 'Empleado actualizado',
       teamUpdateError: 'Error al actualizar empleado',
+      // Earnings
+      navEarnings: 'Ganancias',
+      earningsThisMonth: 'Este Mes',
+      earningsActiveSubs: 'Suscripciones Activas',
+      earningsTrackingLink: 'Tu Link de Seguimiento',
+      earningsCopyLink: 'Copiar',
+      earningsLinkCopied: '¡Link copiado!',
+      earningsThBusiness: 'Negocio',
+      earningsThContact: 'Contacto',
+      earningsThPlan: 'Plan',
+      earningsThCommission: 'Comisión',
+      earningsThStatus: 'Estado',
+      earningsThSince: 'Desde',
+      earningsNoCustomers: 'Aún no hay ventas. ¡Comparte tu link de seguimiento para empezar a ganar!',
+      earningsLoadError: 'Error al cargar datos de ganancias',
+      earningsStatusActive: 'Activo',
+      earningsStatusCancelled: 'Cancelado',
+      earningsStatusPastDue: 'Atrasado',
+      earningsStatusIncomplete: 'Incompleto',
+      earningsStatusNone: 'Sin Sub',
       // Email
       navEmail: 'Correo',
       emailCustomerEmails: 'Correos de Clientes',
@@ -1328,18 +1388,37 @@
       outreachBusinessName: 'Nombre del Negocio',
       outreachPhone: 'Teléfono',
       outreachPreviewUrl: 'Link de Vista Previa',
-      outreachMessage: 'Mensaje',
       outreachCopied: '¡Copiado!',
       outreachNoPhone: 'No hay número de teléfono',
-      outreachTabUrgency: '\uD83D\uDCB8 Urgencia',
-      outreachTabGift: '\uD83C\uDF81 Regalo',
-      outreachTabCompetition: '\uD83C\uDFC6 Competencia',
-      outreachCopyMessage: 'Copiar Mensaje',
       outreachYourName: 'Tu Nombre',
       outreachNoName: 'Configura tu nombre en Equipo',
       thOutreach: 'Contacto',
-      thOutreachSent: 'Enviado',
+      thOutreachSent: 'Progreso',
       outreachSentLabel: 'Enviado',
+      outreachMarkSent: 'Marcar Enviado',
+      outreachMarking: 'Guardando...',
+      outreachStepMarked: 'Paso marcado como enviado',
+      outreachMarkError: 'Error al marcar paso',
+      outreachNoPreviewUrl: 'Sin URL de vista previa — crea el sitio primero',
+      outreachStep1Title: 'Paso 1 — Verificación',
+      outreachStep2Title: 'Paso 2 — Presentación',
+      outreachStep3Title: 'Paso 3 — Demo',
+      outreachStep4Title: 'Paso 4 — Valor',
+      outreachStep5Title: 'Paso 5 — Precio',
+      outreachStep6Title: 'Paso 6 — CTA',
+      outreachStepFollowupTitle: 'Seguimiento (24hr)',
+      outreachStepAboutTitle: 'Sobre Nosotros (opcional)',
+      outreachStepSent: 'Enviado',
+      outreachStepLocked: 'Bloqueado',
+      outreachStepAvailable: 'Listo',
+      outreachFollowupWait: 'Disponible en {0}',
+      outreachFollowupReady: 'Listo para enviar',
+      outreachCopyMessage: 'Copiar',
+      outreachAutoReplyOff: 'Desactivar respuestas automáticas para este número',
+      outreachAutoReplyToggled: 'Configuración de auto-respuesta actualizada',
+      outreachAutoReplyError: 'Error al actualizar auto-respuesta',
+      outreachAllSent: 'Todo enviado',
+      outreachComplete: 'Completo',
       // Demo Analytics
       navDemoAnalytics: 'Analíticas Demo',
       demoAnalyticsTitle: 'Analíticas de Páginas Demo',
@@ -2210,7 +2289,7 @@
         <td class="td-center"><button class="btn btn-view btn-create-website" data-id="${b.id}">${createWebsiteBtnLabel}</button></td>
         <td class="td-center">${websiteUrlHtml}</td>
         <td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach" data-id="${b.id}">${t('outreachBtnLabel')}</button>` : ''}</td>
-        <td class="td-center">${existingWebsiteRecord ? (b.outreach_sent ? `<span class="outreach-sent-label">${t('outreachSentLabel')}</span>` : `<button class="btn-outreach-sent" data-id="${b.id}" title="Mark as sent">✓</button>`) : ''}</td>
+        <td class="td-center">${existingWebsiteRecord ? getOutreachProgressHtml(b) : ''}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center"><button class="btn btn-view btn-enrich" data-id="${b.id}">${b.description ? '\u2713' : t('btnEnrich')}</button></td>
@@ -2257,33 +2336,12 @@
       });
     });
 
-    // Bind outreach sent buttons
-    resultsBody.querySelectorAll('.btn-outreach-sent').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const businessId = btn.getAttribute('data-id');
-        btn.disabled = true;
-        btn.textContent = '...';
-        try {
-          const res = await fetch('/api/businesses/update-pipeline', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ businessId, outreach_sent: true }),
-          });
-          if (!res.ok) throw new Error('Failed');
-          // Update local data
-          const business = allBusinesses.find(b => String(b.id) === String(businessId));
-          if (business) business.outreach_sent = true;
-          const cr = currentResults.find(b => String(b.id) === String(businessId));
-          if (cr) cr.outreach_sent = true;
-          // Replace button with label
-          const td = btn.parentElement;
-          td.innerHTML = `<span class="outreach-sent-label">${t('outreachSentLabel')}</span>`;
-        } catch (err) {
-          console.error('Outreach sent error:', err);
-          btn.disabled = false;
-          btn.textContent = '✓';
-          showToast(t('inlineEditError'), 'error');
-        }
+    // Bind outreach progress clicks (open modal at current step)
+    resultsBody.querySelectorAll('.outreach-progress').forEach((el) => {
+      el.addEventListener('click', () => {
+        const businessId = el.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === businessId);
+        if (business) openOutreachModal(business);
       });
     });
 
@@ -2613,8 +2671,57 @@
     btnNext.disabled = currentPage >= totalPages - 1;
   }
 
+  // ── Outreach Helpers ──
+
+  function extractColonia(addressFull) {
+    if (!addressFull) return '';
+    // Mexican addresses: Street #, Colonia, City, State ZIP
+    const parts = addressFull.split(',').map(p => p.trim());
+    if (parts.length >= 3) return parts[1]; // second segment is usually colonia
+    return '';
+  }
+
+  function getOutreachStepCount(business) {
+    const steps = business.outreach_steps || {};
+    const coreSteps = ['1', '2', '3', '4', '5', '6'];
+    let sent = 0;
+    coreSteps.forEach(s => { if (steps[s] && steps[s].sent_at) sent++; });
+    return sent;
+  }
+
+  function getOutreachProgressHtml(business) {
+    const steps = business.outreach_steps || {};
+    const sent = getOutreachStepCount(business);
+    const hasFollowup = steps.followup && steps.followup.sent_at;
+    if (sent === 0) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer;color:var(--text-dim);font-size:12px">0/6</span>';
+    if (sent < 6) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--warning)">' + sent + '/6</span>';
+    if (hasFollowup) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer"><span class="outreach-sent-label">' + t('outreachComplete') + '</span></span>';
+    return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer"><span class="outreach-sent-label">' + t('outreachAllSent') + '</span></span>';
+  }
+
+  function getOutreachTemplates(business, senderName, previewUrl) {
+    const name = business.name || '';
+    const colonia = extractColonia(business.address_full) || business.address_city || '';
+    const sender = senderName || '';
+    const url = previewUrl || '';
+
+    return {
+      '1': `¿Es este el negocio ${name} en ${colonia}?`,
+      '2': `Hola, soy ${sender}. Vi que tu negocio no tiene página web, y les hice una de ejemplo con la información que encontré en Google.`,
+      '3': `Échale un ojo:\n\n👉 ${url}`,
+      '4': 'Hoy en día la gente busca en Google antes de ir a cualquier lugar. Si no tienes página, no apareces.',
+      '5': 'El servicio cuesta $299 pesos al mes. Eso incluye el diseño, el hospedaje, y un dominio como NombreDeTuNegocio.com.',
+      '6': '¿Te gustaría que la ajustemos juntos para que quede exactamente como tú quieres?',
+      'followup': '¡Hola! Solo quería saber si tuviste chance de ver la página que te mandé. Si tienes cualquier duda, con gusto te ayudo.',
+      'about': 'Si quieres saber más sobre lo que hacemos: ahoratengopagina.com/about',
+    };
+  }
+
   // ── Outreach Modal ──
   function openOutreachModal(business) {
+    const existing = document.getElementById('outreach-modal');
+    if (existing) existing.remove();
+
     const contacts = business.business_contacts || [];
     const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
     const phone = (primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone)) || business.phone || '';
@@ -2625,72 +2732,120 @@
       : '';
 
     const senderName = (window.__employeeAuth && (window.__employeeAuth.employee.outreach_sender_name || window.__employeeAuth.employee.display_name)) || '';
+    const templates = getOutreachTemplates(business, senderName, previewUrl);
+    const steps = business.outreach_steps || {};
 
-    function getTemplate(idx, name, url) {
-      const n = name || '';
-      const u = url || '';
-      if (idx === 0) {
-        return `Hola, soy ${n}. Vi que tu negocio no tiene página web y quise mostrarte algo: hice este sitio de ejemplo para ti en minutos usando inteligencia artificial.\n\n👉 ${u}\n\nAhora mismo, hay clientes buscándote en Google y no te encuentran. Los negocios que usan nuestro servicio reportan en promedio entre 5 y 10 clientes nuevos al mes, lo cual fácilmente cubre el costo de $299 pesos mensuales, todo incluido.\n\nSi te interesa, escríbeme y con mucho gusto te explico cómo funciona todo y respondo cualquier duda que tengas.`;
-      } else if (idx === 1) {
-        return `Hola, soy ${n}. Sin compromiso, te hice una página web para tu negocio. Échale un ojo:\n\n👉 ${u}\n\nSi te gusta, la puedo publicar por $299 al mes — eso incluye todo: dominio, diseño, y tú puedes editarla cuando quieras sin saber nada de tecnología. Si no te interesa, no pasa nada. Solo quería que vieras cómo se vería tu negocio en línea.`;
-      } else {
-        return `Hola, soy ${n}. Estuve viendo negocios como el tuyo en la zona y noté que varios ya tienen página web — pero tú todavía no. Te hice una para que veas qué tan fácil es:\n\n👉 ${u}\n\nPor $299 pesos al mes tienes tu propia página profesional. La puedes editar tú mismo, y lo mejor: cuando alguien busque en Google lo que tú vendes, te va a encontrar a ti y no solo a tu competencia. ¿Platicamos?`;
-      }
+    const stepKeys = ['1', '2', '3', '4', '5', '6'];
+    const stepTitleKeys = {
+      '1': 'outreachStep1Title', '2': 'outreachStep2Title', '3': 'outreachStep3Title',
+      '4': 'outreachStep4Title', '5': 'outreachStep5Title', '6': 'outreachStep6Title',
+      'followup': 'outreachStepFollowupTitle', 'about': 'outreachStepAboutTitle',
+    };
+
+    // Determine which core step is next
+    let nextStep = null;
+    for (const k of stepKeys) {
+      if (!steps[k] || !steps[k].sent_at) { nextStep = k; break; }
     }
 
-    let activeTab = 0;
+    // Follow-up availability: 24hr after step 6
+    let followupAvailable = false;
+    let followupCountdown = '';
+    if (steps['6'] && steps['6'].sent_at) {
+      const step6Time = new Date(steps['6'].sent_at).getTime();
+      const elapsed = Date.now() - step6Time;
+      const remaining = (24 * 60 * 60 * 1000) - elapsed;
+      if (remaining <= 0) {
+        followupAvailable = true;
+      } else {
+        const hours = Math.floor(remaining / (60 * 60 * 1000));
+        const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+        followupCountdown = t('outreachFollowupWait', `${hours}h ${minutes}m`);
+      }
+    }
+    const followupSent = steps.followup && steps.followup.sent_at;
+    const aboutSent = steps.about && steps.about.sent_at;
 
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.id = 'outreach-modal';
+    function buildStepHtml(key, isSent, isNext, isLocked, extraInfo) {
+      const title = t(stepTitleKeys[key]);
+      const msg = templates[key];
+      const statusClass = isSent ? 'outreach-step-sent' : isNext ? 'outreach-step-active' : 'outreach-step-locked';
+      const icon = isSent ? '✅' : isNext ? '▶' : '🔒';
+      const statusLabel = isSent ? t('outreachStepSent') : isNext ? t('outreachStepAvailable') : (extraInfo || t('outreachStepLocked'));
+      const showMsg = isSent || isNext;
+      const sentTime = isSent && steps[key] && steps[key].sent_at ? new Date(steps[key].sent_at).toLocaleString() : '';
+
+      return `
+        <div class="outreach-step ${statusClass}" data-step="${key}">
+          <div class="outreach-step-header">
+            <span class="outreach-step-icon">${icon}</span>
+            <span class="outreach-step-title">${title}</span>
+            <span class="outreach-step-status">${statusLabel}${sentTime ? ' — ' + sentTime : ''}</span>
+          </div>
+          ${showMsg ? `
+            <div class="outreach-step-body">
+              <pre class="outreach-message">${escapeHtml(msg)}</pre>
+              <div class="outreach-step-actions">
+                ${!isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">📋 ${t('outreachCopyMessage')}</button><button class="btn btn-primary btn-outreach-mark" data-step="${key}">${t('outreachMarkSent')}</button>` : ''}
+                ${isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">📋 ${t('outreachCopyMessage')}</button>` : ''}
+              </div>
+            </div>
+          ` : ''}
+        </div>`;
+    }
+
+    let stepsHtml = '';
+    for (const k of stepKeys) {
+      const isSent = !!(steps[k] && steps[k].sent_at);
+      const isNext = (k === nextStep);
+      const isLocked = !isSent && !isNext;
+      stepsHtml += buildStepHtml(k, isSent, isNext, isLocked);
+    }
+
+    // Followup step
+    const followupIsNext = !nextStep && !followupSent && followupAvailable;
+    stepsHtml += `<hr style="border:none;border-top:1px dashed var(--border);margin:12px 0">`;
+    stepsHtml += buildStepHtml('followup', followupSent, followupIsNext, !followupSent && !followupIsNext, followupCountdown || undefined);
+
+    // About step (always available)
+    stepsHtml += buildStepHtml('about', aboutSent, !aboutSent, false);
 
     const phoneDisplay = phone
       ? `<span class="outreach-value">${escapeHtml(phone)}</span><button class="btn-outreach-copy" data-copy="phone" title="Copy">📋</button>`
       : `<span class="outreach-value" style="color:var(--text-dim)">${t('outreachNoPhone')}</span>`;
 
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'outreach-modal';
+
     overlay.innerHTML = `
-      <div class="modal-content" style="max-width:560px">
+      <div class="modal-content" style="max-width:580px">
         <div class="modal-header">
-          <h2>${t('outreachModalTitle')}</h2>
+          <h2>${t('outreachModalTitle')} — ${escapeHtml(business.name)}</h2>
           <button class="modal-close" id="outreach-close">&times;</button>
         </div>
         <div class="modal-body">
-          <div class="outreach-field">
-            <div class="outreach-label">${t('outreachYourName')}</div>
-            <div class="outreach-value-row">
-              <span class="outreach-value">${senderName ? escapeHtml(senderName) : `<span style="color:var(--text-dim)">${t('outreachNoName')}</span>`}</span>
+          <div class="outreach-info-row">
+            <div class="outreach-field" style="flex:1">
+              <div class="outreach-label">${t('outreachPhone')}</div>
+              <div class="outreach-value-row">${phoneDisplay}</div>
+            </div>
+            <div class="outreach-field" style="flex:1">
+              <div class="outreach-label">${t('outreachPreviewUrl')}</div>
+              <div class="outreach-value-row">
+                <span class="outreach-value" style="font-size:12px"><a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener">${escapeHtml(previewUrl ? previewUrl.replace(/^https?:\/\//, '') : '')}</a></span>
+                <button class="btn-outreach-copy" data-copy="url" title="Copy">📋</button>
+              </div>
             </div>
           </div>
-          <div class="outreach-field">
-            <div class="outreach-label">${t('outreachBusinessName')}</div>
-            <div class="outreach-value-row">
-              <span class="outreach-value">${escapeHtml(business.name)}</span>
-              <button class="btn-outreach-copy" data-copy="name" title="Copy">📋</button>
-            </div>
+          <div class="outreach-auto-reply-toggle">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-muted)">
+              <input type="checkbox" id="outreach-auto-reply-cb"> ${t('outreachAutoReplyOff')}
+            </label>
           </div>
-          <div class="outreach-field">
-            <div class="outreach-label">${t('outreachPhone')}</div>
-            <div class="outreach-value-row">${phoneDisplay}</div>
-          </div>
-          <div class="outreach-field">
-            <div class="outreach-label">${t('outreachPreviewUrl')}</div>
-            <div class="outreach-value-row">
-              <span class="outreach-value"><a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener">${escapeHtml(previewUrl)}</a></span>
-              <button class="btn-outreach-copy" data-copy="url" title="Copy">📋</button>
-            </div>
-          </div>
-          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
-          <div class="outreach-field">
-            <div class="outreach-label">${t('outreachMessage')}</div>
-            <div class="outreach-tabs">
-              <button class="outreach-tab active" data-tab="0">${t('outreachTabUrgency')}</button>
-              <button class="outreach-tab" data-tab="1">${t('outreachTabGift')}</button>
-              <button class="outreach-tab" data-tab="2">${t('outreachTabCompetition')}</button>
-            </div>
-            <div class="outreach-message-wrapper">
-              <pre class="outreach-message" id="outreach-msg-text"></pre>
-            </div>
-            <button class="btn-outreach-copy-msg" id="outreach-copy-msg">📋 ${t('outreachCopyMessage')}</button>
+          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+          <div class="outreach-steps-list">
+            ${stepsHtml}
           </div>
         </div>
         <div class="modal-footer">
@@ -2701,40 +2856,94 @@
 
     document.body.appendChild(overlay);
 
-    const msgText = overlay.querySelector('#outreach-msg-text');
-
-    function updateMessage() {
-      msgText.textContent = getTemplate(activeTab, senderName, previewUrl);
+    // Load auto-reply disabled state
+    if (phone) {
+      loadAutoReplyState(phone, overlay.querySelector('#outreach-auto-reply-cb'));
     }
 
-    updateMessage();
-
-    // Tab switching
-    overlay.querySelectorAll('.outreach-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        overlay.querySelectorAll('.outreach-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        activeTab = parseInt(tab.getAttribute('data-tab'), 10);
-        updateMessage();
-      });
-    });
-
-    // Copy buttons
+    // Copy buttons (phone, url)
     overlay.querySelectorAll('.btn-outreach-copy').forEach(btn => {
       btn.addEventListener('click', () => {
         const type = btn.getAttribute('data-copy');
         let text = '';
-        if (type === 'name') text = business.name;
-        else if (type === 'phone') text = phone;
+        if (type === 'phone') text = phone;
         else if (type === 'url') text = previewUrl;
         copyToClipboard(text, t('outreachCopied'));
       });
     });
 
-    // Copy message button
-    overlay.querySelector('#outreach-copy-msg').addEventListener('click', () => {
-      copyToClipboard(msgText.textContent, t('outreachCopied'));
+    // Copy message buttons
+    overlay.querySelectorAll('.btn-outreach-copy-msg').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const stepKey = btn.getAttribute('data-step');
+        copyToClipboard(templates[stepKey], t('outreachCopied'));
+      });
     });
+
+    // Mark sent buttons
+    overlay.querySelectorAll('.btn-outreach-mark').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const stepKey = btn.getAttribute('data-step');
+        btn.disabled = true;
+        btn.textContent = t('outreachMarking');
+
+        try {
+          const res = await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: business.id, outreach_step: stepKey }),
+          });
+          if (!res.ok) throw new Error('Failed');
+          const result = await res.json();
+
+          // Update local data
+          if (result.business) {
+            const fields = ['outreach_steps', 'outreach_sent'];
+            fields.forEach(f => {
+              if (result.business[f] !== undefined) {
+                business[f] = result.business[f];
+                const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+                if (ab) ab[f] = result.business[f];
+                const cr = currentResults.find(b => String(b.id) === String(business.id));
+                if (cr) cr[f] = result.business[f];
+              }
+            });
+          }
+
+          showToast(t('outreachStepMarked'), 'success');
+          // Re-open modal to refresh state
+          closeOutreach();
+          renderTable();
+          openOutreachModal(business);
+        } catch (err) {
+          console.error('Mark step error:', err);
+          showToast(t('outreachMarkError'), 'error');
+          btn.disabled = false;
+          btn.textContent = t('outreachMarkSent');
+        }
+      });
+    });
+
+    // Auto-reply toggle
+    const autoReplyCb = overlay.querySelector('#outreach-auto-reply-cb');
+    if (autoReplyCb) {
+      autoReplyCb.addEventListener('change', async () => {
+        const disabled = autoReplyCb.checked;
+        try {
+          const res = await fetch('/api/whatsapp/toggle-auto-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, disabled }),
+          });
+          if (!res.ok) throw new Error('Failed');
+          showToast(t('outreachAutoReplyToggled'), 'success');
+        } catch (err) {
+          console.error('Toggle auto-reply error:', err);
+          autoReplyCb.checked = !disabled;
+          showToast(t('outreachAutoReplyError'), 'error');
+        }
+      });
+    }
 
     // Close handlers
     function closeOutreach() {
@@ -2752,6 +2961,23 @@
         document.removeEventListener('keydown', onEsc);
       }
     });
+  }
+
+  async function loadAutoReplyState(phone, checkbox) {
+    if (!phone || !checkbox) return;
+    try {
+      const normalizedPhone = phone.replace(/[^\d+]/g, '').replace(/^(?!\+)/, '+');
+      const { data } = await supabaseClient
+        .from('whatsapp_conversations')
+        .select('auto_reply_disabled')
+        .eq('recipient_phone', normalizedPhone)
+        .limit(1);
+      if (data && data.length > 0 && data[0].auto_reply_disabled) {
+        checkbox.checked = true;
+      }
+    } catch (err) {
+      console.warn('Failed to load auto-reply state:', err);
+    }
   }
 
   // ── Detail Modal ──
@@ -5163,11 +5389,12 @@
       customers: ['customers-section'],
       edit_requests: ['edit-requests-section'],
       demo_analytics: ['demo-analytics-section'],
+      earnings: ['earnings-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'earnings-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -5187,11 +5414,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-demo-analytics', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-demo-analytics', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -5216,6 +5443,7 @@
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
     if (tab === 'demo_analytics') loadDemoAnalytics();
+    if (tab === 'earnings') loadEarnings();
     if (tab === 'team') loadTeamEmployees();
   }
 
@@ -8738,6 +8966,97 @@
   document.addEventListener('duplicate-template', (e) => duplicateTemplate(e.detail));
   document.addEventListener('delete-template', (e) => deleteTemplate(e.detail));
   document.addEventListener('insert-merge-tag', (e) => insertMergeTag(e.detail));
+
+  // ── Earnings Dashboard ──
+
+  async function loadEarnings() {
+    const auth = window.__employeeAuth;
+    if (!auth) return;
+
+    try {
+      const res = await fetch('/api/employees/earnings', {
+        headers: { 'Authorization': 'Bearer ' + auth.token },
+      });
+      if (!res.ok) throw new Error('Failed to load earnings');
+      const data = await res.json();
+
+      // Update stat cards
+      const amountEl = document.getElementById('earnings-amount');
+      const countEl = document.getElementById('earnings-active-count');
+      const linkInput = document.getElementById('earnings-link-input');
+
+      if (amountEl) amountEl.textContent = '$' + (data.thisMonth.amount || 0).toLocaleString() + ' ' + (data.thisMonth.currency || 'MXN');
+      if (countEl) countEl.textContent = String(data.thisMonth.activeCount || 0);
+
+      // Load tracking link
+      if (data.trackingCode) {
+        if (linkInput) linkInput.value = 'https://ahoratengopagina.com/planes?rep=' + data.trackingCode;
+      } else {
+        // Generate tracking code if not yet set
+        try {
+          const codeRes = await fetch('/api/employees/tracking-code', {
+            headers: { 'Authorization': 'Bearer ' + auth.token },
+          });
+          if (codeRes.ok) {
+            const codeData = await codeRes.json();
+            if (linkInput) linkInput.value = codeData.link || '';
+          }
+        } catch (e) {
+          console.error('Tracking code fetch error:', e);
+        }
+      }
+
+      // Render customers table
+      const tbody = document.getElementById('earnings-table-body');
+      if (!tbody) return;
+
+      if (!data.customers || data.customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">' + escapeHtml(t('earningsNoCustomers')) + '</td></tr>';
+        return;
+      }
+
+      const statusLabels = {
+        active: t('earningsStatusActive'),
+        cancelled: t('earningsStatusCancelled'),
+        canceled: t('earningsStatusCancelled'),
+        past_due: t('earningsStatusPastDue'),
+        incomplete: t('earningsStatusIncomplete'),
+      };
+
+      tbody.innerHTML = data.customers.map(function(c) {
+        const statusText = statusLabels[c.status] || t('earningsStatusNone');
+        const statusClass = c.status === 'active' ? 'badge-has-site' : 'badge-no-site';
+        return '<tr>' +
+          '<td>' + escapeHtml(c.businessName || '') + '</td>' +
+          '<td>' + escapeHtml(c.contactName || '') + '</td>' +
+          '<td>' + escapeHtml(c.plan || '') + '</td>' +
+          '<td>$' + (c.monthlyCommission || 0).toLocaleString() + ' MXN</td>' +
+          '<td><span class="badge ' + statusClass + '">' + escapeHtml(statusText) + '</span></td>' +
+          '<td>' + escapeHtml(c.since || '—') + '</td>' +
+        '</tr>';
+      }).join('');
+
+    } catch (err) {
+      console.error('Load earnings error:', err);
+      showToast(t('earningsLoadError'), 'error');
+    }
+  }
+
+  // Copy tracking link button
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'btn-copy-tracking-link') {
+      const input = document.getElementById('earnings-link-input');
+      if (input && input.value) {
+        navigator.clipboard.writeText(input.value).then(function() {
+          showToast(t('earningsLinkCopied'), 'success');
+        }).catch(function() {
+          input.select();
+          document.execCommand('copy');
+          showToast(t('earningsLinkCopied'), 'success');
+        });
+      }
+    }
+  });
 
   // ── Team Management ──
   let teamEmployees = [];

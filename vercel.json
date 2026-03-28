@@ -15,6 +15,7 @@
     }
   },
   "rewrites": [
+    { "source": "/employee/explainer", "destination": "/employee/explainer.html" },
     { "source": "/employee/login", "destination": "/employee/login.html" },
     { "source": "/employee", "destination": "/employee/admin.html" },
     { "source": "/employee/search", "destination": "/employee/admin.html" },

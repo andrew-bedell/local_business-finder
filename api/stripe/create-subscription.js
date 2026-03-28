@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { productId, customerName, customerEmail, customerPhone, businessName, websiteId } = req.body || {};
+  const { productId, customerName, customerEmail, customerPhone, businessName, websiteId, repCode } = req.body || {};
 
   if (!productId || !customerEmail || !customerName) {
     return res.status(400).json({ error: 'Missing required fields: productId, customerEmail, customerName' });
@@ -134,7 +134,24 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'Failed to create subscription', detail: stripeSub.error?.message });
     }
 
-    // 5. Save customer record to Supabase
+    // 5. Look up sales rep from tracking code (if provided)
+    let salesRepEmployeeId = null;
+    if (repCode) {
+      try {
+        const repRes = await fetch(
+          `${supabaseUrl}/rest/v1/employees?tracking_code=eq.${encodeURIComponent(repCode)}&is_active=eq.true&select=id`,
+          { headers: supabaseHeaders }
+        );
+        const repData = await repRes.json();
+        if (Array.isArray(repData) && repData.length > 0) {
+          salesRepEmployeeId = repData[0].id;
+        }
+      } catch (repErr) {
+        console.error('Sales rep lookup error:', repErr);
+      }
+    }
+
+    // 6. Save customer record to Supabase
     if (businessId) {
       const customerPayload = {
         business_id: businessId,
@@ -143,6 +160,7 @@ export default async function handler(req, res) {
         contact_name: customerName || null,
         monthly_price: product.price,
         currency: product.currency,
+        ...(salesRepEmployeeId ? { sales_rep_employee_id: salesRepEmployeeId } : {}),
       };
 
       const custRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {

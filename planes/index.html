@@ -308,6 +308,14 @@ body { font-family: var(--font); background: var(--white); color: var(--text-dar
   var websiteId = pathParts[pathParts.length - 1];
   if (!websiteId || websiteId === 'planes') { showPageError('Enlace inv\u00e1lido.'); return; }
 
+  // Persist sales rep tracking code from URL param (30-day expiry)
+  var urlParams = new URLSearchParams(window.location.search);
+  var repParam = urlParams.get('rep');
+  if (repParam) {
+    localStorage.setItem('sales_rep_code', repParam);
+    localStorage.setItem('sales_rep_code_expiry', String(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  }
+
   // FAQ toggle
   document.querySelectorAll('.faq-q').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -379,6 +387,12 @@ body { font-family: var(--font); background: var(--white); color: var(--text-dar
     var intervalText = (product.currency || 'MXN') + (intervalLabels[product.billing_interval] || '');
     var features = product.features || [];
     var ctaUrl = '/checkout/' + encodeURIComponent(product.id) + '?website=' + encodeURIComponent(websiteId);
+    // Append sales rep code if present in localStorage (with expiry check)
+    var savedRep = localStorage.getItem('sales_rep_code');
+    var savedRepExpiry = parseInt(localStorage.getItem('sales_rep_code_expiry') || '0', 10);
+    if (savedRep && savedRepExpiry > Date.now()) {
+      ctaUrl += '&rep=' + encodeURIComponent(savedRep);
+    }
 
     var featuredClass = isFeatured ? ' featured' : '';
     var popularTag = isFeatured ? '<div class="popular-tag">POPULAR</div>' : '';

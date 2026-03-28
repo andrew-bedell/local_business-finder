@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gana dinero vendiendo sitios web — AhoraTengoPagina</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-input: #252833;
+  --bg-hover: #2a2d3a;
+  --border: #2e3140;
+  --text: #e8eaf0;
+  --text-muted: #8b8fa3;
+  --text-dim: #5c6078;
+  --primary: #6366f1;
+  --primary-hover: #818cf8;
+  --primary-bg: rgba(99, 102, 241, 0.12);
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+html, body { min-height: 100vh; font-family: var(--font); font-size: 14px; color: var(--text); background: var(--bg); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* NAV */
+.ex-nav { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.ex-logo { font-size: 17px; font-weight: 800; color: var(--primary); }
+.ex-nav-links { display: flex; gap: 16px; align-items: center; }
+.ex-nav-links a { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.ex-nav-links a:hover { color: var(--text); text-decoration: none; }
+
+/* HERO */
+.ex-hero { text-align: center; padding: 64px 24px 48px; background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%); }
+.ex-hero-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--success-bg); border: 1px solid rgba(34,197,94,0.25); color: var(--success); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 999px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+.ex-hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 800; line-height: 1.12; margin-bottom: 16px; }
+.ex-hero h1 em { font-style: normal; color: var(--success); }
+.ex-hero p { font-size: 16px; color: var(--text-muted); max-width: 520px; margin: 0 auto 32px; line-height: 1.6; }
+.ex-hero-cta { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; font-weight: 700; font-size: 15px; padding: 14px 28px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); transition: background 0.15s, transform 0.1s; text-decoration: none; }
+.ex-hero-cta:hover { background: var(--primary-hover); text-decoration: none; }
+.ex-hero-cta:active { transform: scale(0.97); }
+
+/* SECTIONS */
+.ex-section { padding: 56px 24px; max-width: 900px; margin: 0 auto; }
+.ex-section-label { text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+.ex-section-title { text-align: center; font-size: clamp(22px, 3.5vw, 30px); font-weight: 800; margin-bottom: 8px; }
+.ex-section-sub { text-align: center; font-size: 14px; color: var(--text-muted); max-width: 440px; margin: 0 auto 36px; }
+
+/* HOW IT WORKS — 3 steps */
+.ex-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.ex-step { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 20px; text-align: center; }
+.ex-step-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
+.ex-step-icon.search { background: var(--primary-bg); }
+.ex-step-icon.create { background: var(--success-bg); }
+.ex-step-icon.sell { background: rgba(245, 158, 11, 0.12); }
+.ex-step h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.ex-step p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+
+/* CALCULATOR */
+.ex-calc { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 36px 32px; text-align: center; max-width: 520px; margin: 0 auto; }
+.ex-calc-label { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+.ex-calc-slider { width: 100%; appearance: none; height: 6px; border-radius: 3px; background: var(--border); outline: none; margin-bottom: 8px; cursor: pointer; }
+.ex-calc-slider::-webkit-slider-thumb { appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--primary); cursor: pointer; border: 2px solid var(--bg); }
+.ex-calc-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--primary); cursor: pointer; border: 2px solid var(--bg); }
+.ex-calc-sites { font-size: 32px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.ex-calc-sites-label { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+.ex-calc-result { font-size: 48px; font-weight: 800; color: var(--success); line-height: 1; margin-bottom: 4px; }
+.ex-calc-result-label { font-size: 14px; color: var(--text-muted); }
+
+/* DEMO WIZARD */
+.ex-demo-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 14px; padding: 12px 24px; border-radius: var(--radius); cursor: pointer; font-family: var(--font); transition: border-color 0.15s, background 0.15s; margin-top: 24px; }
+.ex-demo-btn:hover { border-color: var(--primary); background: var(--primary-bg); }
+.ex-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
+.ex-modal-overlay.open { display: flex; }
+.ex-modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); max-width: 680px; width: 90%; max-height: 85vh; overflow-y: auto; animation: slideUp 0.25s ease; }
+.ex-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.ex-modal-header h2 { font-size: 18px; font-weight: 700; }
+.ex-modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+.ex-modal-close:hover { background: var(--bg-hover); color: var(--text); }
+.ex-modal-body { padding: 24px; }
+.ex-modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.ex-modal-step-label { font-size: 12px; color: var(--text-muted); }
+.ex-modal-btns { display: flex; gap: 8px; }
+.ex-modal-btn { padding: 8px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); border: none; transition: background 0.15s; }
+.ex-modal-btn-secondary { background: var(--bg-input); color: var(--text); border: 1px solid var(--border); }
+.ex-modal-btn-secondary:hover { background: var(--bg-hover); }
+.ex-modal-btn-primary { background: var(--primary); color: #fff; }
+.ex-modal-btn-primary:hover { background: var(--primary-hover); }
+
+/* Demo step content */
+.ex-demo-step { display: none; }
+.ex-demo-step.active { display: block; }
+.ex-demo-search-mock { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+.ex-demo-search-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.ex-demo-search-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-muted); font-size: 13px; font-family: var(--font); }
+.ex-demo-search-btn { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 600; font-family: var(--font); }
+.ex-demo-result { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg); border-radius: 6px; margin-bottom: 6px; }
+.ex-demo-result-info h4 { font-size: 13px; font-weight: 600; }
+.ex-demo-result-info p { font-size: 11px; color: var(--text-muted); }
+.ex-demo-result-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+.ex-demo-result-badge.no-site { color: var(--warning); background: rgba(245,158,11,0.12); }
+.ex-demo-result-stars { color: var(--warning); font-size: 11px; }
+
+.ex-demo-before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ex-demo-ba-card { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.ex-demo-ba-card h4 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+.ex-demo-data-list { list-style: none; }
+.ex-demo-data-list li { font-size: 12px; color: var(--text-muted); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+.ex-demo-data-list li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; }
+.ex-demo-website-mock { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+.ex-demo-website-mock h3 { font-size: 16px; font-weight: 800; color: var(--success); margin-bottom: 4px; }
+.ex-demo-website-mock p { font-size: 11px; color: var(--text-muted); }
+.ex-demo-website-sections { display: flex; gap: 6px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.ex-demo-website-sections span { font-size: 10px; background: var(--primary-bg); color: var(--primary); padding: 3px 8px; border-radius: 20px; }
+
+.ex-demo-wa-mock { max-width: 360px; margin: 0 auto; }
+.ex-demo-wa-bubble { padding: 10px 14px; border-radius: 12px; font-size: 12.5px; line-height: 1.5; margin-bottom: 8px; max-width: 85%; }
+.ex-demo-wa-bubble.sent { background: #005c4b; color: #e8eaf0; margin-left: auto; border-bottom-right-radius: 4px; }
+.ex-demo-wa-bubble.received { background: var(--bg-input); color: var(--text); border-bottom-left-radius: 4px; }
+.ex-demo-wa-time { font-size: 10px; color: var(--text-dim); text-align: right; margin-top: 2px; }
+
+/* SHOWCASE */
+.ex-showcase { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; }
+.ex-showcase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+.ex-showcase-item { background: var(--bg-input); border-radius: var(--radius); padding: 16px; }
+.ex-showcase-item h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+.ex-showcase-item p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.ex-showcase-stars { color: var(--warning); font-size: 13px; margin-bottom: 4px; }
+.ex-showcase-review { font-size: 12px; color: var(--text-muted); font-style: italic; line-height: 1.5; }
+.ex-showcase-author { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+/* CTA */
+.ex-cta { text-align: center; padding: 64px 24px; background: linear-gradient(0deg, rgba(99,102,241,0.08) 0%, transparent 100%); }
+.ex-cta h2 { font-size: clamp(22px, 4vw, 32px); font-weight: 800; margin-bottom: 12px; }
+.ex-cta p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+/* FOOTER */
+.ex-footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); }
+.ex-footer p { font-size: 12px; color: var(--text-dim); }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 640px) {
+  .ex-steps { grid-template-columns: 1fr; }
+  .ex-demo-before-after { grid-template-columns: 1fr; }
+  .ex-showcase-grid { grid-template-columns: 1fr; }
+  .ex-hero { padding: 40px 20px 32px; }
+  .ex-section { padding: 40px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="ex-nav">
+  <span class="ex-logo">AhoraTengoPagina</span>
+  <div class="ex-nav-links">
+    <a href="/employee/login">Iniciar sesion</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="ex-hero">
+  <div class="ex-hero-badge">&#128176; Oportunidad de ingreso</div>
+  <h1>Gana <em>$100 MXN/mes</em><br>por cada sitio web que vendas</h1>
+  <p>Busca negocios sin pagina web, nosotros creamos el sitio, tu lo vendes. Ganas comision cada mes mientras el cliente siga activo.</p>
+  <a href="/employee/login" class="ex-hero-cta">Comenzar ahora &#8594;</a>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="ex-section">
+  <div class="ex-section-label">Como funciona</div>
+  <div class="ex-section-title">3 pasos simples</div>
+  <div class="ex-section-sub">No necesitas saber programar. Nosotros hacemos todo el trabajo tecnico.</div>
+  <div class="ex-steps">
+    <div class="ex-step">
+      <div class="ex-step-icon search">&#128269;</div>
+      <h3>1. Busca</h3>
+      <p>Usa nuestra herramienta para encontrar negocios locales que no tienen pagina web. Restaurantes, salones, talleres...</p>
+    </div>
+    <div class="ex-step">
+      <div class="ex-step-icon create">&#127912;</div>
+      <h3>2. Crea</h3>
+      <p>Con un clic, generamos un sitio web profesional con fotos, resenas, horarios y toda la info del negocio.</p>
+    </div>
+    <div class="ex-step">
+      <div class="ex-step-icon sell">&#128176;</div>
+      <h3>3. Vende</h3>
+      <p>Contacta al dueno por WhatsApp, muestrale su sitio listo. Cuando compre, tu ganas comision cada mes.</p>
+    </div>
+  </div>
+
+  <div style="text-align:center">
+    <button class="ex-demo-btn" id="btn-open-demo">&#9654; Ver demo interactivo</button>
+  </div>
+</section>
+
+<!-- EARNINGS CALCULATOR -->
+<section class="ex-section" style="padding-top:0">
+  <div class="ex-section-label">Calculadora</div>
+  <div class="ex-section-title">Calcula tus ganancias</div>
+  <div class="ex-section-sub">Cada cliente activo te genera ingreso mensual recurrente.</div>
+  <div class="ex-calc">
+    <div class="ex-calc-label">Si vendes...</div>
+    <input type="range" class="ex-calc-slider" id="calc-slider" min="1" max="50" value="5">
+    <div class="ex-calc-sites" id="calc-sites">5</div>
+    <div class="ex-calc-sites-label">sitios web</div>
+    <div class="ex-calc-result" id="calc-result">$500</div>
+    <div class="ex-calc-result-label">MXN al mes (recurrente)</div>
+  </div>
+</section>
+
+<!-- SAMPLE SHOWCASE -->
+<section class="ex-section" style="padding-top:0">
+  <div class="ex-section-label">Ejemplo real</div>
+  <div class="ex-section-title">Asi se ve un negocio en nuestro sistema</div>
+  <div class="ex-section-sub">Toda esta info se recopila automaticamente y se convierte en un sitio web profesional.</div>
+  <div class="ex-showcase">
+    <div style="text-align:center;margin-bottom:16px">
+      <h3 style="font-size:18px;font-weight:800;margin-bottom:4px">Tacos Don Pepe</h3>
+      <p style="font-size:13px;color:var(--text-muted)">Taqueria &middot; Merida, Yucatan &middot; &#9733;&#9733;&#9733;&#9733;&#9733; 4.8 (127 resenas)</p>
+    </div>
+    <div class="ex-showcase-grid">
+      <div class="ex-showcase-item">
+        <h4>&#128222; Contacto</h4>
+        <p>Tel: +52 999 123 4567<br>WhatsApp: Si<br>Horario: Lun-Sab 10am-10pm</p>
+      </div>
+      <div class="ex-showcase-item">
+        <h4>&#128205; Ubicacion</h4>
+        <p>Calle 60 #502, Centro<br>Merida, Yucatan 97000<br>Mexico</p>
+      </div>
+      <div class="ex-showcase-item">
+        <h4>&#11088; Mejor resena</h4>
+        <div class="ex-showcase-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <div class="ex-showcase-review">"Los mejores tacos de cochinita de Merida. El servicio es rapido y los precios muy accesibles."</div>
+        <div class="ex-showcase-author">— Maria G., hace 2 semanas</div>
+      </div>
+      <div class="ex-showcase-item">
+        <h4>&#127860; Menu</h4>
+        <p>Tacos de cochinita &middot; $25<br>Panuchos &middot; $30<br>Salbutes &middot; $28<br>Agua de horchata &middot; $20</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="ex-cta">
+  <h2>Listo para empezar a ganar?</h2>
+  <p>Inicia sesion en tu panel de empleado y empieza a buscar negocios hoy mismo.</p>
+  <a href="/employee/login" class="ex-hero-cta">Iniciar sesion &#8594;</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="ex-footer">
+  <p>AhoraTengoPagina &mdash; Plataforma de venta de sitios web</p>
+</footer>
+
+<!-- DEMO WIZARD MODAL -->
+<div class="ex-modal-overlay" id="demo-modal">
+  <div class="ex-modal">
+    <div class="ex-modal-header">
+      <h2 id="demo-modal-title">Paso 1: Busca negocios</h2>
+      <button class="ex-modal-close" id="btn-close-demo">&times;</button>
+    </div>
+    <div class="ex-modal-body">
+      <!-- Step 1: Search -->
+      <div class="ex-demo-step active" id="demo-step-1">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Usa nuestra herramienta para buscar negocios que no tienen pagina web.</p>
+        <div class="ex-demo-search-mock">
+          <div class="ex-demo-search-row">
+            <div class="ex-demo-search-input">&#128205; Merida, Yucatan</div>
+            <div class="ex-demo-search-input">&#127860; Restaurantes</div>
+            <div class="ex-demo-search-btn">Buscar</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">3 negocios sin pagina web encontrados:</div>
+          <div class="ex-demo-result">
+            <div class="ex-demo-result-info">
+              <h4>Tacos Don Pepe</h4>
+              <p>Calle 60 #502 &middot; <span class="ex-demo-result-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span> 4.8 (127)</p>
+            </div>
+            <span class="ex-demo-result-badge no-site">Sin pagina web</span>
+          </div>
+          <div class="ex-demo-result">
+            <div class="ex-demo-result-info">
+              <h4>Pollo Feliz Centro</h4>
+              <p>Calle 55 #410 &middot; <span class="ex-demo-result-stars">&#9733;&#9733;&#9733;&#9733;</span> 4.3 (89)</p>
+            </div>
+            <span class="ex-demo-result-badge no-site">Sin pagina web</span>
+          </div>
+          <div class="ex-demo-result">
+            <div class="ex-demo-result-info">
+              <h4>Salon de Unas Lupita</h4>
+              <p>Calle 40 #201 &middot; <span class="ex-demo-result-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span> 4.9 (64)</p>
+            </div>
+            <span class="ex-demo-result-badge no-site">Sin pagina web</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Create -->
+      <div class="ex-demo-step" id="demo-step-2">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Con un clic, tomamos los datos del negocio y creamos un sitio web profesional.</p>
+        <div class="ex-demo-before-after">
+          <div class="ex-demo-ba-card">
+            <h4>&#128196; Datos recopilados</h4>
+            <ul class="ex-demo-data-list">
+              <li>Nombre: Tacos Don Pepe</li>
+              <li>Telefono: +52 999 123 4567</li>
+              <li>Direccion: Calle 60 #502</li>
+              <li>Horario: Lun-Sab 10am-10pm</li>
+              <li>Calificacion: 4.8/5 (127 resenas)</li>
+              <li>Fotos: 12 del negocio</li>
+              <li>Menu: 15 platillos con precios</li>
+            </ul>
+          </div>
+          <div class="ex-demo-ba-card">
+            <h4>&#127760; Sitio web generado</h4>
+            <div class="ex-demo-website-mock">
+              <h3>Tacos Don Pepe</h3>
+              <p>Taqueria en Merida, Yucatan</p>
+              <div class="ex-demo-website-sections">
+                <span>Inicio</span>
+                <span>Menu</span>
+                <span>Fotos</span>
+                <span>Resenas</span>
+                <span>Contacto</span>
+                <span>Ubicacion</span>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--success);margin-top:8px;text-align:center">&#10003; Listo para publicar</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Outreach -->
+      <div class="ex-demo-step" id="demo-step-3">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Contacta al dueno por WhatsApp y muestrale su sitio web listo.</p>
+        <div class="ex-demo-wa-mock">
+          <div class="ex-demo-wa-bubble sent">
+            Hola Don Pedro! &#128075; Soy Ana de AhoraTengoPagina. Vi que Tacos Don Pepe no tiene pagina web y le creamos una de muestra GRATIS. Le gustaria verla?
+            <div class="ex-demo-wa-time">10:32 AM &#10003;&#10003;</div>
+          </div>
+          <div class="ex-demo-wa-bubble received">
+            Hola Ana! Si, me interesa. Como la puedo ver?
+            <div class="ex-demo-wa-time">10:35 AM</div>
+          </div>
+          <div class="ex-demo-wa-bubble sent">
+            Aqui esta el enlace a su sitio de muestra: ahoratengopagina.com/ver/tacos-don-pepe &#128071; Incluye su menu, fotos, resenas y mapa. Todo listo para publicar!
+            <div class="ex-demo-wa-time">10:36 AM &#10003;&#10003;</div>
+          </div>
+          <div class="ex-demo-wa-bubble received">
+            Wow, se ve muy bien! &#128525; Cuanto cuesta?
+            <div class="ex-demo-wa-time">10:40 AM</div>
+          </div>
+          <div class="ex-demo-wa-bubble sent">
+            Solo $199 MXN al mes. Sin contratos, cancela cuando quiera. Incluye dominio, hosting y cambios ilimitados. Quiere activarlo?
+            <div class="ex-demo-wa-time">10:41 AM &#10003;&#10003;</div>
+          </div>
+          <div class="ex-demo-wa-bubble received">
+            Si, vamos! &#128640;
+            <div class="ex-demo-wa-time">10:43 AM</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:20px;padding:16px;background:var(--success-bg);border-radius:var(--radius);border:1px solid rgba(34,197,94,0.25)">
+          <div style="font-size:20px;margin-bottom:6px">&#127881;</div>
+          <div style="font-size:14px;font-weight:700;color:var(--success)">Venta cerrada = $100 MXN/mes para ti</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Ganas comision cada mes mientras el cliente siga activo</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-modal-footer">
+      <span class="ex-modal-step-label" id="demo-step-indicator">Paso 1 de 3</span>
+      <div class="ex-modal-btns">
+        <button class="ex-modal-btn ex-modal-btn-secondary" id="btn-demo-prev" style="display:none">Anterior</button>
+        <button class="ex-modal-btn ex-modal-btn-primary" id="btn-demo-next">Siguiente &#8594;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Calculator
+  var slider = document.getElementById('calc-slider');
+  var sitesEl = document.getElementById('calc-sites');
+  var resultEl = document.getElementById('calc-result');
+
+  slider.addEventListener('input', function() {
+    var val = parseInt(slider.value, 10);
+    sitesEl.textContent = val;
+    resultEl.textContent = '$' + (val * 100).toLocaleString('es-MX');
+  });
+
+  // Demo wizard
+  var currentStep = 1;
+  var totalSteps = 3;
+  var stepTitles = ['Paso 1: Busca negocios', 'Paso 2: Crea el sitio web', 'Paso 3: Vende por WhatsApp'];
+
+  var modal = document.getElementById('demo-modal');
+  var titleEl = document.getElementById('demo-modal-title');
+  var indicatorEl = document.getElementById('demo-step-indicator');
+  var prevBtn = document.getElementById('btn-demo-prev');
+  var nextBtn = document.getElementById('btn-demo-next');
+
+  document.getElementById('btn-open-demo').addEventListener('click', function() {
+    currentStep = 1;
+    updateDemoStep();
+    modal.classList.add('open');
+  });
+
+  document.getElementById('btn-close-demo').addEventListener('click', function() {
+    modal.classList.remove('open');
+  });
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.classList.remove('open');
+  });
+
+  prevBtn.addEventListener('click', function() {
+    if (currentStep > 1) { currentStep--; updateDemoStep(); }
+  });
+
+  nextBtn.addEventListener('click', function() {
+    if (currentStep < totalSteps) { currentStep++; updateDemoStep(); }
+    else { modal.classList.remove('open'); }
+  });
+
+  function updateDemoStep() {
+    for (var i = 1; i <= totalSteps; i++) {
+      var stepEl = document.getElementById('demo-step-' + i);
+      if (stepEl) stepEl.classList.toggle('active', i === currentStep);
+    }
+    titleEl.textContent = stepTitles[currentStep - 1];
+    indicatorEl.textContent = 'Paso ' + currentStep + ' de ' + totalSteps;
+    prevBtn.style.display = currentStep > 1 ? '' : 'none';
+    nextBtn.textContent = currentStep < totalSteps ? 'Siguiente \u2192' : 'Cerrar';
+  }
+})();
+</script>
+</body>
+</html>
