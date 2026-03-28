@@ -2131,6 +2131,7 @@
         <td class="td-center"><button class="btn btn-view btn-create-website" data-id="${b.id}">${createWebsiteBtnLabel}</button></td>
         <td class="td-center">${websiteUrlHtml}</td>
         <td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach" data-id="${b.id}">${t('outreachBtnLabel')}</button>` : ''}</td>
+        <td class="td-center">${existingWebsiteRecord ? (b.outreach_sent ? `<span class="outreach-sent-label">${t('outreachSentLabel')}</span>` : `<button class="btn-outreach-sent" data-id="${b.id}" title="Mark as sent">✓</button>`) : ''}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center"><button class="btn btn-view btn-enrich" data-id="${b.id}">${b.description ? '\u2713' : t('btnEnrich')}</button></td>
@@ -2174,6 +2175,36 @@
         const businessId = btn.getAttribute('data-id');
         const business = currentResults.find(b => String(b.id) === businessId);
         if (business) openOutreachModal(business);
+      });
+    });
+
+    // Bind outreach sent buttons
+    resultsBody.querySelectorAll('.btn-outreach-sent').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const businessId = btn.getAttribute('data-id');
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          const res = await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId, outreach_sent: true }),
+          });
+          if (!res.ok) throw new Error('Failed');
+          // Update local data
+          const business = allBusinesses.find(b => String(b.id) === String(businessId));
+          if (business) business.outreach_sent = true;
+          const cr = currentResults.find(b => String(b.id) === String(businessId));
+          if (cr) cr.outreach_sent = true;
+          // Replace button with label
+          const td = btn.parentElement;
+          td.innerHTML = `<span class="outreach-sent-label">${t('outreachSentLabel')}</span>`;
+        } catch (err) {
+          console.error('Outreach sent error:', err);
+          btn.disabled = false;
+          btn.textContent = '✓';
+          showToast(t('inlineEditError'), 'error');
+        }
       });
     });
 
