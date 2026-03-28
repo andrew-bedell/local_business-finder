@@ -4229,6 +4229,7 @@
 
   async function loadWizardData() {
     if (!businessData || !businessData.id) return;
+    wizardInitialStateApplied = false;
 
     try {
       // Load photos, reviews, and services in parallel
@@ -4253,6 +4254,7 @@
   }
 
   var wizardEventsFound = false;
+  var wizardInitialStateApplied = false;
 
   function calculateWizardScore(business, photos, reviews) {
     var breakdown = {};
@@ -4318,6 +4320,18 @@
     total = Math.min(total, 100);
 
     return { total: total, breakdown: breakdown };
+  }
+
+  function getCardCompleteness(breakdown) {
+    return {
+      photos: breakdown.photos.score >= breakdown.photos.max,
+      reviews: breakdown.reviews.score >= breakdown.reviews.max,
+      whatsapp: breakdown.whatsapp.filled,
+      address: breakdown.address.filled,
+      hours: breakdown.hours.filled,
+      founder: breakdown.founder.score >= breakdown.founder.max,
+      services: breakdown.services.score >= breakdown.services.max
+    };
   }
 
   function renderWizardScore(scoreData) {
@@ -4446,6 +4460,65 @@
     renderFounderPhoto();
     // Fill form fields
     fillWizardFields();
+
+    // Update visual classes for complete/next states
+    var completeness = getCardCompleteness(bd);
+    var cardOrder = ['photos', 'reviews', 'whatsapp', 'address', 'hours', 'founder', 'services'];
+    var firstIncomplete = null;
+    for (var ci = 0; ci < cardOrder.length; ci++) {
+      var cid = cardOrder[ci];
+      var cardEl = document.querySelector('[data-wiz-card="' + cid + '"]');
+      if (!cardEl) continue;
+      if (completeness[cid]) {
+        cardEl.classList.add('c-wizard-card--complete');
+        cardEl.classList.remove('c-wizard-card--next');
+      } else {
+        cardEl.classList.remove('c-wizard-card--complete');
+        if (!firstIncomplete) {
+          firstIncomplete = cid;
+          cardEl.classList.add('c-wizard-card--next');
+        } else {
+          cardEl.classList.remove('c-wizard-card--next');
+        }
+      }
+    }
+
+    // Apply initial expand/collapse on first load
+    applyWizardSmartState(scoreData, completeness, firstIncomplete);
+  }
+
+  function applyWizardSmartState(scoreData, completeness, firstIncomplete) {
+    if (wizardInitialStateApplied) return;
+    wizardInitialStateApplied = true;
+
+    var cardOrder = ['photos', 'reviews', 'whatsapp', 'address', 'hours', 'founder', 'services'];
+
+    // Collapse completed cards, expand first incomplete
+    for (var i = 0; i < cardOrder.length; i++) {
+      var cid = cardOrder[i];
+      var cardEl = document.querySelector('[data-wiz-card="' + cid + '"]');
+      if (!cardEl) continue;
+      if (completeness[cid]) {
+        cardEl.classList.remove('open');
+      } else if (cid === firstIncomplete) {
+        cardEl.classList.add('open');
+      }
+    }
+
+    // Smooth scroll to first incomplete card, or generate CTA if all complete
+    setTimeout(function () {
+      if (firstIncomplete) {
+        var targetEl = document.querySelector('[data-wiz-card="' + firstIncomplete + '"]');
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        var genCard = document.querySelector('.c-wizard-generate-card');
+        if (genCard) {
+          genCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 350);
   }
 
   function renderWizardPhotos() {
@@ -5322,6 +5395,17 @@
         hintEl.textContent = 'Mientras más información agregues, mejor será tu página web.';
       } else {
         hintEl.textContent = 'Completa los campos requeridos para habilitar la generación.';
+      }
+    }
+
+    // Ready-state pulse when all requirements met and score >= 90
+    var genCard = document.querySelector('.c-wizard-generate-card');
+    if (genCard) {
+      var scoreData = calculateWizardScore(businessData || {}, wizardPhotos, wizardReviews);
+      if (allMet && scoreData.total >= 90) {
+        genCard.classList.add('c-wizard-generate-card--ready');
+      } else {
+        genCard.classList.remove('c-wizard-generate-card--ready');
       }
     }
   }
