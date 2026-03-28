@@ -3183,23 +3183,6 @@ select.input {
   color: #fff;
 }
 
-.outreach-name-input {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.15s;
-}
-
-.outreach-name-input:focus {
-  outline: none;
-  border-color: var(--border-focus);
-}
-
 /* Nav badge for unread count */
 .nav-tab-badge {
   display: inline-flex;
