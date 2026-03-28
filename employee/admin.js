@@ -667,6 +667,8 @@
       outreachYourName: 'Your Name',
       outreachNoName: 'Set your name in Team settings',
       thOutreach: 'Outreach',
+      thOutreachSent: 'Sent',
+      outreachSentLabel: 'Sent',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -1280,6 +1282,8 @@
       outreachYourName: 'Tu Nombre',
       outreachNoName: 'Configura tu nombre en Equipo',
       thOutreach: 'Contacto',
+      thOutreachSent: 'Enviado',
+      outreachSentLabel: 'Enviado',
     },
   };
 
