@@ -1211,6 +1211,25 @@
         <div class="card-header">
           <h2 data-i18n="navTeam">Team</h2>
         </div>
+        <!-- Pending Applications (admin only) -->
+        <div id="team-applications" style="display:none">
+          <h3 style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px" data-i18n="appsPendingTitle">Pending Applications</h3>
+          <div class="results-table-wrapper" style="margin-bottom:20px">
+            <table class="results-table" id="apps-table">
+              <thead>
+                <tr>
+                  <th data-i18n="appsThName">Name</th>
+                  <th data-i18n="appsThEmail">Email</th>
+                  <th data-i18n="appsThPhone">Phone</th>
+                  <th data-i18n="appsThMessage">Message</th>
+                  <th data-i18n="appsThDate">Date</th>
+                  <th data-i18n="appsThActions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="apps-table-body"></tbody>
+            </table>
+          </div>
+        </div>
         <div class="team-invite-form" id="team-invite-form" style="display:none">
           <div class="form-group">
             <label data-i18n="teamEmail">Email</label>

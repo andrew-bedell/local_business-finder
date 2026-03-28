@@ -147,6 +147,22 @@ a:hover { text-decoration: underline; }
 .ex-footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); }
 .ex-footer p { font-size: 12px; color: var(--text-dim); }
 
+/* APPLICATION FORM */
+.ex-apply-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; max-width: 440px; margin: 0 auto; text-align: left; }
+.ex-apply-form { display: flex; flex-direction: column; gap: 14px; }
+.ex-apply-field { display: flex; flex-direction: column; gap: 5px; }
+.ex-apply-field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.ex-apply-field input, .ex-apply-field textarea { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 14px; font-family: var(--font); color: var(--text); outline: none; transition: border-color 0.15s; }
+.ex-apply-field input:focus, .ex-apply-field textarea:focus { border-color: var(--primary); }
+.ex-apply-field input::placeholder, .ex-apply-field textarea::placeholder { color: var(--text-dim); }
+.ex-apply-field textarea { resize: vertical; min-height: 60px; }
+.ex-apply-msg { font-size: 13px; text-align: center; margin-top: 8px; }
+.ex-apply-msg.error { color: var(--danger); }
+.ex-apply-msg.success { color: var(--success); }
+.ex-apply-success { text-align: center; max-width: 440px; margin: 0 auto; }
+.ex-apply-success h3 { font-size: 22px; font-weight: 800; color: var(--success); margin-bottom: 8px; }
+.ex-apply-success p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 640px) {
   .ex-steps { grid-template-columns: 1fr; }
@@ -163,7 +179,8 @@ a:hover { text-decoration: underline; }
 <nav class="ex-nav">
   <span class="ex-logo">AhoraTengoPagina</span>
   <div class="ex-nav-links">
-    <a href="/employee/login">Iniciar sesion</a>
+    <a href="#apply-section">Unirme</a>
+    <a href="/employee/login">Ya tengo cuenta</a>
   </div>
 </nav>
 
@@ -172,7 +189,7 @@ a:hover { text-decoration: underline; }
   <div class="ex-hero-badge">&#128176; Oportunidad de ingreso</div>
   <h1>Gana <em>$100 MXN/mes</em><br>por cada sitio web que vendas</h1>
   <p>Busca negocios sin pagina web, nosotros creamos el sitio, tu lo vendes. Ganas comision cada mes mientras el cliente siga activo.</p>
-  <a href="/employee/login" class="ex-hero-cta">Comenzar ahora &#8594;</a>
+  <a href="#apply-section" class="ex-hero-cta" onclick="document.getElementById('apply-name').focus()">Solicitar acceso &#8594;</a>
 </section>
 
 <!-- HOW IT WORKS -->
@@ -251,11 +268,37 @@ a:hover { text-decoration: underline; }
   </div>
 </section>
 
-<!-- CTA -->
-<section class="ex-cta">
+<!-- CTA / APPLICATION FORM -->
+<section class="ex-cta" id="apply-section">
   <h2>Listo para empezar a ganar?</h2>
-  <p>Inicia sesion en tu panel de empleado y empieza a buscar negocios hoy mismo.</p>
-  <a href="/employee/login" class="ex-hero-cta">Iniciar sesion &#8594;</a>
+  <p>Deja tus datos y te agregamos al equipo. Te contactamos en menos de 24 horas.</p>
+  <div class="ex-apply-card" id="apply-card">
+    <form class="ex-apply-form" id="apply-form">
+      <div class="ex-apply-field">
+        <label for="apply-name">Nombre completo</label>
+        <input type="text" id="apply-name" placeholder="Tu nombre" required>
+      </div>
+      <div class="ex-apply-field">
+        <label for="apply-email">Correo electronico</label>
+        <input type="email" id="apply-email" placeholder="tu@email.com" required>
+      </div>
+      <div class="ex-apply-field">
+        <label for="apply-phone">WhatsApp (opcional)</label>
+        <input type="tel" id="apply-phone" placeholder="+52 999 123 4567">
+      </div>
+      <div class="ex-apply-field">
+        <label for="apply-message">Por que quieres unirte? (opcional)</label>
+        <textarea id="apply-message" rows="3" placeholder="Cuentanos un poco sobre ti..."></textarea>
+      </div>
+      <button type="submit" class="ex-hero-cta" id="apply-btn" style="width:100%;justify-content:center">Solicitar acceso &#8594;</button>
+      <div class="ex-apply-msg" id="apply-msg"></div>
+    </form>
+  </div>
+  <div class="ex-apply-success" id="apply-success" style="display:none">
+    <div style="font-size:40px;margin-bottom:16px">&#127881;</div>
+    <h3>Solicitud enviada!</h3>
+    <p>Revisaremos tu solicitud y te contactaremos pronto. Revisa tu correo.</p>
+  </div>
 </section>
 
 <!-- FOOTER -->
@@ -445,6 +488,49 @@ a:hover { text-decoration: underline; }
     prevBtn.style.display = currentStep > 1 ? '' : 'none';
     nextBtn.textContent = currentStep < totalSteps ? 'Siguiente \u2192' : 'Cerrar';
   }
+
+  // Application form
+  var applyForm = document.getElementById('apply-form');
+  var applyMsg = document.getElementById('apply-msg');
+  var applyBtn = document.getElementById('apply-btn');
+
+  applyForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    applyMsg.textContent = '';
+    applyMsg.className = 'ex-apply-msg';
+    applyBtn.disabled = true;
+    applyBtn.textContent = 'Enviando...';
+
+    var payload = {
+      name: document.getElementById('apply-name').value.trim(),
+      email: document.getElementById('apply-email').value.trim(),
+      phone: document.getElementById('apply-phone').value.trim() || undefined,
+      message: document.getElementById('apply-message').value.trim() || undefined,
+    };
+
+    fetch('/api/employees/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(function(res) {
+      return res.json().then(function(data) { return { ok: res.ok, status: res.status, data: data }; });
+    }).then(function(result) {
+      if (result.ok) {
+        document.getElementById('apply-card').style.display = 'none';
+        document.getElementById('apply-success').style.display = '';
+      } else {
+        applyMsg.textContent = result.data.error || 'Error al enviar solicitud';
+        applyMsg.className = 'ex-apply-msg error';
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = 'Solicitar acceso &#8594;';
+      }
+    }).catch(function() {
+      applyMsg.textContent = 'Error de conexion. Intenta de nuevo.';
+      applyMsg.className = 'ex-apply-msg error';
+      applyBtn.disabled = false;
+      applyBtn.innerHTML = 'Solicitar acceso &#8594;';
+    });
+  });
 })();
 </script>
 </body>
