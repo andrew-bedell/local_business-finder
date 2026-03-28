@@ -15,6 +15,7 @@ const qrcode = require('qrcode-terminal');
 
 const { matchContact, buildPhoneVariants, getCanonicalPhone, extractDigits } = require('./match-contact');
 const { generateResponse } = require('./respond');
+const express = require('express');
 const { findConversationByPhone, upsertConversation, logMessage, getConversationHistory } = require('./db');
 const onboarding = require('./onboarding');
 
@@ -370,6 +371,56 @@ setInterval(async () => {
     console.error('[Abandonment] Check failed:', err.message);
   }
 }, 30 * 60 * 1000); // Every 30 minutes
+
+// ── HTTP API Server ──
+
+const httpApp = express();
+httpApp.use(express.json());
+
+httpApp.post('/send', async (req, res) => {
+  const { phone, message, secret } = req.body || {};
+
+  // Validate shared secret
+  const expectedSecret = process.env.BRIDGE_API_SECRET;
+  if (!expectedSecret || secret !== expectedSecret) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  if (!phone || !message) {
+    return res.status(400).json({ error: 'Missing required fields: phone, message' });
+  }
+
+  // Check WhatsApp client readiness
+  const info = client.info;
+  if (!info) {
+    return res.status(503).json({ error: 'WhatsApp client not ready' });
+  }
+
+  try {
+    // Normalize phone to WhatsApp chatId format: digits@c.us
+    let digits = phone.replace(/[^\d]/g, '');
+
+    // Mexican numbers: WhatsApp requires 521 prefix for mobile numbers
+    // If we have a 52 + 10-digit number, insert the 1
+    if (digits.startsWith('52') && digits.length === 12) {
+      digits = '521' + digits.slice(2);
+    }
+
+    const chatId = digits + '@c.us';
+    await client.sendMessage(chatId, message);
+
+    console.log(`[HTTP API] Message sent to ${chatId}`);
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('[HTTP API] Send failed:', err.message);
+    return res.status(500).json({ error: 'Failed to send message', detail: err.message });
+  }
+});
+
+const BRIDGE_PORT = process.env.BRIDGE_PORT || 3100;
+httpApp.listen(BRIDGE_PORT, () => {
+  console.log(`Bridge HTTP API on port ${BRIDGE_PORT}`);
+});
 
 // ── Start ──
 
