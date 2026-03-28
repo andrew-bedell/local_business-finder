@@ -665,7 +665,7 @@
       outreachTabCompetition: '\uD83C\uDFC6 Competition',
       outreachCopyMessage: 'Copy Message',
       outreachYourName: 'Your Name',
-      outreachNamePlaceholder: 'e.g. Andrés',
+      outreachNoName: 'Set your name in Team settings',
       thOutreach: 'Outreach',
     },
     es: {
@@ -1278,7 +1278,7 @@
       outreachTabCompetition: '\uD83C\uDFC6 Competencia',
       outreachCopyMessage: 'Copiar Mensaje',
       outreachYourName: 'Tu Nombre',
-      outreachNamePlaceholder: 'ej. Andrés',
+      outreachNoName: 'Configura tu nombre en Equipo',
       thOutreach: 'Contacto',
     },
   };
@@ -2514,7 +2514,7 @@
       ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
       : '';
 
-    const senderName = localStorage.getItem('outreach_sender_name') || '';
+    const senderName = (window.__employeeAuth && window.__employeeAuth.employee.display_name) || '';
 
     function getTemplate(idx, name, url) {
       const n = name || '';
@@ -2547,7 +2547,9 @@
         <div class="modal-body">
           <div class="outreach-field">
             <div class="outreach-label">${t('outreachYourName')}</div>
-            <input type="text" class="outreach-name-input" id="outreach-sender-name" value="${escapeHtml(senderName)}" placeholder="${t('outreachNamePlaceholder')}">
+            <div class="outreach-value-row">
+              <span class="outreach-value">${senderName ? escapeHtml(senderName) : `<span style="color:var(--text-dim)">${t('outreachNoName')}</span>`}</span>
+            </div>
           </div>
           <div class="outreach-field">
             <div class="outreach-label">${t('outreachBusinessName')}</div>
@@ -2590,19 +2592,12 @@
     document.body.appendChild(overlay);
 
     const msgText = overlay.querySelector('#outreach-msg-text');
-    const nameInput = overlay.querySelector('#outreach-sender-name');
 
     function updateMessage() {
-      const name = nameInput.value.trim();
-      msgText.textContent = getTemplate(activeTab, name, previewUrl);
+      msgText.textContent = getTemplate(activeTab, senderName, previewUrl);
     }
 
     updateMessage();
-
-    nameInput.addEventListener('input', () => {
-      localStorage.setItem('outreach_sender_name', nameInput.value.trim());
-      updateMessage();
-    });
 
     // Tab switching
     overlay.querySelectorAll('.outreach-tab').forEach(tab => {
