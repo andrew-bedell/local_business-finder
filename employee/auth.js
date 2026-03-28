@@ -225,7 +225,8 @@
         }
 
         // Update joined_at and send welcome email if this is the first login
-        if (!empResult.data.joined_at) {
+        var isFirstLogin = !empResult.data.joined_at;
+        if (isFirstLogin) {
           supabase.from('employees')
             .update({ joined_at: new Date().toISOString() })
             .eq('id', empResult.data.id)
@@ -241,6 +242,12 @@
             },
             body: JSON.stringify({ employee_id: empResult.data.id })
           }).catch(function () {});
+        }
+
+        // First-time login → send to explainer page for onboarding
+        if (isFirstLogin) {
+          window.location.href = '/employee/explainer';
+          return;
         }
 
         var redirect = sessionStorage.getItem('employee_redirect') || '/employee';
