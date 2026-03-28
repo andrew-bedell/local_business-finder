@@ -3038,6 +3038,168 @@ select.input {
   color: #fff;
 }
 
+/* Outreach button */
+.btn-outreach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  margin-left: 4px;
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-outreach:hover {
+  background: var(--success);
+  color: #fff;
+}
+
+/* Outreach modal */
+.outreach-field {
+  margin-bottom: 14px;
+}
+
+.outreach-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.outreach-value-row {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+.outreach-value {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.outreach-value a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.btn-outreach-copy {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 2px 6px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-outreach-copy:hover {
+  color: var(--primary);
+}
+
+.outreach-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.outreach-tab {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.outreach-tab:hover {
+  color: var(--text);
+}
+
+.outreach-tab.active {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.outreach-message-wrapper {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+
+.outreach-message {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  padding: 12px;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: inherit;
+}
+
+.btn-outreach-copy-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  background: var(--primary-bg);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-outreach-copy-msg:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.outreach-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.outreach-name-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
 /* Nav badge for unread count */
 .nav-tab-badge {
   display: inline-flex;
