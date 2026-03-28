@@ -227,6 +227,9 @@
           window.location.href = '/planes/' + id;
         });
 
+        // ── Demo Analytics Tracking ──
+        trackDemo(data.businessId, data.websiteId);
+
       } catch (err) {
         showError(err.message);
       }
@@ -236,6 +239,48 @@
       document.getElementById('pv-loading').style.display = 'none';
       document.getElementById('pv-error').style.display = '';
       document.getElementById('pv-error-msg').textContent = msg;
+    }
+
+    function trackDemo(businessId, websiteId) {
+      if (!businessId) return;
+
+      var loadTime = Date.now();
+      var leaveSent = false;
+      var isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      var deviceType = isMobile ? 'mobile' : 'desktop';
+
+      var basePayload = {
+        business_id: businessId,
+        website_id: websiteId || null,
+        page_url: window.location.pathname,
+        referrer: document.referrer ? (new URL(document.referrer)).hostname : null,
+        device_type: deviceType,
+      };
+
+      // Send demo_view on load
+      try {
+        var viewPayload = Object.assign({}, basePayload, { event_type: 'demo_view' });
+        navigator.sendBeacon('/api/analytics/track', JSON.stringify(viewPayload));
+      } catch (e) { /* ignore */ }
+
+      // Send demo_leave on exit with duration
+      function sendLeave() {
+        if (leaveSent) return;
+        leaveSent = true;
+        var duration = Math.round((Date.now() - loadTime) / 1000);
+        var leavePayload = Object.assign({}, basePayload, {
+          event_type: 'demo_leave',
+          metadata: { duration_seconds: duration },
+        });
+        try {
+          navigator.sendBeacon('/api/analytics/track', JSON.stringify(leavePayload));
+        } catch (e) { /* ignore */ }
+      }
+
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') sendLeave();
+      });
+      window.addEventListener('beforeunload', sendLeave);
     }
   })();
   </script>
