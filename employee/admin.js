@@ -476,6 +476,20 @@
       customersStatusPastDue: 'Past Due',
       customersStatusCancelled: 'Cancelled',
       customersStatusIncomplete: 'Incomplete',
+      createWaCustomer: '+ WhatsApp Customer',
+      createWaCustomerTitle: 'Create WhatsApp Customer',
+      createWaCustomerDesc: 'Create a customer account for a business that can\'t be matched to a Google listing. They\'ll receive a WhatsApp login link.',
+      createWaBusinessName: 'Business Name',
+      createWaWhatsapp: 'WhatsApp Number',
+      createWaCategory: 'Business Type',
+      createWaAddress: 'Address',
+      createWaContactName: 'Contact Name',
+      createWaBtnCreate: 'Create Only',
+      createWaBtnCreateSend: 'Create & Send Login',
+      createWaMissingFields: 'Business name and WhatsApp number are required.',
+      createWaCreated: 'Customer account created successfully.',
+      createWaSentSuccess: 'Login link sent via WhatsApp.',
+      createWaFallbackHint: 'Template message not available. Send manually via WhatsApp:',
       custColBusiness: 'Business',
       custColContact: 'Contact',
       custColEmail: 'Email',
@@ -1091,6 +1105,20 @@
       customersStatusPastDue: 'Pago Pendiente',
       customersStatusCancelled: 'Cancelada',
       customersStatusIncomplete: 'Incompleta',
+      createWaCustomer: '+ Cliente WhatsApp',
+      createWaCustomerTitle: 'Crear Cliente por WhatsApp',
+      createWaCustomerDesc: 'Crea una cuenta para un negocio que no tiene listado en Google. Recibirán un enlace de acceso por WhatsApp.',
+      createWaBusinessName: 'Nombre del Negocio',
+      createWaWhatsapp: 'Número de WhatsApp',
+      createWaCategory: 'Tipo de Negocio',
+      createWaAddress: 'Dirección',
+      createWaContactName: 'Nombre del Contacto',
+      createWaBtnCreate: 'Solo Crear',
+      createWaBtnCreateSend: 'Crear y Enviar Login',
+      createWaMissingFields: 'Nombre del negocio y número de WhatsApp son obligatorios.',
+      createWaCreated: 'Cuenta de cliente creada exitosamente.',
+      createWaSentSuccess: 'Enlace de acceso enviado por WhatsApp.',
+      createWaFallbackHint: 'Mensaje de plantilla no disponible. Envía manualmente por WhatsApp:',
       custColBusiness: 'Negocio',
       custColContact: 'Contacto',
       custColEmail: 'Correo',
@@ -7017,6 +7045,167 @@
 
   const custStatusFilter = document.getElementById('customers-status-filter');
   if (custStatusFilter) custStatusFilter.addEventListener('change', applyCustomerFilters);
+
+  // ── Create WhatsApp Customer ──
+
+  const btnCreateWaCustomer = document.getElementById('btn-create-wa-customer');
+  if (btnCreateWaCustomer) btnCreateWaCustomer.addEventListener('click', openCreateWaCustomerModal);
+
+  function openCreateWaCustomerModal() {
+    // Remove any existing modal
+    const existing = document.getElementById('wa-customer-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'wa-customer-modal';
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-header">
+          <h2>${t('createWaCustomerTitle')}</h2>
+          <button class="modal-close" id="wa-modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:20px 24px">
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">${t('createWaCustomerDesc')}</p>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div>
+              <label class="form-label">${t('createWaBusinessName')} *</label>
+              <input type="text" class="input" id="wa-biz-name" placeholder="Tacos Don Pepe" required>
+            </div>
+            <div>
+              <label class="form-label">${t('createWaWhatsapp')} *</label>
+              <input type="tel" class="input" id="wa-biz-phone" placeholder="+52 624 123 4567" required>
+            </div>
+            <div>
+              <label class="form-label">${t('createWaCategory')}</label>
+              <input type="text" class="input" id="wa-biz-category" placeholder="Restaurante, Salon, etc.">
+            </div>
+            <div>
+              <label class="form-label">${t('createWaAddress')}</label>
+              <input type="text" class="input" id="wa-biz-address" placeholder="Calle Principal #123, Ciudad">
+            </div>
+            <div>
+              <label class="form-label">${t('createWaContactName')}</label>
+              <input type="text" class="input" id="wa-biz-contact" placeholder="Nombre del dueño">
+            </div>
+          </div>
+          <div id="wa-result" style="margin-top:14px;display:none"></div>
+        </div>
+        <div class="modal-footer" style="display:flex;gap:10px">
+          <button class="btn btn-secondary" id="wa-btn-create">${t('createWaBtnCreate')}</button>
+          <button class="btn btn-primary" id="wa-btn-create-send">${t('createWaBtnCreateSend')}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('#wa-modal-close').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+    modal.querySelector('#wa-btn-create').addEventListener('click', () => handleCreateWaCustomer(false));
+    modal.querySelector('#wa-btn-create-send').addEventListener('click', () => handleCreateWaCustomer(true));
+  }
+
+  async function handleCreateWaCustomer(sendLogin) {
+    const name = (document.getElementById('wa-biz-name')?.value || '').trim();
+    const phone = (document.getElementById('wa-biz-phone')?.value || '').trim();
+    const category = (document.getElementById('wa-biz-category')?.value || '').trim();
+    const address = (document.getElementById('wa-biz-address')?.value || '').trim();
+    const contactName = (document.getElementById('wa-biz-contact')?.value || '').trim();
+    const resultEl = document.getElementById('wa-result');
+
+    if (!name || !phone) {
+      showToast(t('createWaMissingFields'), 'warning');
+      return;
+    }
+
+    const btnCreate = document.getElementById('wa-btn-create');
+    const btnSend = document.getElementById('wa-btn-create-send');
+    if (btnCreate) btnCreate.disabled = true;
+    if (btnSend) btnSend.disabled = true;
+
+    try {
+      // Create business + customer
+      const res = await fetch('/api/customers/create-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: name,
+          whatsapp: phone,
+          category: category || undefined,
+          address: address || undefined,
+          contactName: contactName || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Creation failed');
+      }
+
+      const data = await res.json();
+
+      if (sendLogin && data.loginLink) {
+        // Send WhatsApp message with login link
+        const waMessage = `¡Hola${contactName ? ' ' + contactName : ''}! Tu portal para administrar la página web de ${name} está listo. Ingresa aquí para configurar tu cuenta y completar tu información:\n\n${data.loginLink}`;
+
+        try {
+          await fetch('/api/whatsapp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessId: data.businessId,
+              phone: phone,
+              templateName: 'customer_portal_login',
+              templateParams: [contactName || name, data.loginLink],
+              language: 'es',
+            }),
+          });
+          showToast(t('createWaSentSuccess'), 'success');
+        } catch (waErr) {
+          // Template might not be approved — fallback to wa.me link
+          console.warn('WhatsApp template send failed, using wa.me fallback:', waErr);
+          const waLink = `https://wa.me/${phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(waMessage)}`;
+          if (resultEl) {
+            resultEl.style.display = '';
+            resultEl.innerHTML = `
+              <div style="background:var(--bg-input);border-radius:8px;padding:14px;font-size:13px">
+                <p style="color:var(--text-muted);margin-bottom:8px">${t('createWaFallbackHint')}</p>
+                <a href="${waLink}" target="_blank" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:13px">
+                  WhatsApp ↗
+                </a>
+                <div style="margin-top:10px">
+                  <label style="color:var(--text-dim);font-size:11px">Login link:</label>
+                  <input type="text" class="input" value="${data.loginLink}" style="font-size:11px" readonly onclick="this.select()">
+                </div>
+              </div>
+            `;
+          }
+        }
+      } else if (data.loginLink && resultEl) {
+        // Show login link for manual sharing
+        resultEl.style.display = '';
+        resultEl.innerHTML = `
+          <div style="background:var(--bg-input);border-radius:8px;padding:14px;font-size:13px">
+            <p style="color:var(--success);margin-bottom:8px">✓ ${t('createWaCreated')}</p>
+            <label style="color:var(--text-dim);font-size:11px">Login link:</label>
+            <input type="text" class="input" value="${data.loginLink}" style="font-size:11px" readonly onclick="this.select()">
+          </div>
+        `;
+      }
+
+      showToast(t('createWaCreated'), 'success');
+      // Reload customers list
+      loadCustomers();
+    } catch (err) {
+      console.error('Create WhatsApp customer error:', err);
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      if (btnCreate) btnCreate.disabled = false;
+      if (btnSend) btnSend.disabled = false;
+    }
+  }
 
   // ── Edit Requests ──
 

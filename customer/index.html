@@ -129,6 +129,37 @@
   </section>
 
   <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- ── Account Setup Screen (WhatsApp-created accounts) ── -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="setup-screen" class="c-auth-screen" style="display:none;">
+    <div class="c-auth-card">
+      <div class="c-auth-logo">
+        <a href="/" class="c-brand">AhoraTengoPagina</a>
+      </div>
+      <h1 class="c-auth-title">Configura tu cuenta</h1>
+      <p class="c-auth-subtitle">Ingresa tu correo electrónico y crea una contraseña para acceder a tu portal.</p>
+
+      <form id="setup-form" class="c-auth-form" novalidate>
+        <div class="c-form-group">
+          <label for="setup-email" class="c-label">Tu correo electrónico</label>
+          <input type="email" id="setup-email" class="c-input" placeholder="tu@correo.com" autocomplete="email" required>
+        </div>
+        <div class="c-form-group">
+          <label for="setup-password" class="c-label">Crea una contraseña</label>
+          <input type="password" id="setup-password" class="c-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+        </div>
+        <div class="c-form-group">
+          <label for="setup-confirm" class="c-label">Confirma tu contraseña</label>
+          <input type="password" id="setup-confirm" class="c-input" placeholder="Repite la contraseña" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-setup-account">
+          Crear mi cuenta
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
   <!-- ── Dashboard ── -->
   <!-- ══════════════════════════════════════════════════════════ -->
   <section id="dashboard" style="display:none;">
@@ -1273,6 +1304,11 @@
                 <input type="text" id="wiz-address" class="c-input" placeholder="Calle, Número, Colonia, Ciudad, Estado, CP">
                 <div class="c-wizard-saved" id="wiz-saved-address"></div>
               </div>
+              <div class="c-form-group" style="margin-top:14px">
+                <label class="c-label">Tipo de Negocio</label>
+                <input type="text" id="wiz-category" class="c-input" placeholder="Restaurante, Salón de belleza, Taller mecánico...">
+                <div class="c-wizard-saved" id="wiz-saved-category"></div>
+              </div>
             </div>
           </div>
 
@@ -1409,6 +1445,21 @@
           </div>
 
         </div><!-- /accordion -->
+
+        <!-- Generate Website CTA -->
+        <div class="c-wizard-generate" id="wiz-generate-section">
+          <div class="c-wizard-generate-card">
+            <div class="c-wizard-generate-icon">&#127760;</div>
+            <h3 class="c-wizard-generate-title">Tu Página Web</h3>
+            <p class="c-wizard-generate-desc">Cuando estés listo, genera tu página web con la información que has proporcionado.</p>
+            <div class="c-wizard-generate-reqs" id="wiz-generate-reqs"></div>
+            <button type="button" class="c-btn c-btn-primary c-btn--full c-btn--lg" id="wiz-generate-btn" disabled>
+              Generar Mi Página Web
+            </button>
+            <p class="c-wizard-generate-hint" id="wiz-generate-hint"></p>
+          </div>
+        </div>
+
       </div><!-- /section-wizard -->
 
       <!-- ── Footer ── -->
