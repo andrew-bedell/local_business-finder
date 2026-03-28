@@ -179,6 +179,10 @@
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
           <span data-i18n="nav_scheduling">Reservas</span>
         </button>
+        <button class="c-nav-item" data-section="wizard">
+          <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <span data-i18n="nav_wizard">Completar Datos</span>
+        </button>
         <button class="c-nav-item" data-section="account">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
           <span data-i18n="nav_account">Mi Cuenta</span>
@@ -219,6 +223,7 @@
       <button class="c-tab" data-section="editor">Editor</button>
       <button class="c-tab" data-section="team">Equipo</button>
       <button class="c-tab" data-section="scheduling" data-i18n="nav_scheduling_short">Reservas</button>
+      <button class="c-tab" data-section="wizard" data-i18n="nav_wizard_short">Datos</button>
       <button class="c-tab" data-section="account">Cuenta</button>
     </nav>
 
@@ -382,7 +387,7 @@
                 </div>
                 <div class="c-action-arrow">›</div>
               </a>
-              <a href="#" class="c-action-item" data-section="business">
+              <a href="#" class="c-action-item" data-section="wizard">
                 <div class="c-action-icon" style="background: rgba(0,212,170,0.12);">🏪</div>
                 <div class="c-action-text">
                   <div class="c-action-name" data-i18n="action_business">Completar mi negocio</div>
@@ -1135,6 +1140,220 @@
           </div>
         </div>
       </div>
+
+      <!-- ── Section: Data Wizard ── -->
+      <div id="section-wizard" class="c-section" data-section="wizard">
+        <div class="c-topbar">
+          <div class="c-page-title" data-i18n-html="wiz_title">Completar <span>Datos</span></div>
+        </div>
+
+        <!-- Score Hero Card -->
+        <div class="c-wizard-hero">
+          <div class="c-wizard-score-ring">
+            <svg viewBox="0 0 120 120" class="c-wizard-ring-svg">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--c-border)" stroke-width="8"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--c-accent)" stroke-width="8"
+                      stroke-dasharray="326.73" stroke-dashoffset="326.73" stroke-linecap="round"
+                      transform="rotate(-90 60 60)" id="wiz-score-circle"/>
+            </svg>
+            <div class="c-wizard-score-num" id="wiz-score-num">0</div>
+          </div>
+          <div class="c-wizard-hero-info">
+            <div class="c-wizard-hero-label" data-i18n="wiz_score_label">Puntaje de datos</div>
+            <div class="c-wizard-progress-bar">
+              <div class="c-wizard-progress-fill" id="wiz-progress-fill" style="width:0%"></div>
+            </div>
+            <div class="c-wizard-hint" id="wiz-hint" data-i18n="wiz_hint_default">Completa las secciones para mejorar tu puntaje.</div>
+          </div>
+        </div>
+
+        <!-- Accordion Cards -->
+        <div class="c-wizard-accordion" id="wiz-accordion">
+
+          <!-- 1. Photos -->
+          <div class="c-wizard-card" data-wiz-card="photos">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="photos">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              </div>
+              <div class="c-wizard-card-title" data-i18n="wiz_photos_title">Fotos</div>
+              <div class="c-wizard-card-status" id="wiz-status-photos">0/5</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-photos">
+              <div class="c-wizard-upload-zone" id="wiz-upload-zone">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                <div data-i18n="wiz_photos_drop">Arrastra fotos aquí o haz clic para seleccionar</div>
+                <div class="c-wizard-upload-hint" data-i18n="wiz_photos_hint">JPG, PNG o WebP. Máximo 4MB por foto.</div>
+                <input type="file" id="wiz-photo-input" accept="image/*" multiple style="display:none">
+              </div>
+              <div class="c-wizard-photo-type-select">
+                <label class="c-label" data-i18n="wiz_photos_type_label">Tipo de foto</label>
+                <select id="wiz-photo-type" class="c-input">
+                  <option value="exterior" data-i18n="wiz_type_exterior">Exterior</option>
+                  <option value="interior" data-i18n="wiz_type_interior">Interior</option>
+                  <option value="product" data-i18n="wiz_type_product">Producto</option>
+                  <option value="food" data-i18n="wiz_type_food">Comida</option>
+                  <option value="team" data-i18n="wiz_type_team">Equipo</option>
+                  <option value="logo" data-i18n="wiz_type_logo">Logo</option>
+                </select>
+              </div>
+              <div class="c-wizard-photo-grid" id="wiz-photo-grid"></div>
+            </div>
+          </div>
+
+          <!-- 2. Reviews -->
+          <div class="c-wizard-card" data-wiz-card="reviews">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="reviews">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+              <div class="c-wizard-card-title" data-i18n="wiz_reviews_title">Reseñas de Clientes</div>
+              <div class="c-wizard-card-status" id="wiz-status-reviews">0/3</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-reviews">
+              <div class="c-wizard-review-list" id="wiz-review-list"></div>
+              <div class="c-wizard-review-form" id="wiz-review-form">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="wiz_review_name">Nombre del cliente</label>
+                  <input type="text" id="wiz-review-name" class="c-input" maxlength="100">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="wiz_review_rating">Calificación</label>
+                  <div class="c-wizard-star-picker" id="wiz-star-picker">
+                    <span class="c-wizard-star" data-star="1">&#9733;</span>
+                    <span class="c-wizard-star" data-star="2">&#9733;</span>
+                    <span class="c-wizard-star" data-star="3">&#9733;</span>
+                    <span class="c-wizard-star" data-star="4">&#9733;</span>
+                    <span class="c-wizard-star" data-star="5">&#9733;</span>
+                  </div>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="wiz_review_text">Reseña</label>
+                  <textarea id="wiz-review-text" class="c-input c-textarea" rows="3" maxlength="500"></textarea>
+                </div>
+                <button type="button" class="c-btn c-btn-primary" id="wiz-add-review" data-i18n="wiz_review_add">Agregar Reseña</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. WhatsApp -->
+          <div class="c-wizard-card" data-wiz-card="whatsapp">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="whatsapp">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.69 0-3.27-.46-4.626-1.262l-.332-.196-2.87.852.852-2.87-.196-.332A7.963 7.963 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>
+              </div>
+              <div class="c-wizard-card-title">WhatsApp</div>
+              <div class="c-wizard-card-status" id="wiz-status-whatsapp">—</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-whatsapp">
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="wiz_whatsapp_label">Número de WhatsApp (con código de país)</label>
+                <input type="tel" id="wiz-whatsapp" class="c-input" placeholder="+52 55 1234 5678">
+                <div class="c-wizard-saved" id="wiz-saved-whatsapp"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Address -->
+          <div class="c-wizard-card" data-wiz-card="address">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="address">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              </div>
+              <div class="c-wizard-card-title" data-i18n="wiz_address_title">Dirección</div>
+              <div class="c-wizard-card-status" id="wiz-status-address">—</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-address">
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="wiz_address_label">Dirección completa</label>
+                <input type="text" id="wiz-address" class="c-input" placeholder="Calle, Número, Colonia, Ciudad, Estado, CP">
+                <div class="c-wizard-saved" id="wiz-saved-address"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Hours -->
+          <div class="c-wizard-card" data-wiz-card="hours">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="hours">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              </div>
+              <div class="c-wizard-card-title" data-i18n="wiz_hours_title">Horario de Atención</div>
+              <div class="c-wizard-card-status" id="wiz-status-hours">—</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-hours">
+              <div class="c-wizard-hours-toggle">
+                <label class="c-wizard-toggle-label">
+                  <input type="checkbox" id="wiz-hours-same" class="c-wizard-checkbox">
+                  <span data-i18n="wiz_hours_same">Mismo horario todos los días</span>
+                </label>
+              </div>
+              <div class="c-wizard-hours-grid" id="wiz-hours-grid">
+                <div class="c-wizard-hours-row" data-day="lunes">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_mon">Lunes</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="lunes" placeholder="9:00 - 18:00">
+                </div>
+                <div class="c-wizard-hours-row" data-day="martes">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_tue">Martes</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="martes" placeholder="9:00 - 18:00">
+                </div>
+                <div class="c-wizard-hours-row" data-day="miercoles">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_wed">Miércoles</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="miercoles" placeholder="9:00 - 18:00">
+                </div>
+                <div class="c-wizard-hours-row" data-day="jueves">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_thu">Jueves</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="jueves" placeholder="9:00 - 18:00">
+                </div>
+                <div class="c-wizard-hours-row" data-day="viernes">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_fri">Viernes</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="viernes" placeholder="9:00 - 18:00">
+                </div>
+                <div class="c-wizard-hours-row" data-day="sabado">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_sat">Sábado</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="sabado" placeholder="9:00 - 14:00">
+                </div>
+                <div class="c-wizard-hours-row" data-day="domingo">
+                  <span class="c-wizard-day-label" data-i18n="wiz_day_sun">Domingo</span>
+                  <input type="text" class="c-input c-wizard-hours-input" data-day="domingo" placeholder="Cerrado">
+                </div>
+              </div>
+              <div class="c-wizard-saved" id="wiz-saved-hours"></div>
+            </div>
+          </div>
+
+          <!-- 6. Founder Description -->
+          <div class="c-wizard-card" data-wiz-card="founder">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="founder">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+              <div class="c-wizard-card-title" data-i18n="wiz_founder_title">Sobre el Fundador</div>
+              <div class="c-wizard-card-status" id="wiz-status-founder">—</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-founder">
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="wiz_founder_name_label">Nombre del fundador / dueño</label>
+                <input type="text" id="wiz-founder-name" class="c-input" maxlength="100">
+                <div class="c-wizard-saved" id="wiz-saved-founder-name"></div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="wiz_founder_story_label">Historia del fundador (100-300 caracteres)</label>
+                <textarea id="wiz-founder-story" class="c-input c-textarea" rows="4" minlength="100" maxlength="300"></textarea>
+                <div class="c-wizard-char-count"><span id="wiz-founder-chars">0</span>/300</div>
+                <div class="c-wizard-saved" id="wiz-saved-founder-story"></div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /accordion -->
+      </div><!-- /section-wizard -->
 
       <!-- ── Footer ── -->
       <footer class="c-footer">

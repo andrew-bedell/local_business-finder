@@ -83,6 +83,9 @@ CREATE TABLE IF NOT EXISTS businesses (
   pipeline_status_changed_at TIMESTAMPTZ,
   notes                   TEXT,                -- operator notes about the business
 
+  -- Customer-authored content
+  founder_description     TEXT,                -- founder story written by customer (100-300 chars)
+
   -- Tracking
   data_completeness_score INTEGER DEFAULT 0    -- 0–100, how much data we've gathered
                             CHECK (data_completeness_score BETWEEN 0 AND 100),
@@ -195,7 +198,8 @@ CREATE TABLE IF NOT EXISTS business_photos (
                               'instagram',
                               'yelp',
                               'tripadvisor',
-                              'ai_generated'    -- created via NanoBanana or similar
+                              'ai_generated',   -- created via NanoBanana or similar
+                              'customer_upload'  -- uploaded by customer via data wizard
                             )),
 
   photo_type              TEXT
@@ -241,7 +245,8 @@ CREATE TABLE IF NOT EXISTS business_reviews (
                               'google',
                               'facebook',
                               'yelp',
-                              'tripadvisor'
+                              'tripadvisor',
+                              'customer'         -- submitted by customer via data wizard
                             )),
 
   -- Review content
