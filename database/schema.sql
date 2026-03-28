@@ -81,7 +81,8 @@ CREATE TABLE IF NOT EXISTS businesses (
   contact_email           TEXT,                -- DEPRECATED: use business_contacts table
   contact_whatsapp        TEXT,                -- DEPRECATED: use business_contacts table
   pipeline_status_changed_at TIMESTAMPTZ,
-  outreach_sent           BOOLEAN DEFAULT FALSE,  -- whether operator has sent WhatsApp outreach
+  outreach_sent           BOOLEAN DEFAULT FALSE,  -- true when all 6 core outreach steps complete
+  outreach_steps          JSONB DEFAULT '{}',  -- per-step tracking: {"1":{"sent_at":"..."}, "2":{...}, ...}
   notes                   TEXT,                -- operator notes about the business
 
   -- Customer-authored content
@@ -436,6 +437,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_conversations (
                             CHECK (status IN ('active', 'archived')),
   last_inbound_at         TIMESTAMPTZ,             -- tracks 24-hour messaging window
   unread_count            INTEGER DEFAULT 0,        -- denormalized for fast list display
+  auto_reply_disabled     BOOLEAN DEFAULT FALSE,    -- operator toggle to suppress auto-replies
   last_message_text       TEXT,                     -- preview for conversations list
   last_message_at         TIMESTAMPTZ,             -- sort conversations by recency
   created_at              TIMESTAMPTZ DEFAULT NOW(),
@@ -776,6 +778,7 @@ CREATE TABLE IF NOT EXISTS products (
   features                JSONB DEFAULT '[]',          -- array of strings (bullet points for checkout)
   stripe_product_id       TEXT,
   stripe_price_id         TEXT,
+  commission_amount       DECIMAL(10, 2) DEFAULT 100.00,  -- commission per active subscription (MXN)
   is_active               BOOLEAN DEFAULT TRUE,
   sort_order              INTEGER DEFAULT 0,
   created_at              TIMESTAMPTZ DEFAULT NOW(),
@@ -809,6 +812,7 @@ CREATE TABLE IF NOT EXISTS customers (
   currency                TEXT DEFAULT 'USD',         -- USD, MXN, COP, etc.
   notes                   TEXT,                       -- operator notes
   referral_source         TEXT,                       -- how the customer heard about us (collected via WhatsApp)
+  sales_rep_employee_id   UUID REFERENCES employees(id) ON DELETE SET NULL,  -- employee who sourced this sale
   created_at              TIMESTAMPTZ DEFAULT NOW(),
   last_updated_at         TIMESTAMPTZ DEFAULT NOW()
 );
@@ -816,6 +820,7 @@ CREATE TABLE IF NOT EXISTS customers (
 CREATE INDEX IF NOT EXISTS idx_customers_business ON customers (business_id);
 CREATE INDEX IF NOT EXISTS idx_customers_stripe ON customers (stripe_customer_id);
 CREATE INDEX IF NOT EXISTS idx_customers_email ON customers (email);
+CREATE INDEX IF NOT EXISTS idx_customers_sales_rep ON customers (sales_rep_employee_id) WHERE sales_rep_employee_id IS NOT NULL;
 
 CREATE TRIGGER customers_updated_at
   BEFORE UPDATE ON customers
@@ -924,6 +929,7 @@ CREATE TABLE IF NOT EXISTS employees (
   email                   TEXT NOT NULL,              -- denormalized for display
   display_name            TEXT,
   outreach_sender_name    TEXT,                    -- name used in WhatsApp outreach messages
+  tracking_code           TEXT UNIQUE,             -- unique code for sales attribution links
   role                    TEXT DEFAULT 'employee'
                             CHECK (role IN ('admin', 'employee')),
   is_active               BOOLEAN DEFAULT TRUE,
@@ -937,6 +943,7 @@ CREATE TABLE IF NOT EXISTS employees (
 CREATE INDEX IF NOT EXISTS idx_employees_auth ON employees (auth_user_id);
 CREATE INDEX IF NOT EXISTS idx_employees_email ON employees (email);
 CREATE INDEX IF NOT EXISTS idx_employees_active ON employees (is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_employees_tracking_code ON employees (tracking_code) WHERE tracking_code IS NOT NULL;
 
 CREATE TRIGGER employees_updated_at
   BEFORE UPDATE ON employees
