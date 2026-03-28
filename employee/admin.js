@@ -2936,32 +2936,18 @@
       });
     });
 
-    // Send via WhatsApp bridge buttons
+    // Send via WhatsApp (opens wa.me in new tab)
     overlay.querySelectorAll('.btn-outreach-send').forEach(btn => {
       btn.addEventListener('click', async () => {
         const stepKey = btn.getAttribute('data-step');
-        if (!confirm(t('outreachConfirmSend', phone))) return;
+        const cleanPhone = phone.replace(/\+/g, '');
+        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(templates[stepKey])}`;
+        window.open(waUrl, '_blank');
 
         btn.disabled = true;
         btn.textContent = t('outreachSending');
 
         try {
-          // Send via bridge
-          const sendResp = await fetch('/api/whatsapp/bridge-send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              phone: phone,
-              message: templates[stepKey],
-              businessId: business.id,
-            }),
-          });
-
-          if (!sendResp.ok) {
-            const errData = await sendResp.json().catch(() => ({}));
-            throw new Error(errData.detail || errData.error || 'Send failed');
-          }
-
           // Mark step as sent in DB
           const markResp = await fetch('/api/businesses/update-pipeline', {
             method: 'POST',
@@ -2990,7 +2976,7 @@
           renderTable();
           openOutreachModal(business);
         } catch (err) {
-          console.error('Bridge send error:', err);
+          console.error('Mark step error:', err);
           showToast(t('outreachSendError'), 'error');
           btn.disabled = false;
           btn.textContent = t('outreachSendBtn');
