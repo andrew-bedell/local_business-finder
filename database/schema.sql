@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS businesses (
   contact_email           TEXT,                -- DEPRECATED: use business_contacts table
   contact_whatsapp        TEXT,                -- DEPRECATED: use business_contacts table
   pipeline_status_changed_at TIMESTAMPTZ,
+  outreach_sent           BOOLEAN DEFAULT FALSE,  -- whether operator has sent WhatsApp outreach
   notes                   TEXT,                -- operator notes about the business
 
   -- Customer-authored content

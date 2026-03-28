@@ -3062,6 +3062,30 @@ select.input {
   color: #fff;
 }
 
+/* Outreach sent toggle */
+.btn-outreach-sent {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-outreach-sent:hover {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.outreach-sent-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--success);
+}
+
 /* Outreach modal */
 .outreach-field {
   margin-bottom: 14px;
