@@ -134,6 +134,112 @@
       font-size: 15px;
     }
 
+    /* Popup */
+    .pv-popup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: pv-fadeIn 0.3s ease;
+    }
+
+    .pv-popup {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 420px;
+      width: 100%;
+      padding: 32px 28px 24px;
+      text-align: center;
+      position: relative;
+      animation: pv-slideUp 0.35s ease;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .pv-popup-close {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: #9ca3af;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .pv-popup-close:hover {
+      color: #111;
+    }
+
+    .pv-popup-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .pv-popup-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 8px;
+    }
+
+    .pv-popup-text {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .pv-popup-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+      text-decoration: none;
+    }
+
+    .pv-popup-cta:hover {
+      background: #818cf8;
+      transform: translateY(-1px);
+    }
+
+    .pv-popup-dismiss {
+      display: block;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #9ca3af;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .pv-popup-dismiss:hover {
+      color: #6b7280;
+    }
+
+    @keyframes pv-fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pv-slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     @media (max-width: 600px) {
       .pv-banner {
         padding: 10px 14px;
@@ -148,6 +254,12 @@
       .pv-banner-cta {
         padding: 8px 16px;
         font-size: 13px;
+      }
+      .pv-popup {
+        padding: 24px 20px 20px;
+      }
+      .pv-popup-title {
+        font-size: 18px;
       }
     }
   </style>
@@ -223,9 +335,13 @@
         document.getElementById('pv-iframe-wrapper').style.display = '';
 
         // CTA button → checkout
+        var planesUrl = '/planes/' + id;
         document.getElementById('pv-activate-btn').addEventListener('click', function() {
-          window.location.href = '/planes/' + id;
+          window.location.href = planesUrl;
         });
+
+        // Show info popup after delay
+        setTimeout(function() { showInfoPopup(planesUrl); }, 8000);
 
         // ── Demo Analytics Tracking ──
         trackDemo(data.businessId, data.websiteId);
@@ -281,6 +397,38 @@
         if (document.visibilityState === 'hidden') sendLeave();
       });
       window.addEventListener('beforeunload', sendLeave);
+    }
+
+    function showInfoPopup(planesUrl) {
+      // Don't show if already dismissed this session
+      if (sessionStorage.getItem('pv_popup_dismissed')) return;
+
+      var overlay = document.createElement('div');
+      overlay.className = 'pv-popup-overlay';
+      overlay.innerHTML =
+        '<div class="pv-popup">' +
+          '<button class="pv-popup-close" id="pv-popup-close">&times;</button>' +
+          '<div class="pv-popup-icon">\uD83C\uDF10</div>' +
+          '<div class="pv-popup-title">\u00BFTe gust\u00F3 lo que viste?</div>' +
+          '<div class="pv-popup-text">Esta p\u00E1gina fue dise\u00F1ada especialmente para tu negocio. Descubre c\u00F3mo podemos publicarla y empezar a atraer clientes.</div>' +
+          '<a class="pv-popup-cta" href="' + planesUrl + '#como-funciona">' +
+            'Ver C\u00F3mo Funciona \u2192' +
+          '</a>' +
+          '<button class="pv-popup-dismiss" id="pv-popup-dismiss">Ahora no</button>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+
+      function dismiss() {
+        sessionStorage.setItem('pv_popup_dismissed', '1');
+        overlay.remove();
+      }
+
+      overlay.querySelector('#pv-popup-close').addEventListener('click', dismiss);
+      overlay.querySelector('#pv-popup-dismiss').addEventListener('click', dismiss);
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) dismiss();
+      });
     }
   })();
   </script>
