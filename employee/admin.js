@@ -243,6 +243,22 @@
       generatingReport: 'Generating report...',
       reportGenerating: 'Analyzing business data and generating website content report. This may take up to 30 seconds...',
       reportError: 'Failed to generate research report. Please try again.',
+      // Data completeness popup
+      completenessTitle: 'Data Readiness',
+      completenessScore: 'Score: {0}/100',
+      completenessPhotos: 'Photos',
+      completenessReviews: 'Reviews',
+      completenessSocial: 'Social Profiles',
+      completenessMenu: 'Menu Data',
+      completenessContact: 'Contact Info',
+      completenessHours: 'Operating Hours',
+      completenessDescription: 'Business Description',
+      completenessCategory: 'Category',
+      completenessProceed: 'Create Website',
+      completenessCancel: 'Cancel',
+      completenessGood: 'Great — this business has strong data for a quality website.',
+      completenessOk: 'Decent data — the website will be good but could be richer.',
+      completenessLow: 'Limited data — the website may have gaps. Consider enriching first.',
       // Pipeline progress popup
       pipelineTitle: 'Generating for {0}',
       pipelineStepReport: 'Research Report',
@@ -825,6 +841,22 @@
       generatingReport: 'Generando informe...',
       reportGenerating: 'Analizando datos del negocio y generando informe. Esto puede tardar hasta 30 segundos...',
       reportError: 'Error al generar el informe. Intente de nuevo.',
+      // Data completeness popup
+      completenessTitle: 'Datos Disponibles',
+      completenessScore: 'Puntaje: {0}/100',
+      completenessPhotos: 'Fotos',
+      completenessReviews: 'Reseñas',
+      completenessSocial: 'Perfiles Sociales',
+      completenessMenu: 'Datos del Menú',
+      completenessContact: 'Info de Contacto',
+      completenessHours: 'Horario de Atención',
+      completenessDescription: 'Descripción del Negocio',
+      completenessCategory: 'Categoría',
+      completenessProceed: 'Crear Sitio Web',
+      completenessCancel: 'Cancelar',
+      completenessGood: 'Excelente — este negocio tiene datos sólidos para un sitio de calidad.',
+      completenessOk: 'Datos decentes — el sitio será bueno pero podría ser más completo.',
+      completenessLow: 'Datos limitados — el sitio puede tener vacíos. Considere enriquecer primero.',
       // Pipeline progress popup
       pipelineTitle: 'Generando para {0}',
       pipelineStepReport: 'Informe de Investigación',
@@ -3783,6 +3815,156 @@
     generateWebsiteFromTable(business, btn);
   }
 
+  // ── Data Completeness Scoring ──
+  function calculateCompleteness(business, details) {
+    const checks = [];
+    const photos = details.photos || [];
+    const reviews = details.reviews || [];
+    const socials = details.socialProfiles || [];
+    const menus = details.menus || [];
+
+    // Photos: 20 pts (5 for any, 15 for 3+)
+    const photoCount = photos.filter(p => p.has_text_overlay !== true).length;
+    checks.push({
+      key: 'completenessPhotos',
+      score: photoCount >= 3 ? 20 : photoCount >= 1 ? 5 : 0,
+      max: 20,
+      detail: `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}`,
+    });
+
+    // Reviews: 20 pts (10 for any, 20 for 5+)
+    checks.push({
+      key: 'completenessReviews',
+      score: reviews.length >= 5 ? 20 : reviews.length >= 1 ? 10 : 0,
+      max: 20,
+      detail: `${reviews.length}`,
+    });
+
+    // Social profiles: 15 pts (7 for 1, 15 for 2+)
+    checks.push({
+      key: 'completenessSocial',
+      score: socials.length >= 2 ? 15 : socials.length === 1 ? 7 : 0,
+      max: 15,
+      detail: socials.length > 0 ? socials.map(s => s.platform).join(', ') : '',
+    });
+
+    // Contact info: 10 pts (5 for phone, 5 for email/whatsapp)
+    const hasPhone = !!business.phone;
+    const hasEmail = !!business.email;
+    const hasWhatsapp = !!business.whatsapp;
+    const contactScore = (hasPhone ? 5 : 0) + (hasEmail || hasWhatsapp ? 5 : 0);
+    const contactParts = [hasPhone ? 'phone' : null, hasEmail ? 'email' : null, hasWhatsapp ? 'whatsapp' : null].filter(Boolean);
+    checks.push({
+      key: 'completenessContact',
+      score: contactScore,
+      max: 10,
+      detail: contactParts.join(', '),
+    });
+
+    // Hours: 10 pts
+    const hasHours = business.hours && (Array.isArray(business.hours) ? business.hours.length > 0 : Object.keys(business.hours).length > 0);
+    checks.push({
+      key: 'completenessHours',
+      score: hasHours ? 10 : 0,
+      max: 10,
+      detail: '',
+    });
+
+    // Description: 10 pts
+    const hasDesc = !!(business.description || business.highlights?.length > 0);
+    checks.push({
+      key: 'completenessDescription',
+      score: hasDesc ? 10 : 0,
+      max: 10,
+      detail: '',
+    });
+
+    // Category: 5 pts
+    const hasCat = !!(business.category || (business.types && business.types.length > 0));
+    checks.push({
+      key: 'completenessCategory',
+      score: hasCat ? 5 : 0,
+      max: 5,
+      detail: business.category || '',
+    });
+
+    // Menu (restaurants/cafes only): 10 pts
+    const isFood = /restaurant|cafe|bakery|bar|food|comida|taco|pizza/i.test(business.category || '') ||
+                   /restaurant|cafe|bakery|bar|food/i.test((business.types || []).join(' '));
+    if (isFood) {
+      checks.push({
+        key: 'completenessMenu',
+        score: menus.length >= 3 ? 10 : menus.length >= 1 ? 5 : 0,
+        max: 10,
+        detail: `${menus.length} items`,
+      });
+    }
+
+    const totalMax = checks.reduce((s, c) => s + c.max, 0);
+    const totalScore = checks.reduce((s, c) => s + c.score, 0);
+    const normalized = Math.round((totalScore / totalMax) * 100);
+
+    return { score: normalized, checks, totalScore, totalMax };
+  }
+
+  function showCompletenessPopup(business, completeness) {
+    return new Promise((resolve, reject) => {
+      const { score, checks } = completeness;
+
+      // Score color and message
+      let color, message;
+      if (score >= 70) {
+        color = 'var(--success)';
+        message = t('completenessGood');
+      } else if (score >= 40) {
+        color = 'var(--warning)';
+        message = t('completenessOk');
+      } else {
+        color = 'var(--danger)';
+        message = t('completenessLow');
+      }
+
+      // Build checklist rows
+      const rows = checks.map(c => {
+        const full = c.score === c.max;
+        const partial = c.score > 0 && !full;
+        const icon = full ? '\u2713' : partial ? '\u25D4' : '\u2717';
+        const iconColor = full ? 'var(--success)' : partial ? 'var(--warning)' : 'var(--text-dim)';
+        const detail = c.detail ? ` <span style="color:var(--text-dim);font-size:12px">(${escapeHtml(c.detail)})</span>` : '';
+        const points = `<span style="color:var(--text-dim);font-size:12px">${c.score}/${c.max}</span>`;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+          <span style="color:${iconColor};font-size:16px;width:20px;text-align:center">${icon}</span>
+          <span style="flex:1;font-size:13px;color:var(--text)">${t(c.key)}${detail}</span>
+          ${points}
+        </div>`;
+      }).join('');
+
+      const popup = document.createElement('div');
+      popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:1500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
+      popup.innerHTML = `
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;max-width:380px;width:90%">
+          <h3 style="margin:0 0 4px;color:var(--text);font-size:16px">${escapeHtml(business.name)}</h3>
+          <p style="margin:0 0 16px;font-size:13px;color:var(--text-muted)">${t('completenessTitle')}</p>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:12px;background:var(--bg-input);border-radius:var(--radius)">
+            <div style="font-size:28px;font-weight:700;color:${color};min-width:60px;text-align:center">${score}</div>
+            <p style="margin:0;font-size:12px;color:var(--text-muted);line-height:1.4">${message}</p>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:16px">
+            ${rows}
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-secondary" id="completeness-cancel" style="flex:1">${t('completenessCancel')}</button>
+            <button class="btn btn-primary" id="completeness-proceed" style="flex:1">${t('completenessProceed')}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(popup);
+      popup.addEventListener('click', (e) => { if (e.target === popup) { popup.remove(); reject(); } });
+      popup.querySelector('#completeness-cancel').addEventListener('click', () => { popup.remove(); reject(); });
+      popup.querySelector('#completeness-proceed').addEventListener('click', () => { popup.remove(); resolve(); });
+    });
+  }
+
   // ── Create Website (full pipeline: report → photos → website) ──
   async function handleCreateWebsite(business, btn) {
     // If website already exists, show open/regenerate popup (same as before)
@@ -3802,8 +3984,14 @@
       `;
       document.body.appendChild(popup);
       popup.addEventListener('click', (e) => { if (e.target === popup) popup.remove(); });
-      popup.querySelector('#website-popup-regenerate').addEventListener('click', () => {
+      popup.querySelector('#website-popup-regenerate').addEventListener('click', async () => {
         popup.remove();
+        // Show completeness check before regenerating
+        const details = await loadDetailsForBusiness(business);
+        const completeness = calculateCompleteness(business, details);
+        try {
+          await showCompletenessPopup(business, completeness);
+        } catch { return; } // cancelled
         business._cachedReport = null;
         business._cachedGeneratedPhotos = null;
         if (business.generated_websites) {
@@ -3815,6 +4003,18 @@
       });
       return;
     }
+
+    // New website — show completeness check first
+    const details = await loadDetailsForBusiness(business);
+    const completeness = calculateCompleteness(business, details);
+
+    // Save score to database
+    supabaseClient.from('businesses').update({ data_completeness_score: completeness.score }).eq('id', business.id).then(() => {}).catch(() => {});
+
+    try {
+      await showCompletenessPopup(business, completeness);
+    } catch { return; } // cancelled
+
     runFullWebsitePipeline(business, btn);
   }
 
