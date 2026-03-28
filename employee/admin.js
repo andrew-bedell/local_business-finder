@@ -651,6 +651,22 @@
       templatesFlowLinked: 'Linked: {0}',
       templatesFlowNotLinked: 'Not linked',
       templatesTriggerNone: 'None',
+      // Outreach
+      outreachBtnLabel: 'Outreach',
+      outreachModalTitle: 'WhatsApp Outreach',
+      outreachBusinessName: 'Business Name',
+      outreachPhone: 'Phone',
+      outreachPreviewUrl: 'Preview URL',
+      outreachMessage: 'Message',
+      outreachCopied: 'Copied!',
+      outreachNoPhone: 'No phone number available',
+      outreachTabUrgency: '\uD83D\uDCB8 Urgency',
+      outreachTabGift: '\uD83C\uDF81 Gift',
+      outreachTabCompetition: '\uD83C\uDFC6 Competition',
+      outreachCopyMessage: 'Copy Message',
+      outreachYourName: 'Your Name',
+      outreachNamePlaceholder: 'e.g. Andrés',
+      thOutreach: 'Outreach',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -1248,6 +1264,22 @@
       templatesFlowLinked: 'Vinculado: {0}',
       templatesFlowNotLinked: 'No vinculado',
       templatesTriggerNone: 'Ninguno',
+      // Outreach
+      outreachBtnLabel: 'Contactar',
+      outreachModalTitle: 'Contacto por WhatsApp',
+      outreachBusinessName: 'Nombre del Negocio',
+      outreachPhone: 'Teléfono',
+      outreachPreviewUrl: 'Link de Vista Previa',
+      outreachMessage: 'Mensaje',
+      outreachCopied: '¡Copiado!',
+      outreachNoPhone: 'No hay número de teléfono',
+      outreachTabUrgency: '\uD83D\uDCB8 Urgencia',
+      outreachTabGift: '\uD83C\uDF81 Regalo',
+      outreachTabCompetition: '\uD83C\uDFC6 Competencia',
+      outreachCopyMessage: 'Copiar Mensaje',
+      outreachYourName: 'Tu Nombre',
+      outreachNamePlaceholder: 'ej. Andrés',
+      thOutreach: 'Contacto',
     },
   };
 
@@ -2098,6 +2130,7 @@
         <td class="td-center">${socialCellHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-create-website" data-id="${b.id}">${createWebsiteBtnLabel}</button></td>
         <td class="td-center">${websiteUrlHtml}</td>
+        <td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach" data-id="${b.id}">${t('outreachBtnLabel')}</button>` : ''}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
         <td class="td-center"><button class="btn btn-view btn-enrich" data-id="${b.id}">${b.description ? '\u2713' : t('btnEnrich')}</button></td>
@@ -2132,6 +2165,15 @@
         navigator.clipboard.writeText(fullUrl).then(() => {
           showToast('URL copied', 'success');
         });
+      });
+    });
+
+    // Bind outreach buttons
+    resultsBody.querySelectorAll('.btn-outreach').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentResults.find(b => String(b.id) === businessId);
+        if (business) openOutreachModal(business);
       });
     });
 
@@ -2459,6 +2501,152 @@
     pageInfo.textContent = t('pageInfo', currentPage + 1, totalPages);
     btnPrev.disabled = currentPage === 0;
     btnNext.disabled = currentPage >= totalPages - 1;
+  }
+
+  // ── Outreach Modal ──
+  function openOutreachModal(business) {
+    const contacts = business.business_contacts || [];
+    const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
+    const phone = (primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone)) || business.phone || '';
+
+    const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
+    const previewUrl = existingWebsiteRecord
+      ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
+      : '';
+
+    const senderName = localStorage.getItem('outreach_sender_name') || '';
+
+    function getTemplate(idx, name, url) {
+      const n = name || '';
+      const u = url || '';
+      if (idx === 0) {
+        return `Hola, soy ${n}. Vi que tu negocio no tiene página web y quise mostrarte algo: hice este sitio de ejemplo para ti en minutos usando inteligencia artificial.\n\n👉 ${u}\n\nAhora mismo, hay clientes buscándote en Google y no te encuentran. Con una página como esta, aunque sea uno o dos clientes nuevos al mes, ya se paga sola — y el costo es solo $299 pesos al mes, todo incluido.\n\n¿Te gustaría activarla? Puedo tenerla lista hoy mismo.`;
+      } else if (idx === 1) {
+        return `Hola, soy ${n}. Sin compromiso, te hice una página web para tu negocio. Échale un ojo:\n\n👉 ${u}\n\nSi te gusta, la puedo publicar por $299 al mes — eso incluye todo: dominio, diseño, y tú puedes editarla cuando quieras sin saber nada de tecnología. Si no te interesa, no pasa nada. Solo quería que vieras cómo se vería tu negocio en línea.`;
+      } else {
+        return `Hola, soy ${n}. Estuve viendo negocios como el tuyo en la zona y noté que varios ya tienen página web — pero tú todavía no. Te hice una para que veas qué tan fácil es:\n\n👉 ${u}\n\nPor $299 pesos al mes tienes tu propia página profesional. La puedes editar tú mismo, y lo mejor: cuando alguien busque en Google lo que tú vendes, te va a encontrar a ti y no solo a tu competencia. ¿Platicamos?`;
+      }
+    }
+
+    let activeTab = 0;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'outreach-modal';
+
+    const phoneDisplay = phone
+      ? `<span class="outreach-value">${escapeHtml(phone)}</span><button class="btn-outreach-copy" data-copy="phone" title="Copy">📋</button>`
+      : `<span class="outreach-value" style="color:var(--text-dim)">${t('outreachNoPhone')}</span>`;
+
+    overlay.innerHTML = `
+      <div class="modal-content" style="max-width:560px">
+        <div class="modal-header">
+          <h2>${t('outreachModalTitle')}</h2>
+          <button class="modal-close" id="outreach-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="outreach-field">
+            <div class="outreach-label">${t('outreachYourName')}</div>
+            <input type="text" class="outreach-name-input" id="outreach-sender-name" value="${escapeHtml(senderName)}" placeholder="${t('outreachNamePlaceholder')}">
+          </div>
+          <div class="outreach-field">
+            <div class="outreach-label">${t('outreachBusinessName')}</div>
+            <div class="outreach-value-row">
+              <span class="outreach-value">${escapeHtml(business.name)}</span>
+              <button class="btn-outreach-copy" data-copy="name" title="Copy">📋</button>
+            </div>
+          </div>
+          <div class="outreach-field">
+            <div class="outreach-label">${t('outreachPhone')}</div>
+            <div class="outreach-value-row">${phoneDisplay}</div>
+          </div>
+          <div class="outreach-field">
+            <div class="outreach-label">${t('outreachPreviewUrl')}</div>
+            <div class="outreach-value-row">
+              <span class="outreach-value"><a href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener">${escapeHtml(previewUrl)}</a></span>
+              <button class="btn-outreach-copy" data-copy="url" title="Copy">📋</button>
+            </div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+          <div class="outreach-field">
+            <div class="outreach-label">${t('outreachMessage')}</div>
+            <div class="outreach-tabs">
+              <button class="outreach-tab active" data-tab="0">${t('outreachTabUrgency')}</button>
+              <button class="outreach-tab" data-tab="1">${t('outreachTabGift')}</button>
+              <button class="outreach-tab" data-tab="2">${t('outreachTabCompetition')}</button>
+            </div>
+            <div class="outreach-message-wrapper">
+              <pre class="outreach-message" id="outreach-msg-text"></pre>
+            </div>
+            <button class="btn-outreach-copy-msg" id="outreach-copy-msg">📋 ${t('outreachCopyMessage')}</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="outreach-close-footer">${t('closeBtn')}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const msgText = overlay.querySelector('#outreach-msg-text');
+    const nameInput = overlay.querySelector('#outreach-sender-name');
+
+    function updateMessage() {
+      const name = nameInput.value.trim();
+      msgText.textContent = getTemplate(activeTab, name, previewUrl);
+    }
+
+    updateMessage();
+
+    nameInput.addEventListener('input', () => {
+      localStorage.setItem('outreach_sender_name', nameInput.value.trim());
+      updateMessage();
+    });
+
+    // Tab switching
+    overlay.querySelectorAll('.outreach-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        overlay.querySelectorAll('.outreach-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = parseInt(tab.getAttribute('data-tab'), 10);
+        updateMessage();
+      });
+    });
+
+    // Copy buttons
+    overlay.querySelectorAll('.btn-outreach-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.getAttribute('data-copy');
+        let text = '';
+        if (type === 'name') text = business.name;
+        else if (type === 'phone') text = phone;
+        else if (type === 'url') text = previewUrl;
+        copyToClipboard(text, t('outreachCopied'));
+      });
+    });
+
+    // Copy message button
+    overlay.querySelector('#outreach-copy-msg').addEventListener('click', () => {
+      copyToClipboard(msgText.textContent, t('outreachCopied'));
+    });
+
+    // Close handlers
+    function closeOutreach() {
+      overlay.remove();
+    }
+
+    overlay.querySelector('#outreach-close').addEventListener('click', closeOutreach);
+    overlay.querySelector('#outreach-close-footer').addEventListener('click', closeOutreach);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeOutreach();
+    });
+    document.addEventListener('keydown', function onEsc(e) {
+      if (e.key === 'Escape') {
+        closeOutreach();
+        document.removeEventListener('keydown', onEsc);
+      }
+    });
   }
 
   // ── Detail Modal ──
