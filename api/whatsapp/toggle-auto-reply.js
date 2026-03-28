@@ -41,54 +41,66 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Strategy: If businessId provided, find existing conversation by business_id first.
-    // This avoids phone format mismatches (local vs international) creating duplicate rows.
+    // Look up existing conversation by business_id first, then by phone
+    let existingId = null;
+
     if (businessId) {
-      const lookupResp = await fetch(
+      const bizResp = await fetch(
         `${supabaseUrl}/rest/v1/whatsapp_conversations?business_id=eq.${businessId}&select=id&limit=1`,
         { headers }
       );
-      const rows = lookupResp.ok ? await lookupResp.json() : [];
-
-      if (rows.length > 0) {
-        // PATCH the existing row (created by webhook with correct international phone)
-        const patchResp = await fetch(
-          `${supabaseUrl}/rest/v1/whatsapp_conversations?id=eq.${rows[0].id}`,
-          {
-            method: 'PATCH',
-            headers: { ...headers, 'Prefer': 'return=representation' },
-            body: JSON.stringify({ auto_reply_disabled: disabled }),
-          }
-        );
-
-        if (!patchResp.ok) {
-          const errBody = await patchResp.text();
-          console.error('Supabase patch error:', patchResp.status, errBody);
-          return res.status(502).json({ error: 'Failed to update auto-reply setting' });
-        }
-
-        return res.status(200).json({ success: true, auto_reply_disabled: disabled });
-      }
-      // No existing conversation for this business — fall through to phone upsert
+      const bizRows = bizResp.ok ? await bizResp.json() : [];
+      if (bizRows.length > 0) existingId = bizRows[0].id;
     }
 
-    // Fallback: upsert by phone (pre-creates row for future inbound messages)
-    const upsertResp = await fetch(
-      `${supabaseUrl}/rest/v1/whatsapp_conversations`,
-      {
-        method: 'POST',
-        headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-        body: JSON.stringify({
-          recipient_phone: normalizedPhone,
-          auto_reply_disabled: disabled,
-        }),
-      }
-    );
+    if (!existingId) {
+      const phoneResp = await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_conversations?recipient_phone=eq.${encodeURIComponent(normalizedPhone)}&select=id&limit=1`,
+        { headers }
+      );
+      const phoneRows = phoneResp.ok ? await phoneResp.json() : [];
+      if (phoneRows.length > 0) existingId = phoneRows[0].id;
+    }
 
-    if (!upsertResp.ok) {
-      const errBody = await upsertResp.text();
-      console.error('Supabase upsert error:', upsertResp.status, errBody);
-      return res.status(502).json({ error: 'Failed to update auto-reply setting' });
+    if (existingId) {
+      // PATCH existing conversation
+      const patchBody = { auto_reply_disabled: disabled };
+      if (businessId) patchBody.business_id = businessId;
+
+      const patchResp = await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_conversations?id=eq.${existingId}`,
+        {
+          method: 'PATCH',
+          headers: { ...headers, 'Prefer': 'return=representation' },
+          body: JSON.stringify(patchBody),
+        }
+      );
+
+      if (!patchResp.ok) {
+        const errBody = await patchResp.text();
+        console.error('Supabase patch error:', patchResp.status, errBody);
+        return res.status(502).json({ error: 'Failed to update auto-reply setting' });
+      }
+    } else {
+      // INSERT new conversation
+      const insertResp = await fetch(
+        `${supabaseUrl}/rest/v1/whatsapp_conversations`,
+        {
+          method: 'POST',
+          headers: { ...headers, 'Prefer': 'return=representation' },
+          body: JSON.stringify({
+            recipient_phone: normalizedPhone,
+            auto_reply_disabled: disabled,
+            ...(businessId ? { business_id: businessId } : {}),
+          }),
+        }
+      );
+
+      if (!insertResp.ok) {
+        const errBody = await insertResp.text();
+        console.error('Supabase insert error:', insertResp.status, errBody);
+        return res.status(502).json({ error: 'Failed to update auto-reply setting' });
+      }
     }
 
     return res.status(200).json({ success: true, auto_reply_disabled: disabled });
