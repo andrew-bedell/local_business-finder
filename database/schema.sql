@@ -211,6 +211,8 @@ CREATE TABLE IF NOT EXISTS business_photos (
                               'food',           -- food/drink items (restaurants)
                               'team',           -- staff or owner photos
                               'logo',           -- business logo
+                              'founder',        -- founder/owner portrait (customer-uploaded)
+                              'service',        -- photo of a specific service/product
                               'ai_generated'    -- AI-created supporting image
                             )),
 
@@ -311,6 +313,30 @@ CREATE TABLE IF NOT EXISTS business_menus (
 );
 
 CREATE INDEX IF NOT EXISTS idx_menus_business ON business_menus (business_id);
+
+
+-- ============================================================================
+-- 5b. BUSINESS_SERVICES — Customer-defined services/products
+-- ============================================================================
+-- Services or products the business offers, entered by the customer via the
+-- data wizard. These are displayed on the generated website's services section
+-- and complement the AI-written content with real data.
+
+CREATE TABLE IF NOT EXISTS business_services (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id             BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+
+  name                    TEXT NOT NULL,
+  description             TEXT,
+  price                   DECIMAL(10, 2),
+  currency                TEXT DEFAULT 'MXN',  -- MXN, USD, COP, etc.
+  photo_id                UUID REFERENCES business_photos(id) ON DELETE SET NULL,
+
+  sort_order              INTEGER DEFAULT 0,
+  created_at              TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_services_business ON business_services (business_id);
 
 
 -- ============================================================================

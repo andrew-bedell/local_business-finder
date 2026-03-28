@@ -3341,6 +3341,25 @@
       });
     }
 
+    // Founder / owner info
+    if (business.owner_name || business.founder_description) {
+      sections.push('\n=== FOUNDER / OWNER ===');
+      if (business.owner_name) sections.push(`Name: ${business.owner_name}`);
+      if (business.founder_description) sections.push(`Story: ${business.founder_description}`);
+    }
+
+    // Customer-defined services/products
+    const services = details.services || [];
+    if (services.length > 0) {
+      sections.push('\n=== SERVICES / PRODUCTS (customer-provided) ===');
+      services.forEach((s, i) => {
+        let line = `${i + 1}. ${s.name}`;
+        if (s.price) line += ` — $${s.price} ${s.currency || ''}`;
+        if (s.description) line += ` | ${s.description}`;
+        sections.push(line);
+      });
+    }
+
     // Photo inventory
     if (photos.length > 0) {
       sections.push('\n=== PHOTO INVENTORY ===');
@@ -3472,6 +3491,15 @@
       }
     }
 
+    // Inject founder photo if available and not already in manifest
+    const hasFounderSection = manifest.some(m => (m.section || '').toLowerCase().includes('founder'));
+    if (!hasFounderSection) {
+      const founderPhoto = photoInventory.find(p => p.type === 'founder');
+      if (founderPhoto && founderPhoto.url) {
+        manifest.push({ section: 'founder', slot: 'portrait', url: founderPhoto.url });
+      }
+    }
+
     return manifest;
   }
 
@@ -3480,22 +3508,24 @@
     let details = detailCache[business.id];
     if (!details) {
       try {
-        const [reviewsRes, photosRes, menusRes, socialsRes] = await Promise.all([
+        const [reviewsRes, photosRes, menusRes, socialsRes, servicesRes] = await Promise.all([
           supabaseClient.from('business_reviews').select('*').eq('business_id', business.id).order('sentiment_score', { ascending: false, nullsFirst: false }).limit(20),
           supabaseClient.from('business_photos').select('*').eq('business_id', business.id).limit(30),
           supabaseClient.from('business_menus').select('*').eq('business_id', business.id),
           supabaseClient.from('business_social_profiles').select('*').eq('business_id', business.id),
+          supabaseClient.from('business_services').select('*, business_photos(url)').eq('business_id', business.id).order('sort_order', { ascending: true }),
         ]);
         details = {
           reviews: reviewsRes.data || [],
           photos: photosRes.data || [],
           menus: menusRes.data || [],
           socialProfiles: (socialsRes.data || []).map(s => ({ platform: s.platform, url: s.url })),
+          services: (servicesRes.data || []).map(s => ({ ...s, photo_url: s.business_photos?.url || '' })),
         };
         detailCache[business.id] = details;
       } catch (err) {
         console.error('Detail load error:', err);
-        details = { reviews: [], photos: [], menus: [], socialProfiles: [] };
+        details = { reviews: [], photos: [], menus: [], socialProfiles: [], services: [] };
       }
     }
     return details;
@@ -3937,7 +3967,10 @@
             mapsUrl: business.maps_url || '',
             socialProfiles: details.socialProfiles || [],
             menuItems: details.menus || [],
+            services: details.services || [],
             staffMembers: [],
+            founderName: business.owner_name || '',
+            founderDescription: business.founder_description || '',
           }),
         }),
         60000,
@@ -4346,7 +4379,8 @@
             phone: business.phone || '', whatsapp: business.whatsapp || '',
             address: business.address_full || '', mapsUrl: business.maps_url || '',
             socialProfiles: details.socialProfiles || [],
-            menuItems: details.menus || [], staffMembers: [],
+            menuItems: details.menus || [], services: details.services || [], staffMembers: [],
+            founderName: business.owner_name || '', founderDescription: business.founder_description || '',
           }),
         }),
         60000, 'Website generation'
@@ -4666,7 +4700,10 @@
             mapsUrl: business.maps_url || '',
             socialProfiles: details.socialProfiles || [],
             menuItems: details.menus || [],
+            services: details.services || [],
             staffMembers: [],
+            founderName: business.owner_name || '',
+            founderDescription: business.founder_description || '',
           }),
         }),
         60000,

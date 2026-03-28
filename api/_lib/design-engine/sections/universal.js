@@ -98,10 +98,16 @@ export function heroSection(content, photos, business, ctaLabel) {
 }
 
 // ── About Section ──
-export function aboutSection(content, photos) {
+export function aboutSection(content, photos, business) {
   const aboutPhoto = getPhotoForSection(photos, 'about') || getPhotoForSection(photos, 'sobre');
   const heading = esc(content?.about?.heading || 'Sobre Nosotros');
   const paragraphs = content?.about?.paragraphs || [];
+
+  // Founder info from customer-provided data
+  const founderName = (business && business.founderName) || '';
+  const founderDesc = (business && business.founderDescription) || '';
+  const founderPhoto = getPhotoForSection(photos, 'founder');
+  const hasFounder = founderName || founderDesc;
 
   return {
     html: `
@@ -119,15 +125,73 @@ export function aboutSection(content, photos) {
           <img src="${esc(aboutPhoto)}" alt="${heading}" class="img-cover">
         </div>` : ''}
       </div>
+      ${hasFounder ? `
+      <div class="container founder-block reveal" style="margin-top:3rem;">
+        ${founderPhoto ? `
+        <div class="founder-block__photo">
+          <img src="${esc(founderPhoto)}" alt="${esc(founderName)}" class="img-cover">
+        </div>` : ''}
+        <div class="founder-block__text">
+          ${founderName ? `<h3>${esc(founderName)}</h3>` : ''}
+          ${founderDesc ? `<p style="color:var(--color-text-muted);line-height:1.7">${esc(founderDesc)}</p>` : ''}
+        </div>
+      </div>` : ''}
     </section>`,
-    css: '',
+    css: hasFounder ? `
+    .founder-block {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+    .founder-block__photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .founder-block__photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    @media (max-width: 768px) {
+      .founder-block { flex-direction: column; text-align: center; }
+    }` : '',
   };
 }
 
 // ── Services Section ──
-export function servicesSection(content, photos) {
+export function servicesSection(content, photos, business) {
   const heading = esc(content?.services?.heading || 'Servicios');
-  const items = content?.services?.items || [];
+  const aiItems = content?.services?.items || [];
+  const customerServices = (business && business.services) || [];
+
+  // Merge: customer-provided services take priority, then AI-generated ones fill in
+  const mergedItems = [];
+
+  // Add customer-provided services first (they have real data from the business owner)
+  customerServices.forEach(svc => {
+    const photoUrl = svc.photo_url || '';
+    mergedItems.push({
+      name: svc.name,
+      description: svc.description || '',
+      price: svc.price ? `${svc.currency || '$'}${svc.price}` : '',
+      photoUrl,
+    });
+  });
+
+  // Add AI-generated items that don't duplicate customer services (by name similarity)
+  const customerNames = customerServices.map(s => (s.name || '').toLowerCase().trim());
+  aiItems.forEach(item => {
+    const nameLower = (item.name || '').toLowerCase().trim();
+    const isDuplicate = customerNames.some(cn => cn === nameLower || cn.includes(nameLower) || nameLower.includes(cn));
+    if (!isDuplicate) {
+      mergedItems.push({ name: item.name, description: item.description, price: item.price || '', photoUrl: '' });
+    }
+  });
 
   return {
     html: `
@@ -138,8 +202,9 @@ export function servicesSection(content, photos) {
           <h2>${heading}</h2>
         </div>
         <div class="service-grid reveal">
-          ${items.map(item => `
+          ${mergedItems.map(item => `
           <div class="service-grid__item">
+            ${item.photoUrl ? `<div class="service-grid__photo"><img src="${esc(item.photoUrl)}" alt="${esc(item.name)}" loading="lazy" class="img-cover"></div>` : ''}
             <h3>${esc(item.name)}</h3>
             <p>${esc(item.description)}</p>
             ${item.price ? `<p style="margin-top:0.75rem;color:var(--color-accent);font-family:var(--font-heading);font-size:1.05rem">${esc(item.price)}</p>` : ''}
@@ -147,7 +212,19 @@ export function servicesSection(content, photos) {
         </div>
       </div>
     </section>`,
-    css: '',
+    css: `
+    .service-grid__photo {
+      width: 100%;
+      height: 180px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .service-grid__photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }`,
   };
 }
 

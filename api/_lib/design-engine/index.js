@@ -114,8 +114,8 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   const sectionMap = {};
 
   sectionMap.hero = heroSection(content, photos, business, content?.cta?.buttonText);
-  sectionMap.about = aboutSection(content, photos);
-  sectionMap.services = servicesSection(content, photos);
+  sectionMap.about = aboutSection(content, photos, business);
+  sectionMap.services = servicesSection(content, photos, business);
   sectionMap.whyChooseUs = whyChooseUsSection(content);
   sectionMap.testimonials = testimonialsSection(content);
   sectionMap.gallery = gallerySection(content, photos);
