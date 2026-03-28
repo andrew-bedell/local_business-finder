@@ -2481,6 +2481,46 @@ a.c-btn-white {
   color: var(--c-success);
 }
 
+/* ── Smart Wizard: Complete Card ── */
+.c-wizard-card--complete {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.c-wizard-card--complete .c-wizard-card-header {
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.c-wizard-card--complete .c-wizard-card-header:hover {
+  opacity: 1;
+}
+
+.c-wizard-card--complete .c-wizard-card-icon {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--c-success);
+}
+
+/* ── Smart Wizard: Next/Target Card ── */
+.c-wizard-card--next {
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 1px rgba(108, 92, 231, 0.2);
+}
+
+.c-wizard-card--next .c-wizard-card-icon {
+  background: rgba(108, 92, 231, 0.18);
+}
+
+/* ── Smart Wizard: Generate CTA Ready ── */
+.c-wizard-generate-card--ready {
+  border-color: var(--c-success);
+  animation: wizGenPulse 2s ease-in-out infinite;
+}
+
+@keyframes wizGenPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.15); }
+}
+
 .c-wizard-chevron {
   color: var(--c-text-dim);
   flex-shrink: 0;
