@@ -923,6 +923,7 @@ CREATE TABLE IF NOT EXISTS employees (
   auth_user_id            UUID NOT NULL UNIQUE,      -- Supabase Auth user UUID
   email                   TEXT NOT NULL,              -- denormalized for display
   display_name            TEXT,
+  outreach_sender_name    TEXT,                    -- name used in WhatsApp outreach messages
   role                    TEXT DEFAULT 'employee'
                             CHECK (role IN ('admin', 'employee')),
   is_active               BOOLEAN DEFAULT TRUE,

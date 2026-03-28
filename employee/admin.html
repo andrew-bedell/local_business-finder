@@ -1110,12 +1110,12 @@
         </div>
       </section>
 
-      <!-- Team Management (admin only) -->
+      <!-- Team Management -->
       <section id="team-section" class="card" style="display:none">
         <div class="card-header">
           <h2 data-i18n="navTeam">Team</h2>
         </div>
-        <div class="team-invite-form" id="team-invite-form">
+        <div class="team-invite-form" id="team-invite-form" style="display:none">
           <div class="form-group">
             <label data-i18n="teamEmail">Email</label>
             <input type="email" class="input" id="invite-email" placeholder="employee@example.com" style="width:260px">
@@ -1129,8 +1129,9 @@
         <div class="results-table-wrapper">
           <table class="team-table" id="team-table">
             <thead>
-              <tr>
+              <tr id="team-table-head">
                 <th data-i18n="teamName">Name</th>
+                <th data-i18n="teamSenderName">Sender Name</th>
                 <th data-i18n="teamEmail">Email</th>
                 <th data-i18n="teamRole">Role</th>
                 <th data-i18n="teamStatus">Status</th>
