@@ -88,6 +88,9 @@
             }
           };
 
+          // Record employee IP for analytics exclusion (fire-and-forget)
+          trackEmployeeIp(session.access_token, empResult.data);
+
           if (loadingEl) loadingEl.style.display = 'none';
           document.dispatchEvent(new CustomEvent('employee-auth-ready'));
         });
@@ -224,6 +227,9 @@
           return;
         }
 
+        // Record employee IP for analytics exclusion (fire-and-forget)
+        trackEmployeeIp(session.access_token, empResult.data);
+
         // Update joined_at and send welcome email if this is the first login
         var isFirstLogin = !empResult.data.joined_at;
         if (isFirstLogin) {
@@ -330,6 +336,25 @@
         btn.disabled = false;
         btn.textContent = 'Set Password';
       });
+  }
+
+  // ── Track Employee IP for analytics exclusion ──
+  function trackEmployeeIp(accessToken, employee) {
+    try {
+      fetch('/api/employees/track-ip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + accessToken
+        },
+        body: JSON.stringify({
+          employee_id: employee.id,
+          label: employee.display_name || employee.email
+        })
+      }).catch(function () {}); // fire-and-forget
+    } catch (e) {
+      // silent
+    }
   }
 
   // ── Helpers ──

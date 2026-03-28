@@ -39,7 +39,8 @@ export default async function handler(req, res) {
   }
 
   // Generate a visitor fingerprint from IP + User-Agent (no PII stored)
-  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  const forwarded = req.headers['x-forwarded-for'] || '';
+  const ip = forwarded.split(',')[0].trim() || req.headers['x-real-ip'] || 'unknown';
   const ua = req.headers['user-agent'] || 'unknown';
   const visitor_id = createHash('sha256').update(ip + '|' + ua).digest('hex').substring(0, 16);
 
@@ -49,6 +50,24 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
     'Prefer': 'return=minimal',
   };
+
+  // Check if this IP belongs to an employee — skip tracking if so
+  if (ip !== 'unknown') {
+    try {
+      const excludeRes = await fetch(
+        `${supabaseUrl}/rest/v1/excluded_ips?ip_address=eq.${encodeURIComponent(ip)}&select=id&limit=1`,
+        { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+      );
+      if (excludeRes.ok) {
+        const rows = await excludeRes.json();
+        if (rows && rows.length > 0) {
+          return res.status(204).end(); // Employee IP — skip
+        }
+      }
+    } catch {
+      // If check fails, proceed with tracking (fail open)
+    }
+  }
 
   try {
     const payload = {
