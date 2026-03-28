@@ -8,7 +8,8 @@
     pipeline: {
       items: [
         { label: 'navPipeline', tab: 'saved' },
-        { label: 'navDemoAnalytics', tab: 'demo_analytics' }
+        { label: 'navDemoAnalytics', tab: 'demo_analytics' },
+        { label: 'navOutreach', tab: 'outreach' }
       ],
       defaultTab: 'saved'
     },
@@ -773,6 +774,38 @@
       daDays: '{0} days',
       daLoading: 'Loading...',
       daError: 'Failed to load demo analytics.',
+      // Outreach Dashboard
+      navOutreach: 'Outreach',
+      orDashboardTitle: 'Outreach Dashboard',
+      orStatReady: 'Ready',
+      orStatInProgress: 'In Progress',
+      orStatFollowup: 'Awaiting Followup',
+      orStatStale: 'Stale (3+ days)',
+      orStatComplete: 'Complete',
+      orFollowupTitle: '24h Followup Reminders',
+      orVisitorsTitle: 'Recent Website Visitors',
+      orReadyTitle: 'Ready for Outreach',
+      orProgressTitle: 'Outreach In Progress',
+      orCompleteTitle: 'Outreach Complete',
+      orThBusiness: 'Business',
+      orThContact: 'Contact',
+      orThProgress: 'Progress',
+      orThNextStep: 'Next Step',
+      orThLastSent: 'Last Sent',
+      orThLastVisit: 'Last Visit',
+      orThVisitCount: 'Views',
+      orThTimeSince: 'Time Since Step 6',
+      orThCompletedAt: 'Completed',
+      orThStatus: 'Status',
+      orThAction: 'Action',
+      orNoFollowup: 'No businesses awaiting followup.',
+      orNoVisitors: 'No recent website visitors.',
+      orNoReady: 'No businesses ready for outreach.',
+      orNoProgress: 'No outreach in progress.',
+      orNoComplete: 'No outreach completed yet.',
+      orOpenOutreach: 'Open Outreach',
+      orStepLabel: 'Step {0}',
+      orFollowupLabel: 'Followup',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -1490,6 +1523,38 @@
       daDays: '{0} días',
       daLoading: 'Cargando...',
       daError: 'Error al cargar analíticas demo.',
+      // Outreach Dashboard
+      navOutreach: 'Contacto',
+      orDashboardTitle: 'Panel de Contacto',
+      orStatReady: 'Listos',
+      orStatInProgress: 'En Progreso',
+      orStatFollowup: 'Esperando Seguimiento',
+      orStatStale: 'Estancados (3+ días)',
+      orStatComplete: 'Completados',
+      orFollowupTitle: 'Seguimiento 24h',
+      orVisitorsTitle: 'Visitantes Recientes',
+      orReadyTitle: 'Listos para Contactar',
+      orProgressTitle: 'Contacto en Progreso',
+      orCompleteTitle: 'Contacto Completado',
+      orThBusiness: 'Negocio',
+      orThContact: 'Contacto',
+      orThProgress: 'Progreso',
+      orThNextStep: 'Siguiente Paso',
+      orThLastSent: 'Último Envío',
+      orThLastVisit: 'Última Visita',
+      orThVisitCount: 'Vistas',
+      orThTimeSince: 'Tiempo Desde Paso 6',
+      orThCompletedAt: 'Completado',
+      orThStatus: 'Estado',
+      orThAction: 'Acción',
+      orNoFollowup: 'No hay negocios esperando seguimiento.',
+      orNoVisitors: 'No hay visitantes recientes.',
+      orNoReady: 'No hay negocios listos para contactar.',
+      orNoProgress: 'No hay contacto en progreso.',
+      orNoComplete: 'Aún no hay contacto completado.',
+      orOpenOutreach: 'Abrir Contacto',
+      orStepLabel: 'Paso {0}',
+      orFollowupLabel: 'Seguimiento',
     },
   };
 
@@ -3052,6 +3117,7 @@
     // Close handlers
     function closeOutreach() {
       overlay.remove();
+      if (activeTab === 'outreach') loadOutreach();
     }
 
     overlay.querySelector('#outreach-close').addEventListener('click', closeOutreach);
@@ -3081,6 +3147,347 @@
       }
     } catch (err) {
       console.warn('Failed to load auto-reply state:', err);
+    }
+  }
+
+  // ── Outreach Dashboard ──
+
+  function orTimeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
+  function getLastStepSentTime(business) {
+    const steps = business.outreach_steps || {};
+    let latest = null;
+    ['1', '2', '3', '4', '5', '6', 'followup'].forEach(k => {
+      if (steps[k] && steps[k].sent_at) {
+        if (!latest || steps[k].sent_at > latest) latest = steps[k].sent_at;
+      }
+    });
+    return latest;
+  }
+
+  function getNextStepLabel(business) {
+    const steps = business.outreach_steps || {};
+    const coreKeys = ['1', '2', '3', '4', '5', '6'];
+    for (const k of coreKeys) {
+      if (!steps[k] || !steps[k].sent_at) return t('orStepLabel', k);
+    }
+    if (!steps.followup || !steps.followup.sent_at) return t('orFollowupLabel');
+    return '';
+  }
+
+  function getOrContactHtml(business) {
+    const contacts = business.business_contacts || [];
+    const primary = contacts.find(c => c.is_primary) || contacts[0];
+    const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : business.phone;
+    if (!phone) return '<span style="color:var(--text-dim)">—</span>';
+    const name = primary ? (primary.contact_name || '') : '';
+    let html = '';
+    if (name) html += '<span style="font-size:12px">' + escapeHtml(name) + '</span><br>';
+    html += '<span class="or-phone" onclick="event.stopPropagation()" data-phone="' + escapeHtml(phone) + '">' + escapeHtml(phone) + '</span>';
+    return html;
+  }
+
+  function isStaleOutreach(business) {
+    const count = getOutreachStepCount(business);
+    if (count === 0 || count === 6) return false;
+    const lastSent = getLastStepSentTime(business);
+    if (!lastSent) return false;
+    const daysSince = (Date.now() - new Date(lastSent).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 3;
+  }
+
+  function orBizLink(business) {
+    return '<a class="or-biz-link" data-biz-id="' + business.id + '">' + escapeHtml(business.name || 'Unnamed') + '</a>';
+  }
+
+  function orActionBtn(business) {
+    return '<button class="btn btn-view or-action-btn" data-biz-id="' + business.id + '">' + t('orOpenOutreach') + '</button>';
+  }
+
+  function bindOrTableEvents(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    table.addEventListener('click', function (e) {
+      const link = e.target.closest('.or-biz-link');
+      const btn = e.target.closest('.or-action-btn');
+      const phoneCopy = e.target.closest('.or-phone');
+      const bizId = (link && link.dataset.bizId) || (btn && btn.dataset.bizId);
+      if (bizId) {
+        const biz = allBusinesses.find(b => String(b.id) === bizId);
+        if (biz) openOutreachModal(biz);
+      }
+      if (phoneCopy && phoneCopy.dataset.phone) {
+        copyToClipboard(phoneCopy.dataset.phone);
+      }
+    });
+  }
+
+  function loadOutreach() {
+    const withSite = allBusinesses.filter(b => hasGeneratedWebsite(b));
+
+    const ready = [];
+    const inProgress = [];
+    const followupDue = [];
+    const complete = [];
+    let staleCount = 0;
+
+    withSite.forEach(b => {
+      const count = getOutreachStepCount(b);
+      const steps = b.outreach_steps || {};
+      const hasFollowup = steps.followup && steps.followup.sent_at;
+
+      if (count === 0) {
+        ready.push(b);
+      } else if (count < 6) {
+        inProgress.push(b);
+        if (isStaleOutreach(b)) staleCount++;
+      } else if (!hasFollowup) {
+        // 6/6 done, no followup yet — check if 24hr passed since step 6
+        const step6Time = steps['6'] && steps['6'].sent_at;
+        if (step6Time) {
+          const hoursSince = (Date.now() - new Date(step6Time).getTime()) / (1000 * 60 * 60);
+          if (hoursSince >= 24) {
+            followupDue.push(b);
+          } else {
+            inProgress.push(b); // Still waiting for 24h window
+          }
+        } else {
+          inProgress.push(b);
+        }
+      } else {
+        complete.push(b);
+      }
+    });
+
+    // Sort: in-progress by last sent (most recent first), followupDue by step 6 time, ready by name
+    inProgress.sort((a, b) => {
+      const at = getLastStepSentTime(a) || '';
+      const bt = getLastStepSentTime(b) || '';
+      return bt.localeCompare(at);
+    });
+    followupDue.sort((a, b) => {
+      const at = (a.outreach_steps && a.outreach_steps['6'] && a.outreach_steps['6'].sent_at) || '';
+      const bt = (b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at) || '';
+      return at.localeCompare(bt); // oldest first — most overdue
+    });
+    ready.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    complete.sort((a, b) => {
+      const at = (a.outreach_steps && a.outreach_steps.followup && a.outreach_steps.followup.sent_at) || '';
+      const bt = (b.outreach_steps && b.outreach_steps.followup && b.outreach_steps.followup.sent_at) || '';
+      return bt.localeCompare(at);
+    });
+
+    // Stats
+    const statReady = document.getElementById('or-stat-ready');
+    const statProgress = document.getElementById('or-stat-in-progress');
+    const statFollowup = document.getElementById('or-stat-followup');
+    const statStale = document.getElementById('or-stat-stale');
+    const statComplete = document.getElementById('or-stat-complete');
+    if (statReady) statReady.textContent = ready.length;
+    if (statProgress) statProgress.textContent = inProgress.length;
+    if (statFollowup) statFollowup.textContent = followupDue.length;
+    if (statStale) statStale.textContent = staleCount;
+    if (statComplete) statComplete.textContent = complete.length;
+
+    renderOrFollowupTable(followupDue);
+    renderOrReadyTable(ready);
+    renderOrProgressTable(inProgress);
+    renderOrCompleteTable(complete);
+    loadOrVisitors();
+  }
+
+  function renderOrFollowupTable(businesses) {
+    const body = document.getElementById('or-followup-body');
+    const wrapper = document.getElementById('or-followup-wrapper');
+    const empty = document.getElementById('or-followup-empty');
+    const countEl = document.getElementById('or-followup-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    let html = '';
+    businesses.forEach(b => {
+      const step6Time = b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at;
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + orTimeAgo(step6Time) + '</td>'
+        + '<td>' + orActionBtn(b) + '</td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-followup-body');
+  }
+
+  function renderOrReadyTable(businesses) {
+    const body = document.getElementById('or-ready-body');
+    const wrapper = document.getElementById('or-ready-wrapper');
+    const empty = document.getElementById('or-ready-empty');
+    const countEl = document.getElementById('or-ready-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    let html = '';
+    businesses.forEach(b => {
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
+        + '<td>' + orActionBtn(b) + '</td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-ready-body');
+  }
+
+  function renderOrProgressTable(businesses) {
+    const body = document.getElementById('or-progress-body');
+    const wrapper = document.getElementById('or-progress-wrapper');
+    const empty = document.getElementById('or-progress-empty');
+    const countEl = document.getElementById('or-progress-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    let html = '';
+    businesses.forEach(b => {
+      const count = getOutreachStepCount(b);
+      const stale = isStaleOutreach(b);
+      const statusBadge = stale
+        ? '<span class="or-stale-badge">' + t('orStatStale') + '</span>'
+        : '<span class="or-ontrack-badge">On Track</span>';
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + getOutreachProgressHtml(b) + '</td>'
+        + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
+        + '<td>' + orTimeAgo(getLastStepSentTime(b)) + '</td>'
+        + '<td>' + statusBadge + '</td>'
+        + '<td>' + orActionBtn(b) + '</td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-progress-body');
+  }
+
+  function renderOrCompleteTable(businesses) {
+    const body = document.getElementById('or-complete-body');
+    const wrapper = document.getElementById('or-complete-wrapper');
+    const empty = document.getElementById('or-complete-empty');
+    const countEl = document.getElementById('or-complete-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    let html = '';
+    businesses.forEach(b => {
+      const followupTime = b.outreach_steps && b.outreach_steps.followup && b.outreach_steps.followup.sent_at;
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + orTimeAgo(followupTime) + '</td>'
+        + '<td>' + orActionBtn(b) + '</td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-complete-body');
+  }
+
+  async function loadOrVisitors() {
+    const body = document.getElementById('or-visitors-body');
+    const wrapper = document.getElementById('or-visitors-wrapper');
+    const empty = document.getElementById('or-visitors-empty');
+    const countEl = document.getElementById('or-visitors-count');
+
+    try {
+      const res = await fetch('/api/analytics/demo-stats?days=7&limit=200');
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+      const sessions = data.sessions || [];
+
+      // Group by business_id: latest visit time + total views
+      const bizMap = {};
+      sessions.forEach(s => {
+        const bizId = s.business_id;
+        if (!bizId) return;
+        if (!bizMap[bizId]) {
+          bizMap[bizId] = { businessId: bizId, businessName: s.business_name || '', lastVisit: s.created_at, views: 0 };
+        }
+        bizMap[bizId].views++;
+        if (s.created_at > bizMap[bizId].lastVisit) bizMap[bizId].lastVisit = s.created_at;
+      });
+
+      const visitors = Object.values(bizMap).sort((a, b) => (b.lastVisit || '').localeCompare(a.lastVisit || ''));
+      if (countEl) countEl.textContent = visitors.length;
+
+      if (!visitors.length) {
+        if (wrapper) wrapper.style.display = 'none';
+        if (empty) empty.style.display = '';
+        return;
+      }
+      if (wrapper) wrapper.style.display = '';
+      if (empty) empty.style.display = 'none';
+
+      let html = '';
+      visitors.forEach(v => {
+        const biz = allBusinesses.find(b => String(b.id) === String(v.businessId));
+        const progress = biz ? getOutreachProgressHtml(biz) : '—';
+        const contact = biz ? getOrContactHtml(biz) : '—';
+        const bizLink = biz
+          ? orBizLink(biz)
+          : escapeHtml(v.businessName || 'Unknown');
+        const actionHtml = biz ? orActionBtn(biz) : '';
+
+        html += '<tr>'
+          + '<td>' + bizLink + '</td>'
+          + '<td>' + contact + '</td>'
+          + '<td>' + progress + '</td>'
+          + '<td>' + orTimeAgo(v.lastVisit) + '</td>'
+          + '<td>' + v.views + '</td>'
+          + '<td>' + actionHtml + '</td>'
+          + '</tr>';
+      });
+      if (body) body.innerHTML = html;
+      bindOrTableEvents('or-visitors-body');
+    } catch (err) {
+      console.error('Failed to load outreach visitors:', err);
+      if (countEl) countEl.textContent = '0';
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
     }
   }
 
@@ -5494,12 +5901,13 @@
       customers: ['customers-section'],
       edit_requests: ['edit-requests-section'],
       demo_analytics: ['demo-analytics-section'],
+      outreach: ['outreach-section'],
       earnings: ['earnings-section'],
       team: ['team-section'],
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'earnings-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -5519,11 +5927,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-demo-analytics', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -5548,6 +5956,7 @@
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
     if (tab === 'demo_analytics') loadDemoAnalytics();
+    if (tab === 'outreach') loadOutreach();
     if (tab === 'earnings') loadEarnings();
     if (tab === 'team') loadTeamEmployees();
   }
