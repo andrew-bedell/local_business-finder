@@ -63,7 +63,7 @@
 
       // Verify this user is an active employee
       supabase.from('employees')
-        .select('id, email, display_name, role, is_active')
+        .select('id, email, display_name, outreach_sender_name, role, is_active')
         .eq('auth_user_id', session.user.id)
         .eq('is_active', true)
         .single()

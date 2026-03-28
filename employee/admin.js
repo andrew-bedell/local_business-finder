@@ -31,7 +31,7 @@
     },
     settings: {
       items: [
-        { label: 'navTeam', tab: 'team', adminOnly: true },
+        { label: 'navTeam', tab: 'team' },
         { label: 'langToggle', isLangToggle: true }
       ],
       defaultTab: 'team'
@@ -585,6 +585,10 @@
       teamStatus: 'Status',
       teamJoined: 'Joined',
       teamActions: 'Actions',
+      teamSenderName: 'Sender Name',
+      teamSenderNamePlaceholder: 'Enter name for outreach...',
+      teamSenderNameSaved: 'Sender name saved',
+      teamSenderNameError: 'Failed to save sender name',
       teamInvite: 'Invite Employee',
       teamInviting: 'Sending…',
       teamInviteSuccess: 'Invitation sent to {0}',
@@ -1214,6 +1218,10 @@
       teamStatus: 'Estado',
       teamJoined: 'Incorporación',
       teamActions: 'Acciones',
+      teamSenderName: 'Nombre de Remitente',
+      teamSenderNamePlaceholder: 'Nombre para contacto...',
+      teamSenderNameSaved: 'Nombre de remitente guardado',
+      teamSenderNameError: 'Error al guardar nombre',
       teamInvite: 'Invitar Empleado',
       teamInviting: 'Enviando…',
       teamInviteSuccess: 'Invitación enviada a {0}',
@@ -2577,7 +2585,7 @@
       ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
       : '';
 
-    const senderName = (window.__employeeAuth && window.__employeeAuth.employee.display_name) || '';
+    const senderName = (window.__employeeAuth && (window.__employeeAuth.employee.outreach_sender_name || window.__employeeAuth.employee.display_name)) || '';
 
     function getTemplate(idx, name, url) {
       const n = name || '';
@@ -8695,7 +8703,7 @@
 
   async function loadTeamEmployees() {
     const auth = window.__employeeAuth;
-    if (!auth || auth.employee.role !== 'admin') return;
+    if (!auth) return;
     const tbody = document.getElementById('team-table-body');
     if (!tbody) return;
 
@@ -8717,9 +8725,26 @@
   function renderTeamTable() {
     const tbody = document.getElementById('team-table-body');
     if (!tbody) return;
+    const isAdmin = window.__employeeAuth && window.__employeeAuth.employee.role === 'admin';
 
+    // Show/hide admin-only elements
+    const inviteForm = document.getElementById('team-invite-form');
+    if (inviteForm) inviteForm.style.display = isAdmin ? '' : 'none';
+
+    // Show/hide admin-only columns (Role, Status, Joined, Actions)
+    const headRow = document.getElementById('team-table-head');
+    if (headRow) {
+      const ths = headRow.querySelectorAll('th');
+      // Columns: Name(0), Sender Name(1), Email(2), Role(3), Status(4), Joined(5), Actions(6)
+      if (ths[3]) ths[3].style.display = isAdmin ? '' : 'none';
+      if (ths[4]) ths[4].style.display = isAdmin ? '' : 'none';
+      if (ths[5]) ths[5].style.display = isAdmin ? '' : 'none';
+      if (ths[6]) ths[6].style.display = isAdmin ? '' : 'none';
+    }
+
+    const colSpan = isAdmin ? 7 : 3;
     if (teamEmployees.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">${t('teamNoEmployees')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;color:var(--text-muted);padding:24px">${t('teamNoEmployees')}</td></tr>`;
       return;
     }
 
@@ -8738,18 +8763,32 @@
         : emp.is_active
         ? `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="deactivate" style="font-size:11px;padding:3px 10px">${t('teamDeactivate')}</button>${resendBtn}`
         : `<button class="btn btn-view" data-emp-id="${emp.id}" data-action="activate" style="font-size:11px;padding:3px 10px">${t('teamActivate')}</button>`;
-      return `<tr>
-        <td>${escapeHtml(emp.display_name || '—')}</td>
-        <td>${escapeHtml(emp.email)}</td>
+
+      // Sender name: editable for current user, read-only for others
+      let senderNameCell;
+      if (isCurrentUser) {
+        senderNameCell = `<input type="text" class="input team-sender-name-input" data-emp-id="${emp.id}" value="${escapeHtml(emp.outreach_sender_name || '')}" placeholder="${t('teamSenderNamePlaceholder')}" style="font-size:13px;padding:4px 8px;width:140px">`;
+      } else {
+        senderNameCell = escapeHtml(emp.outreach_sender_name || '—');
+      }
+
+      const adminCols = isAdmin ? `
         <td>${roleBadge}</td>
         <td>${statusBadge}</td>
         <td>${joinedDate}</td>
         <td>${actionBtn}</td>
+      ` : '';
+
+      return `<tr>
+        <td>${escapeHtml(emp.display_name || '—')}</td>
+        <td>${senderNameCell}</td>
+        <td>${escapeHtml(emp.email)}</td>
+        ${adminCols}
       </tr>`;
     }).join('');
 
-    // Bind action buttons
-    tbody.querySelectorAll('[data-emp-id]').forEach(btn => {
+    // Bind action buttons (admin only)
+    tbody.querySelectorAll('[data-emp-id][data-action]').forEach(btn => {
       btn.addEventListener('click', () => {
         const empId = btn.dataset.empId;
         const action = btn.dataset.action;
@@ -8760,6 +8799,49 @@
         }
       });
     });
+
+    // Bind sender name inputs
+    tbody.querySelectorAll('.team-sender-name-input').forEach(input => {
+      let saveTimeout;
+      input.addEventListener('input', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => saveSenderName(input), 800);
+      });
+      input.addEventListener('blur', () => {
+        clearTimeout(saveTimeout);
+        saveSenderName(input);
+      });
+    });
+  }
+
+  async function saveSenderName(input) {
+    const empId = input.dataset.empId;
+    const name = input.value.trim();
+    const auth = window.__employeeAuth;
+    if (!auth) return;
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      const res = await fetch('/api/employees/list', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ id: empId, outreach_sender_name: name }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      // Update local auth object so outreach modal picks it up immediately
+      if (auth.employee) auth.employee.outreach_sender_name = name;
+      // Update teamEmployees array
+      const emp = teamEmployees.find(e => e.id === empId);
+      if (emp) emp.outreach_sender_name = name;
+      showToast(t('teamSenderNameSaved'), 'success');
+    } catch (err) {
+      console.error('Save sender name error:', err);
+      showToast(t('teamSenderNameError'), 'error');
+    }
   }
 
   async function inviteEmployee() {
@@ -8991,11 +9073,9 @@
       if (infoEl) infoEl.style.display = '';
       const logoutBtn = document.getElementById('btn-logout');
       if (logoutBtn) logoutBtn.addEventListener('click', () => window.__employeeAuth.signOut());
-      // Show Team tab for admins
-      if (window.__employeeAuth.employee.role === 'admin') {
-        const teamTab = document.getElementById('nav-team');
-        if (teamTab) teamTab.style.display = '';
-      }
+      // Show Team tab for all employees
+      const teamTab = document.getElementById('nav-team');
+      if (teamTab) teamTab.style.display = '';
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function () {
