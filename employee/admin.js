@@ -610,6 +610,21 @@
       teamLoadError: 'Failed to load team members',
       teamUpdateSuccess: 'Employee updated',
       teamUpdateError: 'Failed to update employee',
+      // Applications
+      appsPendingTitle: 'Pending Applications',
+      appsThName: 'Name',
+      appsThEmail: 'Email',
+      appsThPhone: 'Phone',
+      appsThMessage: 'Message',
+      appsThDate: 'Date',
+      appsThActions: 'Actions',
+      appsApprove: 'Approve',
+      appsReject: 'Reject',
+      appsApproving: 'Approving...',
+      appsApproved: 'Application approved — invitation sent to {0}',
+      appsRejected: 'Application rejected',
+      appsError: 'Failed to process application',
+      appsNone: 'No pending applications',
       // Earnings
       navEarnings: 'Earnings',
       earningsThisMonth: 'This Month',
@@ -1306,6 +1321,21 @@
       teamLoadError: 'Error al cargar miembros del equipo',
       teamUpdateSuccess: 'Empleado actualizado',
       teamUpdateError: 'Error al actualizar empleado',
+      // Applications
+      appsPendingTitle: 'Solicitudes Pendientes',
+      appsThName: 'Nombre',
+      appsThEmail: 'Correo',
+      appsThPhone: 'Telefono',
+      appsThMessage: 'Mensaje',
+      appsThDate: 'Fecha',
+      appsThActions: 'Acciones',
+      appsApprove: 'Aprobar',
+      appsReject: 'Rechazar',
+      appsApproving: 'Aprobando...',
+      appsApproved: 'Solicitud aprobada — invitacion enviada a {0}',
+      appsRejected: 'Solicitud rechazada',
+      appsError: 'Error al procesar solicitud',
+      appsNone: 'No hay solicitudes pendientes',
       // Earnings
       navEarnings: 'Ganancias',
       earningsThisMonth: 'Este Mes',
@@ -9130,6 +9160,128 @@
     }
   });
 
+  // ── Employee Applications ──
+
+  async function loadApplications() {
+    const auth = window.__employeeAuth;
+    if (!auth || auth.employee.role !== 'admin') return;
+
+    const container = document.getElementById('team-applications');
+    const tbody = document.getElementById('apps-table-body');
+    if (!container || !tbody) return;
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+
+      const res = await fetch('/api/employees/applications', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      if (!res.ok) throw new Error('Failed to load');
+      const apps = await res.json();
+
+      if (!apps || apps.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = '';
+      tbody.innerHTML = apps.map(function(app) {
+        var date = app.created_at ? new Date(app.created_at).toLocaleDateString() : '—';
+        return '<tr>' +
+          '<td>' + escapeHtml(app.name || '') + '</td>' +
+          '<td>' + escapeHtml(app.email || '') + '</td>' +
+          '<td>' + escapeHtml(app.phone || '—') + '</td>' +
+          '<td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + escapeHtml(app.message || '') + '">' + escapeHtml(app.message || '—') + '</td>' +
+          '<td>' + date + '</td>' +
+          '<td>' +
+            '<button class="btn btn-view" data-app-id="' + app.id + '" data-app-action="approve" data-app-email="' + escapeHtml(app.email) + '" data-app-name="' + escapeHtml(app.name || '') + '" style="font-size:11px;padding:3px 10px;margin-right:4px">' + t('appsApprove') + '</button>' +
+            '<button class="btn btn-view" data-app-id="' + app.id + '" data-app-action="reject" style="font-size:11px;padding:3px 10px;color:var(--danger)">' + t('appsReject') + '</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      // Bind action buttons
+      tbody.querySelectorAll('[data-app-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var appId = btn.dataset.appId;
+          var action = btn.dataset.appAction;
+          if (action === 'approve') {
+            approveApplication(appId, btn.dataset.appEmail, btn.dataset.appName, btn);
+          } else {
+            rejectApplication(appId, btn);
+          }
+        });
+      });
+    } catch (err) {
+      console.error('Load applications error:', err);
+    }
+  }
+
+  async function approveApplication(appId, email, displayName, btn) {
+    const auth = window.__employeeAuth;
+    if (!auth) return;
+
+    var origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = t('appsApproving');
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+
+      // 1. Trigger invite via existing invite endpoint
+      var inviteRes = await fetch('/api/employees/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ email: email, display_name: displayName }),
+      });
+
+      if (!inviteRes.ok) {
+        var inviteErr = await inviteRes.json().catch(function() { return {}; });
+        throw new Error(inviteErr.error || 'Invite failed');
+      }
+
+      // 2. Mark application as approved
+      await fetch('/api/employees/applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ id: appId, status: 'approved' }),
+      });
+
+      showToast(t('appsApproved', email), 'success');
+      loadApplications();
+      loadTeamEmployees();
+    } catch (err) {
+      console.error('Approve application error:', err);
+      showToast(t('appsError') + ': ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = origText;
+    }
+  }
+
+  async function rejectApplication(appId, btn) {
+    const auth = window.__employeeAuth;
+    if (!auth) return;
+
+    try {
+      const session = await auth.supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+
+      await fetch('/api/employees/applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ id: appId, status: 'rejected' }),
+      });
+
+      showToast(t('appsRejected'), 'success');
+      loadApplications();
+    } catch (err) {
+      console.error('Reject application error:', err);
+      showToast(t('appsError'), 'error');
+    }
+  }
+
   // ── Team Management ──
   let teamEmployees = [];
 
@@ -9148,6 +9300,7 @@
       if (!res.ok) throw new Error('Failed to load');
       teamEmployees = await res.json();
       renderTeamTable();
+      loadApplications();
     } catch (err) {
       console.error('Load team error:', err);
       showToast(t('teamLoadError'), 'error');

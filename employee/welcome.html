@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bienvenido al equipo — AhoraTengoPagina</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-input: #252833;
+  --bg-hover: #2a2d3a;
+  --border: #2e3140;
+  --text: #e8eaf0;
+  --text-muted: #8b8fa3;
+  --text-dim: #5c6078;
+  --primary: #6366f1;
+  --primary-hover: #818cf8;
+  --primary-bg: rgba(99, 102, 241, 0.12);
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.12);
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+html, body { min-height: 100vh; font-family: var(--font); font-size: 14px; color: var(--text); background: var(--bg); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* NAV */
+.ex-nav { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.ex-logo { font-size: 17px; font-weight: 800; color: var(--primary); }
+.ex-nav-links { display: flex; gap: 16px; align-items: center; }
+.ex-nav-links a { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.ex-nav-links a:hover { color: var(--text); text-decoration: none; }
+
+/* HERO */
+.ex-hero { text-align: center; padding: 64px 24px 48px; background: linear-gradient(180deg, rgba(34,197,94,0.08) 0%, transparent 100%); }
+.ex-hero-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--success-bg); border: 1px solid rgba(34,197,94,0.25); color: var(--success); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 999px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+.ex-hero h1 { font-size: clamp(28px, 5vw, 44px); font-weight: 800; line-height: 1.12; margin-bottom: 16px; }
+.ex-hero h1 em { font-style: normal; color: var(--success); }
+.ex-hero p { font-size: 16px; color: var(--text-muted); max-width: 520px; margin: 0 auto; line-height: 1.6; }
+
+/* SECTIONS */
+.ex-section { padding: 56px 24px; max-width: 900px; margin: 0 auto; }
+.ex-section-label { text-align: center; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+.ex-section-title { text-align: center; font-size: clamp(22px, 3.5vw, 30px); font-weight: 800; margin-bottom: 8px; }
+.ex-section-sub { text-align: center; font-size: 14px; color: var(--text-muted); max-width: 480px; margin: 0 auto 36px; }
+
+/* STEPS */
+.ex-steps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.ex-step { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 24px; position: relative; }
+.ex-step-num { position: absolute; top: 16px; right: 18px; font-size: 48px; font-weight: 800; color: var(--border); line-height: 1; }
+.ex-step-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 22px; }
+.ex-step-icon.search { background: var(--primary-bg); }
+.ex-step-icon.create { background: var(--success-bg); }
+.ex-step-icon.contact { background: rgba(99, 102, 241, 0.12); }
+.ex-step-icon.earn { background: rgba(245, 158, 11, 0.12); }
+.ex-step h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.ex-step p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+
+/* TRACKING LINK CARD */
+.ex-track-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; text-align: center; max-width: 600px; margin: 0 auto; }
+.ex-track-icon { font-size: 32px; margin-bottom: 12px; }
+.ex-track-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+.ex-track-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 440px; margin: 0 auto; }
+.ex-track-note { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; color: var(--primary); font-weight: 600; background: var(--primary-bg); padding: 8px 16px; border-radius: 999px; }
+
+/* TIPS CARD */
+.ex-tips { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; max-width: 600px; margin: 0 auto; }
+.ex-tips h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+.ex-tips-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.ex-tips-list li { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+.ex-tips-list li .ex-tip-icon { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--primary-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+/* CTA */
+.ex-cta { text-align: center; padding: 64px 24px; background: linear-gradient(0deg, rgba(99,102,241,0.08) 0%, transparent 100%); }
+.ex-cta h2 { font-size: clamp(22px, 4vw, 32px); font-weight: 800; margin-bottom: 12px; }
+.ex-cta p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; }
+.ex-cta-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); transition: background 0.15s, transform 0.1s; text-decoration: none; }
+.ex-cta-btn:hover { background: var(--primary-hover); text-decoration: none; }
+.ex-cta-btn:active { transform: scale(0.97); }
+
+/* FOOTER */
+.ex-footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); }
+.ex-footer p { font-size: 12px; color: var(--text-dim); }
+
+@media (max-width: 640px) {
+  .ex-steps { grid-template-columns: 1fr; }
+  .ex-hero { padding: 40px 20px 32px; }
+  .ex-section { padding: 40px 20px; }
+  .ex-track-card, .ex-tips { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="ex-nav">
+  <span class="ex-logo">AhoraTengoPagina</span>
+  <div class="ex-nav-links">
+    <a href="/employee">Mi panel</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="ex-hero">
+  <div class="ex-hero-badge">&#10003; Cuenta creada</div>
+  <h1>Bienvenido al equipo!</h1>
+  <p>Tu cuenta esta lista. Ahora tienes acceso a todas las herramientas para buscar negocios, generar sitios web y ganar comisiones.</p>
+</section>
+
+<!-- QUICK START GUIDE -->
+<section class="ex-section">
+  <div class="ex-section-label">Guia rapida</div>
+  <div class="ex-section-title">Empieza a ganar hoy</div>
+  <div class="ex-section-sub">4 pasos simples para generar tu primer ingreso.</div>
+  <div class="ex-steps">
+    <div class="ex-step">
+      <div class="ex-step-num">1</div>
+      <div class="ex-step-icon search">&#128269;</div>
+      <h3>Busca negocios</h3>
+      <p>Usa la herramienta de busqueda para encontrar negocios sin pagina web en tu ciudad.</p>
+    </div>
+    <div class="ex-step">
+      <div class="ex-step-num">2</div>
+      <div class="ex-step-icon create">&#127912;</div>
+      <h3>Genera su sitio web</h3>
+      <p>Con un clic, creamos un sitio web profesional con toda la info del negocio.</p>
+    </div>
+    <div class="ex-step">
+      <div class="ex-step-num">3</div>
+      <div class="ex-step-icon contact">&#128172;</div>
+      <h3>Contacta al dueno</h3>
+      <p>Enviale un mensaje por WhatsApp mostrando su sitio listo. Nosotros te damos las plantillas.</p>
+    </div>
+    <div class="ex-step">
+      <div class="ex-step-num">4</div>
+      <div class="ex-step-icon earn">&#128176;</div>
+      <h3>Gana comision</h3>
+      <p>Por cada cliente que se suscriba con tu link, ganas $100 MXN al mes mientras siga activo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- YOUR TRACKING LINK -->
+<section class="ex-section" style="padding-top:0">
+  <div class="ex-section-label">Tu link de ventas</div>
+  <div class="ex-section-title">Ventas atribuidas automaticamente</div>
+  <div class="ex-track-card">
+    <div class="ex-track-icon">&#128279;</div>
+    <h3>Tu link es unico</h3>
+    <p>Cuando un negocio compra a traves de tu link, la venta se te atribuye automaticamente. No tienes que hacer nada extra &mdash; el sistema rastrea todo por ti.</p>
+    <div class="ex-track-note">&#8594; Encuentra tu link en el panel &gt; Ganancias</div>
+  </div>
+</section>
+
+<!-- TIPS -->
+<section class="ex-section" style="padding-top:0">
+  <div class="ex-section-label">Recomendaciones</div>
+  <div class="ex-section-title">Consejos para vender mas</div>
+  <div class="ex-section-sub">Los vendedores mas exitosos siguen estas practicas.</div>
+  <div class="ex-tips">
+    <h3>&#128161; Tips de los mejores vendedores</h3>
+    <ul class="ex-tips-list">
+      <li>
+        <span class="ex-tip-icon">&#11088;</span>
+        <span>Busca negocios con buenas resenas pero sin pagina web &mdash; son los que mas valoran tener presencia online.</span>
+      </li>
+      <li>
+        <span class="ex-tip-icon">&#127760;</span>
+        <span>Genera el sitio primero y muestraselo &mdash; es gratis para ti y el dueno ve el valor de inmediato.</span>
+      </li>
+      <li>
+        <span class="ex-tip-icon">&#128172;</span>
+        <span>Usa WhatsApp para contactar, es lo mas efectivo. Las plantillas de mensaje estan listas en tu panel.</span>
+      </li>
+      <li>
+        <span class="ex-tip-icon">&#128200;</span>
+        <span>Se constante: 5 contactos al dia = 5-10 ventas al mes. La clave es la consistencia.</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="ex-cta">
+  <h2>Todo listo. A vender!</h2>
+  <p>Tu panel tiene todo lo que necesitas para empezar a buscar negocios y generar ingresos hoy.</p>
+  <a href="/employee" class="ex-cta-btn">Ir a mi panel &#8594;</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="ex-footer">
+  <p>AhoraTengoPagina &mdash; Plataforma de venta de sitios web</p>
+</footer>
+
+</body>
+</html>
