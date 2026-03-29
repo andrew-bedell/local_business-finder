@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId, pipeline_status, lead_source, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country, name, address_full, notes, outreach_sent, outreach_step } = req.body || {};
+  const { businessId, pipeline_status, lead_source, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country, name, address_full, notes, outreach_sent, outreach_step, outreach_cancel } = req.body || {};
 
   if (!businessId) {
     return res.status(400).json({ error: 'Missing required field: businessId' });
@@ -45,16 +45,35 @@ export default async function handler(req, res) {
   };
 
   try {
-    // If marking an outreach step, we need to fetch current steps first then merge
+    // If marking an outreach step or cancelling, we need to fetch current steps first then merge
     let mergedSteps = null;
-    if (outreach_step) {
+    if (outreach_step || outreach_cancel) {
       const getRes = await fetch(
         `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}&select=outreach_steps`,
         { headers: supabaseHeaders }
       );
       const current = getRes.ok ? await getRes.json() : [];
       const existing = (current[0] && current[0].outreach_steps) || {};
-      mergedSteps = { ...existing, [outreach_step]: { sent_at: new Date().toISOString() } };
+
+      if (outreach_step) {
+        mergedSteps = { ...existing, [outreach_step]: { sent_at: new Date().toISOString() } };
+      }
+
+      if (outreach_cancel) {
+        const validReasons = ['no_whatsapp', 'wrong_number', 'not_a_business', 'other'];
+        if (outreach_cancel.action === 'cancel') {
+          if (!outreach_cancel.reason || !validReasons.includes(outreach_cancel.reason)) {
+            return res.status(400).json({ error: 'Invalid cancel reason. Must be one of: ' + validReasons.join(', ') });
+          }
+          mergedSteps = { ...(mergedSteps || existing), _cancelled: { at: new Date().toISOString(), reason: outreach_cancel.reason } };
+        } else if (outreach_cancel.action === 'uncancel') {
+          const base = mergedSteps || { ...existing };
+          delete base._cancelled;
+          mergedSteps = base;
+        } else {
+          return res.status(400).json({ error: 'Invalid outreach_cancel action. Must be cancel or uncancel' });
+        }
+      }
     }
 
     const updatePayload = {};

@@ -7,6 +7,10 @@
     {
       "path": "/api/photos/backfill",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/generate-websites",
+      "schedule": "*/10 * * * *"
     }
   ],
   "functions": {
