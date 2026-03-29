@@ -848,6 +848,12 @@
       outreachUncancelBtn: 'Reactivate Outreach',
       outreachUncancelledSuccess: 'Outreach reactivated',
       outreachUncancelledError: 'Failed to reactivate outreach',
+      outreachCheckWA: 'Check WhatsApp',
+      outreachCheckingWA: 'Checking...',
+      outreachOnWA: 'On WhatsApp',
+      outreachNotOnWA: 'Not on WhatsApp',
+      outreachCheckWAError: 'Check failed',
+      outreachCheckWARecheck: 'Re-check',
       orStatCancelled: 'Cancelled',
       orCancelledTitle: 'Cancelled Outreach',
       orNoCancelled: 'No cancelled outreach.',
@@ -1644,6 +1650,12 @@
       outreachUncancelBtn: 'Reactivar Contacto',
       outreachUncancelledSuccess: 'Contacto reactivado',
       outreachUncancelledError: 'Error al reactivar contacto',
+      outreachCheckWA: 'Verificar WhatsApp',
+      outreachCheckingWA: 'Verificando...',
+      outreachOnWA: 'En WhatsApp',
+      outreachNotOnWA: 'No en WhatsApp',
+      outreachCheckWAError: 'Verificación falló',
+      outreachCheckWARecheck: 'Re-verificar',
       orStatCancelled: 'Cancelados',
       orCancelledTitle: 'Contacto Cancelado',
       orNoCancelled: 'No hay contacto cancelado.',
@@ -3098,8 +3110,21 @@
     // About step (always available)
     stepsHtml += buildStepHtml('about', aboutSent, !aboutSent, false);
 
+    // WhatsApp check result badge or button
+    const waCheck = steps._wa_check;
+    let waCheckHtml = '';
+    if (phone) {
+      if (waCheck && waCheck.is_valid === true) {
+        waCheckHtml = `<span class="wa-check-badge wa-check-valid">${t('outreachOnWA')}</span>`;
+      } else if (waCheck && waCheck.is_valid === false) {
+        waCheckHtml = `<span class="wa-check-badge wa-check-invalid">${t('outreachNotOnWA')}</span><button class="btn-outreach-wa-check" style="font-size:11px;color:var(--text-dim);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0 4px">${t('outreachCheckWARecheck')}</button>`;
+      } else {
+        waCheckHtml = `<button class="btn btn-secondary btn-outreach-wa-check" style="padding:4px 10px;font-size:12px">${t('outreachCheckWA')}</button>`;
+      }
+    }
+
     const phoneDisplay = phone
-      ? `<span class="outreach-value">${escapeHtml(phone)}</span><button class="btn-outreach-copy" data-copy="phone" title="Copy">📋</button>`
+      ? `<span class="outreach-value">${escapeHtml(phone)}</span><button class="btn-outreach-copy" data-copy="phone" title="Copy">📋</button>${waCheckHtml}`
       : `<span class="outreach-value" style="color:var(--text-dim)">${t('outreachNoPhone')}</span>`;
 
     const overlay = document.createElement('div');
@@ -3293,6 +3318,53 @@
         if (type === 'phone') text = phone;
         else if (type === 'url') text = previewUrl;
         copyToClipboard(text, t('outreachCopied'));
+      });
+    });
+
+    // WhatsApp number check button
+    overlay.querySelectorAll('.btn-outreach-wa-check').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const origText = btn.textContent;
+        btn.textContent = t('outreachCheckingWA');
+        try {
+          const resp = await fetch('/api/whatsapp/check-number', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: phone,
+              businessId: business.id,
+              addressCountry: business.address_country || 'MX',
+            }),
+          });
+          if (!resp.ok) throw new Error('Check failed');
+          const result = await resp.json();
+
+          // Update local data
+          if (result.business) {
+            const fields = ['outreach_steps'];
+            fields.forEach(f => {
+              if (result.business[f] !== undefined) {
+                business[f] = result.business[f];
+                const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+                if (ab) ab[f] = result.business[f];
+                const abr = allBusinessesRaw.find(b => String(b.id) === String(business.id));
+                if (abr) abr[f] = result.business[f];
+                const cr = currentResults.find(b => String(b.id) === String(business.id));
+                if (cr) cr[f] = result.business[f];
+              }
+            });
+          }
+
+          showToast(result.registered ? t('outreachOnWA') : t('outreachNotOnWA'), result.registered ? 'success' : 'warning');
+          closeOutreach();
+          openOutreachModal(business);
+        } catch (err) {
+          console.error('WhatsApp check error:', err);
+          showToast(t('outreachCheckWAError'), 'error');
+          btn.disabled = false;
+          btn.textContent = origText;
+        }
       });
     });
 

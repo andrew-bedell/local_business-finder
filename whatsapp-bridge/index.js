@@ -432,6 +432,8 @@ httpApp.post('/send', async (req, res) => {
   }
 });
 
+require('./check-number')(httpApp, client);
+
 const BRIDGE_PORT = process.env.BRIDGE_PORT || 3100;
 httpApp.listen(BRIDGE_PORT, () => {
   console.log(`Bridge HTTP API on port ${BRIDGE_PORT}`);
