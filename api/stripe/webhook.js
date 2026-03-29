@@ -2,7 +2,8 @@
 // POST — receives Stripe webhook events and updates database
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { getTemplateForTrigger } from '../_lib/email-templates.js';
+import { getTemplateForTrigger, domainSelectionEmail } from '../_lib/email-templates.js';
+import { generateDomainToken } from '../_lib/domain-token.js';
 
 // Disable body parsing so we can verify the raw signature
 export const config = {
@@ -165,6 +166,27 @@ export default async function handler(req, res) {
                 await sendEmail({ to: customer.email, ...paymentContent, from: emailFrom, replyTo: emailReplyTo });
               } catch (emailErr) {
                 console.warn('Payment confirmation email error (non-blocking):', emailErr);
+              }
+
+              // Send domain selection email if suggestions exist and not yet selected (non-blocking)
+              try {
+                if (customer.business_id) {
+                  const domainSuggestions = await getDomainSuggestions(customer.business_id, supabaseUrl, supabaseHeaders);
+                  if (domainSuggestions && domainSuggestions.length > 0) {
+                    const token = generateDomainToken(customer.business_id);
+                    const selectBaseUrl = origin + '/api/domains/select-domain';
+                    const domainContent = domainSelectionEmail({
+                      contactName: customer.contact_name || '',
+                      businessName: businessName || '',
+                      suggestions: domainSuggestions,
+                      selectBaseUrl,
+                      token,
+                    });
+                    await sendEmail({ to: customer.email, ...domainContent, from: emailFrom, replyTo: emailReplyTo });
+                  }
+                }
+              } catch (domainErr) {
+                console.warn('Domain selection email error (non-blocking):', domainErr);
               }
             }
           } catch (authErr) {
@@ -528,6 +550,29 @@ async function getBusinessIdFromSubscription(stripeSubscriptionId, supabaseUrl, 
     return custs[0].business_id;
   } catch (err) {
     console.error('getBusinessIdFromSubscription error:', err);
+    return null;
+  }
+}
+
+// Helper: get domain suggestions from business outreach_steps (if not yet selected by customer)
+async function getDomainSuggestions(businessId, supabaseUrl, supabaseHeaders) {
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}&select=outreach_steps`,
+      { headers: supabaseHeaders }
+    );
+    const data = await res.json();
+    if (!data || data.length === 0) return null;
+
+    const domainData = data[0].outreach_steps?._domain;
+    if (!domainData || !domainData.suggestions || domainData.suggestions.length === 0) return null;
+
+    // Don't send if customer already selected
+    if (domainData.customer_selected) return null;
+
+    return domainData.suggestions;
+  } catch (err) {
+    console.error('getDomainSuggestions error:', err);
     return null;
   }
 }

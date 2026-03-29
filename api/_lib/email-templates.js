@@ -558,6 +558,68 @@ export function planChangeEmail({ contactName, businessName, oldPlan, newPlan, n
   };
 }
 
+export function domainSelectionEmail({ contactName, businessName, suggestions, selectBaseUrl, token }) {
+  const greeting = contactName ? `Hola ${contactName},` : 'Hola,';
+
+  const domainRows = (suggestions || []).map((s, i) => {
+    const selectUrl = `${selectBaseUrl}?t=${encodeURIComponent(token)}&d=${encodeURIComponent(s.domain)}`;
+    const isRecommended = i === 0;
+    return `<tr>
+      <td style="padding:0 0 10px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+          <tr>
+            <td style="background:${isRecommended ? '#f0eeff' : '#f8f8fb'};border:2px solid ${isRecommended ? '#6C5CE7' : '#e8e8ef'};border-radius:10px;padding:16px 20px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td>
+                    <span style="font-size:16px;font-weight:700;color:#1a1a2e;">${escHtml(s.domain)}</span>
+                    ${isRecommended ? '<span style="display:inline-block;background:#6C5CE7;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle;">RECOMENDADO</span>' : ''}
+                    <br>
+                    <span style="font-size:13px;color:#888;">$${escHtml(s.price)} USD/año</span>
+                  </td>
+                  <td style="text-align:right;vertical-align:middle;">
+                    <a href="${selectUrl}" style="display:inline-block;background:${isRecommended ? '#6C5CE7' : '#ffffff'};color:${isRecommended ? '#ffffff' : '#6C5CE7'} !important;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;border:2px solid #6C5CE7;">Elegir</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const html = baseLayout('Elige tu dominio', `
+    <h2>${greeting}</h2>
+    <p>¡Tu suscripción para <strong>${escHtml(businessName || 'tu negocio')}</strong> ya está activa! Ahora es momento de elegir el dominio para tu página web.</p>
+    <p>Encontramos estos dominios disponibles para tu negocio. Haz clic en <strong>"Elegir"</strong> en el que más te guste:</p>
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:24px 0;">
+      ${domainRows}
+    </table>
+    <div style="background:#f8f8fb;border-radius:10px;padding:16px 20px;margin-top:8px;">
+      <p style="margin:0;font-size:13px;color:#666;"><strong>¿Cómo funciona?</strong> Después de elegir tu dominio, nuestro equipo lo registrará y conectará a tu página web. Este proceso normalmente toma 1–2 días hábiles.</p>
+    </div>
+    <p style="font-size:13px;color:#888;margin-top:24px;">¿Preguntas? Responde a este correo y te ayudaremos.</p>
+  `);
+
+  const domainListText = (suggestions || []).map((s, i) =>
+    `${i === 0 ? '⭐ ' : '  '}${s.domain} — $${s.price} USD/año`
+  ).join('\n');
+
+  const text = `${greeting}\n\n¡Tu suscripción para ${businessName || 'tu negocio'} ya está activa!\n\nElige tu dominio:\n\n${domainListText}\n\nPara elegir, haz clic en el enlace del dominio que prefieras en la versión HTML de este correo.\n\n¿Preguntas? Responde a este correo.`;
+
+  return {
+    subject: `Elige tu dominio — ${businessName || 'AhoraTengoPagina'}`,
+    html,
+    text,
+  };
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // ── Merge Tag Rendering ──
 
 export function renderMergeTags(template, variables) {
@@ -595,6 +657,7 @@ const HARDCODED_FALLBACKS = {
   edit_request_rejected: editRequestRejectedEmail,
   edit_ready_for_review: editReadyForReviewEmail,
   plan_changed: planChangeEmail,
+  domain_selection: domainSelectionEmail,
 };
 
 export async function getTemplateForTrigger(triggerKey, variables) {
