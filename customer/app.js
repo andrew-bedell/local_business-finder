@@ -217,6 +217,11 @@
       wiz_review_error: 'Error al guardar la reseña.',
       wiz_review_deleted: 'Reseña eliminada.',
       wiz_save_error: 'Error al guardar. Intenta de nuevo.',
+      wiz_hours_photo_btn: 'Toma foto de tu horario',
+      wiz_hours_photo_parsing: 'Analizando horario...',
+      wiz_hours_photo_success: 'Horario detectado',
+      wiz_hours_photo_error: 'No se pudo leer el horario. Intenta con otra foto.',
+      wiz_hours_photo_too_large: 'La imagen es muy grande. Máximo 5MB.',
       wiz_photo_deleted: 'Foto eliminada.',
       wiz_photo_delete_error: 'Error al eliminar la foto.',
       wiz_confirm_delete_photo: '¿Eliminar esta foto?',
@@ -427,6 +432,11 @@
       wiz_review_error: 'Error saving review.',
       wiz_review_deleted: 'Review deleted.',
       wiz_save_error: 'Error saving. Please try again.',
+      wiz_hours_photo_btn: 'Take a photo of your hours',
+      wiz_hours_photo_parsing: 'Analyzing hours...',
+      wiz_hours_photo_success: 'Hours detected',
+      wiz_hours_photo_error: 'Could not read hours. Try another photo.',
+      wiz_hours_photo_too_large: 'Image too large. Max 5MB.',
       wiz_photo_deleted: 'Photo deleted.',
       wiz_photo_delete_error: 'Error deleting photo.',
       wiz_confirm_delete_photo: 'Delete this photo?',
@@ -861,6 +871,22 @@
       btnCancelReject.addEventListener('click', function () {
         var rejectForm = $('#review-reject-form');
         if (rejectForm) rejectForm.style.display = 'none';
+      });
+    }
+
+    // Hours photo upload — wizard
+    var wizHoursPhoto = $('#wiz-hours-photo');
+    if (wizHoursPhoto) {
+      wizHoursPhoto.addEventListener('change', function () {
+        handleHoursPhotoUpload(wizHoursPhoto, '#wiz-hours-grid input[data-day]', 'wiz-hours-upload-status', 'spanish');
+      });
+    }
+
+    // Hours photo upload — main business form
+    var bizHoursPhoto = $('#biz-hours-photo');
+    if (bizHoursPhoto) {
+      bizHoursPhoto.addEventListener('change', function () {
+        handleHoursPhotoUpload(bizHoursPhoto, '#biz-hours input[data-day]', 'biz-hours-upload-status', 'english');
       });
     }
   }
@@ -5766,6 +5792,105 @@
       console.error('Wizard save hours error:', err);
       showToast(t('wiz_save_error'), 'error');
     }
+  }
+
+  // ── Hours Photo Upload ──
+  var SPANISH_TO_ENGLISH_DAYS = {
+    lunes: 'monday', martes: 'tuesday', miercoles: 'wednesday',
+    jueves: 'thursday', viernes: 'friday', sabado: 'saturday', domingo: 'sunday'
+  };
+
+  async function handleHoursPhotoUpload(fileInput, inputSelector, statusId, dayKeyFormat) {
+    var file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(t('wiz_hours_photo_too_large'), 'warning');
+      fileInput.value = '';
+      return;
+    }
+
+    var statusEl = document.getElementById(statusId);
+
+    // Show loading state
+    if (statusEl) {
+      statusEl.textContent = t('wiz_hours_photo_parsing');
+      statusEl.className = 'c-hours-upload-status c-status-loading';
+    }
+
+    try {
+      // Read file as base64
+      var base64 = await new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () {
+          // Strip "data:image/...;base64," prefix
+          var result = reader.result;
+          var commaIdx = result.indexOf(',');
+          resolve(commaIdx > -1 ? result.substring(commaIdx + 1) : result);
+        };
+        reader.onerror = function () { reject(new Error('Failed to read file')); };
+        reader.readAsDataURL(file);
+      });
+
+      // Call API
+      var response = await fetch('/api/hours/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData: base64, mediaType: file.type || 'image/jpeg' })
+      });
+
+      if (!response.ok) throw new Error('API error: ' + response.status);
+
+      var data = await response.json();
+      var hours = data.hours;
+
+      if (!hours || Object.keys(hours).length === 0) {
+        throw new Error('No hours parsed');
+      }
+
+      // Populate inputs — API returns Spanish keys (lunes, martes, etc.)
+      var inputs = document.querySelectorAll(inputSelector);
+      inputs.forEach(function (input) {
+        var dayKey = input.getAttribute('data-day');
+        var value;
+        if (dayKeyFormat === 'english') {
+          // Main form uses English keys — find matching Spanish key
+          for (var es in SPANISH_TO_ENGLISH_DAYS) {
+            if (SPANISH_TO_ENGLISH_DAYS[es] === dayKey) {
+              value = hours[es];
+              break;
+            }
+          }
+        } else {
+          // Wizard uses Spanish keys — direct match
+          value = hours[dayKey];
+        }
+        if (value) input.value = value;
+      });
+
+      // Show success
+      if (statusEl) {
+        statusEl.textContent = t('wiz_hours_photo_success');
+        statusEl.className = 'c-hours-upload-status c-status-success';
+        setTimeout(function () { statusEl.textContent = ''; statusEl.className = 'c-hours-upload-status'; }, 3000);
+      }
+
+      // Auto-save if wizard
+      if (dayKeyFormat === 'spanish') {
+        saveWizardHours();
+      }
+    } catch (err) {
+      console.error('Hours photo parse error:', err);
+      if (statusEl) {
+        statusEl.textContent = t('wiz_hours_photo_error');
+        statusEl.className = 'c-hours-upload-status c-status-error';
+        setTimeout(function () { statusEl.textContent = ''; statusEl.className = 'c-hours-upload-status'; }, 4000);
+      }
+    }
+
+    // Reset file input so same file can be re-selected
+    fileInput.value = '';
   }
 
   function flashSaved(indicatorId) {
