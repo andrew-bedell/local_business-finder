@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { businessId, pipeline_status, lead_source, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country, name, address_full, notes, outreach_sent, outreach_step, outreach_cancel } = req.body || {};
+  const { businessId, pipeline_status, lead_source, contact_name, contact_phone, contact_email, contact_whatsapp, phone, email, address_country, name, address_full, notes, outreach_sent, outreach_step, outreach_cancel, outreach_domain_select } = req.body || {};
 
   if (!businessId) {
     return res.status(400).json({ error: 'Missing required field: businessId' });
@@ -45,9 +45,9 @@ export default async function handler(req, res) {
   };
 
   try {
-    // If marking an outreach step or cancelling, we need to fetch current steps first then merge
+    // If marking an outreach step, cancelling, or saving domain selection, we need to fetch current steps first then merge
     let mergedSteps = null;
-    if (outreach_step || outreach_cancel) {
+    if (outreach_step || outreach_cancel || outreach_domain_select) {
       const getRes = await fetch(
         `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}&select=outreach_steps`,
         { headers: supabaseHeaders }
@@ -73,6 +73,11 @@ export default async function handler(req, res) {
         } else {
           return res.status(400).json({ error: 'Invalid outreach_cancel action. Must be cancel or uncancel' });
         }
+      }
+
+      if (outreach_domain_select) {
+        const base = mergedSteps || existing;
+        mergedSteps = { ...base, _domain: outreach_domain_select };
       }
     }
 

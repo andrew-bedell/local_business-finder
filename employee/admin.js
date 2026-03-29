@@ -784,6 +784,14 @@
       outreachVoiceSuccess: 'Voice message generated',
       outreachVoiceError: 'Failed to generate voice message',
       outreachConfirmSend: 'Send this message to {0}?',
+      // Domain suggestions
+      domainSuggestTitle: 'Suggested Domains',
+      domainSearching: 'Searching domains... ({0}/{1})',
+      domainNoneFound: 'No available domains found',
+      domainRecommended: 'Recommended',
+      domainPerYear: '/yr',
+      domainSearchAgain: 'Search again',
+      domainSearchError: 'Domain search failed',
       // Demo Analytics
       navDemoAnalytics: 'Demo Analytics',
       demoAnalyticsTitle: 'Demo Page Analytics',
@@ -1586,6 +1594,14 @@
       outreachVoiceSuccess: 'Mensaje de voz generado',
       outreachVoiceError: 'Error al generar mensaje de voz',
       outreachConfirmSend: '¿Enviar este mensaje a {0}?',
+      // Domain suggestions
+      domainSuggestTitle: 'Dominios Sugeridos',
+      domainSearching: 'Buscando dominios... ({0}/{1})',
+      domainNoneFound: 'No se encontraron dominios disponibles',
+      domainRecommended: 'Recomendado',
+      domainPerYear: '/año',
+      domainSearchAgain: 'Buscar de nuevo',
+      domainSearchError: 'Error al buscar dominios',
       // Demo Analytics
       navDemoAnalytics: 'Analíticas Demo',
       demoAnalyticsTitle: 'Analíticas de Páginas Demo',
@@ -2998,22 +3014,169 @@
     return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer"><span class="outreach-sent-label">' + t('outreachAllSent') + '</span></span>';
   }
 
-  function getOutreachTemplates(business, senderName, previewUrl) {
+  function getOutreachTemplates(business, senderName, previewUrl, selectedDomain) {
     const name = business.name || '';
     const colonia = extractColonia(business.address_full) || business.address_city || '';
     const sender = senderName || '';
     const url = previewUrl || '';
+    const domain = selectedDomain || 'NombreDeTuNegocio.com';
 
     return {
       '1': `¿Es este el negocio ${name} en ${colonia}?`,
       '2': `Hola, soy ${sender}. Vi que tu negocio no tiene página web, y les hice una de ejemplo con la información que encontré en Google.`,
       '3': `Échale un ojo:\n\n👉 ${url}`,
       '4': 'Hoy en día la gente busca en Google antes de ir a cualquier lugar. Si no tienes página, no apareces.',
-      '5': 'El servicio cuesta $299 pesos al mes. Eso incluye el diseño, el hospedaje, y un dominio como NombreDeTuNegocio.com.',
+      '5': `El servicio cuesta $299 pesos al mes. Eso incluye el diseño, el hospedaje, y un dominio como ${domain}.`,
       '6': '¿Te gustaría que la ajustemos juntos para que quede exactamente como tú quieres?',
       'followup': '¡Hola! Solo quería saber si tuviste chance de ver la página que te mandé. Si tienes cualquier duda, con gusto te ayudo.',
       'about': 'Si quieres saber más sobre lo que hacemos: ahoratengopagina.com/about',
     };
+  }
+
+  // ── Domain Suggestion Helpers ──
+  function renderDomainList(suggestions, selected) {
+    if (!suggestions || suggestions.length === 0) {
+      return `<div style="font-size:13px;color:var(--text-dim);padding:8px 0">${t('domainNoneFound')}</div>`;
+    }
+    return `<div class="domain-list">${suggestions.map((s, i) => {
+      const isSelected = s.domain === selected || (!selected && i === 0);
+      return `<label class="domain-item${isSelected ? ' domain-recommended' : ''}" data-domain="${escapeHtml(s.domain)}">
+        <input type="radio" name="domain-select" value="${escapeHtml(s.domain)}"${isSelected ? ' checked' : ''}>
+        <span class="domain-name">${escapeHtml(s.domain)}</span>
+        <span class="domain-price">$${escapeHtml(s.price)}${t('domainPerYear')}</span>
+        ${i === 0 ? `<span class="domain-rec-badge">${t('domainRecommended')}</span>` : ''}
+      </label>`;
+    }).join('')}</div>`;
+  }
+
+  async function searchDomains(business, overlay) {
+    const contentEl = overlay.querySelector('#domain-suggest-content');
+    if (!contentEl) return;
+
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'domain-loading';
+    loadingEl.id = 'domain-loading';
+    loadingEl.innerHTML = `<span class="domain-loading-text">${t('domainSearching', '0', '?')}</span>`;
+    contentEl.innerHTML = '';
+    contentEl.appendChild(loadingEl);
+
+    try {
+      const resp = await fetch('/api/domains/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business_name: business.name,
+          country_code: business.address_country || undefined,
+        }),
+      });
+
+      if (!resp.ok) throw new Error('Domain search failed');
+      const result = await resp.json();
+
+      const domainData = {
+        suggestions: result.suggestions,
+        selected: result.recommended,
+        searched_at: new Date().toISOString(),
+      };
+
+      // Save to DB
+      await fetch('/api/businesses/update-pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId: business.id, outreach_domain_select: domainData }),
+      });
+
+      // Update local data
+      if (!business.outreach_steps) business.outreach_steps = {};
+      business.outreach_steps._domain = domainData;
+      [allBusinesses, allBusinessesRaw, currentResults].forEach(arr => {
+        if (!arr) return;
+        const found = arr.find(b => String(b.id) === String(business.id));
+        if (found) {
+          if (!found.outreach_steps) found.outreach_steps = {};
+          found.outreach_steps._domain = domainData;
+        }
+      });
+
+      // Render results
+      contentEl.innerHTML = renderDomainList(domainData.suggestions, domainData.selected);
+      bindDomainSelection(overlay, business);
+
+      // Show search again button
+      const searchAgainBtn = overlay.querySelector('#domain-search-again');
+      if (!searchAgainBtn) {
+        const label = overlay.querySelector('#domain-suggest-section .outreach-label');
+        if (label) {
+          const btn = document.createElement('button');
+          btn.className = 'btn-text';
+          btn.id = 'domain-search-again';
+          btn.style.cssText = 'font-size:11px;padding:0';
+          btn.textContent = t('domainSearchAgain');
+          btn.addEventListener('click', () => searchDomains(business, overlay));
+          label.appendChild(btn);
+        }
+      }
+    } catch (err) {
+      console.error('Domain search error:', err);
+      contentEl.innerHTML = `<div style="font-size:13px;color:var(--danger);padding:8px 0">${t('domainSearchError')}</div>`;
+    }
+  }
+
+  function bindDomainSelection(overlay, business) {
+    overlay.querySelectorAll('input[name="domain-select"]').forEach(radio => {
+      radio.addEventListener('change', async () => {
+        const domain = radio.value;
+        const steps = business.outreach_steps || {};
+        const domainData = steps._domain || {};
+        domainData.selected = domain;
+
+        // Update highlight
+        overlay.querySelectorAll('.domain-item').forEach(el => el.classList.remove('domain-recommended'));
+        const parentLabel = radio.closest('.domain-item');
+        if (parentLabel) parentLabel.classList.add('domain-recommended');
+
+        // Update step 5 message in the modal
+        const senderName = (window.__employeeAuth && (window.__employeeAuth.employee.outreach_sender_name || window.__employeeAuth.employee.display_name)) || '';
+        const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
+        const previewUrl = existingWebsiteRecord
+          ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
+          : '';
+        const updatedTemplates = getOutreachTemplates(business, senderName, previewUrl, domain);
+        const step5El = overlay.querySelector('.outreach-step[data-step="5"] .outreach-message');
+        if (step5El) step5El.textContent = updatedTemplates['5'];
+
+        // Update copy handler for step 5
+        const copyBtn = overlay.querySelector('.btn-outreach-copy-msg[data-step="5"]');
+        if (copyBtn) {
+          const newBtn = copyBtn.cloneNode(true);
+          copyBtn.parentNode.replaceChild(newBtn, copyBtn);
+          newBtn.addEventListener('click', () => copyToClipboard(updatedTemplates['5'], t('outreachCopied')));
+        }
+
+        // Save to DB
+        try {
+          await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: business.id, outreach_domain_select: domainData }),
+          });
+
+          // Update local data
+          if (!business.outreach_steps) business.outreach_steps = {};
+          business.outreach_steps._domain = domainData;
+          [allBusinesses, allBusinessesRaw, currentResults].forEach(arr => {
+            if (!arr) return;
+            const found = arr.find(b => String(b.id) === String(business.id));
+            if (found) {
+              if (!found.outreach_steps) found.outreach_steps = {};
+              found.outreach_steps._domain = domainData;
+            }
+          });
+        } catch (err) {
+          console.error('Domain select save error:', err);
+        }
+      });
+    });
   }
 
   // ── Outreach Modal ──
@@ -3031,8 +3194,10 @@
       : '';
 
     const senderName = (window.__employeeAuth && (window.__employeeAuth.employee.outreach_sender_name || window.__employeeAuth.employee.display_name)) || '';
-    const templates = getOutreachTemplates(business, senderName, previewUrl);
     const steps = business.outreach_steps || {};
+    const domainData = steps._domain || null;
+    const selectedDomain = domainData && domainData.selected ? domainData.selected : null;
+    const templates = getOutreachTemplates(business, senderName, previewUrl, selectedDomain);
     const isCancelled = isOutreachCancelled(business);
 
     const stepKeys = ['1', '2', '3', '4', '5', '6'];
@@ -3202,6 +3367,15 @@
               }
             </div>
           </div>
+          <div class="domain-suggest" id="domain-suggest-section">
+            <div class="outreach-label" style="display:flex;align-items:center;gap:8px">
+              ${t('domainSuggestTitle')}
+              ${domainData && domainData.suggestions ? `<button class="btn-text" id="domain-search-again" style="font-size:11px;padding:0">${t('domainSearchAgain')}</button>` : ''}
+            </div>
+            <div id="domain-suggest-content">
+              ${domainData && domainData.suggestions ? renderDomainList(domainData.suggestions, domainData.selected) : `<div class="domain-loading" id="domain-loading"><span class="domain-loading-text">${t('domainSearching', '0', '?')}</span></div>`}
+            </div>
+          </div>
           <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
           <div class="outreach-steps-list">
             ${stepsHtml}
@@ -3215,6 +3389,17 @@
     `;
 
     document.body.appendChild(overlay);
+
+    // Domain suggestion: auto-search or bind cached results
+    if (domainData && domainData.suggestions) {
+      bindDomainSelection(overlay, business);
+    } else if (!isCancelled) {
+      searchDomains(business, overlay);
+    }
+    const searchAgainBtn = overlay.querySelector('#domain-search-again');
+    if (searchAgainBtn) {
+      searchAgainBtn.addEventListener('click', () => searchDomains(business, overlay));
+    }
 
     // Cancel outreach handler
     const cancelBtn = overlay.querySelector('#outreach-cancel-btn');
