@@ -1005,6 +1005,9 @@
                   <option value="MXN">MXN</option>
                   <option value="USD">USD</option>
                   <option value="COP">COP</option>
+                  <option value="PEN">PEN</option>
+                  <option value="ARS">ARS</option>
+                  <option value="CLP">CLP</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1022,6 +1025,18 @@
               <div class="form-group">
                 <label data-i18n="productStripePriceId">Stripe Price ID</label>
                 <input type="text" class="input" id="product-stripe-price-id" placeholder="Auto-generated on save">
+              </div>
+              <div class="form-group">
+                <label data-i18n="productCountry">Country</label>
+                <select class="input" id="product-country-code">
+                  <option value="" data-i18n="productCountryNone">None (universal)</option>
+                  <option value="MX">MX</option>
+                  <option value="CO">CO</option>
+                  <option value="EC">EC</option>
+                  <option value="PE">PE</option>
+                  <option value="AR">AR</option>
+                  <option value="CL">CL</option>
+                </select>
               </div>
               <div class="form-group">
                 <label data-i18n="productSortOrder">Sort Order</label>
@@ -1049,6 +1064,24 @@
           </div>
         </div>
       </section>
+
+      <!-- Product Duplicate to Currencies Modal -->
+      <div class="modal-overlay" id="product-duplicate-modal" style="display:none">
+        <div class="modal-content" style="max-width:500px">
+          <div class="modal-header">
+            <h2 id="product-duplicate-title" data-i18n="productDuplicateTitle">Duplicate to Currencies</h2>
+            <button class="modal-close" id="product-duplicate-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p id="product-duplicate-source" style="margin-bottom:16px;color:var(--text-muted);font-size:13px"></p>
+            <div id="product-duplicate-currencies"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" id="btn-duplicate-cancel" data-i18n="cancel">Cancel</button>
+            <button class="btn btn-primary" id="btn-duplicate-confirm" data-i18n="productDuplicateBtn">Duplicate</button>
+          </div>
+        </div>
+      </div>
 
       <!-- Edit Requests Management -->
       <section id="edit-requests-section" style="display:none">

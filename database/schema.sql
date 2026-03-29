@@ -543,6 +543,7 @@ CREATE TABLE IF NOT EXISTS marketing_leads (
   status                  TEXT DEFAULT 'new'
                             CHECK (status IN ('new', 'contacted', 'qualified', 'converted', 'lost')),
   notes                   TEXT,
+  country_code            TEXT,                -- detected visitor country (MX, CO, EC, etc.)
   created_at              TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -772,13 +773,15 @@ CREATE TABLE IF NOT EXISTS products (
   description             TEXT,
   price                   DECIMAL(10, 2) NOT NULL,
   currency                TEXT DEFAULT 'MXN'
-                            CHECK (currency IN ('MXN', 'USD', 'COP')),
+                            CHECK (currency IN ('MXN', 'USD', 'COP', 'PEN', 'ARS', 'CLP')),
   billing_interval        TEXT DEFAULT 'monthly'
                             CHECK (billing_interval IN ('monthly', 'yearly', 'one_time')),
   features                JSONB DEFAULT '[]',          -- array of strings (bullet points for checkout)
   stripe_product_id       TEXT,
   stripe_price_id         TEXT,
   commission_amount       DECIMAL(10, 2) DEFAULT 100.00,  -- commission per active subscription (MXN)
+  country_code            TEXT                             -- NULL = universal, otherwise country-specific product
+                            CHECK (country_code IN ('MX', 'CO', 'EC', 'PE', 'AR', 'CL')),
   is_active               BOOLEAN DEFAULT TRUE,
   sort_order              INTEGER DEFAULT 0,
   created_at              TIMESTAMPTZ DEFAULT NOW(),
@@ -787,6 +790,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE INDEX IF NOT EXISTS idx_products_active ON products (is_active) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_products_sort ON products (sort_order);
+CREATE INDEX IF NOT EXISTS idx_products_country ON products (country_code) WHERE is_active = TRUE;
 
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all access" ON products FOR ALL USING (true) WITH CHECK (true);

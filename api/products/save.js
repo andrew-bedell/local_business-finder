@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { id, name, description, price, currency, billing_interval, features, stripe_product_id, stripe_price_id, is_active, sort_order } = req.body || {};
+  const { id, name, description, price, currency, billing_interval, features, stripe_product_id, stripe_price_id, is_active, sort_order, country_code } = req.body || {};
 
   if (!name || price == null) {
     return res.status(400).json({ error: 'Missing required fields: name, price' });
@@ -133,6 +133,7 @@ export default async function handler(req, res) {
       stripe_price_id: finalStripePriceId,
       is_active: is_active !== false,
       sort_order: sort_order || 0,
+      country_code: country_code || null,
     };
 
     let url = `${supabaseUrl}/rest/v1/products`;
