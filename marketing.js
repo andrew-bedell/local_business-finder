@@ -230,12 +230,29 @@
       modal_sending: 'Sending...',
       modal_error: 'There was an error. Please try again.',
 
+    },
+    // ── Country-specific overrides (only keys that differ from base es) ──
+    es_CO: {
+      modal_address_ph: 'Ej: Calle 80 #45-20, Medellín',
+      case_desc: 'María tiene un salón de uñas en Bogotá. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+    },
+    es_EC: {
+      modal_address_ph: 'Ej: Av. 6 de Diciembre N34-120, Quito',
+      case_desc: 'María tiene un salón de uñas en Quito. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
     }
   };
 
   var currentLang = localStorage.getItem('m_lang') || 'es';
+  var currentCountry = localStorage.getItem('m_country') || null;
 
   function t(key) {
+    // Check country-specific override for Spanish
+    if (currentLang === 'es' && currentCountry && currentCountry !== 'MX') {
+      var countryKey = 'es_' + currentCountry;
+      if (translations[countryKey] && translations[countryKey][key]) {
+        return translations[countryKey][key];
+      }
+    }
     return (translations[currentLang] && translations[currentLang][key]) || key;
   }
 
@@ -279,13 +296,62 @@
   var leadForm = document.getElementById('m-lead-form');
   var formSubmitBtn = document.getElementById('m-form-submit');
   var formSuccess = document.getElementById('m-form-success');
+  var pricingGrid = document.getElementById('pricing-grid');
 
   // ── Language Toggle ──
   document.getElementById('m-lang-toggle').addEventListener('click', toggleLanguage);
   document.getElementById('m-lang-toggle-mobile').addEventListener('click', toggleLanguage);
 
-  // Apply saved language on load
+  // ── Country Detection ──
+  var DIAL_CODES = { MX: '52', CO: '57', EC: '593' };
+  var FALLBACK_PRICING = {
+    MX: { price: '$250', currency: 'MXN' },
+    CO: { price: '$100,000', currency: 'COP' },
+    EC: { price: '$15', currency: 'USD' },
+  };
+
+  function detectCountry() {
+    if (currentCountry) {
+      onCountryReady();
+      return;
+    }
+    fetch('/api/geo')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        currentCountry = data.country || 'MX';
+        localStorage.setItem('m_country', currentCountry);
+        onCountryReady();
+      })
+      .catch(function() {
+        currentCountry = 'MX';
+        localStorage.setItem('m_country', currentCountry);
+        onCountryReady();
+      });
+  }
+
+  function onCountryReady() {
+    applyLanguage();
+    updateCountryDefaults();
+    if (pricingGrid) loadPricingProducts();
+  }
+
+  function updateCountryDefaults() {
+    var dialCode = DIAL_CODES[currentCountry];
+    if (!dialCode) return;
+    var select = document.getElementById('lead-country-code');
+    if (select) {
+      for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === dialCode) {
+          select.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
+  // Apply language immediately, then detect country (may re-apply with overrides)
   applyLanguage();
+  detectCountry();
 
   // ── Sticky Nav ──
   var heroSection = document.querySelector('.m-hero');
@@ -450,6 +516,7 @@
             email: customerEmail,
             name: customerName,
             address: businessAddress,
+            country_code: currentCountry,
           }),
         }).catch(function(err) {
           console.warn('Lead capture error (non-blocking):', err);
@@ -570,13 +637,11 @@
   }
 
   // ── Dynamic Pricing Cards ──
-  var pricingGrid = document.getElementById('pricing-grid');
-  if (pricingGrid) {
-    loadPricingProducts();
-  }
 
   function loadPricingProducts() {
-    fetch('/api/products/list')
+    var url = '/api/products/list';
+    if (currentCountry) url += '?country=' + currentCountry;
+    fetch(url)
       .then(function(res) { return res.json(); })
       .then(function(data) {
         var products = (data.products || []).slice(0, 3);
@@ -638,11 +703,12 @@
   }
 
   function renderFallbackPricing() {
-    // Static fallback if API fails
+    // Static fallback if API fails — show country-appropriate pricing
+    var fb = FALLBACK_PRICING[currentCountry] || FALLBACK_PRICING.MX;
     pricingGrid.setAttribute('data-cols', '1');
     pricingGrid.innerHTML =
       '<div class="m-pricing-card m-visible" data-reveal>' +
-        '<div class="m-pricing-price">$250 <span>MXN / mes</span></div>' +
+        '<div class="m-pricing-price">' + fb.price + ' <span>' + fb.currency + ' / mes</span></div>' +
         '<p class="m-pricing-note">' + t('pricing_note') + '</p>' +
         '<div class="m-pricing-features">' +
           '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f1') + '</span></div>' +

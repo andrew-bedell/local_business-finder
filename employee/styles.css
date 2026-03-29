@@ -3477,6 +3477,48 @@ select.input {
   font-family: inherit;
 }
 
+/* Product Duplicate Modal */
+.dup-currency-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.dup-currency-row:last-child {
+  border-bottom: none;
+}
+
+.dup-currency-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dup-currency-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+.dup-price-input {
+  margin-top: 8px;
+  padding-left: 26px;
+}
+
+.dup-price-input label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.dup-price-input input {
+  width: 160px;
+}
+
 /* === Customers Section === */
 .customers-header-actions {
   display: flex;

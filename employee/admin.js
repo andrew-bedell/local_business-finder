@@ -2209,7 +2209,7 @@
     // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete
     const src = allBusinessesRaw.length ? allBusinessesRaw : businesses;
     counts.cold_outreach_ready = src.filter(b => {
-      if (!hasGeneratedWebsite(b)) return false;
+      if (!hasDemoWebsite(b)) return false;
       const contacts = b.business_contacts || [];
       const primary = contacts.find(c => c.is_primary) || contacts[0];
       const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
@@ -2241,7 +2241,7 @@
       // Dynamic: has website + phone + outreach not fully complete
       const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
       filtered = src.filter(b => {
-        if (!hasGeneratedWebsite(b)) return false;
+        if (!hasDemoWebsite(b)) return false;
         const contacts = b.business_contacts || [];
         const primary = contacts.find(c => c.is_primary) || contacts[0];
         const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
@@ -2288,6 +2288,10 @@
 
   function hasGeneratedWebsite(business) {
     return (business.generated_websites || []).some(w => w.config && w.config.html);
+  }
+
+  function hasDemoWebsite(business) {
+    return (business.generated_websites || []).length > 0;
   }
 
   function getWebsiteStatus(business) {
@@ -3309,7 +3313,7 @@
   function loadOutreach() {
     // Use raw unfiltered data so pipeline-tab filters don't affect outreach
     const source = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
-    const withSite = source.filter(b => hasGeneratedWebsite(b) && getBusinessPhone(b));
+    const withSite = source.filter(b => hasDemoWebsite(b) && getBusinessPhone(b));
 
     const ready = [];
     const inProgress = [];

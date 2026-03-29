@@ -22,15 +22,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/products?is_active=eq.true&order=sort_order.asc`,
-      {
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-      }
-    );
+    // Optional country filter: ?country=CO returns products for that country + universal (null)
+    const country = (req.query.country || '').toUpperCase();
+    let url = `${supabaseUrl}/rest/v1/products?is_active=eq.true&order=sort_order.asc`;
+    if (country && /^[A-Z]{2}$/.test(country)) {
+      url += `&or=(country_code.eq.${country},country_code.is.null)`;
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+    });
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
