@@ -555,7 +555,15 @@
           </div>
 
           <div class="c-panel">
-            <div class="c-panel-title" style="margin-bottom:20px">Horario de Atención</div>
+            <div class="c-panel-title" style="margin-bottom:12px">Horario de Atención</div>
+            <div class="c-hours-photo-upload" style="margin-bottom:16px">
+              <label class="c-hours-upload-btn" id="biz-hours-upload-label">
+                <input type="file" accept="image/*" capture="environment" id="biz-hours-photo" style="display:none">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zM17.9 17.39c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41C18.93 5.77 22 8.65 22 12c0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                <span data-i18n="wiz_hours_photo_btn">Toma foto de tu horario</span>
+              </label>
+              <span class="c-hours-upload-status" id="biz-hours-upload-status"></span>
+            </div>
             <div class="c-hours-grid" id="biz-hours">
               <div class="c-hours-row"><span class="c-hours-day">Lunes</span><input type="text" class="c-input c-input-sm" data-day="monday" placeholder="9:00 AM - 6:00 PM"></div>
               <div class="c-hours-row"><span class="c-hours-day">Martes</span><input type="text" class="c-input c-input-sm" data-day="tuesday" placeholder="9:00 AM - 6:00 PM"></div>
@@ -1311,6 +1319,14 @@
               <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
             </button>
             <div class="c-wizard-card-body" id="wiz-body-hours">
+              <div class="c-hours-photo-upload">
+                <label class="c-hours-upload-btn" id="wiz-hours-upload-label">
+                  <input type="file" accept="image/*" capture="environment" id="wiz-hours-photo" style="display:none">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zM17.9 17.39c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41C18.93 5.77 22 8.65 22 12c0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                  <span data-i18n="wiz_hours_photo_btn">Toma foto de tu horario</span>
+                </label>
+                <span class="c-hours-upload-status" id="wiz-hours-upload-status"></span>
+              </div>
               <div class="c-wizard-hours-toggle">
                 <label class="c-wizard-toggle-label">
                   <input type="checkbox" id="wiz-hours-same" class="c-wizard-checkbox">
