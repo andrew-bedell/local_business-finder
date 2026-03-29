@@ -615,6 +615,102 @@ export function domainSelectionEmail({ contactName, businessName, suggestions, s
   };
 }
 
+export function siteEditsOnboardingEmail({ contactName, businessName, onboardingUrl, portalUrl, whatsappPhone }) {
+  const greeting = contactName ? `Hola ${contactName},` : 'Hola,';
+  const waText = encodeURIComponent(`Hola, quiero hacer cambios en mi página web para ${businessName || 'mi negocio'}`);
+
+  const html = baseLayout('Personaliza tu página web', `
+    <h2>${greeting}</h2>
+    <p>¡Tu dominio está listo! Ahora puedes personalizar tu página web para <strong>${escHtml(businessName || 'tu negocio')}</strong> antes de publicarla.</p>
+    <p>Tienes <strong>3 opciones</strong> para hacer cambios:</p>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:20px 0;">
+      <tr><td style="padding:0 0 10px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+          <td style="background:#f8f8fb;border:1px solid #e8e8ef;border-radius:10px;padding:16px 20px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+              <td style="vertical-align:top;padding-right:14px;font-size:24px;">💬</td>
+              <td>
+                <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Enviar cambios por WhatsApp</p>
+                <p style="margin:0 0 8px;font-size:13px;color:#4a4a66;">Escríbenos qué quieres cambiar y nosotros lo hacemos.</p>
+                <a href="https://wa.me/${escHtml(whatsappPhone || '')}?text=${waText}" style="display:inline-block;background:#25D366;color:#ffffff !important;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">Abrir WhatsApp</a>
+              </td>
+            </tr></table>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 0 10px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+          <td style="background:#f8f8fb;border:1px solid #e8e8ef;border-radius:10px;padding:16px 20px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+              <td style="vertical-align:top;padding-right:14px;font-size:24px;">✏️</td>
+              <td>
+                <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Editor visual en tu portal</p>
+                <p style="margin:0 0 8px;font-size:13px;color:#4a4a66;">Haz clic en cualquier parte de tu página y edítala con IA.</p>
+                <a href="${escHtml(portalUrl || '')}" style="display:inline-block;background:#6C5CE7;color:#ffffff !important;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">Ir al Editor</a>
+              </td>
+            </tr></table>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:0 0 10px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+          <td style="background:#f8f8fb;border:1px solid #e8e8ef;border-radius:10px;padding:16px 20px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+              <td style="vertical-align:top;padding-right:14px;font-size:24px;">📅</td>
+              <td>
+                <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Agendar llamada con nuestro diseñador</p>
+                <p style="margin:0 0 8px;font-size:13px;color:#4a4a66;">Agenda una videollamada y hacemos los cambios juntos.</p>
+                <a href="https://wa.me/${escHtml(whatsappPhone || '')}?text=${encodeURIComponent('Hola, me gustaría agendar una llamada para personalizar mi página web')}" style="display:inline-block;background:#ffffff;color:#6C5CE7 !important;padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;border:2px solid #6C5CE7;">Agendar Llamada</a>
+              </td>
+            </tr></table>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
+
+    <p>Cuando estés satisfecho con tu página, haz clic aquí para publicarla:</p>
+    <a href="${escHtml(onboardingUrl || '')}" class="cta">Ver Opciones y Publicar</a>
+    <p style="font-size:13px;color:#888;">¿Preguntas? Responde a este correo y te ayudaremos.</p>
+  `);
+
+  const text = `${greeting}\n\n¡Tu dominio está listo! Ahora puedes personalizar tu página web para ${businessName || 'tu negocio'}.\n\n3 opciones para hacer cambios:\n1. WhatsApp: https://wa.me/${whatsappPhone || ''}\n2. Editor visual: ${portalUrl || ''}\n3. Agendar llamada con diseñador\n\nCuando estés listo: ${onboardingUrl || ''}\n\n¿Preguntas? Responde a este correo.`;
+
+  return {
+    subject: `Personaliza tu página web — ${businessName || 'AhoraTengoPagina'}`,
+    html,
+    text,
+  };
+}
+
+export function siteLiveEmail({ contactName, businessName, domain, liveUrl, portalUrl }) {
+  const greeting = contactName ? `Hola ${contactName},` : 'Hola,';
+  const html = baseLayout('¡Tu página está en vivo!', `
+    <h2>${greeting}</h2>
+    <p>🎉 <strong>¡Felicidades!</strong> Tu página web para <strong>${escHtml(businessName || 'tu negocio')}</strong> ya está publicada en tu propio dominio.</p>
+    <p style="text-align:center;margin:24px 0;">
+      <a href="${escHtml(liveUrl || '')}" style="display:inline-block;background:#f0eeff;padding:16px 32px;border-radius:12px;font-size:20px;font-weight:800;color:#6C5CE7;text-decoration:none;border:2px solid #6C5CE7;word-break:break-all;">${escHtml(domain || '')}</a>
+    </p>
+    <p><strong>¿Qué hacer ahora?</strong></p>
+    <ul style="color:#4a4a66;font-size:15px;line-height:1.8;padding-left:20px;">
+      <li>Comparte tu nueva dirección web con tus clientes</li>
+      <li>Agrégala a tus redes sociales y tarjetas de presentación</li>
+      <li>Imprímela en tus menús, volantes y tarjetas</li>
+    </ul>
+    <p>La verificación del dominio puede tardar hasta 24 horas. Mientras tanto, tu página seguirá disponible en su dirección anterior.</p>
+    <p>Puedes administrar tu página, ver estadísticas y solicitar cambios desde tu portal:</p>
+    <a href="${escHtml(portalUrl || '')}" class="cta">Ir a Mi Portal</a>
+    <p style="font-size:13px;color:#888;">¿Preguntas? Responde a este correo y te ayudaremos.</p>
+  `);
+  const text = `${greeting}\n\n¡Tu página web para ${businessName || 'tu negocio'} ya está en vivo!\n\nTu nueva dirección: ${liveUrl || ''}\n\nComparte esta dirección con tus clientes. La verificación puede tardar hasta 24 horas.\n\nAdministra tu página: ${portalUrl || ''}\n\n¿Preguntas? Responde a este correo.`;
+
+  return {
+    subject: `🎉 ¡Tu página está en vivo! — ${domain || businessName || 'AhoraTengoPagina'}`,
+    html,
+    text,
+  };
+}
+
 function escHtml(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -658,6 +754,8 @@ const HARDCODED_FALLBACKS = {
   edit_ready_for_review: editReadyForReviewEmail,
   plan_changed: planChangeEmail,
   domain_selection: domainSelectionEmail,
+  site_edits_onboarding: siteEditsOnboardingEmail,
+  site_live: siteLiveEmail,
 };
 
 export async function getTemplateForTrigger(triggerKey, variables) {
