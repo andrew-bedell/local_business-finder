@@ -2206,6 +2206,18 @@
       const status = b.pipeline_status || 'saved';
       if (counts[status] !== undefined) counts[status]++;
     });
+    // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete
+    const src = allBusinessesRaw.length ? allBusinessesRaw : businesses;
+    counts.cold_outreach_ready = src.filter(b => {
+      if (!hasGeneratedWebsite(b)) return false;
+      const contacts = b.business_contacts || [];
+      const primary = contacts.find(c => c.is_primary) || contacts[0];
+      const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
+      if (!phone) return false;
+      const steps = b.outreach_steps || {};
+      const hasFollowup = steps.followup && steps.followup.sent_at;
+      return !hasFollowup; // not fully complete
+    }).length;
     const el = (id) => document.getElementById(id);
     el('pill-count-all').textContent = counts.all;
     el('pill-count-saved').textContent = counts.saved;
@@ -2225,7 +2237,20 @@
     });
     // Re-filter from allBusinesses
     let filtered = allBusinesses;
-    if (pipelineStage !== 'all') {
+    if (pipelineStage === 'cold_outreach_ready') {
+      // Dynamic: has website + phone + outreach not fully complete
+      const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+      filtered = src.filter(b => {
+        if (!hasGeneratedWebsite(b)) return false;
+        const contacts = b.business_contacts || [];
+        const primary = contacts.find(c => c.is_primary) || contacts[0];
+        const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
+        if (!phone) return false;
+        const steps = b.outreach_steps || {};
+        const hasFollowup = steps.followup && steps.followup.sent_at;
+        return !hasFollowup;
+      });
+    } else if (pipelineStage !== 'all') {
       filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
     }
     // Apply search
@@ -5318,27 +5343,27 @@
     if (ids.length === 0) return;
     showToast(t('bulkWebsitesStarted', ids.length), 'success');
 
-    let successCount = 0;
-    // Process sequentially to avoid rate limits
+    const tasks = [];
+    let alreadyDone = 0;
     for (const id of ids) {
       const business = currentResults.find(b => String(b.id) === id);
       if (!business) continue;
-      // Skip if website already exists
       const hasWebsite = (business.generated_websites || []).some(w => w.config && w.config.html);
       if (hasWebsite) {
-        successCount++;
+        alreadyDone++;
         continue;
       }
-      // Find the button in the table row to update its state
       const row = resultsBody.querySelector(`[data-id="${id}"]`);
       const btn = row ? row.closest('tr')?.querySelector('.btn-create-website') : null;
-      try {
-        await runFullWebsitePipeline(business, btn);
-        successCount++;
-      } catch (err) {
-        console.error('Bulk website creation failed for', business.name, err);
-      }
+      tasks.push(
+        runFullWebsitePipeline(business, btn)
+          .then(() => true)
+          .catch(err => { console.error('Bulk website creation failed for', business.name, err); return false; })
+      );
     }
+
+    const results = await Promise.allSettled(tasks);
+    const successCount = alreadyDone + results.filter(r => r.status === 'fulfilled' && r.value === true).length;
     showToast(t('bulkWebsitesComplete', successCount, ids.length), 'success');
     clearSelection();
   }
