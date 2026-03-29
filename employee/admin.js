@@ -835,6 +835,24 @@
       orOpenOutreach: 'Open Outreach',
       orStepLabel: 'Step {0}',
       orFollowupLabel: 'Followup',
+      // Outreach Cancel
+      outreachCancelBtn: 'Cancel Outreach',
+      outreachCancelConfirm: 'Why are you cancelling outreach?',
+      outreachCancelNoWhatsapp: "WhatsApp doesn't connect",
+      outreachCancelWrongNumber: 'Wrong number',
+      outreachCancelNotBusiness: 'Not a real business',
+      outreachCancelOther: 'Other',
+      outreachCancelled: 'Cancelled',
+      outreachCancelledSuccess: 'Outreach cancelled',
+      outreachCancelledError: 'Failed to cancel outreach',
+      outreachUncancelBtn: 'Reactivate Outreach',
+      outreachUncancelledSuccess: 'Outreach reactivated',
+      outreachUncancelledError: 'Failed to reactivate outreach',
+      orStatCancelled: 'Cancelled',
+      orCancelledTitle: 'Cancelled Outreach',
+      orNoCancelled: 'No cancelled outreach.',
+      orThCancelledAt: 'Cancelled',
+      orThReason: 'Reason',
     },
     es: {
       adminTitle: 'Negocios Guardados',
@@ -1613,6 +1631,24 @@
       orOpenOutreach: 'Abrir Contacto',
       orStepLabel: 'Paso {0}',
       orFollowupLabel: 'Seguimiento',
+      // Outreach Cancel
+      outreachCancelBtn: 'Cancelar Contacto',
+      outreachCancelConfirm: '¿Por qué cancelas el contacto?',
+      outreachCancelNoWhatsapp: 'WhatsApp no conecta',
+      outreachCancelWrongNumber: 'Número equivocado',
+      outreachCancelNotBusiness: 'No es un negocio real',
+      outreachCancelOther: 'Otro',
+      outreachCancelled: 'Cancelado',
+      outreachCancelledSuccess: 'Contacto cancelado',
+      outreachCancelledError: 'Error al cancelar contacto',
+      outreachUncancelBtn: 'Reactivar Contacto',
+      outreachUncancelledSuccess: 'Contacto reactivado',
+      outreachUncancelledError: 'Error al reactivar contacto',
+      orStatCancelled: 'Cancelados',
+      orCancelledTitle: 'Contacto Cancelado',
+      orNoCancelled: 'No hay contacto cancelado.',
+      orThCancelledAt: 'Cancelado',
+      orThReason: 'Razón',
     },
   };
 
@@ -2274,9 +2310,10 @@
       const status = b.pipeline_status || 'saved';
       if (counts[status] !== undefined) counts[status]++;
     });
-    // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete
+    // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete, exclude cancelled
     const src = allBusinessesRaw.length ? allBusinessesRaw : businesses;
     counts.cold_outreach_ready = src.filter(b => {
+      if (isOutreachCancelled(b)) return false;
       if (!hasDemoWebsite(b)) return false;
       const contacts = b.business_contacts || [];
       const primary = contacts.find(c => c.is_primary) || contacts[0];
@@ -2306,9 +2343,10 @@
     // Re-filter from allBusinesses
     let filtered = allBusinesses;
     if (pipelineStage === 'cold_outreach_ready') {
-      // Dynamic: has website + phone + outreach not fully complete
+      // Dynamic: has website + phone + outreach not fully complete, exclude cancelled
       const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
       filtered = src.filter(b => {
+        if (isOutreachCancelled(b)) return false;
         if (!hasDemoWebsite(b)) return false;
         const contacts = b.business_contacts || [];
         const primary = contacts.find(c => c.is_primary) || contacts[0];
@@ -2922,6 +2960,11 @@
     return '';
   }
 
+  function isOutreachCancelled(business) {
+    const steps = business.outreach_steps || {};
+    return !!(steps._cancelled && steps._cancelled.at);
+  }
+
   function getOutreachStepCount(business) {
     const steps = business.outreach_steps || {};
     const coreSteps = ['1', '2', '3', '4', '5', '6'];
@@ -2931,6 +2974,9 @@
   }
 
   function getOutreachProgressHtml(business) {
+    if (isOutreachCancelled(business)) {
+      return '<span class="outreach-progress or-cancelled-badge" data-id="' + business.id + '" style="cursor:pointer">' + t('outreachCancelled') + '</span>';
+    }
     const steps = business.outreach_steps || {};
     const sent = getOutreachStepCount(business);
     const hasFollowup = steps.followup && steps.followup.sent_at;
@@ -2975,6 +3021,7 @@
     const senderName = (window.__employeeAuth && (window.__employeeAuth.employee.outreach_sender_name || window.__employeeAuth.employee.display_name)) || '';
     const templates = getOutreachTemplates(business, senderName, previewUrl);
     const steps = business.outreach_steps || {};
+    const isCancelled = isOutreachCancelled(business);
 
     const stepKeys = ['1', '2', '3', '4', '5', '6'];
     const stepTitleKeys = {
@@ -3059,13 +3106,48 @@
     overlay.className = 'modal-overlay';
     overlay.id = 'outreach-modal';
 
+    const cancelReasonLabels = {
+      no_whatsapp: t('outreachCancelNoWhatsapp'),
+      wrong_number: t('outreachCancelWrongNumber'),
+      not_a_business: t('outreachCancelNotBusiness'),
+      other: t('outreachCancelOther'),
+    };
+
+    const cancelledBannerHtml = isCancelled ? `
+      <div class="outreach-cancelled-banner">
+        <div style="display:flex;align-items:center;gap:8px;flex:1">
+          <span style="font-size:16px">&#x26D4;</span>
+          <div>
+            <strong>${t('outreachCancelled')}</strong> — ${escapeHtml(cancelReasonLabels[steps._cancelled.reason] || steps._cancelled.reason)}
+            <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${new Date(steps._cancelled.at).toLocaleString()}</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="outreach-uncancel-btn" style="padding:5px 14px;font-size:12px">${t('outreachUncancelBtn')}</button>
+      </div>` : '';
+
+    const cancelBtnHtml = !isCancelled ? `<button class="btn-text" id="outreach-cancel-btn" style="color:var(--danger);font-size:12px;margin-left:auto;padding:4px 8px">${t('outreachCancelBtn')}</button>` : '';
+
     overlay.innerHTML = `
       <div class="modal-content" style="max-width:580px">
         <div class="modal-header">
-          <h2>${t('outreachModalTitle')} — ${escapeHtml(business.name)}</h2>
+          <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+            <h2 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t('outreachModalTitle')} — ${escapeHtml(business.name)}</h2>
+            ${cancelBtnHtml}
+          </div>
           <button class="modal-close" id="outreach-close">&times;</button>
         </div>
         <div class="modal-body">
+          ${cancelledBannerHtml}
+          <div id="outreach-cancel-picker" style="display:none;background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius);padding:12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:8px">${t('outreachCancelConfirm')}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <button class="btn btn-secondary outreach-cancel-reason" data-reason="no_whatsapp" style="font-size:12px;padding:5px 12px">${t('outreachCancelNoWhatsapp')}</button>
+              <button class="btn btn-secondary outreach-cancel-reason" data-reason="wrong_number" style="font-size:12px;padding:5px 12px">${t('outreachCancelWrongNumber')}</button>
+              <button class="btn btn-secondary outreach-cancel-reason" data-reason="not_a_business" style="font-size:12px;padding:5px 12px">${t('outreachCancelNotBusiness')}</button>
+              <button class="btn btn-secondary outreach-cancel-reason" data-reason="other" style="font-size:12px;padding:5px 12px">${t('outreachCancelOther')}</button>
+            </div>
+          </div>
+          <div class="${isCancelled ? 'outreach-steps-disabled' : ''}">
           <div class="outreach-info-row">
             <div class="outreach-field" style="flex:1">
               <div class="outreach-label">${t('outreachPhone')}</div>
@@ -3099,6 +3181,7 @@
           <div class="outreach-steps-list">
             ${stepsHtml}
           </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" id="outreach-close-footer">${t('closeBtn')}</button>
@@ -3107,6 +3190,95 @@
     `;
 
     document.body.appendChild(overlay);
+
+    // Cancel outreach handler
+    const cancelBtn = overlay.querySelector('#outreach-cancel-btn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        const picker = overlay.querySelector('#outreach-cancel-picker');
+        if (picker) picker.style.display = picker.style.display === 'none' ? '' : 'none';
+      });
+    }
+
+    // Cancel reason buttons
+    overlay.querySelectorAll('.outreach-cancel-reason').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const reason = btn.dataset.reason;
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          const resp = await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: business.id, outreach_cancel: { action: 'cancel', reason } }),
+          });
+          if (!resp.ok) throw new Error('Failed');
+          const result = await resp.json();
+          if (result.business) {
+            const fields = ['outreach_steps'];
+            fields.forEach(f => {
+              if (result.business[f] !== undefined) {
+                business[f] = result.business[f];
+                const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+                if (ab) ab[f] = result.business[f];
+                const abr = allBusinessesRaw.find(b => String(b.id) === String(business.id));
+                if (abr) abr[f] = result.business[f];
+                const cr = currentResults.find(b => String(b.id) === String(business.id));
+                if (cr) cr[f] = result.business[f];
+              }
+            });
+          }
+          showToast(t('outreachCancelledSuccess'), 'success');
+          closeOutreach();
+          openOutreachModal(business);
+        } catch (err) {
+          console.error('Cancel outreach error:', err);
+          showToast(t('outreachCancelledError'), 'error');
+          btn.disabled = false;
+          btn.textContent = cancelReasonLabels[reason];
+        }
+      });
+    });
+
+    // Uncancel handler
+    const uncancelBtn = overlay.querySelector('#outreach-uncancel-btn');
+    if (uncancelBtn) {
+      uncancelBtn.addEventListener('click', async () => {
+        uncancelBtn.disabled = true;
+        uncancelBtn.textContent = '...';
+        try {
+          const resp = await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: business.id, outreach_cancel: { action: 'uncancel' } }),
+          });
+          if (!resp.ok) throw new Error('Failed');
+          const result = await resp.json();
+          if (result.business) {
+            const fields = ['outreach_steps'];
+            fields.forEach(f => {
+              if (result.business[f] !== undefined) {
+                business[f] = result.business[f];
+                const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+                if (ab) ab[f] = result.business[f];
+                const abr = allBusinessesRaw.find(b => String(b.id) === String(business.id));
+                if (abr) abr[f] = result.business[f];
+                const cr = currentResults.find(b => String(b.id) === String(business.id));
+                if (cr) cr[f] = result.business[f];
+              }
+            });
+          }
+          showToast(t('outreachUncancelledSuccess'), 'success');
+          closeOutreach();
+          openOutreachModal(business);
+        } catch (err) {
+          console.error('Uncancel outreach error:', err);
+          showToast(t('outreachUncancelledError'), 'error');
+          uncancelBtn.disabled = false;
+          uncancelBtn.textContent = t('outreachUncancelBtn');
+        }
+      });
+    }
 
     // Load auto-reply disabled state
     if (phone) {
@@ -3438,13 +3610,17 @@
     const source = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
     const withSite = source.filter(b => hasDemoWebsite(b) && getBusinessPhone(b));
 
+    // Separate cancelled from active
+    const cancelled = withSite.filter(b => isOutreachCancelled(b));
+    const active = withSite.filter(b => !isOutreachCancelled(b));
+
     const ready = [];
     const inProgress = [];
     const followupDue = [];
     const complete = [];
     let staleCount = 0;
 
-    withSite.forEach(b => {
+    active.forEach(b => {
       const count = getOutreachStepCount(b);
       const steps = b.outreach_steps || {};
       const hasFollowup = steps.followup && steps.followup.sent_at;
@@ -3496,16 +3672,19 @@
     const statFollowup = document.getElementById('or-stat-followup');
     const statStale = document.getElementById('or-stat-stale');
     const statComplete = document.getElementById('or-stat-complete');
+    const statCancelled = document.getElementById('or-stat-cancelled');
     if (statReady) statReady.textContent = ready.length;
     if (statProgress) statProgress.textContent = inProgress.length;
     if (statFollowup) statFollowup.textContent = followupDue.length;
     if (statStale) statStale.textContent = staleCount;
     if (statComplete) statComplete.textContent = complete.length;
+    if (statCancelled) statCancelled.textContent = cancelled.length;
 
     renderOrFollowupTable(followupDue);
     renderOrReadyTable(ready);
     renderOrProgressTable(inProgress);
     renderOrCompleteTable(complete);
+    renderOrCancelledTable(cancelled);
     loadOrVisitors();
   }
 
@@ -3629,6 +3808,82 @@
     });
     if (body) body.innerHTML = html;
     bindOrTableEvents('or-complete-body');
+  }
+
+  function renderOrCancelledTable(businesses) {
+    const body = document.getElementById('or-cancelled-body');
+    const wrapper = document.getElementById('or-cancelled-wrapper');
+    const empty = document.getElementById('or-cancelled-empty');
+    const countEl = document.getElementById('or-cancelled-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    const cancelReasonLabels = {
+      no_whatsapp: t('outreachCancelNoWhatsapp'),
+      wrong_number: t('outreachCancelWrongNumber'),
+      not_a_business: t('outreachCancelNotBusiness'),
+      other: t('outreachCancelOther'),
+    };
+
+    let html = '';
+    businesses.forEach(b => {
+      const cancelled = b.outreach_steps && b.outreach_steps._cancelled;
+      const reason = cancelled ? (cancelReasonLabels[cancelled.reason] || cancelled.reason) : '';
+      const cancelledAt = cancelled ? orTimeAgo(cancelled.at) : '';
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + escapeHtml(reason) + '</td>'
+        + '<td>' + cancelledAt + '</td>'
+        + '<td><button class="btn btn-view or-reactivate-btn" data-biz-id="' + b.id + '">' + t('outreachUncancelBtn') + '</button></td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-cancelled-body');
+    bindOrCancelledTableEvents();
+  }
+
+  function bindOrCancelledTableEvents() {
+    const table = document.getElementById('or-cancelled-body');
+    if (!table) return;
+    table.querySelectorAll('.or-reactivate-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const bizId = btn.dataset.bizId;
+        btn.disabled = true;
+        btn.textContent = '...';
+        try {
+          const resp = await fetch('/api/businesses/update-pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessId: bizId, outreach_cancel: { action: 'uncancel' } }),
+          });
+          if (!resp.ok) throw new Error('Failed');
+          const result = await resp.json();
+          if (result.business) {
+            const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+            const biz = src.find(b => String(b.id) === bizId);
+            if (biz) biz.outreach_steps = result.business.outreach_steps;
+            const ab = allBusinesses.find(b => String(b.id) === bizId);
+            if (ab) ab.outreach_steps = result.business.outreach_steps;
+          }
+          showToast(t('outreachUncancelledSuccess'), 'success');
+          loadOutreach();
+        } catch (err) {
+          console.error('Reactivate outreach error:', err);
+          showToast(t('outreachUncancelledError'), 'error');
+          btn.disabled = false;
+          btn.textContent = t('outreachUncancelBtn');
+        }
+      });
+    });
   }
 
   async function loadOrVisitors() {
@@ -7678,7 +7933,7 @@
       const country = cb.getAttribute('data-country');
       const priceEl = dupCurrencies.querySelector(`input[data-price-for="${cur}"]`);
       const price = parseFloat(priceEl?.value);
-      if (!price || price <= 0) {
+      if (isNaN(price) || price < 0) {
         showToast(t('productDuplicatePrice', cur) + ' is required', 'error');
         return;
       }
