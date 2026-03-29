@@ -242,27 +242,27 @@ a:hover { text-decoration: underline; }
   <div class="ex-section-sub">Toda esta info se recopila automaticamente y se convierte en un sitio web profesional.</div>
   <div class="ex-showcase">
     <div style="text-align:center;margin-bottom:16px">
-      <h3 style="font-size:18px;font-weight:800;margin-bottom:4px">Tacos Don Pepe</h3>
-      <p style="font-size:13px;color:var(--text-muted)">Taqueria &middot; Merida, Yucatan &middot; &#9733;&#9733;&#9733;&#9733;&#9733; 4.8 (127 resenas)</p>
+      <h3 style="font-size:18px;font-weight:800;margin-bottom:4px" id="showcase-name">Tacos Don Pepe</h3>
+      <p style="font-size:13px;color:var(--text-muted)" id="showcase-info">Taqueria &middot; Merida, Yucatan &middot; &#9733;&#9733;&#9733;&#9733;&#9733; 4.8 (127 resenas)</p>
     </div>
     <div class="ex-showcase-grid">
       <div class="ex-showcase-item">
         <h4>&#128222; Contacto</h4>
-        <p>Tel: +52 999 123 4567<br>WhatsApp: Si<br>Horario: Lun-Sab 10am-10pm</p>
+        <p id="showcase-contact">Tel: +52 999 123 4567<br>WhatsApp: Si<br>Horario: Lun-Sab 10am-10pm</p>
       </div>
       <div class="ex-showcase-item">
         <h4>&#128205; Ubicacion</h4>
-        <p>Calle 60 #502, Centro<br>Merida, Yucatan 97000<br>Mexico</p>
+        <p id="showcase-location">Calle 60 #502, Centro<br>Merida, Yucatan 97000<br>Mexico</p>
       </div>
       <div class="ex-showcase-item">
         <h4>&#11088; Mejor resena</h4>
         <div class="ex-showcase-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <div class="ex-showcase-review">"Los mejores tacos de cochinita de Merida. El servicio es rapido y los precios muy accesibles."</div>
-        <div class="ex-showcase-author">— Maria G., hace 2 semanas</div>
+        <div class="ex-showcase-review" id="showcase-review">"Los mejores tacos de cochinita de Merida. El servicio es rapido y los precios muy accesibles."</div>
+        <div class="ex-showcase-author" id="showcase-author">— Maria G., hace 2 semanas</div>
       </div>
       <div class="ex-showcase-item">
         <h4>&#127860; Menu</h4>
-        <p>Tacos de cochinita &middot; $25<br>Panuchos &middot; $30<br>Salbutes &middot; $28<br>Agua de horchata &middot; $20</p>
+        <p id="showcase-menu">Tacos de cochinita &middot; $25<br>Panuchos &middot; $30<br>Salbutes &middot; $28<br>Agua de horchata &middot; $20</p>
       </div>
     </div>
   </div>
@@ -317,7 +317,7 @@ a:hover { text-decoration: underline; }
       <!-- Step 1: Search -->
       <div class="ex-demo-step active" id="demo-step-1">
         <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Usa nuestra herramienta para buscar negocios que no tienen pagina web.</p>
-        <div class="ex-demo-search-mock">
+        <div class="ex-demo-search-mock" id="demo-search-mock">
           <div class="ex-demo-search-row">
             <div class="ex-demo-search-input">&#128205; Merida, Yucatan</div>
             <div class="ex-demo-search-input">&#127860; Restaurantes</div>
@@ -351,7 +351,7 @@ a:hover { text-decoration: underline; }
       <!-- Step 2: Create -->
       <div class="ex-demo-step" id="demo-step-2">
         <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Con un clic, tomamos los datos del negocio y creamos un sitio web profesional.</p>
-        <div class="ex-demo-before-after">
+        <div class="ex-demo-before-after" id="demo-before-after">
           <div class="ex-demo-ba-card">
             <h4>&#128196; Datos recopilados</h4>
             <ul class="ex-demo-data-list">
@@ -386,7 +386,7 @@ a:hover { text-decoration: underline; }
       <!-- Step 3: Outreach -->
       <div class="ex-demo-step" id="demo-step-3">
         <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Contacta al dueno por WhatsApp y muestrale su sitio web listo.</p>
-        <div class="ex-demo-wa-mock">
+        <div class="ex-demo-wa-mock" id="demo-wa-mock">
           <div class="ex-demo-wa-bubble sent">
             Hola Don Pedro! &#128075; Soy Ana de AhoraTengoPagina. Vi que Tacos Don Pepe no tiene pagina web y le creamos una de muestra GRATIS. Le gustaria verla?
             <div class="ex-demo-wa-time">10:32 AM &#10003;&#10003;</div>
@@ -444,6 +444,167 @@ a:hover { text-decoration: underline; }
   };
   var DEFAULT_COMMISSION = COMMISSION.MX;
 
+  // Country-specific locale data for demo content, showcase, and form
+  var LOCALE_DATA = {
+    MX: {
+      phonePlaceholder: '+52 999 123 4567',
+      showcase: {
+        name: 'Tacos Don Pepe',
+        info: 'Taqueria &middot; Merida, Yucatan &middot; &#9733;&#9733;&#9733;&#9733;&#9733; 4.8 (127 resenas)',
+        contact: 'Tel: +52 999 123 4567<br>WhatsApp: Si<br>Horario: Lun-Sab 10am-10pm',
+        location: 'Calle 60 #502, Centro<br>Merida, Yucatan 97000<br>Mexico',
+        review: '"Los mejores tacos de cochinita de Merida. El servicio es rapido y los precios muy accesibles."',
+        author: '\u2014 Maria G., hace 2 semanas',
+        menu: 'Tacos de cochinita &middot; $25<br>Panuchos &middot; $30<br>Salbutes &middot; $28<br>Agua de horchata &middot; $20'
+      },
+      demo: {
+        city: 'Merida, Yucatan',
+        type: 'Restaurantes',
+        results: [
+          { name: 'Tacos Don Pepe', addr: 'Calle 60 #502', stars: 5, rating: '4.8', count: '127' },
+          { name: 'Pollo Feliz Centro', addr: 'Calle 55 #410', stars: 4, rating: '4.3', count: '89' },
+          { name: 'Salon de Unas Lupita', addr: 'Calle 40 #201', stars: 5, rating: '4.9', count: '64' }
+        ],
+        bizName: 'Tacos Don Pepe',
+        bizPhone: '+52 999 123 4567',
+        bizAddr: 'Calle 60 #502',
+        bizHours: 'Lun-Sab 10am-10pm',
+        bizRating: '4.8/5 (127 resenas)',
+        bizPhotos: '12 del negocio',
+        bizMenu: '15 platillos con precios',
+        siteDesc: 'Taqueria en Merida, Yucatan',
+        wa: [
+          { type: 'sent', text: 'Hola Don Pedro! &#128075; Soy Ana de AhoraTengoPagina. Vi que Tacos Don Pepe no tiene pagina web y le creamos una de muestra GRATIS. Le gustaria verla?', time: '10:32 AM' },
+          { type: 'received', text: 'Hola Ana! Si, me interesa. Como la puedo ver?', time: '10:35 AM' },
+          { type: 'sent', text: 'Aqui esta el enlace a su sitio de muestra: ahoratengopagina.com/ver/tacos-don-pepe &#128071; Incluye su menu, fotos, resenas y mapa. Todo listo para publicar!', time: '10:36 AM' },
+          { type: 'received', text: 'Wow, se ve muy bien! &#128525; Cuanto cuesta?', time: '10:40 AM' },
+          { type: 'sent', text: 'Solo $199 MXN al mes. Sin contratos, cancela cuando quiera. Incluye dominio, hosting y cambios ilimitados. Quiere activarlo?', time: '10:41 AM' },
+          { type: 'received', text: 'Si, vamos! &#128640;', time: '10:43 AM' }
+        ]
+      }
+    },
+    CO: {
+      phonePlaceholder: '+57 301 234 5678',
+      showcase: {
+        name: 'Arepas Do\u00f1a Carmen',
+        info: 'Restaurante &middot; Medellin, Antioquia &middot; &#9733;&#9733;&#9733;&#9733;&#9733; 4.7 (98 resenas)',
+        contact: 'Tel: +57 301 234 5678<br>WhatsApp: Si<br>Horario: Lun-Sab 7am-9pm',
+        location: 'Carrera 70 #44-20, Laureles<br>Medellin, Antioquia<br>Colombia',
+        review: '"Las mejores arepas de choclo de Medellin. Todo es muy fresco y la atencion es increible."',
+        author: '\u2014 Carolina M., hace 1 semana',
+        menu: 'Arepa de choclo &middot; $6,000<br>Bandeja paisa &middot; $18,000<br>Empanada &middot; $3,500<br>Jugo de lulo &middot; $4,000'
+      },
+      demo: {
+        city: 'Medellin, Antioquia',
+        type: 'Restaurantes',
+        results: [
+          { name: 'Arepas Do\u00f1a Carmen', addr: 'Cra 70 #44-20', stars: 5, rating: '4.7', count: '98' },
+          { name: 'Asados El Paisa', addr: 'Calle 33 #76-12', stars: 4, rating: '4.4', count: '72' },
+          { name: 'Peluqueria Sandra', addr: 'Cra 65 #48-15', stars: 5, rating: '4.8', count: '56' }
+        ],
+        bizName: 'Arepas Do\u00f1a Carmen',
+        bizPhone: '+57 301 234 5678',
+        bizAddr: 'Cra 70 #44-20',
+        bizHours: 'Lun-Sab 7am-9pm',
+        bizRating: '4.7/5 (98 resenas)',
+        bizPhotos: '10 del negocio',
+        bizMenu: '12 platos con precios',
+        siteDesc: 'Restaurante en Medellin, Antioquia',
+        wa: [
+          { type: 'sent', text: 'Hola Do\u00f1a Carmen! &#128075; Soy Ana de AhoraTengoPagina. Vi que Arepas Do\u00f1a Carmen no tiene pagina web y le creamos una de muestra GRATIS. Le gustaria verla?', time: '10:32 AM' },
+          { type: 'received', text: 'Hola! Si claro, me interesa. Como la veo?', time: '10:35 AM' },
+          { type: 'sent', text: 'Aqui esta el enlace a su sitio de muestra: ahoratengopagina.com/ver/arepas-dona-carmen &#128071; Incluye su menu, fotos, resenas y mapa. Todo listo para publicar!', time: '10:36 AM' },
+          { type: 'received', text: 'Ay que bonito! &#128525; Y cuanto vale?', time: '10:40 AM' },
+          { type: 'sent', text: 'Solo $39,900 COP al mes. Sin contratos, cancela cuando quiera. Incluye dominio, hosting y cambios ilimitados. Lo activamos?', time: '10:41 AM' },
+          { type: 'received', text: 'Dale, vamos! &#128640;', time: '10:43 AM' }
+        ]
+      }
+    },
+    EC: {
+      phonePlaceholder: '+593 99 123 4567',
+      showcase: {
+        name: 'Encebollados Don Luis',
+        info: 'Restaurante &middot; Guayaquil, Guayas &middot; &#9733;&#9733;&#9733;&#9733;&#9733; 4.6 (85 resenas)',
+        contact: 'Tel: +593 99 123 4567<br>WhatsApp: Si<br>Horario: Lun-Dom 6am-3pm',
+        location: 'Av. 9 de Octubre #412, Centro<br>Guayaquil, Guayas<br>Ecuador',
+        review: '"El mejor encebollado de Guayaquil. Siempre fresco y con bastante limon. Se los recomiendo."',
+        author: '\u2014 Patricia R., hace 3 dias',
+        menu: 'Encebollado &middot; $3.50<br>Bolon de verde &middot; $2.50<br>Ceviche de camaron &middot; $5.00<br>Jugo de naranjilla &middot; $1.50'
+      },
+      demo: {
+        city: 'Guayaquil, Guayas',
+        type: 'Restaurantes',
+        results: [
+          { name: 'Encebollados Don Luis', addr: 'Av. 9 de Octubre #412', stars: 5, rating: '4.6', count: '85' },
+          { name: 'Ceviches La Costa', addr: 'Calle Panama #305', stars: 4, rating: '4.5', count: '63' },
+          { name: 'Peluqueria Maria', addr: 'Av. Quito #118', stars: 5, rating: '4.7', count: '41' }
+        ],
+        bizName: 'Encebollados Don Luis',
+        bizPhone: '+593 99 123 4567',
+        bizAddr: 'Av. 9 de Octubre #412',
+        bizHours: 'Lun-Dom 6am-3pm',
+        bizRating: '4.6/5 (85 resenas)',
+        bizPhotos: '8 del negocio',
+        bizMenu: '10 platos con precios',
+        siteDesc: 'Restaurante en Guayaquil, Guayas',
+        wa: [
+          { type: 'sent', text: 'Hola Don Luis! &#128075; Soy Ana de AhoraTengoPagina. Vi que Encebollados Don Luis no tiene pagina web y le creamos una de muestra GRATIS. Le gustaria verla?', time: '10:32 AM' },
+          { type: 'received', text: 'Hola! Si, me interesa. Como la puedo ver?', time: '10:35 AM' },
+          { type: 'sent', text: 'Aqui esta el enlace a su sitio de muestra: ahoratengopagina.com/ver/encebollados-don-luis &#128071; Incluye su menu, fotos, resenas y mapa. Todo listo para publicar!', time: '10:36 AM' },
+          { type: 'received', text: 'Chevere, se ve bien! &#128525; Cuanto cuesta?', time: '10:40 AM' },
+          { type: 'sent', text: 'Solo $9.99 USD al mes. Sin contratos, cancela cuando quiera. Incluye dominio, hosting y cambios ilimitados. Lo activamos?', time: '10:41 AM' },
+          { type: 'received', text: 'Si, dale! &#128640;', time: '10:43 AM' }
+        ]
+      }
+    }
+  };
+
+  // Template builders for localized demo content
+  function buildStars(n) { var s = ''; for (var i = 0; i < n; i++) s += '&#9733;'; return s; }
+
+  function buildSearchMockHTML(d) {
+    var html = '<div class="ex-demo-search-row">' +
+      '<div class="ex-demo-search-input">&#128205; ' + d.city + '</div>' +
+      '<div class="ex-demo-search-input">&#127860; ' + d.type + '</div>' +
+      '<div class="ex-demo-search-btn">Buscar</div></div>' +
+      '<div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">' + d.results.length + ' negocios sin pagina web encontrados:</div>';
+    d.results.forEach(function(r) {
+      html += '<div class="ex-demo-result"><div class="ex-demo-result-info"><h4>' + r.name + '</h4>' +
+        '<p>' + r.addr + ' &middot; <span class="ex-demo-result-stars">' + buildStars(r.stars) + '</span> ' + r.rating + ' (' + r.count + ')</p></div>' +
+        '<span class="ex-demo-result-badge no-site">Sin pagina web</span></div>';
+    });
+    return html;
+  }
+
+  function buildBeforeAfterHTML(d) {
+    return '<div class="ex-demo-ba-card"><h4>&#128196; Datos recopilados</h4>' +
+      '<ul class="ex-demo-data-list">' +
+      '<li>Nombre: ' + d.bizName + '</li>' +
+      '<li>Telefono: ' + d.bizPhone + '</li>' +
+      '<li>Direccion: ' + d.bizAddr + '</li>' +
+      '<li>Horario: ' + d.bizHours + '</li>' +
+      '<li>Calificacion: ' + d.bizRating + '</li>' +
+      '<li>Fotos: ' + d.bizPhotos + '</li>' +
+      '<li>Menu: ' + d.bizMenu + '</li>' +
+      '</ul></div>' +
+      '<div class="ex-demo-ba-card"><h4>&#127760; Sitio web generado</h4>' +
+      '<div class="ex-demo-website-mock"><h3>' + d.bizName + '</h3>' +
+      '<p>' + d.siteDesc + '</p>' +
+      '<div class="ex-demo-website-sections"><span>Inicio</span><span>Menu</span><span>Fotos</span><span>Resenas</span><span>Contacto</span><span>Ubicacion</span></div>' +
+      '</div><p style="font-size:11px;color:var(--success);margin-top:8px;text-align:center">&#10003; Listo para publicar</p></div>';
+  }
+
+  function buildWhatsAppHTML(wa) {
+    var html = '';
+    wa.forEach(function(msg) {
+      var cls = msg.type === 'sent' ? 'sent' : 'received';
+      var check = msg.type === 'sent' ? ' &#10003;&#10003;' : '';
+      html += '<div class="ex-demo-wa-bubble ' + cls + '">' + msg.text +
+        '<div class="ex-demo-wa-time">' + msg.time + check + '</div></div>';
+    });
+    return html;
+  }
+
   // Detect country (URL param > geo API > default MX)
   var countryParam = (new URLSearchParams(window.location.search).get('country') || '').toUpperCase();
   var detectedCountry = 'MX';
@@ -451,6 +612,7 @@ a:hover { text-decoration: underline; }
   function applyCountry(country) {
     detectedCountry = country;
     var c = COMMISSION[country] || DEFAULT_COMMISSION;
+    var locale = LOCALE_DATA[country] || LOCALE_DATA.MX;
 
     // Hero
     document.getElementById('hero-commission').textContent = '$' + c.amount.toLocaleString('es-MX') + ' ' + c.currency + '/mes';
@@ -464,6 +626,25 @@ a:hover { text-decoration: underline; }
 
     // Demo sale text
     document.getElementById('demo-sale-text').textContent = 'Venta cerrada = $' + c.amount.toLocaleString('es-MX') + ' ' + c.currency + '/mes para ti';
+
+    // Showcase
+    var s = locale.showcase;
+    document.getElementById('showcase-name').textContent = s.name;
+    document.getElementById('showcase-info').innerHTML = s.info;
+    document.getElementById('showcase-contact').innerHTML = s.contact;
+    document.getElementById('showcase-location').innerHTML = s.location;
+    document.getElementById('showcase-review').textContent = s.review;
+    document.getElementById('showcase-author').textContent = s.author;
+    document.getElementById('showcase-menu').innerHTML = s.menu;
+
+    // Demo modal content
+    var d = locale.demo;
+    document.getElementById('demo-search-mock').innerHTML = buildSearchMockHTML(d);
+    document.getElementById('demo-before-after').innerHTML = buildBeforeAfterHTML(d);
+    document.getElementById('demo-wa-mock').innerHTML = buildWhatsAppHTML(d.wa);
+
+    // Phone placeholder
+    document.getElementById('apply-phone').placeholder = locale.phonePlaceholder;
   }
 
   function updateCalc(sites, c) {
