@@ -73,6 +73,7 @@
       pipelineInactive: 'Inactive',
       pipelineSearchPlaceholder: 'Search by name, email, phone...',
       thStage: 'Stage',
+      thSource: 'Source',
       thCountry: 'Country',
       thContact: 'Contact Name',
       thContacts: 'Contacts',
@@ -116,6 +117,19 @@
       stageDemo: 'Demo',
       stageActiveCustomer: 'Active',
       stageInactiveCustomer: 'Inactive',
+      leadSource: 'Lead Source',
+      srcSearch: 'Internal Search',
+      srcColdOutreach: 'Cold Outreach',
+      srcWebsiteForm: 'Website Form',
+      srcWhatsappInbound: 'WhatsApp Inbound',
+      srcReferral: 'Referral',
+      srcAdMeta: 'Facebook / Instagram Ad',
+      srcAdGoogle: 'Google Ad',
+      srcOrganicSocial: 'Organic Social',
+      srcOrganicSearch: 'Organic Search',
+      srcReferralContent: 'Blog / Directory',
+      srcManual: 'Manual Entry',
+      srcOther: 'Other',
       statTotal: 'Total Businesses',
       statLeads: 'Leads',
       statActiveCustomers: 'Active Customers',
@@ -841,6 +855,7 @@
       pipelineInactive: 'Inactivos',
       pipelineSearchPlaceholder: 'Buscar por nombre, email, teléfono...',
       thStage: 'Etapa',
+      thSource: 'Fuente',
       thCountry: 'País',
       thContact: 'Nombre de Contacto',
       thContacts: 'Contactos',
@@ -884,6 +899,19 @@
       stageDemo: 'Demo',
       stageActiveCustomer: 'Activo',
       stageInactiveCustomer: 'Inactivo',
+      leadSource: 'Fuente del Lead',
+      srcSearch: 'Búsqueda Interna',
+      srcColdOutreach: 'Contacto en Frío',
+      srcWebsiteForm: 'Formulario Web',
+      srcWhatsappInbound: 'WhatsApp Entrante',
+      srcReferral: 'Referido',
+      srcAdMeta: 'Anuncio Facebook / Instagram',
+      srcAdGoogle: 'Anuncio Google',
+      srcOrganicSocial: 'Redes Sociales Orgánico',
+      srcOrganicSearch: 'Búsqueda Orgánica',
+      srcReferralContent: 'Blog / Directorio',
+      srcManual: 'Ingreso Manual',
+      srcOther: 'Otro',
       statTotal: 'Total Negocios',
       statLeads: 'Leads',
       statActiveCustomers: 'Clientes Activos',
@@ -2488,6 +2516,7 @@
         <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(b.address_full || '—')}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
+        <td style="font-size:11px;color:var(--text-muted)">${t('src' + (b.lead_source || 'other').replace(/(^|_)([a-z])/g, (_, __, c) => c.toUpperCase()))}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-contacts" data-id="${b.id}" title="${t('clickToEdit')}" style="cursor:pointer">${contactsCellHtml}</td>
         <td>${primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone) ? escapeHtml(primaryContact.contact_whatsapp || primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>
@@ -3912,6 +3941,23 @@
                   <option value="inactive_customer" ${business.pipeline_status === 'inactive_customer' ? 'selected' : ''}>${t('stageInactiveCustomer')}</option>
                 </select>
               </div>
+              <div class="form-group">
+                <label>${t('leadSource')}</label>
+                <select class="input" id="modal-lead-source">
+                  <option value="search" ${business.lead_source === 'search' ? 'selected' : ''}>${t('srcSearch')}</option>
+                  <option value="cold_outreach" ${business.lead_source === 'cold_outreach' ? 'selected' : ''}>${t('srcColdOutreach')}</option>
+                  <option value="website_form" ${business.lead_source === 'website_form' ? 'selected' : ''}>${t('srcWebsiteForm')}</option>
+                  <option value="whatsapp_inbound" ${business.lead_source === 'whatsapp_inbound' ? 'selected' : ''}>${t('srcWhatsappInbound')}</option>
+                  <option value="referral" ${business.lead_source === 'referral' ? 'selected' : ''}>${t('srcReferral')}</option>
+                  <option value="ad_meta" ${business.lead_source === 'ad_meta' ? 'selected' : ''}>${t('srcAdMeta')}</option>
+                  <option value="ad_google" ${business.lead_source === 'ad_google' ? 'selected' : ''}>${t('srcAdGoogle')}</option>
+                  <option value="organic_social" ${business.lead_source === 'organic_social' ? 'selected' : ''}>${t('srcOrganicSocial')}</option>
+                  <option value="organic_search" ${business.lead_source === 'organic_search' ? 'selected' : ''}>${t('srcOrganicSearch')}</option>
+                  <option value="referral_content" ${business.lead_source === 'referral_content' ? 'selected' : ''}>${t('srcReferralContent')}</option>
+                  <option value="manual" ${business.lead_source === 'manual' ? 'selected' : ''}>${t('srcManual')}</option>
+                  <option value="other" ${(business.lead_source || 'other') === 'other' ? 'selected' : ''}>${t('srcOther')}</option>
+                </select>
+              </div>
             </div>
             <div class="contact-edit-actions">
               <button class="btn btn-primary btn-sm" id="modal-save-pipeline">${t('pipelineSaveBtn')}</button>
@@ -4031,6 +4077,7 @@
       const payload = {
         businessId: business.id,
         pipeline_status: modal.querySelector('#modal-pipeline-status').value,
+        lead_source: modal.querySelector('#modal-lead-source').value,
       };
 
       try {
@@ -4044,6 +4091,7 @@
 
         // Update local business object so table re-renders correctly
         business.pipeline_status = payload.pipeline_status;
+        business.lead_source = payload.lead_source;
 
         // Update allBusinesses too
         const idx = allBusinesses.findIndex(b => b.id === business.id);

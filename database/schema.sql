@@ -71,6 +71,23 @@ CREATE TABLE IF NOT EXISTS businesses (
   search_location         TEXT,
   search_type             TEXT,
 
+  -- Acquisition source (how this business entered our system)
+  lead_source             TEXT DEFAULT 'other'
+                            CHECK (lead_source IN (
+                              'search',             -- outbound: employee Google Places search
+                              'cold_outreach',       -- outbound: door-to-door, cold call, cold message
+                              'website_form',        -- inbound: ahoratengopagina.com form fill
+                              'whatsapp_inbound',    -- inbound: business messaged us on WhatsApp
+                              'referral',            -- inbound: customer or partner referral
+                              'ad_meta',             -- inbound paid: Facebook / Instagram ad
+                              'ad_google',           -- inbound paid: Google Ads
+                              'organic_social',      -- inbound: organic social media discovery
+                              'organic_search',      -- inbound: organic search / SEO
+                              'referral_content',    -- inbound: blog, directory, or partner website
+                              'manual',              -- manually entered by operator
+                              'other'                -- unspecified
+                            )),
+
   -- Pipeline
   pipeline_status         TEXT DEFAULT 'saved'
                             CHECK (pipeline_status IN (
@@ -100,6 +117,7 @@ CREATE TABLE IF NOT EXISTS businesses (
 CREATE INDEX IF NOT EXISTS idx_businesses_category ON businesses (category);
 CREATE INDEX IF NOT EXISTS idx_businesses_city ON businesses (address_city);
 CREATE INDEX IF NOT EXISTS idx_businesses_status ON businesses (business_status);
+CREATE INDEX IF NOT EXISTS idx_businesses_lead_source ON businesses (lead_source);
 CREATE INDEX IF NOT EXISTS idx_businesses_completeness ON businesses (data_completeness_score);
 CREATE INDEX IF NOT EXISTS idx_businesses_slug ON businesses (slug) WHERE slug IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_businesses_place_id ON businesses (place_id) WHERE place_id IS NOT NULL;

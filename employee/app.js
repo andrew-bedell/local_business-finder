@@ -884,6 +884,7 @@
         category: mapped.category,
         subcategory: mapped.subcategory,
         search_type: place.searchType || type,
+        lead_source: 'search',
         description: place.description || null,
         thumbnail: place.thumbnail || null,
         price_level: place.priceLevel ? parseInt(place.priceLevel) || null : null,
