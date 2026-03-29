@@ -419,12 +419,21 @@
       productStripePriceId: 'Stripe Price ID',
       productSortOrder: 'Sort Order',
       productActive: 'Active',
+      productCountry: 'Country',
+      productCountryNone: 'None (universal)',
       productSave: 'Save Product',
       productSaved: 'Product saved',
       productDeleteConfirm: 'Delete this product?',
       productDeleted: 'Product deleted',
       productPerMonth: '{0}/mo',
       productPerYear: '{0}/yr',
+      productDuplicate: 'Duplicate',
+      productDuplicateTitle: 'Duplicate to Currencies',
+      productDuplicateBtn: 'Duplicate',
+      productDuplicateSource: 'Source: {0} — {1} {2}',
+      productDuplicatePrice: 'Price in {0}',
+      productDuplicated: '{0} product(s) created',
+      productDuplicateNone: 'Select at least one currency',
       // Preview links
       websiteCopyLink: 'Copy Preview Link',
       websiteSendWhatsApp: 'Send via WhatsApp',
@@ -1168,12 +1177,21 @@
       productStripePriceId: 'Stripe Price ID',
       productSortOrder: 'Orden',
       productActive: 'Activo',
+      productCountry: 'País',
+      productCountryNone: 'Ninguno (universal)',
       productSave: 'Guardar Producto',
       productSaved: 'Producto guardado',
       productDeleteConfirm: '¿Eliminar este producto?',
       productDeleted: 'Producto eliminado',
       productPerMonth: '{0}/mes',
       productPerYear: '{0}/año',
+      productDuplicate: 'Duplicar',
+      productDuplicateTitle: 'Duplicar a Monedas',
+      productDuplicateBtn: 'Duplicar',
+      productDuplicateSource: 'Origen: {0} — {1} {2}',
+      productDuplicatePrice: 'Precio en {0}',
+      productDuplicated: '{0} producto(s) creados',
+      productDuplicateNone: 'Selecciona al menos una moneda',
       // Preview links
       websiteCopyLink: 'Copiar Enlace',
       websiteSendWhatsApp: 'Enviar por WhatsApp',
@@ -1818,6 +1836,7 @@
   let allFiltered = []; // Full filtered dataset for client-side pagination
   const selectedIds = new Set(); // Selected business IDs for bulk actions
   let allBusinesses = []; // Unfiltered dataset for pipeline counts
+  let allBusinessesRaw = []; // Completely unfiltered dataset for cross-tab features (outreach)
   let pipelineStage = 'all'; // Currently selected pipeline filter
   // Cache for detail modal data (keyed by business ID)
   const detailCache = {};
@@ -2119,6 +2138,9 @@
       const { data, error } = await query;
 
       if (error) throw error;
+
+      // Store raw unfiltered data for cross-tab features (outreach dashboard)
+      allBusinessesRaw = data || [];
 
       // Client-side filtering for social profile filters (Supabase doesn't easily filter on nested joins)
       let filtered = data || [];
@@ -3243,7 +3265,8 @@
       const phoneCopy = e.target.closest('.or-phone');
       const bizId = (link && link.dataset.bizId) || (btn && btn.dataset.bizId);
       if (bizId) {
-        const biz = allBusinesses.find(b => String(b.id) === bizId);
+        const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+        const biz = src.find(b => String(b.id) === bizId);
         if (biz) openOutreachModal(biz);
       }
       if (phoneCopy && phoneCopy.dataset.phone) {
@@ -3252,8 +3275,16 @@
     });
   }
 
+  function getBusinessPhone(b) {
+    const contacts = b.business_contacts || [];
+    const primary = contacts.find(c => c.is_primary) || contacts[0];
+    return primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
+  }
+
   function loadOutreach() {
-    const withSite = allBusinesses.filter(b => hasGeneratedWebsite(b));
+    // Use raw unfiltered data so pipeline-tab filters don't affect outreach
+    const source = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+    const withSite = source.filter(b => hasGeneratedWebsite(b) && getBusinessPhone(b));
 
     const ready = [];
     const inProgress = [];
@@ -3485,7 +3516,8 @@
 
       let html = '';
       visitors.forEach(v => {
-        const biz = allBusinesses.find(b => String(b.id) === String(v.businessId));
+        const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+        const biz = src.find(b => String(b.id) === String(v.businessId));
         const progress = biz ? getOutreachProgressHtml(biz) : '—';
         const contact = biz ? getOrContactHtml(biz) : '—';
         const bizLink = biz
@@ -7252,12 +7284,14 @@
           </div>
           <div class="product-card-actions">
             <button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('edit-product',{detail:'${p.id}'}))">${t('productEdit')}</button>
+            <button class="btn btn-view" onclick="document.dispatchEvent(new CustomEvent('duplicate-product',{detail:'${p.id}'}))">${t('productDuplicate')}</button>
             <button class="btn btn-secondary btn-sm" onclick="document.dispatchEvent(new CustomEvent('delete-product',{detail:'${p.id}'}))" style="color:var(--danger)">✕</button>
           </div>
         </div>
         ${p.description ? `<div class="product-card-desc">${escapeHtml(p.description)}</div>` : ''}
         ${features.length ? `<ul class="product-card-features">${features.map(f => `<li>${escapeHtml(f)}</li>`).join('')}</ul>` : ''}
         <div class="product-card-meta">
+          ${p.country_code ? `<span class="badge badge-has-site">${escapeHtml(p.country_code)}</span>` : ''}
           ${p.stripe_price_id ? `<span class="badge badge-has-site">Stripe ✓</span>` : `<span class="badge badge-no-site">No Stripe</span>`}
           ${!p.is_active ? `<span class="badge badge-no-site">Inactive</span>` : ''}
         </div>
@@ -7286,6 +7320,7 @@
         document.getElementById('product-features').value = (p.features || []).join('\n');
         document.getElementById('product-stripe-product-id').value = p.stripe_product_id || '';
         document.getElementById('product-stripe-price-id').value = p.stripe_price_id || '';
+        document.getElementById('product-country-code').value = p.country_code || '';
         document.getElementById('product-sort-order').value = p.sort_order || 0;
         document.getElementById('product-active').value = p.is_active !== false ? 'true' : 'false';
       }
@@ -7299,6 +7334,7 @@
       document.getElementById('product-features').value = '';
       document.getElementById('product-stripe-product-id').value = '';
       document.getElementById('product-stripe-price-id').value = '';
+      document.getElementById('product-country-code').value = '';
       document.getElementById('product-sort-order').value = '0';
       document.getElementById('product-active').value = 'true';
     }
@@ -7332,6 +7368,7 @@
       stripe_price_id: document.getElementById('product-stripe-price-id').value.trim() || null,
       sort_order: parseInt(document.getElementById('product-sort-order').value) || 0,
       is_active: document.getElementById('product-active').value === 'true',
+      country_code: document.getElementById('product-country-code').value || null,
     };
 
     if (editingProductId) {
@@ -7379,6 +7416,7 @@
   // Product event listeners (using custom events for inline onclick)
   document.addEventListener('edit-product', (e) => openProductEditor(e.detail));
   document.addEventListener('delete-product', (e) => deleteProduct(e.detail));
+  document.addEventListener('duplicate-product', (e) => openDuplicateModal(e.detail));
 
   // Product button listeners
   const btnCreateProduct = document.getElementById('btn-create-product');
@@ -7389,6 +7427,139 @@
 
   const btnSaveProduct = document.getElementById('btn-save-product');
   if (btnSaveProduct) btnSaveProduct.addEventListener('click', saveProduct);
+
+  // ── Product Duplicate to Currencies ──
+
+  const CURRENCY_COUNTRY_MAP = {
+    MXN: 'MX',
+    COP: 'CO',
+    USD: 'EC',
+    PEN: 'PE',
+    ARS: 'AR',
+    CLP: 'CL',
+  };
+
+  const ALL_CURRENCIES = ['MXN', 'USD', 'COP', 'PEN', 'ARS', 'CLP'];
+
+  let duplicateSourceProduct = null;
+  const dupModal = document.getElementById('product-duplicate-modal');
+  const dupCurrencies = document.getElementById('product-duplicate-currencies');
+  const dupClose = document.getElementById('product-duplicate-close');
+  const btnDupCancel = document.getElementById('btn-duplicate-cancel');
+  const btnDupConfirm = document.getElementById('btn-duplicate-confirm');
+
+  function openDuplicateModal(productId) {
+    const p = products.find(x => x.id === productId);
+    if (!p) return;
+    duplicateSourceProduct = p;
+
+    const sourceLabel = document.getElementById('product-duplicate-source');
+    const priceStr = '$' + parseFloat(p.price).toLocaleString('en', { minimumFractionDigits: 0 });
+    sourceLabel.textContent = t('productDuplicateSource', p.name, priceStr, p.currency || 'MXN');
+
+    const available = ALL_CURRENCIES.filter(c => c !== (p.currency || 'MXN'));
+    dupCurrencies.innerHTML = available.map(cur => {
+      const country = CURRENCY_COUNTRY_MAP[cur] || '';
+      return `<div class="dup-currency-row">
+        <label class="dup-currency-check">
+          <input type="checkbox" data-currency="${cur}" data-country="${country}">
+          <span>${cur}${country ? ' (' + country + ')' : ''}</span>
+        </label>
+        <div class="dup-price-input" style="display:none">
+          <label>${t('productDuplicatePrice', cur)}</label>
+          <input type="number" class="input" min="0" step="0.01" data-price-for="${cur}" placeholder="0">
+        </div>
+      </div>`;
+    }).join('');
+
+    // Toggle price input visibility on checkbox change
+    dupCurrencies.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', function() {
+        const row = this.closest('.dup-currency-row');
+        const priceInput = row.querySelector('.dup-price-input');
+        priceInput.style.display = this.checked ? '' : 'none';
+        if (this.checked) {
+          priceInput.querySelector('input').focus();
+        }
+      });
+    });
+
+    dupModal.style.display = '';
+  }
+
+  function closeDuplicateModal() {
+    dupModal.style.display = 'none';
+    duplicateSourceProduct = null;
+  }
+
+  async function confirmDuplicate() {
+    if (!duplicateSourceProduct) return;
+
+    const checked = dupCurrencies.querySelectorAll('input[type="checkbox"]:checked');
+    if (!checked.length) {
+      showToast(t('productDuplicateNone'), 'warning');
+      return;
+    }
+
+    const entries = [];
+    for (const cb of checked) {
+      const cur = cb.getAttribute('data-currency');
+      const country = cb.getAttribute('data-country');
+      const priceEl = dupCurrencies.querySelector(`input[data-price-for="${cur}"]`);
+      const price = parseFloat(priceEl?.value);
+      if (!price || price <= 0) {
+        showToast(t('productDuplicatePrice', cur) + ' is required', 'error');
+        return;
+      }
+      entries.push({ currency: cur, country_code: country || null, price });
+    }
+
+    btnDupConfirm.disabled = true;
+    btnDupConfirm.textContent = '...';
+    let created = 0;
+
+    for (const entry of entries) {
+      const payload = {
+        name: duplicateSourceProduct.name,
+        description: duplicateSourceProduct.description || null,
+        price: entry.price,
+        currency: entry.currency,
+        billing_interval: duplicateSourceProduct.billing_interval || 'monthly',
+        features: duplicateSourceProduct.features || [],
+        is_active: duplicateSourceProduct.is_active !== false,
+        sort_order: duplicateSourceProduct.sort_order || 0,
+        country_code: entry.country_code,
+      };
+
+      try {
+        const res = await fetch('/api/products/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) created++;
+        else console.error('Duplicate save error:', await res.text());
+      } catch (err) {
+        console.error('Duplicate save error:', err);
+      }
+    }
+
+    btnDupConfirm.disabled = false;
+    btnDupConfirm.textContent = t('productDuplicateBtn');
+
+    if (created > 0) {
+      showToast(t('productDuplicated', created), 'success');
+      closeDuplicateModal();
+      loadProducts();
+    } else {
+      showToast('Failed to create duplicates', 'error');
+    }
+  }
+
+  if (dupClose) dupClose.addEventListener('click', closeDuplicateModal);
+  if (btnDupCancel) btnDupCancel.addEventListener('click', closeDuplicateModal);
+  if (btnDupConfirm) btnDupConfirm.addEventListener('click', confirmDuplicate);
+  if (dupModal) dupModal.addEventListener('click', (e) => { if (e.target === dupModal) closeDuplicateModal(); });
 
 
   // ── Customers ──
