@@ -187,7 +187,7 @@ a:hover { text-decoration: underline; }
 <!-- HERO -->
 <section class="ex-hero">
   <div class="ex-hero-badge">&#128176; Oportunidad de ingreso</div>
-  <h1>Gana <em>$100 MXN/mes</em><br>por cada sitio web que vendas</h1>
+  <h1>Gana <em id="hero-commission">$120 MXN/mes</em><br>por cada sitio web que vendas</h1>
   <p>Busca negocios sin pagina web, nosotros creamos el sitio, tu lo vendes. Ganas comision cada mes mientras el cliente siga activo.</p>
   <a href="#apply-section" class="ex-hero-cta" onclick="document.getElementById('apply-name').focus()">Solicitar acceso &#8594;</a>
 </section>
@@ -230,8 +230,8 @@ a:hover { text-decoration: underline; }
     <input type="range" class="ex-calc-slider" id="calc-slider" min="1" max="50" value="5">
     <div class="ex-calc-sites" id="calc-sites">5</div>
     <div class="ex-calc-sites-label">sitios web</div>
-    <div class="ex-calc-result" id="calc-result">$500</div>
-    <div class="ex-calc-result-label">MXN al mes (recurrente)</div>
+    <div class="ex-calc-result" id="calc-result">$600</div>
+    <div class="ex-calc-result-label" id="calc-currency-label">MXN al mes (recurrente)</div>
   </div>
 </section>
 
@@ -414,7 +414,7 @@ a:hover { text-decoration: underline; }
         </div>
         <div style="text-align:center;margin-top:20px;padding:16px;background:var(--success-bg);border-radius:var(--radius);border:1px solid rgba(34,197,94,0.25)">
           <div style="font-size:20px;margin-bottom:6px">&#127881;</div>
-          <div style="font-size:14px;font-weight:700;color:var(--success)">Venta cerrada = $100 MXN/mes para ti</div>
+          <div style="font-size:14px;font-weight:700;color:var(--success)" id="demo-sale-text">Venta cerrada = $120 MXN/mes para ti</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Ganas comision cada mes mientras el cliente siga activo</div>
         </div>
       </div>
@@ -433,6 +433,52 @@ a:hover { text-decoration: underline; }
 (function() {
   'use strict';
 
+  // Commission per country (base: 120 MXN, converted at approximate rates)
+  var COMMISSION = {
+    MX: { amount: 120, currency: 'MXN', label: 'MXN al mes (recurrente)' },
+    CO: { amount: 25000, currency: 'COP', label: 'COP al mes (recurrente)' },
+    EC: { amount: 6, currency: 'USD', label: 'USD al mes (recurrente)' },
+    PE: { amount: 25, currency: 'PEN', label: 'PEN al mes (recurrente)' },
+    AR: { amount: 7000, currency: 'ARS', label: 'ARS al mes (recurrente)' },
+    CL: { amount: 5500, currency: 'CLP', label: 'CLP al mes (recurrente)' },
+  };
+  var DEFAULT_COMMISSION = COMMISSION.MX;
+
+  // Detect country (URL param > geo API > default MX)
+  var countryParam = (new URLSearchParams(window.location.search).get('country') || '').toUpperCase();
+  var detectedCountry = 'MX';
+
+  function applyCountry(country) {
+    detectedCountry = country;
+    var c = COMMISSION[country] || DEFAULT_COMMISSION;
+
+    // Hero
+    document.getElementById('hero-commission').textContent = '$' + c.amount.toLocaleString('es-MX') + ' ' + c.currency + '/mes';
+
+    // Calculator
+    var val = parseInt(slider.value, 10);
+    updateCalc(val, c);
+
+    // Calculator label
+    document.getElementById('calc-currency-label').textContent = c.label;
+
+    // Demo sale text
+    document.getElementById('demo-sale-text').textContent = 'Venta cerrada = $' + c.amount.toLocaleString('es-MX') + ' ' + c.currency + '/mes para ti';
+  }
+
+  function updateCalc(sites, c) {
+    var total = sites * c.amount;
+    resultEl.textContent = '$' + total.toLocaleString('es-MX');
+  }
+
+  if (countryParam && COMMISSION[countryParam]) {
+    applyCountry(countryParam);
+  } else {
+    fetch('/api/geo').then(function(r) { return r.json(); }).then(function(d) {
+      applyCountry(d.country || 'MX');
+    }).catch(function() { applyCountry('MX'); });
+  }
+
   // Calculator
   var slider = document.getElementById('calc-slider');
   var sitesEl = document.getElementById('calc-sites');
@@ -441,7 +487,8 @@ a:hover { text-decoration: underline; }
   slider.addEventListener('input', function() {
     var val = parseInt(slider.value, 10);
     sitesEl.textContent = val;
-    resultEl.textContent = '$' + (val * 100).toLocaleString('es-MX');
+    var c = COMMISSION[detectedCountry] || DEFAULT_COMMISSION;
+    updateCalc(val, c);
   });
 
   // Demo wizard
