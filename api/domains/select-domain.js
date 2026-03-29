@@ -1,7 +1,10 @@
 // Vercel serverless function: Handle domain selection from email link
-// GET ?t=<token>&d=<domain> — validates token, records selection, shows confirmation
+// GET ?t=<token>&d=<domain> — validates token, records selection, purchases domain, sends onboarding email
 
-import { validateDomainToken } from '../_lib/domain-token.js';
+import { validateDomainToken, generateDomainToken } from '../_lib/domain-token.js';
+import { purchaseAndConfigureDomain } from '../_lib/porkbun.js';
+import { sendEmail } from '../_lib/sendgrid.js';
+import { siteEditsOnboardingEmail } from '../_lib/email-templates.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -55,7 +58,8 @@ export default async function handler(req, res) {
       return res.status(200).send(confirmationPage(
         business.name,
         domainData.customer_selected,
-        true // already selected
+        true,
+        !!domainData.purchased_at
       ));
     }
 
@@ -66,13 +70,27 @@ export default async function handler(req, res) {
       return res.status(400).send(errorPage('Este dominio no es una opción válida. Por favor selecciona uno de los dominios del correo.'));
     }
 
-    // Record the selection in outreach_steps._domain
+    // Record the selection
     const updatedDomain = {
       ...domainData,
       selected: domain,
       customer_selected: domain,
       customer_selected_at: new Date().toISOString(),
     };
+
+    // Purchase domain via Porkbun + configure DNS for Vercel
+    let purchaseSuccess = false;
+    try {
+      await purchaseAndConfigureDomain(domain);
+      updatedDomain.purchased_at = new Date().toISOString();
+      updatedDomain.purchase_status = 'completed';
+      purchaseSuccess = true;
+    } catch (purchaseErr) {
+      console.error('Domain purchase error (non-blocking):', purchaseErr);
+      updatedDomain.purchase_status = 'failed';
+      updatedDomain.purchase_error = purchaseErr.message;
+    }
+
     const updatedSteps = { ...steps, _domain: updatedDomain };
 
     await fetch(
@@ -84,14 +102,60 @@ export default async function handler(req, res) {
       }
     );
 
-    return res.status(200).send(confirmationPage(business.name, domain, false));
+    // Send onboarding email about site edits (non-blocking)
+    try {
+      // Look up customer email for this business
+      const custRes = await fetch(
+        `${supabaseUrl}/rest/v1/customers?business_id=eq.${encodeURIComponent(businessId)}&select=id,email,contact_name&limit=1`,
+        { headers: supabaseHeaders }
+      );
+      const custData = await custRes.json();
+      if (custData && custData.length > 0 && custData[0].email) {
+        const customer = custData[0];
+        const origin = 'https://ahoratengopagina.com';
+        const onboardingToken = generateDomainToken(businessId, 30); // 30-day expiry
+        const onboardingUrl = `${origin}/api/onboarding/site-edits?t=${encodeURIComponent(onboardingToken)}`;
+        const portalUrl = `${origin}/mipagina`;
+        const whatsappPhone = '5215512345678'; // TODO: configure per-operator
+
+        const emailContent = siteEditsOnboardingEmail({
+          contactName: customer.contact_name || '',
+          businessName: business.name || '',
+          onboardingUrl,
+          portalUrl,
+          whatsappPhone,
+        });
+        await sendEmail({
+          to: customer.email,
+          ...emailContent,
+          from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
+          replyTo: 'andres@ahoratengopagina.com',
+        });
+      }
+    } catch (emailErr) {
+      console.warn('Onboarding email error (non-blocking):', emailErr);
+    }
+
+    return res.status(200).send(confirmationPage(business.name, domain, false, purchaseSuccess));
   } catch (err) {
     console.error('Domain select error:', err);
     return res.status(500).send(errorPage('Ocurrió un error. Por favor intenta de nuevo o contáctanos.'));
   }
 }
 
-function confirmationPage(businessName, domain, alreadySelected) {
+function confirmationPage(businessName, domain, alreadySelected, domainPurchased) {
+  const nextStepsHtml = domainPurchased
+    ? `<div class="info">
+        <p><strong>¿Qué sigue?</strong></p>
+        <p>Tu dominio <strong>${esc(domain)}</strong> ya fue registrado a tu nombre. Ahora puedes personalizar tu página web antes de publicarla.</p>
+        <p>Revisa tu correo — te enviamos las opciones para personalizar tu página.</p>
+      </div>`
+    : `<div class="info">
+        <p><strong>¿Qué sigue?</strong></p>
+        <p>Nuestro equipo registrará tu dominio y lo preparará para tu página web. Te notificaremos por correo con los siguientes pasos.</p>
+        <p>Este proceso normalmente toma 1–2 días hábiles.</p>
+      </div>`;
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -127,11 +191,7 @@ function confirmationPage(businessName, domain, alreadySelected) {
       : `Has seleccionado el dominio para <strong>${esc(businessName)}</strong>:`
     }</p>
     <div class="domain-badge">${esc(domain)}</div>
-    <div class="info">
-      <p><strong>¿Qué sigue?</strong></p>
-      <p>Nuestro equipo registrará tu dominio y lo conectará a tu página web. Te notificaremos por correo cuando esté listo.</p>
-      <p>Este proceso normalmente toma 1–2 días hábiles.</p>
-    </div>
+    ${nextStepsHtml}
   </div>
 </div>
 </body>

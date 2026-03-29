@@ -2,7 +2,7 @@
 // POST — receives Stripe webhook events and updates database
 
 import { sendEmail } from '../_lib/sendgrid.js';
-import { getTemplateForTrigger, domainSelectionEmail } from '../_lib/email-templates.js';
+import { getTemplateForTrigger, domainSelectionEmail, siteEditsOnboardingEmail } from '../_lib/email-templates.js';
 import { generateDomainToken } from '../_lib/domain-token.js';
 
 // Disable body parsing so we can verify the raw signature
@@ -169,10 +169,12 @@ export default async function handler(req, res) {
               }
 
               // Send domain selection email if suggestions exist and not yet selected (non-blocking)
+              let hasDomainSuggestions = false;
               try {
                 if (customer.business_id) {
                   const domainSuggestions = await getDomainSuggestions(customer.business_id, supabaseUrl, supabaseHeaders);
                   if (domainSuggestions && domainSuggestions.length > 0) {
+                    hasDomainSuggestions = true;
                     const token = generateDomainToken(customer.business_id);
                     const selectBaseUrl = origin + '/api/domains/select-domain';
                     const domainContent = domainSelectionEmail({
@@ -187,6 +189,25 @@ export default async function handler(req, res) {
                 }
               } catch (domainErr) {
                 console.warn('Domain selection email error (non-blocking):', domainErr);
+              }
+
+              // Send onboarding email if no domain suggestions (otherwise sent after domain selection)
+              if (!hasDomainSuggestions && customer.business_id) {
+                try {
+                  const onboardingToken = generateDomainToken(customer.business_id, 30);
+                  const onboardingUrl = `${origin}/api/onboarding/site-edits?t=${encodeURIComponent(onboardingToken)}`;
+                  const whatsappPhone = '5215512345678'; // TODO: configure per-operator
+                  const onboardingContent = siteEditsOnboardingEmail({
+                    contactName: customer.contact_name || '',
+                    businessName: businessName || '',
+                    onboardingUrl,
+                    portalUrl,
+                    whatsappPhone,
+                  });
+                  await sendEmail({ to: customer.email, ...onboardingContent, from: emailFrom, replyTo: emailReplyTo });
+                } catch (onboardErr) {
+                  console.warn('Onboarding email error (non-blocking):', onboardErr);
+                }
               }
             }
           } catch (authErr) {
