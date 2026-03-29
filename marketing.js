@@ -42,7 +42,7 @@
 
       case_tag: 'Caso de Éxito',
       case_title: 'María aumentó sus citas un 40% en el primer mes',
-      case_desc: 'María tiene un salón de uñas en Bogotá. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+      case_desc: 'María tiene un salón de uñas en Guadalajara. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
       case_stat1: 'Más clientes',
       case_stat2: 'Más visitas',
       case_stat3: 'Citas perdidas',
@@ -233,12 +233,20 @@
     },
     // ── Country-specific overrides (only keys that differ from base es) ──
     es_CO: {
+      case_title: 'Carolina aumentó sus citas un 40% en el primer mes',
+      case_desc: 'Carolina tiene una peluquería en Medellín. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+      modal_name_ph: 'Ej: Carolina López',
+      modal_business_ph: 'Ej: Peluquería Sandra',
       modal_address_ph: 'Ej: Calle 80 #45-20, Medellín',
-      case_desc: 'María tiene un salón de uñas en Bogotá. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+      footer_desc: 'Creamos páginas web profesionales para negocios locales en Colombia. Simple, rápido y sin complicaciones.',
     },
     es_EC: {
+      case_title: 'Patricia aumentó sus citas un 40% en el primer mes',
+      case_desc: 'Patricia tiene una peluquería en Guayaquil. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+      modal_name_ph: 'Ej: Patricia Reyes',
+      modal_business_ph: 'Ej: Cevichería Don Luis',
       modal_address_ph: 'Ej: Av. 6 de Diciembre N34-120, Quito',
-      case_desc: 'María tiene un salón de uñas en Quito. Sus clientes la encontraban en Google pero no podían ver sus servicios ni agendar citas. Con su nueva página web, ahora recibe reservas directas y sus clientes tienen toda la información que necesitan.',
+      footer_desc: 'Creamos páginas web profesionales para negocios locales en Ecuador. Simple, rápido y sin complicaciones.',
     }
   };
 
