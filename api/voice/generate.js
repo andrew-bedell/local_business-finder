@@ -3,17 +3,17 @@
 
 export const config = { maxDuration: 30 };
 
-// Voice IDs per country — ElevenLabs premade voices with eleven_multilingual_v2
-// Each country gets a distinct voice so outreach feels regionally appropriate
+// Voice IDs per country — custom-generated voices with regional Latin American accents
+// Created via ElevenLabs text-to-voice API with country-specific accent descriptions
 const VOICE_MAP = {
-  'MX': 'onwK4e9ZLuTAKqWW03F9', // Daniel — friendly, relatable (Mexico)
-  'CO': 'JBFqnCBsd6RMkjVDRZzb', // George — warm, conversational (Colombia)
-  'EC': 'TX3LPaxmHKxFdv7VOQHJ', // Liam — approachable, casual (Ecuador)
-  'PE': 'cjVigY5qzO86Huf0OWal', // Eric — clear, professional (Peru)
-  'AR': 'nPczCjzI2devNBz1zQrb', // Brian — confident, warm (Argentina)
-  'CL': 'N2lVS1w4EtoT3dr4eOWO', // Callum — calm, trustworthy (Chile)
+  'MX': 'Mi8wpbNOfH9kjRcWIkd8', // Andres-MX — Mexican accent
+  'CO': 'X3tazE9LEDu76yoJEjVd', // Andres-CO — Colombian accent
+  'EC': 'nKhGuxCKswJIKJwwq7uX', // Andres-EC — Ecuadorian accent
+  'PE': 'B8XVO1qPoixuzWW64wjt', // Andres-PE — Peruvian accent
+  'AR': 'ZGVZYlb8ZHiT81XiBbtU', // Andres-AR — Argentine accent
+  'CL': 'qWxg6pWpiLLjrQpHzZEG', // Andres-CL — Chilean accent
 };
-const DEFAULT_VOICE = 'onwK4e9ZLuTAKqWW03F9'; // Daniel — default Latin American
+const DEFAULT_VOICE = 'Mi8wpbNOfH9kjRcWIkd8'; // Andres-MX — default
 
 const MESSAGE_TEMPLATE = `Hola, qué tal? Buenas.
 
@@ -69,6 +69,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         text: messageText,
         model_id: 'eleven_multilingual_v2',
+        language_code: 'es',
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
