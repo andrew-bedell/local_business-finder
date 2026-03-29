@@ -1726,85 +1726,113 @@
   }
 
   // ── Pipeline Progress Popup ──
-  function showPipelinePopup(businessName) {
-    // Remove existing popup if any
-    const existing = document.getElementById('pipeline-popup-overlay');
-    if (existing) existing.remove();
+  // Track active pipelines for the shared popup
+  let pipelinePopupOverlay = null;
+  let pipelinePopupCount = 0;
+  let pipelinePopupDone = 0;
 
-    const overlay = document.createElement('div');
-    overlay.id = 'pipeline-popup-overlay';
-    overlay.className = 'modal-overlay';
-    overlay.style.zIndex = '2500';
-    overlay.innerHTML = `
-      <div class="modal-content" style="max-width:420px;padding:24px">
-        <h2 style="margin:0 0 20px;font-size:18px">${t('pipelineTitle', escapeHtml(businessName))}</h2>
-        <div id="pipeline-steps">
-          <div class="pipeline-step" id="pipeline-step-report">
-            <span class="pipeline-icon">&#9711;</span>
-            <span class="pipeline-label">${t('pipelineStepReport')}</span>
-            <span class="pipeline-status" style="color:var(--text-dim)">${t('pipelineStatusPending')}</span>
-          </div>
-          <div class="pipeline-step" id="pipeline-step-photos">
-            <span class="pipeline-icon">&#9711;</span>
-            <span class="pipeline-label">${t('pipelineStepPhotos')}</span>
-            <span class="pipeline-status" style="color:var(--text-dim)">${t('pipelineStatusPending')}</span>
-          </div>
-          <div class="pipeline-step" id="pipeline-step-website">
-            <span class="pipeline-icon">&#9711;</span>
-            <span class="pipeline-label">${t('pipelineStepWebsite')}</span>
-            <span class="pipeline-status" style="color:var(--text-dim)">${t('pipelineStatusPending')}</span>
-          </div>
+  function showPipelinePopup(businessName) {
+    const uid = 'pp_' + Math.random().toString(36).substring(2, 8);
+
+    // Create or reuse the shared popup overlay
+    if (!pipelinePopupOverlay || !document.body.contains(pipelinePopupOverlay)) {
+      pipelinePopupOverlay = document.createElement('div');
+      pipelinePopupOverlay.id = 'pipeline-popup-overlay';
+      pipelinePopupOverlay.className = 'modal-overlay';
+      pipelinePopupOverlay.style.zIndex = '2500';
+      pipelinePopupOverlay.innerHTML = `
+        <div class="modal-content" style="max-width:520px;padding:24px;max-height:80vh;overflow-y:auto">
+          <h2 style="margin:0 0 16px;font-size:18px">${t('pipelineTitle', '')}</h2>
+          <div id="pipeline-entries"></div>
+          <button class="btn btn-secondary" id="pipeline-close-btn" style="margin-top:16px;width:100%;display:none">${t('pipelineClose')}</button>
         </div>
-        <button class="btn btn-secondary" id="pipeline-close-btn" style="margin-top:20px;width:100%;display:none">${t('pipelineClose')}</button>
+      `;
+      document.body.appendChild(pipelinePopupOverlay);
+      const closeBtn = pipelinePopupOverlay.querySelector('#pipeline-close-btn');
+      closeBtn.addEventListener('click', () => {
+        pipelinePopupOverlay.remove();
+        pipelinePopupOverlay = null;
+        pipelinePopupCount = 0;
+        pipelinePopupDone = 0;
+      });
+      pipelinePopupCount = 0;
+      pipelinePopupDone = 0;
+    }
+
+    pipelinePopupCount++;
+    // Update header to show count
+    const h2 = pipelinePopupOverlay.querySelector('h2');
+    if (h2) h2.textContent = pipelinePopupCount === 1
+      ? t('pipelineTitle', escapeHtml(businessName))
+      : t('pipelineTitle', pipelinePopupCount + ' websites');
+
+    // Add entry for this business
+    const container = pipelinePopupOverlay.querySelector('#pipeline-entries');
+    const entry = document.createElement('div');
+    entry.id = uid;
+    entry.style.cssText = 'margin-bottom:16px;padding:12px;background:var(--bg-input);border-radius:8px;';
+    entry.innerHTML = `
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px">${escapeHtml(businessName)}</div>
+      <div class="pipeline-step" data-step="report" style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;">
+        <span class="pipeline-icon" style="font-size:16px;width:20px;text-align:center">&#9711;</span>
+        <span class="pipeline-label" style="flex:1">${t('pipelineStepReport')}</span>
+        <span class="pipeline-status" style="font-size:12px;color:var(--text-dim)">${t('pipelineStatusPending')}</span>
+      </div>
+      <div class="pipeline-step" data-step="photos" style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;">
+        <span class="pipeline-icon" style="font-size:16px;width:20px;text-align:center">&#9711;</span>
+        <span class="pipeline-label" style="flex:1">${t('pipelineStepPhotos')}</span>
+        <span class="pipeline-status" style="font-size:12px;color:var(--text-dim)">${t('pipelineStatusPending')}</span>
+      </div>
+      <div class="pipeline-step" data-step="website" style="display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px;">
+        <span class="pipeline-icon" style="font-size:16px;width:20px;text-align:center">&#9711;</span>
+        <span class="pipeline-label" style="flex:1">${t('pipelineStepWebsite')}</span>
+        <span class="pipeline-status" style="font-size:12px;color:var(--text-dim)">${t('pipelineStatusPending')}</span>
       </div>
     `;
-    document.body.appendChild(overlay);
+    container.appendChild(entry);
 
-    // Style the steps
-    overlay.querySelectorAll('.pipeline-step').forEach(step => {
-      step.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;';
-    });
-    overlay.querySelectorAll('.pipeline-icon').forEach(icon => {
-      icon.style.cssText = 'font-size:18px;width:24px;text-align:center;';
-    });
-    overlay.querySelectorAll('.pipeline-label').forEach(label => {
-      label.style.cssText = 'flex:1;font-weight:600;';
-    });
-    overlay.querySelectorAll('.pipeline-status').forEach(status => {
-      status.style.cssText = 'font-size:13px;';
-    });
+    function updateStep(stepId, state) {
+      const step = entry.querySelector(`[data-step="${stepId}"]`);
+      if (!step) return;
+      const icon = step.querySelector('.pipeline-icon');
+      const status = step.querySelector('.pipeline-status');
+      if (state === 'running') {
+        icon.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px"></span>';
+        status.textContent = t('pipelineStatusRunning');
+        status.style.color = 'var(--primary)';
+      } else if (state === 'done') {
+        icon.textContent = '\u2713';
+        icon.style.color = 'var(--success)';
+        status.textContent = t('pipelineStatusDone');
+        status.style.color = 'var(--success)';
+      } else if (state === 'error') {
+        icon.textContent = '\u2717';
+        icon.style.color = 'var(--danger)';
+        status.textContent = t('pipelineStatusError');
+        status.style.color = 'var(--danger)';
+      }
+    }
 
-    const closeBtn = document.getElementById('pipeline-close-btn');
-    closeBtn.addEventListener('click', () => overlay.remove());
+    function markFinished() {
+      pipelinePopupDone++;
+      if (pipelinePopupDone >= pipelinePopupCount && pipelinePopupOverlay) {
+        const btn = pipelinePopupOverlay.querySelector('#pipeline-close-btn');
+        if (btn) btn.style.display = '';
+      }
+    }
 
     return {
-      setStep(stepId, state) {
-        const step = document.getElementById('pipeline-step-' + stepId);
-        if (!step) return;
-        const icon = step.querySelector('.pipeline-icon');
-        const status = step.querySelector('.pipeline-status');
-        if (state === 'running') {
-          icon.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px"></span>';
-          status.textContent = t('pipelineStatusRunning');
-          status.style.color = 'var(--primary)';
-        } else if (state === 'done') {
-          icon.textContent = '\u2713';
-          icon.style.color = 'var(--success)';
-          status.textContent = t('pipelineStatusDone');
-          status.style.color = 'var(--success)';
-        } else if (state === 'error') {
-          icon.textContent = '\u2717';
-          icon.style.color = 'var(--danger)';
-          status.textContent = t('pipelineStatusError');
-          status.style.color = 'var(--danger)';
-        }
-      },
-      showClose() {
-        const btn = document.getElementById('pipeline-close-btn');
-        if (btn) btn.style.display = '';
-      },
+      setStep: updateStep,
+      showClose: markFinished,
       close() {
-        overlay.remove();
+        if (entry.parentNode) entry.remove();
+        // If no entries left, close the overlay
+        if (container && container.children.length === 0 && pipelinePopupOverlay) {
+          pipelinePopupOverlay.remove();
+          pipelinePopupOverlay = null;
+          pipelinePopupCount = 0;
+          pipelinePopupDone = 0;
+        }
       }
     };
   }
