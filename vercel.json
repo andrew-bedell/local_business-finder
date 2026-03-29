@@ -35,6 +35,7 @@
     { "source": "/checkout/:id", "destination": "/checkout/index.html" },
     { "source": "/sitio/:slug", "destination": "/api/sitio/serve?slug=:slug" },
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
+    { "source": "/editorial", "destination": "/editorial.html" },
     { "source": "/about", "destination": "/about.html" },
     {
       "source": "/:path*",
