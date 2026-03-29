@@ -315,6 +315,14 @@
       onCountryReady();
       return;
     }
+    // URL param override: ?country=CO
+    var urlCountry = (new URLSearchParams(window.location.search).get('country') || '').toUpperCase();
+    if (urlCountry && /^[A-Z]{2}$/.test(urlCountry)) {
+      currentCountry = urlCountry;
+      localStorage.setItem('m_country', currentCountry);
+      onCountryReady();
+      return;
+    }
     fetch('/api/geo')
       .then(function(res) { return res.json(); })
       .then(function(data) {
