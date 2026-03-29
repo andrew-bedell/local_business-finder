@@ -193,7 +193,7 @@ async function ensureContact({ businessId, contactName, contactEmail, contactPho
   });
 }
 
-export async function matchOrCreateBusiness({ businessName, email, phone, contactName, contactWhatsapp, address, countryCode, supabaseUrl, supabaseKey }) {
+export async function matchOrCreateBusiness({ businessName, email, phone, contactName, contactWhatsapp, address, countryCode, leadSource, supabaseUrl, supabaseKey }) {
   const headers = {
     'apikey': supabaseKey,
     'Authorization': `Bearer ${supabaseKey}`,
@@ -371,6 +371,7 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       contact_phone: normalizedPhone || null,
       contact_whatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
       pipeline_status: 'saved',
+      lead_source: leadSource || 'website_form',
     };
   } else {
     // Synthetic business (no Google data available) — still save form address + country
@@ -389,6 +390,7 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       contact_phone: normalizedPhone || null,
       contact_whatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
       pipeline_status: 'saved',
+      lead_source: leadSource || 'website_form',
     };
   }
 

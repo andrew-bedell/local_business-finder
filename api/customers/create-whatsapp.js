@@ -47,6 +47,7 @@ export default async function handler(req, res) {
       owner_name: contactName || null,
       pipeline_status: 'lead',
       pipeline_status_changed_at: new Date().toISOString(),
+      lead_source: 'whatsapp_inbound',
       data_completeness_score: 0,
     };
 
