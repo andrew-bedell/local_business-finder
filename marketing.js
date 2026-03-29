@@ -311,15 +311,15 @@
   };
 
   function detectCountry() {
-    if (currentCountry) {
-      onCountryReady();
-      return;
-    }
-    // URL param override: ?country=CO
+    // URL param override always wins: ?country=CO
     var urlCountry = (new URLSearchParams(window.location.search).get('country') || '').toUpperCase();
     if (urlCountry && /^[A-Z]{2}$/.test(urlCountry)) {
       currentCountry = urlCountry;
       localStorage.setItem('m_country', currentCountry);
+      onCountryReady();
+      return;
+    }
+    if (currentCountry) {
       onCountryReady();
       return;
     }
