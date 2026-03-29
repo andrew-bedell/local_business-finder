@@ -3045,6 +3045,56 @@ a.c-btn-white {
   }
 }
 
+/* ── Wizard Catalog Upload ── */
+.c-wizard-catalog-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.c-wizard-catalog-hint {
+  color: var(--c-text-dim);
+  font-size: 13px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.c-wizard-catalog-upload-zone {
+  border: 2px dashed var(--c-border);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-dim);
+  font-size: 13px;
+}
+
+.c-wizard-catalog-upload-zone:hover,
+.c-wizard-catalog-upload-zone.drag-over {
+  border-color: var(--c-accent);
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.c-wizard-catalog-upload-zone.uploading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.c-wizard-catalog-parsing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  color: var(--c-accent);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 /* ── Wizard Menu ── */
 .c-wizard-menu-hint {
   color: var(--c-text-dim);
