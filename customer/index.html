@@ -1395,6 +1395,21 @@
               <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
             </button>
             <div class="c-wizard-card-body" id="wiz-body-services">
+              <!-- Catalog/PDF upload -->
+              <div class="c-wizard-catalog-section">
+                <p class="c-wizard-catalog-hint">Sube una foto o PDF de tu catálogo o lista de precios para extraer los servicios automáticamente.</p>
+                <div class="c-wizard-catalog-upload-zone" id="wiz-catalog-upload-zone">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28" style="opacity:0.4"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11zm-3-7h-2V9h-2v4H9l3 3 3-3z"/></svg>
+                  <span>Arrastra o haz clic para subir catálogo</span>
+                  <div class="c-wizard-upload-hint">Imagen o PDF. Máximo 10MB.</div>
+                  <input type="file" id="wiz-catalog-input" accept="image/*,application/pdf" hidden>
+                </div>
+                <div class="c-wizard-catalog-parsing" id="wiz-catalog-parsing" style="display:none">
+                  <span class="c-wizard-progress-spinner"></span>
+                  <span>Analizando catálogo...</span>
+                </div>
+              </div>
+
               <div class="c-wizard-service-list" id="wiz-service-list"></div>
               <div class="c-wizard-service-form" id="wiz-service-form">
                 <div class="c-form-group">

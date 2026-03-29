@@ -4915,6 +4915,107 @@
     }
   }
 
+  // ── Catalog/PDF Upload for Services ──
+
+  async function handleCatalogUpload(files) {
+    var token = await getAuthToken();
+    if (!token) return;
+
+    var uploadZone = document.getElementById('wiz-catalog-upload-zone');
+    var parsingEl = document.getElementById('wiz-catalog-parsing');
+
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      var isImage = file.type.startsWith('image/');
+      var isPdf = file.type === 'application/pdf';
+      if (!isImage && !isPdf) {
+        showToast('Formato no soportado. Usa imagen o PDF.', 'warning');
+        continue;
+      }
+
+      var maxSize = isPdf ? 10 * 1024 * 1024 : 4 * 1024 * 1024;
+      if (file.size > maxSize) {
+        showToast(isPdf ? 'PDF demasiado grande. Máximo 10MB.' : 'Imagen demasiado grande. Máximo 4MB.', 'warning');
+        continue;
+      }
+
+      if (uploadZone) uploadZone.classList.add('uploading');
+
+      try {
+        var buffer = await file.arrayBuffer();
+
+        // Upload the file
+        var uploadRes = await fetch('/api/wizard/upload-catalog', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': file.type,
+          },
+          body: buffer,
+        });
+
+        if (!uploadRes.ok) {
+          var errData = await uploadRes.json().catch(function () { return {}; });
+          throw new Error(errData.error || 'Upload failed');
+        }
+
+        var uploadData = await uploadRes.json();
+
+        // Parse the catalog
+        if (parsingEl) parsingEl.style.display = 'flex';
+
+        var parseRes = await fetch('/api/catalog/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl: uploadData.public_url,
+            currency: 'MXN',
+            businessType: (businessData && businessData.category) || '',
+          }),
+        });
+
+        if (parseRes.ok) {
+          var parsed = await parseRes.json();
+          if (parsed.services && parsed.services.length > 0) {
+            var savedCount = 0;
+            for (var j = 0; j < parsed.services.length; j++) {
+              var svc = parsed.services[j];
+              var insertResult = await supabase.from('business_services').insert({
+                business_id: businessData.id,
+                name: svc.name,
+                description: svc.description || '',
+                price: svc.price,
+                currency: svc.currency || 'MXN',
+                sort_order: wizardServices.length + j,
+              }).select();
+
+              if (insertResult.data && insertResult.data[0]) {
+                wizardServices.push(insertResult.data[0]);
+                savedCount++;
+              }
+            }
+
+            if (savedCount > 0) {
+              showToast(savedCount + ' servicios extraídos del catálogo', 'success');
+            }
+          } else {
+            showToast('No se encontraron servicios en el archivo', 'warning');
+          }
+        } else {
+          showToast('No se pudo analizar el catálogo', 'warning');
+        }
+      } catch (err) {
+        console.error('Catalog upload/parse error:', err);
+        showToast('Error al procesar el catálogo', 'error');
+      }
+    }
+
+    if (uploadZone) uploadZone.classList.remove('uploading');
+    if (parsingEl) parsingEl.style.display = 'none';
+    renderWizardServices();
+    refreshWizardScore();
+  }
+
   // ── Menu Wizard ──
 
   function renderWizardMenu() {
@@ -5346,6 +5447,35 @@
     if (svcSaveBtn) {
       svcSaveBtn.addEventListener('click', function () {
         saveWizardService();
+      });
+    }
+
+    // Catalog/PDF upload zone
+    var catalogUploadZone = document.getElementById('wiz-catalog-upload-zone');
+    var catalogInput = document.getElementById('wiz-catalog-input');
+    if (catalogUploadZone && catalogInput) {
+      catalogUploadZone.addEventListener('click', function () {
+        catalogInput.click();
+      });
+      catalogInput.addEventListener('change', function () {
+        if (catalogInput.files && catalogInput.files.length > 0) {
+          handleCatalogUpload(catalogInput.files);
+          catalogInput.value = '';
+        }
+      });
+      catalogUploadZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        catalogUploadZone.classList.add('drag-over');
+      });
+      catalogUploadZone.addEventListener('dragleave', function () {
+        catalogUploadZone.classList.remove('drag-over');
+      });
+      catalogUploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        catalogUploadZone.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleCatalogUpload(e.dataTransfer.files);
+        }
       });
     }
 
