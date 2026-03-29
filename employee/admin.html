@@ -1230,6 +1230,10 @@
               <div class="or-stat-value" id="or-stat-complete">--</div>
               <div class="or-stat-label" data-i18n="orStatComplete">Complete</div>
             </div>
+            <div class="or-stat-card or-stat-card-muted">
+              <div class="or-stat-value" id="or-stat-cancelled">--</div>
+              <div class="or-stat-label" data-i18n="orStatCancelled">Cancelled</div>
+            </div>
           </div>
         </div>
 
@@ -1331,6 +1335,26 @@
             </table>
           </div>
           <div class="or-empty" id="or-complete-empty"><p data-i18n="orNoComplete">No outreach completed yet.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-cancelled-card">
+          <div class="card-header">
+            <h2 data-i18n="orCancelledTitle">Cancelled Outreach</h2>
+            <span class="badge badge-no-site" id="or-cancelled-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-cancelled-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThReason">Reason</th>
+                <th data-i18n="orThCancelledAt">Cancelled</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-cancelled-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-cancelled-empty"><p data-i18n="orNoCancelled">No cancelled outreach.</p></div>
         </div>
       </section>
 
