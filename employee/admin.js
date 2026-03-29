@@ -741,7 +741,7 @@
       outreachModalTitle: 'WhatsApp Outreach',
       outreachBusinessName: 'Business Name',
       outreachPhone: 'Phone',
-      outreachPreviewUrl: 'Preview URL',
+      outreachPreviewUrl: 'Website URL',
       outreachCopied: 'Copied!',
       outreachNoPhone: 'No phone number available',
       outreachYourName: 'Your Name',
@@ -1551,7 +1551,7 @@
       outreachModalTitle: 'Contacto por WhatsApp',
       outreachBusinessName: 'Nombre del Negocio',
       outreachPhone: 'Teléfono',
-      outreachPreviewUrl: 'Link de Vista Previa',
+      outreachPreviewUrl: 'Link del Sitio',
       outreachCopied: '¡Copiado!',
       outreachNoPhone: 'No hay número de teléfono',
       outreachYourName: 'Tu Nombre',
@@ -2406,6 +2406,31 @@
   }
 
   // ── Helpers ──
+
+  const COUNTRY_DIAL_CODES = {
+    MX: '52', CO: '57', US: '1', PE: '51', AR: '54', CL: '56',
+    EC: '593', GT: '502', HN: '504', CR: '506', PA: '507', DO: '1',
+    VE: '58', BR: '55', UY: '598', BO: '591', PY: '595', NI: '505', SV: '503',
+  };
+
+  function toE164(phone, addressCountry) {
+    if (!phone) return '';
+    let stripped = phone.replace(/[^\d+]/g, '');
+    if (!stripped) return phone;
+    if (stripped.startsWith('+')) return stripped;
+    const dialCode = addressCountry ? COUNTRY_DIAL_CODES[addressCountry.toUpperCase()] : null;
+    if (dialCode && stripped.startsWith(dialCode)) return '+' + stripped;
+    if (dialCode === '52' && stripped.length === 10) return '+52' + stripped;
+    if (dialCode === '57' && stripped.length === 10) return '+57' + stripped;
+    if (dialCode === '1' && stripped.length === 10) return '+1' + stripped;
+    if (dialCode && !stripped.startsWith(dialCode)) {
+      const total = dialCode.length + stripped.length;
+      if (total >= 7 && total <= 15) return '+' + dialCode + stripped;
+    }
+    if (stripped.length >= 10 && stripped.length <= 15) return '+' + stripped;
+    return phone;
+  }
+
   function hasProfile(business, platform) {
     const profiles = business.business_social_profiles || [];
     return profiles.some(p => p.platform === platform);
@@ -3186,7 +3211,8 @@
 
     const contacts = business.business_contacts || [];
     const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
-    const phone = (primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone)) || business.phone || '';
+    const rawPhone = (primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone)) || business.phone || '';
+    const phone = toE164(rawPhone, business.address_country) || rawPhone;
 
     const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
     const previewUrl = existingWebsiteRecord
@@ -5524,7 +5550,7 @@
             subcategory: business.subcategory || '',
           }),
         }),
-        120000, 'Content writing'
+        320000, 'Content writing'
       );
       if (!contentResp.ok) {
         const errData = await contentResp.json().catch(() => ({}));
@@ -5557,7 +5583,7 @@
             founderDescription: business.founder_description || '',
           }),
         }),
-        60000,
+        310000,
         'Website generation'
       );
       clearInterval(timerInterval);
@@ -6257,7 +6283,7 @@
             subcategory: business.subcategory || '',
           }),
         }),
-        120000, 'Content writing'
+        320000, 'Content writing'
       );
       if (!contentResp.ok) {
         const errData = await contentResp.json().catch(() => ({}));
@@ -6290,7 +6316,7 @@
             founderDescription: business.founder_description || '',
           }),
         }),
-        60000,
+        310000,
         'Website generation'
       );
 
@@ -6369,7 +6395,6 @@
           <button class="btn btn-secondary" id="website-download-btn">${t('websiteDownload')}</button>
           <button class="btn btn-secondary" id="website-new-tab-btn">${t('websiteOpenNewTab')}</button>
           ${websiteUuid ? `<button class="btn btn-secondary" id="website-copy-link-btn">${t('websiteCopyLink')}</button>` : ''}
-          ${websiteUuid && business.phone ? `<button class="btn btn-secondary" id="website-whatsapp-btn" style="background:var(--success);color:#fff;border-color:var(--success)">${t('websiteSendWhatsApp')}</button>` : ''}
           ${lifecycleButtons}
         </div>
         <iframe id="website-preview-iframe" class="website-preview-iframe" sandbox="allow-same-origin"></iframe>
@@ -6398,12 +6423,12 @@
       window.open(url, '_blank');
     });
 
-    // Copy preview link
+    // Copy link (prefer published URL, fall back to preview)
     const copyLinkBtn = container.querySelector('#website-copy-link-btn');
     if (copyLinkBtn && websiteUuid) {
       copyLinkBtn.addEventListener('click', () => {
-        const previewUrl = `${window.location.origin}/ver/${websiteUuid}`;
-        copyToClipboard(previewUrl, t('websiteLinkCopied'));
+        const url = publishedUrl || `${window.location.origin}/ver/${websiteUuid}`;
+        copyToClipboard(url, t('websiteLinkCopied'));
       });
     }
 
@@ -6421,29 +6446,6 @@
     bindLifecycleBtn(container, '#website-suspend-btn', 'suspend', websiteUuid, business, modal, html);
     bindLifecycleBtn(container, '#website-reactivate-btn', 'reactivate', websiteUuid, business, modal, html);
 
-    // Send via WhatsApp
-    const whatsappBtn = container.querySelector('#website-whatsapp-btn');
-    if (whatsappBtn && websiteUuid && business.phone) {
-      whatsappBtn.addEventListener('click', async () => {
-        const previewUrl = `${window.location.origin}/ver/${websiteUuid}`;
-        const message = `¡Hola! Tu página web ya está lista para revisar: ${previewUrl}`;
-        try {
-          await fetch('/api/whatsapp/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: business.phone,
-              message: message,
-              businessId: business.id,
-            }),
-          });
-          showToast(t('msgSendSuccess'), 'success');
-        } catch (err) {
-          console.error('WhatsApp send error:', err);
-          showToast(t('msgSendError'), 'error');
-        }
-      });
-    }
   }
 
   function copyToClipboard(text, successMsg) {
@@ -6564,10 +6566,41 @@
       if (error) {
         console.warn('Website save error:', error);
       } else {
-        showToast(t('websiteSaved'), 'success');
         // Update local business object so the ✓ button works immediately
         if (!business.generated_websites) business.generated_websites = [];
         if (data && data[0]) business.generated_websites.push(data[0]);
+
+        // Auto-publish the website immediately
+        const websiteId = data && data[0] && data[0].id;
+        if (websiteId) {
+          try {
+            const pubRes = await fetch('/api/websites/publish', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ websiteId, action: 'publish' }),
+            });
+            if (pubRes.ok) {
+              const pubData = await pubRes.json();
+              // Update the local website record with published state
+              const localRecord = business.generated_websites.find(w => w.id === websiteId);
+              if (localRecord) {
+                localRecord.status = 'published';
+                localRecord.site_status = 'active';
+                localRecord.published_url = pubData.website.published_url;
+              }
+              showToast(t('websiteSaved'), 'success');
+            } else {
+              console.warn('Auto-publish failed, website saved as draft');
+              showToast(t('websiteSaved'), 'success');
+            }
+          } catch (pubErr) {
+            console.warn('Auto-publish error (non-fatal):', pubErr);
+            showToast(t('websiteSaved'), 'success');
+          }
+        } else {
+          showToast(t('websiteSaved'), 'success');
+        }
+
         // Refresh stats
         loadStats();
       }
