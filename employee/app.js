@@ -2581,6 +2581,9 @@
             place.enrichedData = data;
             // Merge enriched data into place object (don't overwrite existing)
             if (!place.description && data.description) place.description = data.description;
+            if ((!place.hours || place.hours.length === 0) && data.hours && data.hours.length > 0) {
+              place.hours = data.hours;
+            }
             if ((!place.serviceOptions || place.serviceOptions.length === 0) && data.serviceOptions) {
               place.serviceOptions = data.serviceOptions;
             }

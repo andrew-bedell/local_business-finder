@@ -71,8 +71,21 @@ export default async function handler(req, res) {
       url: wr.link || '',
     }));
 
+    // Parse open_hours into weekday descriptions array
+    const hours = [];
+    if (place.open_hours) {
+      const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      for (const day of dayOrder) {
+        if (place.open_hours[day]) {
+          const capitalized = day.charAt(0).toUpperCase() + day.slice(1);
+          hours.push(`${capitalized}: ${place.open_hours[day]}`);
+        }
+      }
+    }
+
     const result = {
       description: place.description || '',
+      hours: hours,
       serviceOptions: extensions.serviceOptions,
       amenities: extensions.amenities,
       highlights: extensions.highlights,
