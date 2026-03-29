@@ -763,6 +763,12 @@
       outreachSending: 'Sending...',
       outreachSentSuccess: 'Message sent!',
       outreachSendError: 'Failed to send message',
+      outreachVoiceLabel: 'Voice Message',
+      outreachVoiceGenerate: 'Generate Voice Message',
+      outreachVoiceGenerating: 'Generating...',
+      outreachVoiceRegenerate: 'Regenerate',
+      outreachVoiceSuccess: 'Voice message generated',
+      outreachVoiceError: 'Failed to generate voice message',
       outreachConfirmSend: 'Send this message to {0}?',
       // Demo Analytics
       navDemoAnalytics: 'Demo Analytics',
@@ -1521,6 +1527,12 @@
       outreachSending: 'Enviando...',
       outreachSentSuccess: '¡Mensaje enviado!',
       outreachSendError: 'Error al enviar mensaje',
+      outreachVoiceLabel: 'Mensaje de Voz',
+      outreachVoiceGenerate: 'Generar Mensaje de Voz',
+      outreachVoiceGenerating: 'Generando...',
+      outreachVoiceRegenerate: 'Regenerar',
+      outreachVoiceSuccess: 'Mensaje de voz generado',
+      outreachVoiceError: 'Error al generar mensaje de voz',
       outreachConfirmSend: '¿Enviar este mensaje a {0}?',
       // Demo Analytics
       navDemoAnalytics: 'Analíticas Demo',
@@ -3015,6 +3027,17 @@
               <input type="checkbox" id="outreach-auto-reply-cb"> ${t('outreachAutoReplyOff')}
             </label>
           </div>
+          <div class="outreach-voice-section">
+            <div class="outreach-label">${t('outreachVoiceLabel')}</div>
+            <div class="outreach-voice-content">
+              ${steps.voice && steps.voice.url
+                ? `<audio controls src="${escapeHtml(steps.voice.url)}" preload="metadata"></audio>
+                   <button class="btn btn-secondary" id="btn-regenerate-voice" style="padding:6px 12px;font-size:12px">${t('outreachVoiceRegenerate')}</button>
+                   <a href="${escapeHtml(steps.voice.url)}" download="${escapeHtml(business.name)}-voice.mp3" class="btn btn-secondary" style="padding:6px 12px;font-size:12px;text-decoration:none">Download</a>`
+                : `<button class="btn btn-primary" id="btn-generate-voice" style="padding:8px 16px;font-size:13px">${t('outreachVoiceGenerate')}</button>`
+              }
+            </div>
+          </div>
           <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
           <div class="outreach-steps-list">
             ${stepsHtml}
@@ -3171,6 +3194,49 @@
         }
       });
     }
+
+    // Voice message generation
+    async function handleVoiceGenerate() {
+      const genBtn = overlay.querySelector('#btn-generate-voice') || overlay.querySelector('#btn-regenerate-voice');
+      if (!genBtn) return;
+      genBtn.disabled = true;
+      genBtn.textContent = t('outreachVoiceGenerating');
+      try {
+        const resp = await fetch('/api/voice/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessId: business.id,
+            businessName: business.name,
+            country: business.address_country || 'MX',
+          }),
+        });
+        if (!resp.ok) throw new Error('Failed');
+        const result = await resp.json();
+
+        // Update local data
+        if (!business.outreach_steps) business.outreach_steps = {};
+        business.outreach_steps.voice = { url: result.url, generated_at: new Date().toISOString(), voice_id: result.voice_id };
+        const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+        if (ab) ab.outreach_steps = business.outreach_steps;
+        const cr = currentResults.find(b => String(b.id) === String(business.id));
+        if (cr) cr.outreach_steps = business.outreach_steps;
+
+        showToast(t('outreachVoiceSuccess'), 'success');
+        closeOutreach();
+        openOutreachModal(business);
+      } catch (err) {
+        console.error('Voice generation error:', err);
+        showToast(t('outreachVoiceError'), 'error');
+        genBtn.disabled = false;
+        genBtn.textContent = t('outreachVoiceGenerate');
+      }
+    }
+
+    const voiceGenBtn = overlay.querySelector('#btn-generate-voice');
+    if (voiceGenBtn) voiceGenBtn.addEventListener('click', handleVoiceGenerate);
+    const voiceRegenBtn = overlay.querySelector('#btn-regenerate-voice');
+    if (voiceRegenBtn) voiceRegenBtn.addEventListener('click', handleVoiceGenerate);
 
     // Close handlers
     function closeOutreach() {
