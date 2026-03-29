@@ -3045,6 +3045,171 @@ a.c-btn-white {
   }
 }
 
+/* ── Wizard Menu ── */
+.c-wizard-menu-hint {
+  color: var(--c-text-dim);
+  font-size: 13px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.c-wizard-menu-upload-zone {
+  border: 2px dashed var(--c-border);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-text-dim);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.c-wizard-menu-upload-zone:hover,
+.c-wizard-menu-upload-zone.drag-over {
+  border-color: var(--c-accent);
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.c-wizard-menu-upload-zone.uploading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.c-wizard-menu-photos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.c-wizard-menu-photo-thumb {
+  position: relative;
+  width: 100px;
+  height: 75px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+}
+
+.c-wizard-menu-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.c-wizard-menu-parsing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  color: var(--c-accent);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.c-wizard-menu-category {
+  margin-bottom: 16px;
+}
+
+.c-wizard-menu-category-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.c-wizard-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.c-wizard-menu-item:last-child {
+  border-bottom: none;
+}
+
+.c-wizard-menu-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.c-wizard-menu-item-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-text);
+}
+
+.c-wizard-menu-item-desc {
+  display: block;
+  font-size: 12px;
+  color: var(--c-text-dim);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.c-wizard-menu-item-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-accent);
+  white-space: nowrap;
+}
+
+.c-wizard-menu-item-delete {
+  background: none;
+  border: none;
+  color: var(--c-text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.c-wizard-menu-item:hover .c-wizard-menu-item-delete {
+  opacity: 1;
+}
+
+.c-wizard-menu-item-delete:hover {
+  color: var(--c-danger);
+}
+
+.c-wizard-menu-manual {
+  border-top: 1px solid var(--c-border);
+  padding-top: 12px;
+  margin-top: 14px;
+}
+
+.c-wizard-menu-manual summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-accent);
+  padding: 4px 0;
+}
+
+.c-wizard-menu-form {
+  padding-top: 12px;
+}
+
+.c-wizard-menu-form .c-form-group {
+  margin-bottom: 12px;
+}
+
 /* ── Wizard Generate Website CTA ── */
 .c-wizard-generate {
   margin-top: 24px;
