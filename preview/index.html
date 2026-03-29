@@ -301,6 +301,10 @@
       return;
     }
 
+    // Country override from URL param: ?country=CO
+    const urlParams = new URLSearchParams(window.location.search);
+    const countryParam = (urlParams.get('country') || '').toUpperCase();
+
     loadPreview(websiteId);
 
     async function loadPreview(id) {
@@ -334,8 +338,8 @@
         document.getElementById('pv-banner').style.display = '';
         document.getElementById('pv-iframe-wrapper').style.display = '';
 
-        // CTA button → checkout
-        var planesUrl = '/planes/' + id;
+        // CTA button → checkout (forward country param if present)
+        var planesUrl = '/planes/' + id + (countryParam ? '?country=' + countryParam : '');
         document.getElementById('pv-activate-btn').addEventListener('click', function() {
           window.location.href = planesUrl;
         });

@@ -11,7 +11,14 @@ export default function handler(req, res) {
     return res.status(200).end();
   }
 
-  const SUPPORTED = ['MX', 'CO', 'EC'];
+  const SUPPORTED = ['MX', 'CO', 'EC', 'PE', 'AR', 'CL'];
+
+  // Allow URL param override: /api/geo?country=CO
+  const override = (req.query.country || '').toUpperCase();
+  if (override && SUPPORTED.includes(override)) {
+    return res.status(200).json({ country: override });
+  }
+
   const detected = (req.headers['x-vercel-ip-country'] || '').toUpperCase();
   const country = SUPPORTED.includes(detected) ? detected : 'MX';
 

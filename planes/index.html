@@ -316,6 +316,9 @@ body { font-family: var(--font); background: var(--white); color: var(--text-dar
     localStorage.setItem('sales_rep_code_expiry', String(Date.now() + 30 * 24 * 60 * 60 * 1000));
   }
 
+  // Country override from URL param: ?country=CO
+  var countryParam = (urlParams.get('country') || '').toUpperCase();
+
   // FAQ toggle
   document.querySelectorAll('.faq-q').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -331,8 +334,18 @@ body { font-family: var(--font); background: var(--white); color: var(--text-dar
 
   async function init() {
     try {
+      // Detect country: URL param override > geo detection > default MX
+      var country = countryParam;
+      if (!country) {
+        try {
+          var geoRes = await fetch('/api/geo');
+          var geoData = await geoRes.json();
+          country = geoData.country || 'MX';
+        } catch (e) { country = 'MX'; }
+      }
+
       var responses = await Promise.all([
-        fetch('/api/products/list'),
+        fetch('/api/products/list?country=' + encodeURIComponent(country)),
         fetch('/api/preview/website?id=' + encodeURIComponent(websiteId))
       ]);
 
