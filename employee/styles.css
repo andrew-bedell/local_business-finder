@@ -451,13 +451,13 @@ select.input {
   background: var(--bg-hover);
 }
 
-.btn-text {
+.btn.btn-text {
   background: transparent;
   color: var(--primary);
   padding: 4px 8px;
   font-size: 13px;
 }
-.btn-text:hover {
+.btn.btn-text:hover {
   background: var(--primary-bg);
 }
 
