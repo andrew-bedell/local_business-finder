@@ -3222,6 +3222,27 @@ select.input {
   height: 16px;
 }
 
+.outreach-voice-section {
+  margin: 8px 0;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.outreach-voice-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.outreach-voice-content audio {
+  flex: 1;
+  height: 36px;
+  min-width: 0;
+}
+
 .outreach-steps-list {
   display: flex;
   flex-direction: column;
