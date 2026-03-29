@@ -1432,6 +1432,67 @@
             </div>
           </div>
 
+          <!-- 8. Menu -->
+          <div class="c-wizard-card" data-wiz-card="menu">
+            <button type="button" class="c-wizard-card-header" data-wiz-toggle="menu">
+              <div class="c-wizard-card-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M8.1 13.34l2.83-2.83L3.91 3.5a4.008 4.008 0 000 5.66l4.19 4.18zm6.78-1.81c1.53.71 3.68.21 5.27-1.38 1.91-1.91 2.28-4.65.81-6.12-1.46-1.46-4.2-1.1-6.12.81-1.59 1.59-2.09 3.74-1.38 5.27L3.7 19.87l1.41 1.41L12 14.41l6.88 6.88 1.41-1.41L13.41 13l1.47-1.47z"/></svg>
+              </div>
+              <div class="c-wizard-card-title">Menú</div>
+              <div class="c-wizard-card-status" id="wiz-status-menu">0</div>
+              <svg class="c-wizard-chevron" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <div class="c-wizard-card-body" id="wiz-body-menu">
+              <p class="c-wizard-menu-hint">Sube una foto de tu menú para extraer los platillos automáticamente, o agrégalos manualmente.</p>
+
+              <!-- Menu photo upload -->
+              <div class="c-wizard-menu-upload-zone" id="wiz-menu-upload-zone">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28" style="opacity:0.4"><path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/></svg>
+                <span>Arrastra o haz clic para subir foto del menú</span>
+                <div class="c-wizard-upload-hint">JPG, PNG o WebP. Máximo 4MB.</div>
+                <input type="file" id="wiz-menu-photo-input" accept="image/*" hidden>
+              </div>
+
+              <!-- Menu photo preview -->
+              <div class="c-wizard-menu-photos" id="wiz-menu-photos"></div>
+
+              <!-- Parsing indicator -->
+              <div class="c-wizard-menu-parsing" id="wiz-menu-parsing" style="display:none">
+                <span class="c-wizard-progress-spinner"></span>
+                <span>Analizando menú...</span>
+              </div>
+
+              <!-- Menu items list -->
+              <div class="c-wizard-menu-items" id="wiz-menu-items"></div>
+
+              <!-- Manual add form -->
+              <details class="c-wizard-menu-manual">
+                <summary>Agregar platillo manualmente</summary>
+                <div class="c-wizard-menu-form">
+                  <div class="c-form-group">
+                    <label class="c-label">Categoría</label>
+                    <input type="text" id="wiz-menu-category" class="c-input" placeholder="Ej: Entradas, Platos Fuertes, Bebidas">
+                  </div>
+                  <div class="c-wizard-service-form-row">
+                    <div class="c-form-group" style="flex:2">
+                      <label class="c-label">Nombre del platillo</label>
+                      <input type="text" id="wiz-menu-item-name" class="c-input" maxlength="200">
+                    </div>
+                    <div class="c-form-group" style="flex:1">
+                      <label class="c-label">Precio</label>
+                      <input type="number" id="wiz-menu-item-price" class="c-input" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                  </div>
+                  <div class="c-form-group">
+                    <label class="c-label">Descripción <span class="c-wizard-optional">(opcional)</span></label>
+                    <input type="text" id="wiz-menu-item-desc" class="c-input" maxlength="300">
+                  </div>
+                  <button type="button" class="c-btn c-btn-primary" id="wiz-menu-add">Agregar Platillo</button>
+                </div>
+              </details>
+            </div>
+          </div>
+
         </div><!-- /accordion -->
 
         <!-- Generate Website CTA -->

@@ -4238,6 +4238,7 @@
   var wizardPhotos = [];
   var wizardReviews = [];
   var wizardServices = [];
+  var wizardMenuItems = [];
   var wizardStarRating = 5;
   var wizardSvcPhotoId = null;  // temp photo ID for service being edited
   var wizardSvcPhotoUrl = null; // temp photo URL for service being edited
@@ -4256,16 +4257,18 @@
     wizardInitialStateApplied = false;
 
     try {
-      // Load photos, reviews, and services in parallel
+      // Load photos, reviews, services, and menu items in parallel
       var results = await Promise.all([
         supabase.from('business_photos').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false }),
         supabase.from('business_reviews').select('*').eq('business_id', businessData.id).order('created_at', { ascending: false }),
-        supabase.from('business_services').select('*').eq('business_id', businessData.id).order('sort_order', { ascending: true })
+        supabase.from('business_services').select('*').eq('business_id', businessData.id).order('sort_order', { ascending: true }),
+        supabase.from('business_menus').select('*').eq('business_id', businessData.id)
       ]);
 
       wizardPhotos = (results[0].data || []);
       wizardReviews = (results[1].data || []);
       wizardServices = (results[2].data || []);
+      wizardMenuItems = (results[3].data || []);
 
       var scoreData = calculateWizardScore(businessData, wizardPhotos, wizardReviews);
       renderWizardScore(scoreData);
@@ -4354,7 +4357,8 @@
       address: breakdown.address.filled,
       hours: breakdown.hours.filled,
       founder: breakdown.founder.score >= breakdown.founder.max,
-      services: breakdown.services.score >= breakdown.services.max
+      services: breakdown.services.score >= breakdown.services.max,
+      menu: wizardMenuItems.length > 0
     };
   }
 
@@ -4474,12 +4478,21 @@
       svcStatus.setAttribute('data-complete', bd.services.score >= bd.services.max ? 'true' : 'false');
     }
 
+    // Menu status
+    var menuStatus = document.getElementById('wiz-status-menu');
+    if (menuStatus) {
+      menuStatus.textContent = String(wizardMenuItems.length);
+      menuStatus.setAttribute('data-complete', wizardMenuItems.length > 0 ? 'true' : 'false');
+    }
+
     // Render photo grid
     renderWizardPhotos();
     // Render review list
     renderWizardReviews();
     // Render services list
     renderWizardServices();
+    // Render menu items
+    renderWizardMenu();
     // Render founder photo
     renderFounderPhoto();
     // Fill form fields
@@ -4487,7 +4500,7 @@
 
     // Update visual classes for complete/next states
     var completeness = getCardCompleteness(bd);
-    var cardOrder = ['photos', 'reviews', 'whatsapp', 'address', 'hours', 'founder', 'services'];
+    var cardOrder = ['photos', 'reviews', 'whatsapp', 'address', 'hours', 'founder', 'services', 'menu'];
     var firstIncomplete = null;
     for (var ci = 0; ci < cardOrder.length; ci++) {
       var cid = cardOrder[ci];
@@ -4515,7 +4528,7 @@
     if (wizardInitialStateApplied) return;
     wizardInitialStateApplied = true;
 
-    var cardOrder = ['photos', 'reviews', 'whatsapp', 'address', 'hours', 'founder', 'services'];
+    var cardOrder = ['photos', 'reviews', 'whatsapp', 'address', 'hours', 'founder', 'services', 'menu'];
 
     // Collapse completed cards, expand first incomplete
     for (var i = 0; i < cardOrder.length; i++) {
@@ -4902,6 +4915,259 @@
     }
   }
 
+  // ── Menu Wizard ──
+
+  function renderWizardMenu() {
+    var list = document.getElementById('wiz-menu-items');
+    var photosEl = document.getElementById('wiz-menu-photos');
+    if (!list) return;
+
+    // Update status count
+    var status = document.getElementById('wiz-status-menu');
+    if (status) status.textContent = String(wizardMenuItems.length);
+
+    // Render menu photo thumbnails
+    if (photosEl) {
+      var menuPhotos = wizardPhotos.filter(function (p) { return p.photo_type === 'menu'; });
+      if (menuPhotos.length === 0) {
+        photosEl.innerHTML = '';
+      } else {
+        var ph = '';
+        for (var i = 0; i < menuPhotos.length; i++) {
+          var mp = menuPhotos[i];
+          var mpUrl = mp.url || '';
+          ph += '<div class="c-wizard-menu-photo-thumb">';
+          ph += '<img src="' + escapeHtml(mpUrl || '') + '" alt="Menu">';
+          if (mp.source === 'customer_upload') {
+            ph += '<button type="button" class="c-wizard-photo-delete" data-photo-id="' + escapeHtml(mp.id) + '">&times;</button>';
+          }
+          ph += '</div>';
+        }
+        photosEl.innerHTML = ph;
+
+        photosEl.querySelectorAll('.c-wizard-photo-delete').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            deleteWizardPhoto(btn.getAttribute('data-photo-id'));
+          });
+        });
+      }
+    }
+
+    if (wizardMenuItems.length === 0) {
+      list.innerHTML = '<p style="color:var(--c-text-dim);font-size:13px;">No hay platillos agregados.</p>';
+      return;
+    }
+
+    // Group by category
+    var categories = {};
+    var catOrder = [];
+    wizardMenuItems.forEach(function (item) {
+      var cat = item.menu_category || 'Otros';
+      if (!categories[cat]) {
+        categories[cat] = [];
+        catOrder.push(cat);
+      }
+      categories[cat].push(item);
+    });
+
+    var html = '';
+    catOrder.forEach(function (cat) {
+      var items = categories[cat];
+      html += '<div class="c-wizard-menu-category">';
+      html += '<div class="c-wizard-menu-category-title">' + escapeHtml(cat) + '</div>';
+      items.forEach(function (item) {
+        html += '<div class="c-wizard-menu-item">';
+        html += '<div class="c-wizard-menu-item-info">';
+        html += '<span class="c-wizard-menu-item-name">' + escapeHtml(item.item_name || '') + '</span>';
+        if (item.item_description) {
+          html += '<span class="c-wizard-menu-item-desc">' + escapeHtml(item.item_description) + '</span>';
+        }
+        html += '</div>';
+        if (item.price != null) {
+          html += '<span class="c-wizard-menu-item-price">$' + escapeHtml(String(item.price)) + '</span>';
+        }
+        html += '<button type="button" class="c-wizard-menu-item-delete" data-menu-id="' + escapeHtml(item.id) + '">&times;</button>';
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+
+    list.innerHTML = html;
+
+    list.querySelectorAll('.c-wizard-menu-item-delete').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        deleteWizardMenuItem(btn.getAttribute('data-menu-id'));
+      });
+    });
+  }
+
+  async function handleMenuPhotoUpload(files) {
+    var token = await getAuthToken();
+    if (!token) return;
+
+    var uploadZone = document.getElementById('wiz-menu-upload-zone');
+    var parsingEl = document.getElementById('wiz-menu-parsing');
+
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 4 * 1024 * 1024) {
+        showToast(t('wiz_upload_too_large'), 'warning');
+        continue;
+      }
+
+      if (uploadZone) uploadZone.classList.add('uploading');
+
+      try {
+        var buffer = await file.arrayBuffer();
+
+        // Upload as menu photo
+        var res = await fetch('/api/wizard/upload-photo?photo_type=menu', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': file.type,
+          },
+          body: buffer,
+        });
+
+        if (!res.ok) {
+          var errData = await res.json().catch(function () { return {}; });
+          throw new Error(errData.error || 'Upload failed');
+        }
+
+        var data = await res.json();
+        var photoUrl = data.public_url;
+
+        // Add to local photos array
+        wizardPhotos.unshift({
+          id: data.id,
+          source: 'customer_upload',
+          photo_type: 'menu',
+          url: photoUrl,
+          storage_path: data.storage_path,
+          business_id: businessData.id,
+        });
+
+        renderWizardMenu();
+
+        // Auto-parse the menu photo
+        if (parsingEl) parsingEl.style.display = 'flex';
+
+        var parseRes = await fetch('/api/menu/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoUrl: photoUrl }),
+        });
+
+        if (parseRes.ok) {
+          var parsed = await parseRes.json();
+          if (parsed.items && parsed.items.length > 0) {
+            // Save parsed items to database
+            var savedCount = 0;
+            for (var j = 0; j < parsed.items.length; j++) {
+              var item = parsed.items[j];
+              var insertResult = await supabase.from('business_menus').insert({
+                business_id: businessData.id,
+                source_photo_id: data.id,
+                menu_category: item.menu_category || 'Otros',
+                item_name: item.item_name,
+                item_description: item.item_description || '',
+                price: item.price,
+                currency: item.currency || 'MXN',
+              }).select();
+
+              if (insertResult.data && insertResult.data[0]) {
+                wizardMenuItems.push(insertResult.data[0]);
+                savedCount++;
+              }
+            }
+
+            if (savedCount > 0) {
+              showToast(savedCount + ' platillos extraídos del menú', 'success');
+            }
+          } else {
+            showToast('No se encontraron platillos en la imagen', 'warning');
+          }
+        } else {
+          showToast('No se pudo analizar la foto del menú', 'warning');
+        }
+      } catch (err) {
+        console.error('Menu photo upload/parse error:', err);
+        showToast('Error al subir la foto del menú', 'error');
+      }
+    }
+
+    if (uploadZone) uploadZone.classList.remove('uploading');
+    if (parsingEl) parsingEl.style.display = 'none';
+    renderWizardMenu();
+    refreshWizardScore();
+  }
+
+  async function saveWizardMenuItem() {
+    var catInput = document.getElementById('wiz-menu-category');
+    var nameInput = document.getElementById('wiz-menu-item-name');
+    var priceInput = document.getElementById('wiz-menu-item-price');
+    var descInput = document.getElementById('wiz-menu-item-desc');
+
+    var name = nameInput ? nameInput.value.trim() : '';
+    if (!name) {
+      showToast('Ingresa el nombre del platillo', 'warning');
+      return;
+    }
+
+    var category = catInput ? catInput.value.trim() : '';
+    if (!category) {
+      showToast('Ingresa la categoría', 'warning');
+      return;
+    }
+
+    try {
+      var row = {
+        business_id: businessData.id,
+        menu_category: category,
+        item_name: name,
+        item_description: descInput ? descInput.value.trim() : '',
+        price: priceInput && priceInput.value ? parseFloat(priceInput.value) : null,
+        currency: 'MXN',
+      };
+
+      var result = await supabase.from('business_menus').insert(row).select();
+      if (result.error) throw result.error;
+
+      if (result.data && result.data[0]) {
+        wizardMenuItems.push(result.data[0]);
+      }
+
+      // Clear form (keep category for quick adds in same category)
+      if (nameInput) nameInput.value = '';
+      if (priceInput) priceInput.value = '';
+      if (descInput) descInput.value = '';
+
+      showToast('Platillo agregado', 'success');
+      renderWizardMenu();
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Save menu item error:', err);
+      showToast('Error al guardar el platillo', 'error');
+    }
+  }
+
+  async function deleteWizardMenuItem(menuId) {
+    try {
+      var result = await supabase.from('business_menus').delete().eq('id', menuId);
+      if (result.error) throw result.error;
+
+      wizardMenuItems = wizardMenuItems.filter(function (m) { return m.id !== menuId; });
+      showToast('Platillo eliminado', 'success');
+      renderWizardMenu();
+      refreshWizardScore();
+    } catch (err) {
+      console.error('Delete menu item error:', err);
+      showToast('Error al eliminar el platillo', 'error');
+    }
+  }
+
   function bindWizardEvents() {
     if (wizardEventsFound) return;
     wizardEventsFound = true;
@@ -5080,6 +5346,43 @@
     if (svcSaveBtn) {
       svcSaveBtn.addEventListener('click', function () {
         saveWizardService();
+      });
+    }
+
+    // Menu photo upload zone
+    var menuUploadZone = document.getElementById('wiz-menu-upload-zone');
+    var menuPhotoInput = document.getElementById('wiz-menu-photo-input');
+    if (menuUploadZone && menuPhotoInput) {
+      menuUploadZone.addEventListener('click', function () {
+        menuPhotoInput.click();
+      });
+      menuPhotoInput.addEventListener('change', function () {
+        if (menuPhotoInput.files && menuPhotoInput.files.length > 0) {
+          handleMenuPhotoUpload(menuPhotoInput.files);
+          menuPhotoInput.value = '';
+        }
+      });
+      menuUploadZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        menuUploadZone.classList.add('drag-over');
+      });
+      menuUploadZone.addEventListener('dragleave', function () {
+        menuUploadZone.classList.remove('drag-over');
+      });
+      menuUploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        menuUploadZone.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleMenuPhotoUpload(e.dataTransfer.files);
+        }
+      });
+    }
+
+    // Manual menu item add
+    var menuAddBtn = document.getElementById('wiz-menu-add');
+    if (menuAddBtn) {
+      menuAddBtn.addEventListener('click', function () {
+        saveWizardMenuItem();
       });
     }
 
