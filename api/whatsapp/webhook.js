@@ -4,6 +4,7 @@
 
 import { createHmac } from 'crypto';
 import { handleAutoReply } from '../_lib/whatsapp-responder.js';
+import { buildPhoneVariants } from '../_lib/phone-utils.js';
 
 export default async function handler(req, res) {
   // GET: Webhook verification
@@ -69,15 +70,19 @@ export default async function handler(req, res) {
 
           // Trigger auto-reply (non-blocking — don't let failures hold up the webhook)
           if (result) {
-            handleAutoReply({
-              senderPhone: msg.from,
-              messageBody: msg.text?.body || '',
-              messageType: msg.type || 'text',
-              businessId: result.businessId,
-              conversationId: result.conversationId,
-              supabaseUrl,
-              supabaseKey,
-            }).catch(err => console.error('Auto-reply error (non-blocking):', err));
+            if (result.autoReplyDisabled) {
+              console.log('[webhook] Auto-reply disabled for conversation:', result.conversationId, '— skipping');
+            } else {
+              handleAutoReply({
+                senderPhone: msg.from,
+                messageBody: msg.text?.body || '',
+                messageType: msg.type || 'text',
+                businessId: result.businessId,
+                conversationId: result.conversationId,
+                supabaseUrl,
+                supabaseKey,
+              }).catch(err => console.error('Auto-reply error (non-blocking):', err));
+            }
           }
         }
 
@@ -108,9 +113,11 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
   const messageType = msg.type || 'text';
   const senderName = contacts?.[0]?.profile?.name || null;
 
-  // Look up conversation by recipient_phone
+  // Look up conversation by recipient_phone (try all phone format variants)
+  const phoneVariants = buildPhoneVariants(senderPhone);
+  const orConditions = phoneVariants.map(v => `recipient_phone.eq.${encodeURIComponent(v)}`).join(',');
   const convResp = await fetch(
-    `${supabaseUrl}/rest/v1/whatsapp_conversations?recipient_phone=eq.%2B${senderPhone}&select=id,business_id,unread_count`,
+    `${supabaseUrl}/rest/v1/whatsapp_conversations?or=(${orConditions})&select=id,business_id,unread_count,auto_reply_disabled&limit=1`,
     { headers }
   );
   if (!convResp.ok) {
@@ -230,7 +237,7 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
 
     // Check for existing conversation by business_id (phone format may differ)
     const existConvResp = await fetch(
-      `${supabaseUrl}/rest/v1/whatsapp_conversations?business_id=eq.${bizData[0].id}&select=id,unread_count&limit=1`,
+      `${supabaseUrl}/rest/v1/whatsapp_conversations?business_id=eq.${bizData[0].id}&select=id,unread_count,auto_reply_disabled&limit=1`,
       { headers }
     );
     const existConvData = existConvResp.ok ? await existConvResp.json() : [];
@@ -277,7 +284,7 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
       );
 
       await updateCampaignReplyCount(bizData[0].id, supabaseUrl, headers);
-      return { businessId: bizData[0].id, conversationId: existConv.id };
+      return { businessId: bizData[0].id, conversationId: existConv.id, autoReplyDisabled: existConv.auto_reply_disabled === true };
     }
 
     // No existing conversation — create new one
@@ -415,7 +422,7 @@ async function handleInboundMessage(msg, contacts, supabaseUrl, supabaseKey, hea
     await updateCampaignReplyCount(resolvedBusinessId, supabaseUrl, headers);
   }
 
-  return { businessId: resolvedBusinessId, conversationId: conv.id };
+  return { businessId: resolvedBusinessId, conversationId: conv.id, autoReplyDisabled: conv.auto_reply_disabled === true };
 }
 
 async function handleStatusUpdate(status, supabaseUrl, headers) {
