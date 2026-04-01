@@ -19,7 +19,8 @@
         { label: 'navAudiences', tab: 'audiences' },
         { label: 'navMessages', tab: 'messages' },
         { label: 'navEmail', tab: 'email' },
-        { label: 'navTemplates', tab: 'templates' }
+        { label: 'navTemplates', tab: 'templates' },
+        { label: 'navWaLogs', tab: 'wa_logs' }
       ],
       defaultTab: 'campaigns'
     },
@@ -744,6 +745,24 @@
       templatesFlowLinked: 'Linked: {0}',
       templatesFlowNotLinked: 'Not linked',
       templatesTriggerNone: 'None',
+      // WA Logs
+      navWaLogs: 'WA Logs',
+      waLogsTitle: 'WhatsApp Logs',
+      waLogsInbound: 'Inbound',
+      waLogsOutbound: 'Outbound',
+      waLogsSearchPh: 'Search phone, message...',
+      waLogsThTime: 'Time',
+      waLogsThDir: 'Dir',
+      waLogsThPhone: 'Phone',
+      waLogsThBusiness: 'Business',
+      waLogsThMessage: 'Message',
+      waLogsThType: 'Type',
+      waLogsThStatus: 'Status',
+      waLogsEmpty: 'No messages found.',
+      waLogsPrev: 'Previous',
+      waLogsNext: 'Next',
+      waLogsCount: '{0} messages',
+      waLogsAutoReply: 'Auto-reply',
       // Outreach
       outreachBtnLabel: 'Outreach',
       outreachModalTitle: 'WhatsApp Outreach',
@@ -763,11 +782,8 @@
       outreachMarkError: 'Failed to mark step',
       outreachNoPreviewUrl: 'No preview URL — create website first',
       outreachStep1Title: 'Step 1 — Verification',
-      outreachStep2Title: 'Step 2 — Introduction',
-      outreachStep3Title: 'Step 3 — Demo Link',
-      outreachStep4Title: 'Step 4 — Value',
-      outreachStep5Title: 'Step 5 — Price',
-      outreachStep6Title: 'Step 6 — CTA',
+      outreachStep2Title: 'Step 2 — Voice Message',
+      outreachStep3Title: 'Step 3 — Website Link',
       outreachStepFollowupTitle: 'Follow-up (24hr)',
       outreachStepAboutTitle: 'About Page (optional)',
       outreachStepSent: 'Sent',
@@ -839,7 +855,7 @@
       orThLastSent: 'Last Sent',
       orThLastVisit: 'Last Visit',
       orThVisitCount: 'Views',
-      orThTimeSince: 'Time Since Step 6',
+      orThTimeSince: 'Time Since Last Step',
       orThCompletedAt: 'Completed',
       orThStatus: 'Status',
       orThAction: 'Action',
@@ -1602,11 +1618,8 @@
       outreachMarkError: 'Error al marcar paso',
       outreachNoPreviewUrl: 'Sin URL de vista previa — crea el sitio primero',
       outreachStep1Title: 'Paso 1 — Verificación',
-      outreachStep2Title: 'Paso 2 — Presentación',
-      outreachStep3Title: 'Paso 3 — Demo',
-      outreachStep4Title: 'Paso 4 — Valor',
-      outreachStep5Title: 'Paso 5 — Precio',
-      outreachStep6Title: 'Paso 6 — CTA',
+      outreachStep2Title: 'Paso 2 — Mensaje de Voz',
+      outreachStep3Title: 'Paso 3 — Enlace del Sitio',
       outreachStepFollowupTitle: 'Seguimiento (24hr)',
       outreachStepAboutTitle: 'Sobre Nosotros (opcional)',
       outreachStepSent: 'Enviado',
@@ -1678,7 +1691,7 @@
       orThLastSent: 'Último Envío',
       orThLastVisit: 'Última Visita',
       orThVisitCount: 'Vistas',
-      orThTimeSince: 'Tiempo Desde Paso 6',
+      orThTimeSince: 'Tiempo Desde Último Paso',
       orThCompletedAt: 'Completado',
       orThStatus: 'Estado',
       orThAction: 'Acción',
@@ -3157,7 +3170,7 @@
 
   function getOutreachStepCount(business) {
     const steps = business.outreach_steps || {};
-    const coreSteps = ['1', '2', '3', '4', '5', '6'];
+    const coreSteps = ['1', '2', '3'];
     let sent = 0;
     coreSteps.forEach(s => { if (steps[s] && steps[s].sent_at) sent++; });
     return sent;
@@ -3170,8 +3183,8 @@
     const steps = business.outreach_steps || {};
     const sent = getOutreachStepCount(business);
     const hasFollowup = steps.followup && steps.followup.sent_at;
-    if (sent === 0) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer;color:var(--text-dim);font-size:12px">0/6</span>';
-    if (sent < 6) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--warning)">' + sent + '/6</span>';
+    if (sent === 0) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer;color:var(--text-dim);font-size:12px">0/3</span>';
+    if (sent < 3) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--warning)">' + sent + '/3</span>';
     if (hasFollowup) return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer"><span class="outreach-sent-label">' + t('outreachComplete') + '</span></span>';
     return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer"><span class="outreach-sent-label">' + t('outreachAllSent') + '</span></span>';
   }
@@ -3185,11 +3198,8 @@
 
     return {
       '1': `Es este el negocio ${name} en ${colonia}?`,
-      '2': `Hola, soy ${sender}. Vi que tu negocio no tiene página web, y les hice una de ejemplo con la información que encontré en Google.`,
-      '3': `Échale un ojo:\n\n👉 ${url}`,
-      '4': 'Hoy en día la gente busca en Google antes de ir a cualquier lugar. Si no tienes página, no apareces.',
-      '5': `El servicio cuesta $299 pesos al mes. Eso incluye el diseño, el hospedaje, y un dominio como ${domain}.`,
-      '6': 'Te gustaría que la ajustemos juntos para que quede exactamente como tú quieres?',
+      '2': '🎙️ [Mensaje de voz]',
+      '3': `👉 ${url}`,
       'followup': '¡Hola! Solo quería saber si tuviste chance de ver la página que te mandé. Si tienes cualquier duda, con gusto te ayudo.',
       'about': 'Si quieres saber más sobre lo que hacemos: ahoratengopagina.com/about',
     };
@@ -3297,24 +3307,6 @@
         const parentLabel = radio.closest('.domain-item');
         if (parentLabel) parentLabel.classList.add('domain-recommended');
 
-        // Update step 5 message in the modal
-        const senderName = (window.__employeeAuth && (window.__employeeAuth.employee.outreach_sender_name || window.__employeeAuth.employee.display_name)) || '';
-        const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
-        const previewUrl = existingWebsiteRecord
-          ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
-          : '';
-        const updatedTemplates = getOutreachTemplates(business, senderName, previewUrl, domain);
-        const step5El = overlay.querySelector('.outreach-step[data-step="5"] .outreach-message');
-        if (step5El) step5El.textContent = updatedTemplates['5'];
-
-        // Update copy handler for step 5
-        const copyBtn = overlay.querySelector('.btn-outreach-copy-msg[data-step="5"]');
-        if (copyBtn) {
-          const newBtn = copyBtn.cloneNode(true);
-          copyBtn.parentNode.replaceChild(newBtn, copyBtn);
-          newBtn.addEventListener('click', () => copyToClipboard(updatedTemplates['5'], t('outreachCopied')));
-        }
-
         // Save to DB
         try {
           await fetch('/api/businesses/update-pipeline', {
@@ -3363,10 +3355,9 @@
     const templates = getOutreachTemplates(business, senderName, previewUrl, selectedDomain);
     const isCancelled = isOutreachCancelled(business);
 
-    const stepKeys = ['1', '2', '3', '4', '5', '6'];
+    const stepKeys = ['1', '2', '3'];
     const stepTitleKeys = {
       '1': 'outreachStep1Title', '2': 'outreachStep2Title', '3': 'outreachStep3Title',
-      '4': 'outreachStep4Title', '5': 'outreachStep5Title', '6': 'outreachStep6Title',
       'followup': 'outreachStepFollowupTitle', 'about': 'outreachStepAboutTitle',
     };
 
@@ -3376,12 +3367,12 @@
       if (!steps[k] || !steps[k].sent_at) { nextStep = k; break; }
     }
 
-    // Follow-up availability: 24hr after step 6
+    // Follow-up availability: 24hr after step 3
     let followupAvailable = false;
     let followupCountdown = '';
-    if (steps['6'] && steps['6'].sent_at) {
-      const step6Time = new Date(steps['6'].sent_at).getTime();
-      const elapsed = Date.now() - step6Time;
+    if (steps['3'] && steps['3'].sent_at) {
+      const step3Time = new Date(steps['3'].sent_at).getTime();
+      const elapsed = Date.now() - step3Time;
       const remaining = (24 * 60 * 60 * 1000) - elapsed;
       if (remaining <= 0) {
         followupAvailable = true;
@@ -3403,6 +3394,35 @@
       const showMsg = isSent || isNext;
       const sentTime = isSent && steps[key] && steps[key].sent_at ? new Date(steps[key].sent_at).toLocaleString() : '';
 
+      // Step 2 — voice message: show player/generator instead of text template
+      let bodyHtml = '';
+      if (key === '2' && showMsg) {
+        const voiceUrl = steps.voice && steps.voice.url;
+        bodyHtml = `<div class="outreach-step-body">
+          <div class="outreach-voice-content" style="margin-bottom:8px">
+            ${voiceUrl
+              ? `<audio controls src="${escapeHtml(voiceUrl)}" preload="metadata" style="width:100%;margin-bottom:6px"></audio>
+                 <div style="display:flex;gap:6px;flex-wrap:wrap">
+                   <button class="btn btn-secondary" id="btn-regenerate-voice" style="padding:6px 12px;font-size:12px">${t('outreachVoiceRegenerate')}</button>
+                   <a href="${escapeHtml(voiceUrl)}" download="${escapeHtml(business.name)}-voice.mp3" class="btn btn-secondary" style="padding:6px 12px;font-size:12px;text-decoration:none">Download</a>
+                 </div>`
+              : `<button class="btn btn-primary" id="btn-generate-voice" style="padding:8px 16px;font-size:13px">${t('outreachVoiceGenerate')}</button>`
+            }
+          </div>
+          <div class="outreach-step-actions">
+            ${!isSent ? `<button class="btn btn-secondary btn-outreach-mark" data-step="${key}">${t('outreachMarkSent')}</button>` : ''}
+          </div>
+        </div>`;
+      } else if (showMsg) {
+        bodyHtml = `<div class="outreach-step-body">
+          <pre class="outreach-message">${escapeHtml(msg)}</pre>
+          <div class="outreach-step-actions">
+            ${!isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">\uD83D\uDCCB ${t('outreachCopyMessage')}</button>${phone ? `<button class="btn btn-primary btn-outreach-send" data-step="${key}">${t('outreachSendBtn')}</button>` : ''}<button class="btn btn-secondary btn-outreach-mark" data-step="${key}">${t('outreachMarkSent')}</button>` : ''}
+            ${isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">📋 ${t('outreachCopyMessage')}</button>` : ''}
+          </div>
+        </div>`;
+      }
+
       return `
         <div class="outreach-step ${statusClass}" data-step="${key}">
           <div class="outreach-step-header">
@@ -3410,15 +3430,7 @@
             <span class="outreach-step-title">${title}</span>
             <span class="outreach-step-status">${statusLabel}${sentTime ? ' — ' + sentTime : ''}</span>
           </div>
-          ${showMsg ? `
-            <div class="outreach-step-body">
-              <pre class="outreach-message">${escapeHtml(msg)}</pre>
-              <div class="outreach-step-actions">
-                ${!isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">\uD83D\uDCCB ${t('outreachCopyMessage')}</button>${phone ? `<button class="btn btn-primary btn-outreach-send" data-step="${key}">${t('outreachSendBtn')}</button>` : ''}<button class="btn btn-secondary btn-outreach-mark" data-step="${key}">${t('outreachMarkSent')}</button>` : ''}
-                ${isSent ? `<button class="btn-outreach-copy-msg" data-step="${key}">📋 ${t('outreachCopyMessage')}</button>` : ''}
-              </div>
-            </div>
-          ` : ''}
+          ${bodyHtml}
         </div>`;
     }
 
@@ -3520,17 +3532,6 @@
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-muted)">
               <input type="checkbox" id="outreach-auto-reply-cb"> ${t('outreachAutoReplyOff')}
             </label>
-          </div>
-          <div class="outreach-voice-section">
-            <div class="outreach-label">${t('outreachVoiceLabel')}</div>
-            <div class="outreach-voice-content">
-              ${steps.voice && steps.voice.url
-                ? `<audio controls src="${escapeHtml(steps.voice.url)}" preload="metadata"></audio>
-                   <button class="btn btn-secondary" id="btn-regenerate-voice" style="padding:6px 12px;font-size:12px">${t('outreachVoiceRegenerate')}</button>
-                   <a href="${escapeHtml(steps.voice.url)}" download="${escapeHtml(business.name)}-voice.mp3" class="btn btn-secondary" style="padding:6px 12px;font-size:12px;text-decoration:none">Download</a>`
-                : `<button class="btn btn-primary" id="btn-generate-voice" style="padding:8px 16px;font-size:13px">${t('outreachVoiceGenerate')}</button>`
-              }
-            </div>
           </div>
           <div class="domain-suggest" id="domain-suggest-section">
             <div class="outreach-label" style="display:flex;align-items:center;gap:8px">
@@ -3955,7 +3956,7 @@
   function getLastStepSentTime(business) {
     const steps = business.outreach_steps || {};
     let latest = null;
-    ['1', '2', '3', '4', '5', '6', 'followup'].forEach(k => {
+    ['1', '2', '3', 'followup'].forEach(k => {
       if (steps[k] && steps[k].sent_at) {
         if (!latest || steps[k].sent_at > latest) latest = steps[k].sent_at;
       }
@@ -3981,7 +3982,7 @@
 
   function getNextStepLabel(business) {
     const steps = business.outreach_steps || {};
-    const coreKeys = ['1', '2', '3', '4', '5', '6'];
+    const coreKeys = ['1', '2', '3'];
     for (const k of coreKeys) {
       if (!steps[k] || !steps[k].sent_at) return t('orStepLabel', k);
     }
@@ -4003,7 +4004,7 @@
 
   function isStaleOutreach(business) {
     const count = getOutreachStepCount(business);
-    if (count === 0 || count === 6) return false;
+    if (count === 0 || count === 3) return false;
     const lastSent = getLastStepSentTime(business);
     if (!lastSent) return false;
     const daysSince = (Date.now() - new Date(lastSent).getTime()) / (1000 * 60 * 60 * 24);
@@ -4065,14 +4066,14 @@
 
       if (count === 0) {
         ready.push(b);
-      } else if (count < 6) {
+      } else if (count < 3) {
         inProgress.push(b);
         if (isStaleOutreach(b)) staleCount++;
       } else if (!hasFollowup) {
-        // 6/6 done, no followup yet — check if 24hr passed since step 6
-        const step6Time = steps['6'] && steps['6'].sent_at;
-        if (step6Time) {
-          const hoursSince = (Date.now() - new Date(step6Time).getTime()) / (1000 * 60 * 60);
+        // 3/3 done, no followup yet — check if 24hr passed since step 3
+        const step3Time = steps['3'] && steps['3'].sent_at;
+        if (step3Time) {
+          const hoursSince = (Date.now() - new Date(step3Time).getTime()) / (1000 * 60 * 60);
           if (hoursSince >= 24) {
             followupDue.push(b);
           } else {
@@ -4093,8 +4094,8 @@
       return bt.localeCompare(at);
     });
     followupDue.sort((a, b) => {
-      const at = (a.outreach_steps && a.outreach_steps['6'] && a.outreach_steps['6'].sent_at) || '';
-      const bt = (b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at) || '';
+      const at = (a.outreach_steps && a.outreach_steps['3'] && a.outreach_steps['3'].sent_at) || '';
+      const bt = (b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at) || '';
       return at.localeCompare(bt); // oldest first — most overdue
     });
     ready.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -4124,7 +4125,7 @@
     const todayTs = todayStart.getTime();
     const messagedToday = withSite.filter(b => {
       const steps = b.outreach_steps || {};
-      return ['1', '2', '3', '4', '5', '6', 'followup'].some(k =>
+      return ['1', '2', '3', 'followup'].some(k =>
         steps[k] && steps[k].sent_at && new Date(steps[k].sent_at).getTime() >= todayTs
       );
     });
@@ -4134,15 +4135,15 @@
       return bt.localeCompare(at);
     });
 
-    // Compute "24h Follow-Up Schedule" — step 6 done, no followup sent
+    // Compute "24h Follow-Up Schedule" — step 3 done, no followup sent
     const followupSchedule = active.filter(b => {
       const steps = b.outreach_steps || {};
       const count = getOutreachStepCount(b);
-      return count >= 6 && !(steps.followup && steps.followup.sent_at);
+      return count >= 3 && !(steps.followup && steps.followup.sent_at);
     });
     followupSchedule.sort((a, b) => {
-      const at = (a.outreach_steps && a.outreach_steps['6'] && a.outreach_steps['6'].sent_at) || '';
-      const bt = (b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at) || '';
+      const at = (a.outreach_steps && a.outreach_steps['3'] && a.outreach_steps['3'].sent_at) || '';
+      const bt = (b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at) || '';
       return at.localeCompare(bt); // oldest first — most overdue at top
     });
 
@@ -4155,7 +4156,7 @@
     renderOrCancelledTable(cancelled);
     // Reset selection state and rebind checkbox events
     Object.keys(orSelectedIds).forEach(k => orSelectedIds[k].clear());
-    ['ready', 'progress', 'followup', 'complete', 'cancelled'].forEach(s => updateOrBulkBar(s));
+    ['ready', 'progress', 'followup', 'complete', 'cancelled', 'today', 'schedule'].forEach(s => updateOrBulkBar(s));
     document.querySelectorAll('.or-select-all').forEach(cb => { cb.checked = false; });
     bindOrSelectionEventsOnce();
     loadOrVisitors();
@@ -4178,14 +4179,14 @@
 
     let html = '';
     businesses.forEach(b => {
-      const step6Time = b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at;
+      const lastStepTime = b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at;
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="followup" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
         + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
-        + '<td>' + orTimeAgo(step6Time) + '</td>'
+        + '<td>' + orTimeAgo(lastStepTime) + '</td>'
         + '<td>' + orActionBtn(b) + '</td>'
         + '</tr>';
     });
@@ -4354,6 +4355,7 @@
     let html = '';
     businesses.forEach(b => {
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="today" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + getOutreachProgressHtml(b) + '</td>'
@@ -4382,8 +4384,8 @@
 
     let html = '';
     businesses.forEach(b => {
-      const step6Time = b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at;
-      const dueTime = step6Time ? new Date(new Date(step6Time).getTime() + 24 * 60 * 60 * 1000) : null;
+      const step3Time = b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at;
+      const dueTime = step3Time ? new Date(new Date(step3Time).getTime() + 24 * 60 * 60 * 1000) : null;
       const hoursUntilDue = dueTime ? (dueTime.getTime() - Date.now()) / (1000 * 60 * 60) : 0;
       let overdueLabel = '';
       if (!dueTime) {
@@ -4396,6 +4398,7 @@
         overdueLabel = '<span class="badge badge-has-site" style="font-size:11px">' + t('orDueInLabel', Math.round(hoursUntilDue)) + '</span>';
       }
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="schedule" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + (dueTime ? orFormatDateTime(dueTime.toISOString()) : '—') + '</td>'
@@ -4445,7 +4448,7 @@
 
   // ── Outreach Bulk Selection ──
 
-  const orSelectedIds = { ready: new Set(), progress: new Set(), followup: new Set(), complete: new Set(), cancelled: new Set() };
+  const orSelectedIds = { ready: new Set(), progress: new Set(), followup: new Set(), complete: new Set(), cancelled: new Set(), today: new Set(), schedule: new Set() };
 
   function updateOrBulkBar(section) {
     const bar = document.getElementById('or-' + section + '-bulk');
@@ -4517,7 +4520,7 @@
           // Mark all remaining steps + followup as sent sequentially
           const biz = src.find(b => String(b.id) === bizId);
           let currentSteps = (biz && biz.outreach_steps) || {};
-          const allKeys = ['1', '2', '3', '4', '5', '6', 'followup'];
+          const allKeys = ['1', '2', '3', 'followup'];
           for (const k of allKeys) {
             if (currentSteps[k] && currentSteps[k].sent_at) continue;
             const r = await fetch('/api/businesses/update-pipeline', {
@@ -4571,7 +4574,7 @@
 
   function getNextOutreachStep(business) {
     const steps = (business && business.outreach_steps) || {};
-    const keys = ['1', '2', '3', '4', '5', '6', 'followup'];
+    const keys = ['1', '2', '3', 'followup'];
     for (const k of keys) {
       if (!steps[k] || !steps[k].sent_at) return k;
     }
