@@ -868,6 +868,7 @@
       outreachCancelNoWhatsapp: "WhatsApp doesn't connect",
       outreachCancelWrongNumber: 'Wrong number',
       outreachCancelNotBusiness: 'Not a real business',
+      outreachCancelNotInterested: 'Not interested',
       outreachCancelOther: 'Other',
       outreachCancelled: 'Cancelled',
       outreachCancelledSuccess: 'Outreach cancelled',
@@ -1706,6 +1707,7 @@
       outreachCancelNoWhatsapp: 'WhatsApp no conecta',
       outreachCancelWrongNumber: 'Número equivocado',
       outreachCancelNotBusiness: 'No es un negocio real',
+      outreachCancelNotInterested: 'No le interesa',
       outreachCancelOther: 'Otro',
       outreachCancelled: 'Cancelado',
       outreachCancelledSuccess: 'Contacto cancelado',
@@ -3182,12 +3184,12 @@
     const domain = selectedDomain || 'NombreDeTuNegocio.com';
 
     return {
-      '1': `¿Es este el negocio ${name} en ${colonia}?`,
+      '1': `Es este el negocio ${name} en ${colonia}?`,
       '2': `Hola, soy ${sender}. Vi que tu negocio no tiene página web, y les hice una de ejemplo con la información que encontré en Google.`,
       '3': `Échale un ojo:\n\n👉 ${url}`,
       '4': 'Hoy en día la gente busca en Google antes de ir a cualquier lugar. Si no tienes página, no apareces.',
       '5': `El servicio cuesta $299 pesos al mes. Eso incluye el diseño, el hospedaje, y un dominio como ${domain}.`,
-      '6': '¿Te gustaría que la ajustemos juntos para que quede exactamente como tú quieres?',
+      '6': 'Te gustaría que la ajustemos juntos para que quede exactamente como tú quieres?',
       'followup': '¡Hola! Solo quería saber si tuviste chance de ver la página que te mandé. Si tienes cualquier duda, con gusto te ayudo.',
       'about': 'Si quieres saber más sobre lo que hacemos: ahoratengopagina.com/about',
     };
@@ -3461,6 +3463,7 @@
       no_whatsapp: t('outreachCancelNoWhatsapp'),
       wrong_number: t('outreachCancelWrongNumber'),
       not_a_business: t('outreachCancelNotBusiness'),
+      not_interested: t('outreachCancelNotInterested'),
       other: t('outreachCancelOther'),
     };
 
@@ -3495,6 +3498,7 @@
               <button class="btn btn-secondary outreach-cancel-reason" data-reason="no_whatsapp" style="font-size:12px;padding:5px 12px">${t('outreachCancelNoWhatsapp')}</button>
               <button class="btn btn-secondary outreach-cancel-reason" data-reason="wrong_number" style="font-size:12px;padding:5px 12px">${t('outreachCancelWrongNumber')}</button>
               <button class="btn btn-secondary outreach-cancel-reason" data-reason="not_a_business" style="font-size:12px;padding:5px 12px">${t('outreachCancelNotBusiness')}</button>
+              <button class="btn btn-secondary outreach-cancel-reason" data-reason="not_interested" style="font-size:12px;padding:5px 12px">${t('outreachCancelNotInterested')}</button>
               <button class="btn btn-secondary outreach-cancel-reason" data-reason="other" style="font-size:12px;padding:5px 12px">${t('outreachCancelOther')}</button>
             </div>
           </div>
@@ -4309,6 +4313,7 @@
       no_whatsapp: t('outreachCancelNoWhatsapp'),
       wrong_number: t('outreachCancelWrongNumber'),
       not_a_business: t('outreachCancelNotBusiness'),
+      not_interested: t('outreachCancelNotInterested'),
       other: t('outreachCancelOther'),
     };
 

@@ -60,7 +60,7 @@ export default async function handler(req, res) {
       }
 
       if (outreach_cancel) {
-        const validReasons = ['no_whatsapp', 'wrong_number', 'not_a_business', 'other'];
+        const validReasons = ['no_whatsapp', 'wrong_number', 'not_a_business', 'not_interested', 'other'];
         if (outreach_cancel.action === 'cancel') {
           if (!outreach_cancel.reason || !validReasons.includes(outreach_cancel.reason)) {
             return res.status(400).json({ error: 'Invalid cancel reason. Must be one of: ' + validReasons.join(', ') });
