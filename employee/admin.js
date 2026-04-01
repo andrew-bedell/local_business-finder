@@ -1599,6 +1599,24 @@
       templatesFlowLinked: 'Vinculado: {0}',
       templatesFlowNotLinked: 'No vinculado',
       templatesTriggerNone: 'Ninguno',
+      // WA Logs
+      navWaLogs: 'Logs WA',
+      waLogsTitle: 'Logs de WhatsApp',
+      waLogsInbound: 'Entrante',
+      waLogsOutbound: 'Saliente',
+      waLogsSearchPh: 'Buscar teléfono, mensaje...',
+      waLogsThTime: 'Hora',
+      waLogsThDir: 'Dir',
+      waLogsThPhone: 'Teléfono',
+      waLogsThBusiness: 'Negocio',
+      waLogsThMessage: 'Mensaje',
+      waLogsThType: 'Tipo',
+      waLogsThStatus: 'Estado',
+      waLogsEmpty: 'No se encontraron mensajes.',
+      waLogsPrev: 'Anterior',
+      waLogsNext: 'Siguiente',
+      waLogsCount: '{0} mensajes',
+      waLogsAutoReply: 'Auto-respuesta',
       // Outreach
       outreachBtnLabel: 'Contactar',
       outreachModalTitle: 'Contacto por WhatsApp',
@@ -7078,6 +7096,7 @@
       messages: ['messaging-section'],
       email: ['email-section'],
       templates: ['templates-section'],
+      wa_logs: ['wa-logs-section'],
       products: ['products-section'],
       customers: ['customers-section'],
       edit_requests: ['edit-requests-section'],
@@ -7088,7 +7107,7 @@
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -7108,11 +7127,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', wa_logs: 'nav-wa-logs', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -7133,6 +7152,7 @@
     if (tab === 'messages') loadConversations();
     if (tab === 'email') loadEmailConversations();
     if (tab === 'templates') loadTemplates();
+    if (tab === 'wa_logs') loadWaLogs();
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
@@ -11549,6 +11569,163 @@
       });
     }
   }
+
+  // ── WA Logs ──
+  let waLogsData = [];
+  let waLogsOffset = 0;
+  const WA_LOGS_PAGE_SIZE = 100;
+
+  async function loadWaLogs() {
+    if (!supabaseClient) return;
+    const tbody = document.getElementById('wa-logs-tbody');
+    const noResults = document.getElementById('no-wa-logs');
+    const countEl = document.getElementById('wa-logs-count');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-dim)">Loading...</td></tr>';
+    if (noResults) noResults.style.display = 'none';
+
+    try {
+      const dirFilter = document.getElementById('wa-logs-direction-filter')?.value || '';
+      const statusFilter = document.getElementById('wa-logs-status-filter')?.value || '';
+      const searchTerm = (document.getElementById('wa-logs-search')?.value || '').trim().toLowerCase();
+
+      let query = supabaseClient
+        .from('whatsapp_messages')
+        .select('id, direction, message_type, body, template_name, template_params, status, error_message, wamid, created_at, sent_at, delivered_at, read_at, conversation_id, business_id, whatsapp_conversations(recipient_phone, businesses(name))')
+        .order('created_at', { ascending: false })
+        .range(waLogsOffset, waLogsOffset + WA_LOGS_PAGE_SIZE - 1);
+
+      if (dirFilter) query = query.eq('direction', dirFilter);
+      if (statusFilter) query = query.eq('status', statusFilter);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error loading WA logs:', error);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--danger)">Error loading logs</td></tr>';
+        return;
+      }
+
+      waLogsData = data || [];
+
+      // Client-side search filter (phone, message body, business name)
+      let filtered = waLogsData;
+      if (searchTerm) {
+        filtered = waLogsData.filter(function(m) {
+          var phone = (m.whatsapp_conversations?.recipient_phone || '').toLowerCase();
+          var biz = (m.whatsapp_conversations?.businesses?.name || '').toLowerCase();
+          var body = (m.body || '').toLowerCase();
+          var tmpl = (m.template_name || '').toLowerCase();
+          return phone.includes(searchTerm) || biz.includes(searchTerm) || body.includes(searchTerm) || tmpl.includes(searchTerm);
+        });
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        if (noResults) noResults.style.display = '';
+        if (countEl) countEl.textContent = '';
+        updateWaLogsPagination(filtered.length);
+        return;
+      }
+
+      if (noResults) noResults.style.display = 'none';
+      if (countEl) countEl.textContent = t('waLogsCount', filtered.length + (filtered.length === WA_LOGS_PAGE_SIZE ? '+' : ''));
+
+      tbody.innerHTML = filtered.map(function(m) {
+        var time = m.created_at ? formatWaLogTime(m.created_at) : '';
+        var dir = m.direction === 'inbound' ? '<span style="color:var(--success);font-weight:600">\u2193 IN</span>' : '<span style="color:var(--primary);font-weight:600">\u2191 OUT</span>';
+        var phone = escapeHtml(m.whatsapp_conversations?.recipient_phone || '\u2014');
+        var bizName = escapeHtml(m.whatsapp_conversations?.businesses?.name || '\u2014');
+        var msgBody = formatWaLogMessage(m);
+        var msgType = escapeHtml(m.message_type || 'text');
+        var statusBadge = formatWaLogStatus(m);
+
+        return '<tr class="wa-log-row" data-msg-id="' + m.id + '">' +
+          '<td style="font-size:12px;white-space:nowrap;color:var(--text-dim)">' + time + '</td>' +
+          '<td>' + dir + '</td>' +
+          '<td style="font-size:12px;font-family:monospace">' + phone + '</td>' +
+          '<td style="font-size:12px">' + bizName + '</td>' +
+          '<td class="wa-log-body">' + msgBody + '</td>' +
+          '<td><span class="badge" style="font-size:11px;padding:2px 8px">' + msgType + '</span></td>' +
+          '<td>' + statusBadge + '</td>' +
+          '</tr>';
+      }).join('');
+
+      updateWaLogsPagination(filtered.length);
+    } catch (err) {
+      console.error('Load WA logs error:', err);
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--danger)">Error loading logs</td></tr>';
+    }
+  }
+
+  function formatWaLogTime(isoStr) {
+    var d = new Date(isoStr);
+    var now = new Date();
+    var pad = function(n) { return String(n).padStart(2, '0'); };
+    var time = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    if (d.toDateString() === now.toDateString()) return time;
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + time;
+  }
+
+  function formatWaLogMessage(m) {
+    if (m.template_name) {
+      var params = m.template_params ? ' [' + escapeHtml(JSON.stringify(m.template_params)) + ']' : '';
+      return '<span style="color:var(--warning);font-size:11px">[template: ' + escapeHtml(m.template_name) + ']</span>' + params;
+    }
+    var body = m.body || '';
+    var truncated = body.length > 120 ? body.substring(0, 120) + '\u2026' : body;
+    return '<span style="font-size:12px">' + escapeHtml(truncated) + '</span>';
+  }
+
+  function formatWaLogStatus(m) {
+    var s = m.status || 'unknown';
+    var color = 'var(--text-dim)';
+    var icon = '';
+    if (s === 'sent') { color = 'var(--text-muted)'; icon = '\u2713'; }
+    else if (s === 'delivered') { color = 'var(--text-muted)'; icon = '\u2713\u2713'; }
+    else if (s === 'read') { color = 'var(--primary)'; icon = '\u2713\u2713'; }
+    else if (s === 'failed') { color = 'var(--danger)'; icon = '\u2717'; }
+    else if (s === 'pending') { color = 'var(--warning)'; icon = '\u23f3'; }
+
+    var html = '<span style="color:' + color + ';font-size:11px;font-weight:600">' + icon + ' ' + s + '</span>';
+    if (s === 'failed' && m.error_message) {
+      html += '<div style="font-size:10px;color:var(--danger);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escapeHtml(m.error_message) + '">' + escapeHtml(m.error_message) + '</div>';
+    }
+    return html;
+  }
+
+  function updateWaLogsPagination(count) {
+    var prevBtn = document.getElementById('wa-logs-prev');
+    var nextBtn = document.getElementById('wa-logs-next');
+    if (prevBtn) prevBtn.disabled = waLogsOffset === 0;
+    if (nextBtn) nextBtn.disabled = count < WA_LOGS_PAGE_SIZE;
+  }
+
+  // WA Logs event bindings
+  (function initWaLogs() {
+    document.addEventListener('click', function(e) {
+      if (e.target.id === 'btn-refresh-wa-logs') { waLogsOffset = 0; loadWaLogs(); }
+      if (e.target.id === 'wa-logs-prev') { waLogsOffset = Math.max(0, waLogsOffset - WA_LOGS_PAGE_SIZE); loadWaLogs(); }
+      if (e.target.id === 'wa-logs-next') { waLogsOffset += WA_LOGS_PAGE_SIZE; loadWaLogs(); }
+    });
+
+    // Filter change listeners
+    ['wa-logs-direction-filter', 'wa-logs-status-filter'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('change', function() { waLogsOffset = 0; loadWaLogs(); });
+    });
+
+    // Debounced search
+    var searchEl = document.getElementById('wa-logs-search');
+    if (searchEl) {
+      var waLogsSearchTimer;
+      searchEl.addEventListener('input', function() {
+        clearTimeout(waLogsSearchTimer);
+        waLogsSearchTimer = setTimeout(function() { loadWaLogs(); }, 300);
+      });
+    }
+  })();
 
   // ── Start ──
   // Wait for auth guard (auth.js) to verify employee before initializing
