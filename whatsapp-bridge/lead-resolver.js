@@ -246,7 +246,7 @@ async function findConversation(sb, phoneVariants, lastTen) {
 
   const { data, error } = await sb
     .from('whatsapp_conversations')
-    .select('id, business_id, recipient_phone, unread_count')
+    .select('id, business_id, recipient_phone, unread_count, auto_reply_disabled')
     .or(convOrFilter)
     .limit(1)
     .single();
