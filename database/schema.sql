@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS businesses (
   pipeline_status_changed_at TIMESTAMPTZ,
   outreach_sent           BOOLEAN DEFAULT FALSE,  -- true when all 6 core outreach steps complete
   outreach_steps          JSONB DEFAULT '{}',  -- per-step tracking: {"1":{"sent_at":"..."}, "2":{...}, ...}
+  whatsapp_status         TEXT DEFAULT 'unvalidated' CHECK (whatsapp_status IN ('unvalidated', 'valid', 'invalid')),
   notes                   TEXT,                -- operator notes about the business
 
   -- Customer-authored content
