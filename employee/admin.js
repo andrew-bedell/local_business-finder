@@ -2476,7 +2476,7 @@
   }
 
   function hasDemoWebsite(business) {
-    return (business.generated_websites || []).length > 0;
+    return (business.generated_websites || []).some(w => w.config && w.config.html);
   }
 
   function getWebsiteStatus(business) {
