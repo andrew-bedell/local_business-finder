@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid pipeline_status. Must be one of: ' + validStatuses.join(', ') });
   }
 
-  const validSteps = ['1', '2', '3', '4', '5', '6', 'followup', 'about'];
+  const validSteps = ['1', '2', '3', 'followup', 'about'];
   if (outreach_step && !validSteps.includes(outreach_step)) {
     return res.status(400).json({ error: 'Invalid outreach_step. Must be one of: ' + validSteps.join(', ') });
   }
@@ -102,8 +102,8 @@ export default async function handler(req, res) {
 
     if (mergedSteps) {
       updatePayload.outreach_steps = mergedSteps;
-      // Auto-set outreach_sent when all 6 core steps are done
-      const coreSteps = ['1', '2', '3', '4', '5', '6'];
+      // Auto-set outreach_sent when all 3 core steps are done
+      const coreSteps = ['1', '2', '3'];
       const allCoreDone = coreSteps.every(s => mergedSteps[s] && mergedSteps[s].sent_at);
       if (allCoreDone) {
         updatePayload.outreach_sent = true;
