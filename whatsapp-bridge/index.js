@@ -166,6 +166,19 @@ client.on('message', async (msg) => {
     // Step 0: Resolve phone against all DB tables
     const resolvedContext = await resolveLeadByPhone(canonicalPhone, phoneVariants);
 
+    // Step 0.5: Early auto-reply check — skip ALL auto-replies if disabled
+    if (resolvedContext.existingConversation?.auto_reply_disabled) {
+      console.log(`  → Auto-reply disabled for conversation ${resolvedContext.existingConversation.id} — skipping`);
+      return;
+    }
+    if (resolvedContext.businessId) {
+      const { isDisabled } = await isAutoReplyDisabledForBusiness(resolvedContext.businessId);
+      if (isDisabled) {
+        console.log(`  → Auto-reply disabled for business ${resolvedContext.businessId} — skipping`);
+        return;
+      }
+    }
+
     // Step 1: Handle active onboarding flow
     if (resolvedContext.activeFlowId) {
       console.log(`  → Active onboarding flow: ${resolvedContext.activeFlowId} (step: ${resolvedContext.activeFlowStep})`);
@@ -279,19 +292,6 @@ client.on('message', async (msg) => {
         direction: 'inbound',
         body: messageBody,
       });
-    }
-
-    // Step 5.5: Check if auto-reply is disabled for this conversation or business
-    if (existingConversation?.auto_reply_disabled) {
-      console.log(`  → Auto-reply disabled for conversation ${existingConversation.id} — skipping`);
-      return;
-    }
-    if (businessId) {
-      const { isDisabled } = await isAutoReplyDisabledForBusiness(businessId);
-      if (isDisabled) {
-        console.log(`  → Auto-reply disabled for business ${businessId} — skipping`);
-        return;
-      }
     }
 
     // Step 6: Get conversation history for context
