@@ -3062,6 +3062,17 @@ select.input {
   color: #fff;
 }
 
+.btn-outreach-invalid {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-outreach-invalid:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
 /* Outreach sent toggle */
 .btn-outreach-sent {
   background: none;
