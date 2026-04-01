@@ -186,6 +186,9 @@
       bulkDeleteConfirm: 'Are you sure you want to delete {0} businesses? This cannot be undone.',
       bulkDeleteSuccess: 'Deleted {0} businesses.',
       bulkEnrichSuccess: 'Enrichment started for {0} businesses.',
+      bulkCheckWA: 'Check WhatsApp',
+      bulkCheckWAStarted: 'Checking WhatsApp for {0} businesses...',
+      bulkCheckWAComplete: 'WhatsApp: {0} valid, {1} invalid, {2} skipped.',
       viewBtn: 'View',
       badgeYes: 'Yes',
       badgeNo: '—',
@@ -1000,6 +1003,9 @@
       bulkDeleteConfirm: '¿Estás seguro de que quieres eliminar {0} negocios? Esta acción no se puede deshacer.',
       bulkDeleteSuccess: '{0} negocios eliminados.',
       bulkEnrichSuccess: 'Enriquecimiento iniciado para {0} negocios.',
+      bulkCheckWA: 'Verificar WhatsApp',
+      bulkCheckWAStarted: 'Verificando WhatsApp para {0} negocios...',
+      bulkCheckWAComplete: 'WhatsApp: {0} válidos, {1} inválidos, {2} omitidos.',
       viewBtn: 'Ver',
       badgeYes: 'Sí',
       badgeNo: '—',
@@ -2098,6 +2104,8 @@
     if (btnBulkEnrich) btnBulkEnrich.addEventListener('click', bulkEnrich);
     const btnBulkCreateWebsites = document.getElementById('btn-bulk-create-websites');
     if (btnBulkCreateWebsites) btnBulkCreateWebsites.addEventListener('click', bulkCreateWebsites);
+    const btnBulkCheckWA = document.getElementById('btn-bulk-check-wa');
+    if (btnBulkCheckWA) btnBulkCheckWA.addEventListener('click', bulkCheckWhatsApp);
     const btnBulkClear = document.getElementById('btn-bulk-clear');
     if (btnBulkClear) btnBulkClear.addEventListener('click', clearSelection);
 
@@ -2829,6 +2837,74 @@
     loadBusinesses();
   }
 
+  async function bulkCheckWhatsApp() {
+    if (selectedIds.size === 0) return;
+
+    const businesses = currentResults.filter(b => selectedIds.has(String(b.id)));
+    const withPhone = businesses.filter(b => {
+      const contacts = b.business_contacts || [];
+      const primary = contacts.find(c => c.is_primary) || contacts[0];
+      const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
+      return !!phone;
+    });
+
+    if (withPhone.length === 0) {
+      showToast(t('bulkCheckWAComplete', 0, 0, businesses.length), 'warning');
+      return;
+    }
+
+    showToast(t('bulkCheckWAStarted', withPhone.length), 'success');
+
+    let valid = 0, invalid = 0, skipped = businesses.length - withPhone.length;
+
+    for (const business of withPhone) {
+      const contacts = business.business_contacts || [];
+      const primary = contacts.find(c => c.is_primary) || contacts[0];
+      const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : business.phone;
+
+      try {
+        const resp = await fetch('/api/whatsapp/check-number', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: phone,
+            businessId: business.id,
+            addressCountry: business.address_country || 'MX',
+          }),
+        });
+        if (!resp.ok) { skipped++; continue; }
+        const result = await resp.json();
+
+        if (result.registered) valid++;
+        else invalid++;
+
+        // Update local data
+        if (result.business) {
+          const fields = ['outreach_steps', 'whatsapp_status'];
+          fields.forEach(f => {
+            if (result.business[f] !== undefined) {
+              business[f] = result.business[f];
+              const ab = allBusinesses.find(b => String(b.id) === String(business.id));
+              if (ab) ab[f] = result.business[f];
+              const abr = allBusinessesRaw.find(b => String(b.id) === String(business.id));
+              if (abr) abr[f] = result.business[f];
+              const cr = currentResults.find(b => String(b.id) === String(business.id));
+              if (cr) cr[f] = result.business[f];
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('WhatsApp check failed for', business.name, err);
+        skipped++;
+      }
+    }
+
+    showToast(t('bulkCheckWAComplete', valid, invalid, skipped), 'success');
+    selectedIds.clear();
+    updateBulkActionsBar();
+    renderCurrentPage();
+  }
+
   // ── Inline Edit ──
 
   function startInlineEdit(td) {
@@ -3553,7 +3629,7 @@
 
           // Update local data
           if (result.business) {
-            const fields = ['outreach_steps'];
+            const fields = ['outreach_steps', 'whatsapp_status'];
             fields.forEach(f => {
               if (result.business[f] !== undefined) {
                 business[f] = result.business[f];

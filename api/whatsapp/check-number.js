@@ -86,7 +86,7 @@ export default async function handler(req, res) {
       {
         method: 'PATCH',
         headers: supabaseHeaders,
-        body: JSON.stringify({ outreach_steps: mergedSteps }),
+        body: JSON.stringify({ outreach_steps: mergedSteps, whatsapp_status: isValid ? 'valid' : 'invalid' }),
       }
     );
 
