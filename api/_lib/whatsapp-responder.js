@@ -296,8 +296,9 @@ async function isAutoReplyDisabled(conversationId, supabaseUrl, headers) {
     );
     const data = res.ok ? await res.json() : [];
     return data.length > 0 && data[0].auto_reply_disabled === true;
-  } catch {
-    return false;
+  } catch (err) {
+    console.error('isAutoReplyDisabled check failed, defaulting to disabled:', err);
+    return true;
   }
 }
 
@@ -310,8 +311,9 @@ async function isAutoReplyDisabledForBusiness(businessId, supabaseUrl, headers) 
     );
     const data = res.ok ? await res.json() : [];
     return data.length > 0;
-  } catch {
-    return false;
+  } catch (err) {
+    console.error('isAutoReplyDisabledForBusiness check failed, defaulting to disabled:', err);
+    return true;
   }
 }
 

@@ -3,6 +3,7 @@
 // Returns contact type, business info, and context for AI agent (OpenClaw) routing
 // Also logs the inbound message to whatsapp_conversations + whatsapp_messages
 //
+import { extractDigits, buildPhoneVariants, getCanonicalPhone } from '../_lib/phone-utils.js';
 // Contact types returned:
 //   "active_customer"    — has a paid subscription and active website
 //   "demo"               — has a generated demo website (not yet paying)
@@ -258,84 +259,7 @@ export default async function handler(req, res) {
 }
 
 
-// ── Phone number normalization ──
-
-/**
- * Extract only digits from a phone string.
- */
-function extractDigits(phone) {
-  return (phone || '').replace(/\D/g, '');
-}
-
-/**
- * Build multiple phone format variants for fuzzy matching.
- *
- * WhatsApp Mexican numbers include an extra "1" after country code 52:
- *   WhatsApp sends: 5216242356580 (521 + 10 digits)
- *   DB stores:      +526242356580 (+52 + 10 digits)
- *
- * We generate both forms so the query matches regardless of which format is stored.
- */
-function buildPhoneVariants(rawPhone) {
-  const digits = extractDigits(rawPhone);
-  if (!digits || digits.length < 10) return [];
-
-  const variants = new Set();
-
-  // Add as-is with + prefix
-  variants.add('+' + digits);
-
-  // If raw input already had +, add that too
-  if (rawPhone.startsWith('+')) {
-    variants.add(rawPhone.replace(/[^\d+]/g, ''));
-  }
-
-  // Mexico: handle the WhatsApp "1" insertion
-  // WhatsApp format: 521XXXXXXXXXX (13 digits) → DB format: +52XXXXXXXXXX (12 digits)
-  if (digits.startsWith('521') && digits.length === 13) {
-    // Strip the "1" → +52 + last 10 digits
-    variants.add('+52' + digits.slice(3));
-  }
-  // Reverse: if DB has +52XXXXXXXXXX and WhatsApp sends 521XXXXXXXXXX
-  if (digits.startsWith('52') && digits.length === 12 && !digits.startsWith('521')) {
-    // Add with "1" inserted → +521 + last 10 digits
-    variants.add('+521' + digits.slice(2));
-  }
-
-  // Colombia: similar pattern possible (57 + 1 + number)
-  if (digits.startsWith('571') && digits.length === 13) {
-    variants.add('+57' + digits.slice(3));
-  }
-  if (digits.startsWith('57') && digits.length === 12 && !digits.startsWith('571')) {
-    variants.add('+571' + digits.slice(2));
-  }
-
-  // Always include last 10 digits as local number with common prefixes
-  const lastTen = digits.slice(-10);
-  if (lastTen.length === 10) {
-    variants.add('+52' + lastTen);   // Mexico
-    variants.add('+521' + lastTen);  // Mexico WhatsApp
-  }
-
-  return [...variants];
-}
-
-
-/**
- * Get a canonical E.164 phone for storing in the DB.
- * Strips the WhatsApp Mexico extra "1" so we store +52XXXXXXXXXX consistently.
- */
-function getCanonicalPhone(digits) {
-  // Mexico: 521XXXXXXXXXX → +52XXXXXXXXXX
-  if (digits.startsWith('521') && digits.length === 13) {
-    return '+52' + digits.slice(3);
-  }
-  // Colombia: 571XXXXXXXXXX → +57XXXXXXXXXX
-  if (digits.startsWith('571') && digits.length === 13) {
-    return '+57' + digits.slice(3);
-  }
-  return '+' + digits;
-}
+// Phone normalization functions imported from ../\_lib/phone-utils.js
 
 
 // ── Conversation logging ──
