@@ -68,6 +68,7 @@
       pipelineSaved: 'Saved',
       pipelineLead: 'Leads',
       pipelineColdOutreach: 'Outreach Ready',
+      pipelineNoWhatsapp: 'No WhatsApp',
       pipelineDemo: 'Demo',
       pipelineActive: 'Active',
       pipelineInactive: 'Inactive',
@@ -885,6 +886,7 @@
       pipelineSaved: 'Guardados',
       pipelineLead: 'Leads',
       pipelineColdOutreach: 'Listo para Contactar',
+      pipelineNoWhatsapp: 'Sin WhatsApp',
       pipelineDemo: 'Demo',
       pipelineActive: 'Activos',
       pipelineInactive: 'Inactivos',
@@ -2341,15 +2343,16 @@
 
   // ── Pipeline Counts ──
   function updatePipelineCounts(businesses) {
-    const counts = { all: businesses.length, saved: 0, lead: 0, cold_outreach_ready: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
+    const counts = { all: businesses.length, saved: 0, lead: 0, cold_outreach_ready: 0, no_whatsapp: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
     businesses.forEach(b => {
       const status = b.pipeline_status || 'saved';
       if (counts[status] !== undefined) counts[status]++;
     });
-    // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete, exclude cancelled
+    // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete, exclude cancelled + invalid whatsapp
     const src = allBusinessesRaw.length ? allBusinessesRaw : businesses;
     counts.cold_outreach_ready = src.filter(b => {
       if (isOutreachCancelled(b)) return false;
+      if (b.whatsapp_status === 'invalid') return false;
       if (!hasDemoWebsite(b)) return false;
       const contacts = b.business_contacts || [];
       const primary = contacts.find(c => c.is_primary) || contacts[0];
@@ -2359,11 +2362,14 @@
       const hasFollowup = steps.followup && steps.followup.sent_at;
       return !hasFollowup; // not fully complete
     }).length;
+    // No WhatsApp: businesses with invalid whatsapp_status
+    counts.no_whatsapp = src.filter(b => b.whatsapp_status === 'invalid').length;
     const el = (id) => document.getElementById(id);
     el('pill-count-all').textContent = counts.all;
     el('pill-count-saved').textContent = counts.saved;
     el('pill-count-lead').textContent = counts.lead;
     el('pill-count-cold-outreach').textContent = counts.cold_outreach_ready;
+    el('pill-count-no-whatsapp').textContent = counts.no_whatsapp;
     el('pill-count-demo').textContent = counts.demo;
     el('pill-count-active').textContent = counts.active_customer;
     el('pill-count-inactive').textContent = counts.inactive_customer;
@@ -2379,10 +2385,11 @@
     // Re-filter from allBusinesses
     let filtered = allBusinesses;
     if (pipelineStage === 'cold_outreach_ready') {
-      // Dynamic: has website + phone + outreach not fully complete, exclude cancelled
+      // Dynamic: has website + phone + outreach not fully complete, exclude cancelled + invalid whatsapp
       const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
       filtered = src.filter(b => {
         if (isOutreachCancelled(b)) return false;
+        if (b.whatsapp_status === 'invalid') return false;
         if (!hasDemoWebsite(b)) return false;
         const contacts = b.business_contacts || [];
         const primary = contacts.find(c => c.is_primary) || contacts[0];
@@ -2392,6 +2399,9 @@
         const hasFollowup = steps.followup && steps.followup.sent_at;
         return !hasFollowup;
       });
+    } else if (pipelineStage === 'no_whatsapp') {
+      const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+      filtered = src.filter(b => b.whatsapp_status === 'invalid');
     } else if (pipelineStage !== 'all') {
       filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
     }
@@ -2627,7 +2637,7 @@
         <td class="td-center">${socialCellHtml}</td>
         <td class="td-center"><button class="btn btn-view btn-create-website" data-id="${b.id}">${createWebsiteBtnLabel}</button></td>
         <td class="td-center">${websiteUrlHtml}</td>
-        <td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach" data-id="${b.id}">${t('outreachBtnLabel')}</button>` : ''}</td>
+        <td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach${b.whatsapp_status === 'invalid' ? ' btn-outreach-invalid' : ''}" data-id="${b.id}">${t('outreachBtnLabel')}</button>` : ''}</td>
         <td class="td-center">${existingWebsiteRecord ? getOutreachProgressHtml(b) : ''}</td>
         <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
         <td class="td-center">${mapsLink}</td>
@@ -2811,7 +2821,7 @@
     if (selectedIds.size === 0) return;
 
     const businesses = currentResults.filter(b => selectedIds.has(String(b.id)));
-    const enrichable = businesses.filter(b => b.place_id && !b.place_id.startsWith('marketing-'));
+    const enrichable = businesses.filter(b => b.place_id && !b.place_id.startsWith('marketing-') && b.whatsapp_status !== 'invalid');
 
     if (enrichable.length === 0) {
       showToast(t('enrichNoPlaceId'), 'error');

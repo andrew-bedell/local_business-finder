@@ -88,7 +88,7 @@ export default async function handler(req, res) {
         `address_full=not.is.null&address_full=neq.&` +
         `phone=not.is.null&phone=neq.&` +
         `pipeline_status=in.(saved,lead)&` +
-        `or=(business_status.eq.OPERATIONAL,business_status.is.null)&` +
+        `and=(or(business_status.eq.OPERATIONAL,business_status.is.null),or(whatsapp_status.eq.valid,whatsapp_status.eq.unvalidated,whatsapp_status.is.null))&` +
         `select=id,name,address_full,address_country,phone,whatsapp,category,subcategory,types,business_status,` +
         `description,price_level,service_options,amenities,highlights,payment_methods,languages_spoken,` +
         `accessibility_info,parking_info,year_established,owner_name,founder_description,hours,rating,review_count,` +

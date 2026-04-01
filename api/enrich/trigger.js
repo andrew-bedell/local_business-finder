@@ -23,9 +23,9 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
-  // 1. Look up business to get place_id, name, address
+  // 1. Look up business to get place_id, name, address, whatsapp_status
   const bizRes = await fetch(
-    `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=place_id,name,address_full`,
+    `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=place_id,name,address_full,whatsapp_status`,
     { headers }
   );
   if (!bizRes.ok) return res.status(500).json({ error: 'Failed to fetch business' });
@@ -37,6 +37,11 @@ export default async function handler(req, res) {
 
   if (!placeId || placeId.startsWith('marketing-')) {
     return res.status(400).json({ error: 'No Google place ID — cannot enrich' });
+  }
+
+  // Skip enrichment for businesses with invalid WhatsApp numbers
+  if (biz.whatsapp_status === 'invalid') {
+    return res.status(200).json({ skipped: true, reason: 'Invalid WhatsApp number — enrichment blocked' });
   }
 
   // 2. Search for data_id using SearchAPI google_maps engine
