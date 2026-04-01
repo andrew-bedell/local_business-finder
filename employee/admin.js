@@ -164,6 +164,10 @@
       thLocation: 'Location',
       thType: 'Type',
       thPhone: 'Business Phone',
+      thWhatsappStatus: 'WA Status',
+      waValid: 'Valid',
+      waInvalid: 'Invalid',
+      waUnchecked: 'Not Checked',
       thEmail: 'Business Email',
       thRating: 'Rating',
       thReviews: 'Reviews',
@@ -982,6 +986,10 @@
       thLocation: 'Ubicación',
       thType: 'Tipo',
       thPhone: 'Tel. Negocio',
+      thWhatsappStatus: 'Estado WA',
+      waValid: 'Válido',
+      waInvalid: 'Inválido',
+      waUnchecked: 'Sin Verificar',
       thEmail: 'Email Negocio',
       thRating: 'Calificación',
       thReviews: 'Reseñas',
@@ -2631,6 +2639,7 @@
         <td>${primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone) ? escapeHtml(primaryContact.contact_whatsapp || primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>
         <td>${primaryContact && primaryContact.contact_email ? escapeHtml(primaryContact.contact_email) : '<span class="td-empty-placeholder">—</span>'}</td>
         <td class="td-editable" data-id="${b.id}" data-field="phone" data-value="${escapeHtml(b.phone || '')}" title="${b.phone ? t('clickToEdit') : t('clickToAdd')}">${b.phone ? escapeHtml(b.phone) : '<span class="td-empty-placeholder">+</span>'}</td>
+        <td class="td-center"><span class="badge ${b.whatsapp_status === 'valid' ? 'badge-has-site' : b.whatsapp_status === 'invalid' ? 'badge-no-site' : ''}" style="font-size:11px">${b.whatsapp_status === 'valid' ? t('waValid') : b.whatsapp_status === 'invalid' ? t('waInvalid') : t('waUnchecked')}</span></td>
         <td class="td-editable" data-id="${b.id}" data-field="email" data-value="${escapeHtml(b.email || '')}" title="${b.email ? t('clickToEdit') : t('clickToAdd')}">${b.email ? escapeHtml(b.email) : '<span class="td-empty-placeholder">+</span>'}</td>
         <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
         <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
