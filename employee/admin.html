@@ -1256,6 +1256,8 @@
                 <th class="col-select"><input type="checkbox" class="or-select-all" data-section="followup"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThFirstOutreach">First Outreach</th>
+                <th data-i18n="orThLastOutreach">Last Outreach</th>
                 <th data-i18n="orThTimeSince">Time Since Step 6</th>
                 <th data-i18n="orThAction">Action</th>
               </tr></thead>
@@ -1263,6 +1265,46 @@
             </table>
           </div>
           <div class="or-empty" id="or-followup-empty"><p data-i18n="orNoFollowup">No businesses awaiting followup.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-today-card">
+          <div class="card-header">
+            <h2 data-i18n="orMessagedTodayTitle">Messaged Today</h2>
+            <span class="badge badge-has-site" id="or-today-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-today-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThProgress">Progress</th>
+                <th data-i18n="orThLastOutreach">Last Outreach</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-today-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-today-empty"><p data-i18n="orNoMessagedToday">No businesses messaged today.</p></div>
+        </div>
+
+        <div class="card or-table-card" id="or-schedule-card">
+          <div class="card-header">
+            <h2 data-i18n="orFollowupScheduleTitle">24h Follow-Up Schedule</h2>
+            <span class="badge badge-no-site" id="or-schedule-count">0</span>
+          </div>
+          <div class="results-table-wrapper" id="or-schedule-wrapper" style="display:none">
+            <table class="results-table">
+              <thead><tr>
+                <th data-i18n="orThBusiness">Business</th>
+                <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThFollowupDue">Followup Due</th>
+                <th data-i18n="orThOverdue">Overdue</th>
+                <th data-i18n="orThAction">Action</th>
+              </tr></thead>
+              <tbody id="or-schedule-body"></tbody>
+            </table>
+          </div>
+          <div class="or-empty" id="or-schedule-empty"><p data-i18n="orNoFollowupSchedule">No follow-ups scheduled.</p></div>
         </div>
 
         <div class="card or-table-card" id="or-visitors-card">
@@ -1301,6 +1343,8 @@
                 <th class="col-select"><input type="checkbox" class="or-select-all" data-section="ready"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThFirstOutreach">First Outreach</th>
+                <th data-i18n="orThLastOutreach">Last Outreach</th>
                 <th data-i18n="orThNextStep">Next Step</th>
                 <th data-i18n="orThAction">Action</th>
               </tr></thead>
@@ -1329,7 +1373,8 @@
                 <th data-i18n="orThContact">Contact</th>
                 <th data-i18n="orThProgress">Progress</th>
                 <th data-i18n="orThNextStep">Next Step</th>
-                <th data-i18n="orThLastSent">Last Sent</th>
+                <th data-i18n="orThFirstOutreach">First Outreach</th>
+                <th data-i18n="orThLastOutreach">Last Outreach</th>
                 <th data-i18n="orThStatus">Status</th>
                 <th data-i18n="orThAction">Action</th>
               </tr></thead>
@@ -1354,6 +1399,8 @@
                 <th class="col-select"><input type="checkbox" class="or-select-all" data-section="complete"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
+                <th data-i18n="orThFirstOutreach">First Outreach</th>
+                <th data-i18n="orThLastOutreach">Last Outreach</th>
                 <th data-i18n="orThCompletedAt">Completed</th>
                 <th data-i18n="orThAction">Action</th>
               </tr></thead>

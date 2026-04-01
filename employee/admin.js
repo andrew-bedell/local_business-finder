@@ -843,6 +843,17 @@
       orThCompletedAt: 'Completed',
       orThStatus: 'Status',
       orThAction: 'Action',
+      orThFirstOutreach: 'First Outreach',
+      orThLastOutreach: 'Last Outreach',
+      orThFollowupDue: 'Followup Due',
+      orThOverdue: 'Overdue',
+      orMessagedTodayTitle: 'Messaged Today',
+      orNoMessagedToday: 'No businesses messaged today.',
+      orFollowupScheduleTitle: '24h Follow-Up Schedule',
+      orNoFollowupSchedule: 'No follow-ups scheduled.',
+      orOverdueLabel: '{0}h overdue',
+      orDueInLabel: 'Due in {0}h',
+      orDueNowLabel: 'Due now',
       orNoFollowup: 'No businesses awaiting followup.',
       orNoVisitors: 'No recent website visitors.',
       orNoReady: 'No businesses ready for outreach.',
@@ -1670,6 +1681,17 @@
       orThCompletedAt: 'Completado',
       orThStatus: 'Estado',
       orThAction: 'Acción',
+      orThFirstOutreach: 'Primer Contacto',
+      orThLastOutreach: 'Último Contacto',
+      orThFollowupDue: 'Seguimiento Pendiente',
+      orThOverdue: 'Atraso',
+      orMessagedTodayTitle: 'Contactados Hoy',
+      orNoMessagedToday: 'Ningún negocio contactado hoy.',
+      orFollowupScheduleTitle: 'Programa de Seguimiento 24h',
+      orNoFollowupSchedule: 'No hay seguimientos programados.',
+      orOverdueLabel: '{0}h de atraso',
+      orDueInLabel: 'En {0}h',
+      orDueNowLabel: 'Ahora',
       orNoFollowup: 'No hay negocios esperando seguimiento.',
       orNoVisitors: 'No hay visitantes recientes.',
       orNoReady: 'No hay negocios listos para contactar.',
@@ -3937,6 +3959,22 @@
     return latest;
   }
 
+  function getFirstOutreachTime(business) {
+    const steps = business.outreach_steps || {};
+    return (steps['1'] && steps['1'].sent_at) || null;
+  }
+
+  function orFormatDateTime(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const h12 = h % 12 || 12;
+    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + h12 + ':' + String(m).padStart(2, '0') + ampm;
+  }
+
   function getNextStepLabel(business) {
     const steps = business.outreach_steps || {};
     const coreKeys = ['1', '2', '3', '4', '5', '6'];
@@ -4076,6 +4114,36 @@
     if (statComplete) statComplete.textContent = complete.length;
     if (statCancelled) statCancelled.textContent = cancelled.length;
 
+    // Compute "Messaged Today" — any business with a step sent today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayTs = todayStart.getTime();
+    const messagedToday = withSite.filter(b => {
+      const steps = b.outreach_steps || {};
+      return ['1', '2', '3', '4', '5', '6', 'followup'].some(k =>
+        steps[k] && steps[k].sent_at && new Date(steps[k].sent_at).getTime() >= todayTs
+      );
+    });
+    messagedToday.sort((a, b) => {
+      const at = getLastStepSentTime(a) || '';
+      const bt = getLastStepSentTime(b) || '';
+      return bt.localeCompare(at);
+    });
+
+    // Compute "24h Follow-Up Schedule" — step 6 done, no followup sent
+    const followupSchedule = active.filter(b => {
+      const steps = b.outreach_steps || {};
+      const count = getOutreachStepCount(b);
+      return count >= 6 && !(steps.followup && steps.followup.sent_at);
+    });
+    followupSchedule.sort((a, b) => {
+      const at = (a.outreach_steps && a.outreach_steps['6'] && a.outreach_steps['6'].sent_at) || '';
+      const bt = (b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at) || '';
+      return at.localeCompare(bt); // oldest first — most overdue at top
+    });
+
+    renderOrMessagedTodayTable(messagedToday);
+    renderOrFollowupScheduleTable(followupSchedule);
     renderOrFollowupTable(followupDue);
     renderOrReadyTable(ready);
     renderOrProgressTable(inProgress);
@@ -4111,6 +4179,8 @@
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="followup" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
+        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
         + '<td>' + orTimeAgo(step6Time) + '</td>'
         + '<td>' + orActionBtn(b) + '</td>'
         + '</tr>';
@@ -4140,6 +4210,8 @@
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="ready" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
+        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
         + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
         + '<td>' + orActionBtn(b) + '</td>'
         + '</tr>';
@@ -4176,7 +4248,8 @@
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + getOutreachProgressHtml(b) + '</td>'
         + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
-        + '<td>' + orTimeAgo(getLastStepSentTime(b)) + '</td>'
+        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
+        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
         + '<td>' + statusBadge + '</td>'
         + '<td>' + orActionBtn(b) + '</td>'
         + '</tr>';
@@ -4207,6 +4280,8 @@
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="complete" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
+        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
         + '<td>' + orTimeAgo(followupTime) + '</td>'
         + '<td>' + orActionBtn(b) + '</td>'
         + '</tr>';
@@ -4254,6 +4329,77 @@
     if (body) body.innerHTML = html;
     bindOrTableEvents('or-cancelled-body');
     bindOrCancelledTableEvents();
+  }
+
+  function renderOrMessagedTodayTable(businesses) {
+    const body = document.getElementById('or-today-body');
+    const wrapper = document.getElementById('or-today-wrapper');
+    const empty = document.getElementById('or-today-empty');
+    const countEl = document.getElementById('or-today-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    let html = '';
+    businesses.forEach(b => {
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + getOutreachProgressHtml(b) + '</td>'
+        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
+        + '<td>' + orActionBtn(b) + '</td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-today-body');
+  }
+
+  function renderOrFollowupScheduleTable(businesses) {
+    const body = document.getElementById('or-schedule-body');
+    const wrapper = document.getElementById('or-schedule-wrapper');
+    const empty = document.getElementById('or-schedule-empty');
+    const countEl = document.getElementById('or-schedule-count');
+    if (countEl) countEl.textContent = businesses.length;
+
+    if (!businesses.length) {
+      if (wrapper) wrapper.style.display = 'none';
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (wrapper) wrapper.style.display = '';
+    if (empty) empty.style.display = 'none';
+
+    let html = '';
+    businesses.forEach(b => {
+      const step6Time = b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at;
+      const dueTime = step6Time ? new Date(new Date(step6Time).getTime() + 24 * 60 * 60 * 1000) : null;
+      const hoursUntilDue = dueTime ? (dueTime.getTime() - Date.now()) / (1000 * 60 * 60) : 0;
+      let overdueLabel = '';
+      if (!dueTime) {
+        overdueLabel = '—';
+      } else if (Math.abs(hoursUntilDue) < 0.5) {
+        overdueLabel = '<span class="badge badge-no-site" style="font-size:11px">' + t('orDueNowLabel') + '</span>';
+      } else if (hoursUntilDue < 0) {
+        overdueLabel = '<span class="badge badge-no-site" style="font-size:11px">' + t('orOverdueLabel', Math.round(Math.abs(hoursUntilDue))) + '</span>';
+      } else {
+        overdueLabel = '<span class="badge badge-has-site" style="font-size:11px">' + t('orDueInLabel', Math.round(hoursUntilDue)) + '</span>';
+      }
+      html += '<tr>'
+        + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + getOrContactHtml(b) + '</td>'
+        + '<td>' + (dueTime ? orFormatDateTime(dueTime.toISOString()) : '—') + '</td>'
+        + '<td>' + overdueLabel + '</td>'
+        + '<td>' + orActionBtn(b) + '</td>'
+        + '</tr>';
+    });
+    if (body) body.innerHTML = html;
+    bindOrTableEvents('or-schedule-body');
   }
 
   function bindOrCancelledTableEvents() {
