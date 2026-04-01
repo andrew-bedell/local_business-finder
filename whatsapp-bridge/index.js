@@ -16,7 +16,7 @@ const qrcode = require('qrcode-terminal');
 const { matchContact, buildPhoneVariants, getCanonicalPhone, extractDigits } = require('./match-contact');
 const { generateResponse } = require('./respond');
 const express = require('express');
-const { findConversationByPhone, upsertConversation, logMessage, getConversationHistory } = require('./db');
+const { findConversationByPhone, upsertConversation, logMessage, getConversationHistory, isAutoReplyDisabledForBusiness } = require('./db');
 const onboarding = require('./onboarding');
 const { resolveLeadByPhone } = require('./lead-resolver');
 
@@ -279,6 +279,19 @@ client.on('message', async (msg) => {
         direction: 'inbound',
         body: messageBody,
       });
+    }
+
+    // Step 5.5: Check if auto-reply is disabled for this conversation or business
+    if (existingConversation?.auto_reply_disabled) {
+      console.log(`  → Auto-reply disabled for conversation ${existingConversation.id} — skipping`);
+      return;
+    }
+    if (businessId) {
+      const { isDisabled } = await isAutoReplyDisabledForBusiness(businessId);
+      if (isDisabled) {
+        console.log(`  → Auto-reply disabled for business ${businessId} — skipping`);
+        return;
+      }
     }
 
     // Step 6: Get conversation history for context

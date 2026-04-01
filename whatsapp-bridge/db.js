@@ -25,7 +25,7 @@ async function findConversationByPhone(phoneVariants) {
 
   const { data, error } = await sb
     .from('whatsapp_conversations')
-    .select('id, business_id, recipient_phone, unread_count')
+    .select('id, business_id, recipient_phone, unread_count, auto_reply_disabled')
     .or(filters)
     .limit(1)
     .single();
@@ -366,11 +366,37 @@ async function updateMarketingLeadStatus(leadId, status) {
 }
 
 
+/**
+ * Check if auto-reply is disabled for any conversation linked to this business.
+ * Returns { isDisabled: true/false }.
+ */
+async function isAutoReplyDisabledForBusiness(businessId) {
+  const sb = getClient();
+  try {
+    const { data, error } = await sb
+      .from('whatsapp_conversations')
+      .select('id')
+      .eq('business_id', businessId)
+      .eq('auto_reply_disabled', true)
+      .limit(1);
+
+    if (error) {
+      console.error('isAutoReplyDisabledForBusiness error:', error.message);
+      return { isDisabled: true }; // Fail closed
+    }
+    return { isDisabled: data && data.length > 0 };
+  } catch (err) {
+    console.error('isAutoReplyDisabledForBusiness error:', err);
+    return { isDisabled: true }; // Fail closed
+  }
+}
+
 module.exports = {
   findConversationByPhone,
   upsertConversation,
   logMessage,
   getConversationHistory,
+  isAutoReplyDisabledForBusiness,
   findActiveFlow,
   createFlow,
   updateFlow,
