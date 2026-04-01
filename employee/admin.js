@@ -870,6 +870,15 @@
       outreachNotOnWA: 'Not on WhatsApp',
       outreachCheckWAError: 'Check failed',
       outreachCheckWARecheck: 'Re-check',
+      orBulkCancel: 'Cancel',
+      orBulkComplete: 'Mark Complete',
+      orBulkNextStep: 'Next Step',
+      orBulkReactivate: 'Reactivate',
+      orBulkSelected: '{0} selected',
+      orBulkCancelDone: 'Cancelled {0} businesses.',
+      orBulkCompleteDone: 'Marked {0} businesses complete.',
+      orBulkNextStepDone: 'Advanced {0} businesses to next step.',
+      orBulkReactivateDone: 'Reactivated {0} businesses.',
       orStatCancelled: 'Cancelled',
       orCancelledTitle: 'Cancelled Outreach',
       orNoCancelled: 'No cancelled outreach.',
@@ -1688,6 +1697,15 @@
       outreachNotOnWA: 'No en WhatsApp',
       outreachCheckWAError: 'Verificación falló',
       outreachCheckWARecheck: 'Re-verificar',
+      orBulkCancel: 'Cancelar',
+      orBulkComplete: 'Marcar Completo',
+      orBulkNextStep: 'Siguiente Paso',
+      orBulkReactivate: 'Reactivar',
+      orBulkSelected: '{0} seleccionados',
+      orBulkCancelDone: '{0} negocios cancelados.',
+      orBulkCompleteDone: '{0} negocios marcados como completos.',
+      orBulkNextStepDone: '{0} negocios avanzados al siguiente paso.',
+      orBulkReactivateDone: '{0} negocios reactivados.',
       orStatCancelled: 'Cancelados',
       orCancelledTitle: 'Contacto Cancelado',
       orNoCancelled: 'No hay contacto cancelado.',
@@ -4063,6 +4081,11 @@
     renderOrProgressTable(inProgress);
     renderOrCompleteTable(complete);
     renderOrCancelledTable(cancelled);
+    // Reset selection state and rebind checkbox events
+    Object.keys(orSelectedIds).forEach(k => orSelectedIds[k].clear());
+    ['ready', 'progress', 'followup', 'complete', 'cancelled'].forEach(s => updateOrBulkBar(s));
+    document.querySelectorAll('.or-select-all').forEach(cb => { cb.checked = false; });
+    bindOrSelectionEventsOnce();
     loadOrVisitors();
   }
 
@@ -4085,6 +4108,7 @@
     businesses.forEach(b => {
       const step6Time = b.outreach_steps && b.outreach_steps['6'] && b.outreach_steps['6'].sent_at;
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="followup" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + orTimeAgo(step6Time) + '</td>'
@@ -4113,6 +4137,7 @@
     let html = '';
     businesses.forEach(b => {
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="ready" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
@@ -4146,6 +4171,7 @@
         ? '<span class="or-stale-badge">' + t('orStatStale') + '</span>'
         : '<span class="or-ontrack-badge">On Track</span>';
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="progress" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + getOutreachProgressHtml(b) + '</td>'
@@ -4178,6 +4204,7 @@
     businesses.forEach(b => {
       const followupTime = b.outreach_steps && b.outreach_steps.followup && b.outreach_steps.followup.sent_at;
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="complete" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + orTimeAgo(followupTime) + '</td>'
@@ -4216,6 +4243,7 @@
       const reason = cancelled ? (cancelReasonLabels[cancelled.reason] || cancelled.reason) : '';
       const cancelledAt = cancelled ? orTimeAgo(cancelled.at) : '';
       html += '<tr>'
+        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="cancelled" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + escapeHtml(reason) + '</td>'
@@ -4262,6 +4290,141 @@
         }
       });
     });
+  }
+
+  // ── Outreach Bulk Selection ──
+
+  const orSelectedIds = { ready: new Set(), progress: new Set(), followup: new Set(), complete: new Set(), cancelled: new Set() };
+
+  function updateOrBulkBar(section) {
+    const bar = document.getElementById('or-' + section + '-bulk');
+    const countEl = document.getElementById('or-' + section + '-bulk-count');
+    const count = orSelectedIds[section].size;
+    if (bar) bar.style.display = count > 0 ? '' : 'none';
+    if (countEl) countEl.textContent = t('orBulkSelected', count);
+  }
+
+  function bindOrSelectionEventsOnce() {
+    if (bindOrSelectionEventsOnce._bound) return;
+    bindOrSelectionEventsOnce._bound = true;
+
+    // Select-all checkboxes
+    document.querySelectorAll('.or-select-all').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const section = cb.dataset.section;
+        const card = cb.closest('.or-table-card');
+        const rows = card ? card.querySelectorAll('.or-row-select[data-section="' + section + '"]') : [];
+        rows.forEach(r => {
+          r.checked = cb.checked;
+          const bizId = r.dataset.bizId;
+          if (cb.checked) orSelectedIds[section].add(bizId);
+          else orSelectedIds[section].delete(bizId);
+        });
+        updateOrBulkBar(section);
+      });
+    });
+
+    // Individual row checkboxes (delegated from card level)
+    document.querySelectorAll('.or-table-card').forEach(card => {
+      card.addEventListener('change', (e) => {
+        const cb = e.target.closest('.or-row-select');
+        if (!cb) return;
+        const section = cb.dataset.section;
+        const bizId = cb.dataset.bizId;
+        if (cb.checked) orSelectedIds[section].add(bizId);
+        else orSelectedIds[section].delete(bizId);
+        updateOrBulkBar(section);
+      });
+    });
+
+    // Bulk action buttons
+    document.querySelectorAll('.or-bulk-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.dataset.section;
+        const action = btn.dataset.action;
+        handleOrBulkAction(section, action);
+      });
+    });
+  }
+
+  async function handleOrBulkAction(section, action) {
+    const ids = Array.from(orSelectedIds[section]);
+    if (ids.length === 0) return;
+
+    const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+    let processed = 0;
+
+    for (const bizId of ids) {
+      try {
+        let body = { businessId: bizId };
+
+        if (action === 'cancel') {
+          body.outreach_cancel = { action: 'cancel', reason: 'other' };
+        } else if (action === 'reactivate') {
+          body.outreach_cancel = { action: 'uncancel' };
+        } else if (action === 'complete') {
+          // Mark all remaining steps + followup as sent sequentially
+          const biz = src.find(b => String(b.id) === bizId);
+          let currentSteps = (biz && biz.outreach_steps) || {};
+          const allKeys = ['1', '2', '3', '4', '5', '6', 'followup'];
+          for (const k of allKeys) {
+            if (currentSteps[k] && currentSteps[k].sent_at) continue;
+            const r = await fetch('/api/businesses/update-pipeline', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ businessId: bizId, outreach_step: k }),
+            });
+            if (!r.ok) break;
+            const res = await r.json();
+            if (res.business) {
+              currentSteps = res.business.outreach_steps || {};
+              if (biz) biz.outreach_steps = res.business.outreach_steps;
+              const ab = allBusinesses.find(b => String(b.id) === bizId);
+              if (ab) ab.outreach_steps = res.business.outreach_steps;
+            }
+          }
+          processed++;
+          continue;
+        } else if (action === 'next-step') {
+          const biz = src.find(b => String(b.id) === bizId);
+          const nextStep = getNextOutreachStep(biz);
+          if (!nextStep) continue;
+          body.outreach_step = nextStep;
+        }
+
+        const resp = await fetch('/api/businesses/update-pipeline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (resp.ok) {
+          const result = await resp.json();
+          if (result.business) {
+            const biz = src.find(b => String(b.id) === bizId);
+            if (biz) biz.outreach_steps = result.business.outreach_steps;
+            const ab = allBusinesses.find(b => String(b.id) === bizId);
+            if (ab) ab.outreach_steps = result.business.outreach_steps;
+          }
+          processed++;
+        }
+      } catch (err) {
+        console.warn('Bulk outreach action failed for', bizId, err);
+      }
+    }
+
+    const toastKeys = { cancel: 'orBulkCancelDone', complete: 'orBulkCompleteDone', 'next-step': 'orBulkNextStepDone', reactivate: 'orBulkReactivateDone' };
+    showToast(t(toastKeys[action] || 'orBulkCancelDone', processed), 'success');
+    orSelectedIds[section].clear();
+    loadOutreach();
+  }
+
+  function getNextOutreachStep(business) {
+    const steps = (business && business.outreach_steps) || {};
+    const keys = ['1', '2', '3', '4', '5', '6', 'followup'];
+    for (const k of keys) {
+      if (!steps[k] || !steps[k].sent_at) return k;
+    }
+    return null;
   }
 
   async function loadOrVisitors() {

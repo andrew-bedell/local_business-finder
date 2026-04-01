@@ -1245,9 +1245,15 @@
             <h2 data-i18n="orFollowupTitle">24h Followup Reminders</h2>
             <span class="badge badge-no-site" id="or-followup-count">0</span>
           </div>
+          <div class="or-bulk-bar" id="or-followup-bulk" style="display:none">
+            <span class="bulk-actions-count" id="or-followup-bulk-count"></span>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="followup" data-action="cancel" data-i18n="orBulkCancel">Cancel</button>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="followup" data-action="complete" data-i18n="orBulkComplete">Mark Complete</button>
+          </div>
           <div class="results-table-wrapper" id="or-followup-wrapper" style="display:none">
             <table class="results-table">
               <thead><tr>
+                <th class="col-select"><input type="checkbox" class="or-select-all" data-section="followup"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
                 <th data-i18n="orThTimeSince">Time Since Step 6</th>
@@ -1285,9 +1291,14 @@
             <h2 data-i18n="orReadyTitle">Ready for Outreach</h2>
             <span class="badge badge-no-site" id="or-ready-count">0</span>
           </div>
+          <div class="or-bulk-bar" id="or-ready-bulk" style="display:none">
+            <span class="bulk-actions-count" id="or-ready-bulk-count"></span>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="ready" data-action="cancel" data-i18n="orBulkCancel">Cancel</button>
+          </div>
           <div class="results-table-wrapper" id="or-ready-wrapper" style="display:none">
             <table class="results-table">
               <thead><tr>
+                <th class="col-select"><input type="checkbox" class="or-select-all" data-section="ready"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
                 <th data-i18n="orThNextStep">Next Step</th>
@@ -1304,9 +1315,16 @@
             <h2 data-i18n="orProgressTitle">Outreach In Progress</h2>
             <span class="badge badge-no-site" id="or-progress-count">0</span>
           </div>
+          <div class="or-bulk-bar" id="or-progress-bulk" style="display:none">
+            <span class="bulk-actions-count" id="or-progress-bulk-count"></span>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="progress" data-action="next-step" data-i18n="orBulkNextStep">Next Step</button>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="progress" data-action="cancel" data-i18n="orBulkCancel">Cancel</button>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="progress" data-action="complete" data-i18n="orBulkComplete">Mark Complete</button>
+          </div>
           <div class="results-table-wrapper" id="or-progress-wrapper" style="display:none">
             <table class="results-table">
               <thead><tr>
+                <th class="col-select"><input type="checkbox" class="or-select-all" data-section="progress"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
                 <th data-i18n="orThProgress">Progress</th>
@@ -1326,9 +1344,14 @@
             <h2 data-i18n="orCompleteTitle">Outreach Complete</h2>
             <span class="badge badge-has-site" id="or-complete-count">0</span>
           </div>
+          <div class="or-bulk-bar" id="or-complete-bulk" style="display:none">
+            <span class="bulk-actions-count" id="or-complete-bulk-count"></span>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="complete" data-action="cancel" data-i18n="orBulkCancel">Cancel</button>
+          </div>
           <div class="results-table-wrapper" id="or-complete-wrapper" style="display:none">
             <table class="results-table">
               <thead><tr>
+                <th class="col-select"><input type="checkbox" class="or-select-all" data-section="complete"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
                 <th data-i18n="orThCompletedAt">Completed</th>
@@ -1345,9 +1368,14 @@
             <h2 data-i18n="orCancelledTitle">Cancelled Outreach</h2>
             <span class="badge badge-no-site" id="or-cancelled-count">0</span>
           </div>
+          <div class="or-bulk-bar" id="or-cancelled-bulk" style="display:none">
+            <span class="bulk-actions-count" id="or-cancelled-bulk-count"></span>
+            <button class="btn btn-secondary btn-sm or-bulk-btn" data-section="cancelled" data-action="reactivate" data-i18n="orBulkReactivate">Reactivate</button>
+          </div>
           <div class="results-table-wrapper" id="or-cancelled-wrapper" style="display:none">
             <table class="results-table">
               <thead><tr>
+                <th class="col-select"><input type="checkbox" class="or-select-all" data-section="cancelled"></th>
                 <th data-i18n="orThBusiness">Business</th>
                 <th data-i18n="orThContact">Contact</th>
                 <th data-i18n="orThReason">Reason</th>
