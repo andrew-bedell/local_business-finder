@@ -3986,7 +3986,7 @@
   function loadOutreach() {
     // Use raw unfiltered data so pipeline-tab filters don't affect outreach
     const source = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
-    const withSite = source.filter(b => hasDemoWebsite(b) && getBusinessPhone(b));
+    const withSite = source.filter(b => hasDemoWebsite(b) && getBusinessPhone(b) && b.whatsapp_status !== 'invalid');
 
     // Separate cancelled from active
     const cancelled = withSite.filter(b => isOutreachCancelled(b));
