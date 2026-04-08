@@ -110,6 +110,8 @@
       inlineEditSaved: 'Saved',
       inlineEditError: 'Failed to save',
       clickToEdit: 'Click to edit',
+      clickToCopy: 'Click to copy',
+      copiedToClipboard: 'Copied!',
       clickToAdd: 'Click to add',
       pipelineSaving: 'Saving...',
       pipelineSaveBtn: 'Save Pipeline Status',
@@ -968,6 +970,8 @@
       inlineEditSaved: 'Guardado',
       inlineEditError: 'Error al guardar',
       clickToEdit: 'Clic para editar',
+      clickToCopy: 'Clic para copiar',
+      copiedToClipboard: '¡Copiado!',
       clickToAdd: 'Clic para agregar',
       pipelineSaving: 'Guardando...',
       pipelineSaveBtn: 'Guardar Etapa',
@@ -2702,7 +2706,7 @@
         <td class="td-center col-sticky col-select"><input type="checkbox" class="pipeline-checkbox row-select" data-id="${b.id}" ${isChecked ? 'checked' : ''}></td>
         <td class="td-center col-sticky col-sticky-1">${offset + i + 1}</td>
         <td class="td-editable col-sticky col-sticky-2" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
-        <td class="td-center" style="font-size:11px;color:var(--text-dim);font-family:monospace" title="${escapeHtml(b.business_code || '')}">${escapeHtml(b.business_code || '—')}</td>
+        <td class="td-center td-copyable" style="font-size:11px;color:var(--text-dim);font-family:monospace;cursor:pointer" data-copy-value="${escapeHtml(b.business_code || '')}" title="${t('clickToCopy')}">${escapeHtml(b.business_code || '—')}</td>
         <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(b.address_full || '—')}</td>
         <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
         <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
@@ -2809,6 +2813,17 @@
         const businessId = td.getAttribute('data-id');
         const business = currentResults.find(b => String(b.id) === String(businessId));
         if (business) openDetailModal(business);
+      });
+    });
+
+    // Bind copyable cells (e.g. Biz ID)
+    resultsBody.querySelectorAll('.td-copyable').forEach((td) => {
+      td.addEventListener('click', () => {
+        const val = td.getAttribute('data-copy-value');
+        if (!val) return;
+        navigator.clipboard.writeText(val).then(() => {
+          showToast(t('copiedToClipboard'), 'success');
+        }).catch(() => {});
       });
     });
 
@@ -3207,11 +3222,11 @@
     return '<span class="outreach-progress" data-id="' + business.id + '" style="cursor:pointer"><span class="outreach-sent-label">' + t('outreachAllSent') + '</span></span>';
   }
 
-  function getOutreachTemplates(business, senderName, previewUrl, selectedDomain) {
+  function getOutreachTemplates(business, senderName, previewUrl, selectedDomain, demoUrl) {
     const name = business.name || '';
     const colonia = extractColonia(business.address_full) || business.address_city || '';
     const sender = senderName || '';
-    const url = previewUrl || '';
+    const url = demoUrl || previewUrl || '';
     const domain = selectedDomain || 'NombreDeTuNegocio.com';
 
     return {
@@ -3362,6 +3377,9 @@
     const phone = toE164(rawPhone, business.address_country) || rawPhone;
 
     const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
+    const demoUrl = existingWebsiteRecord
+      ? (window.location.origin + '/demo/' + existingWebsiteRecord.id)
+      : '';
     const previewUrl = existingWebsiteRecord
       ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
       : '';
@@ -3370,7 +3388,7 @@
     const steps = business.outreach_steps || {};
     const domainData = steps._domain || null;
     const selectedDomain = domainData && domainData.selected ? domainData.selected : null;
-    const templates = getOutreachTemplates(business, senderName, previewUrl, selectedDomain);
+    const templates = getOutreachTemplates(business, senderName, previewUrl, selectedDomain, demoUrl);
     const isCancelled = isOutreachCancelled(business);
 
     const stepKeys = ['1', '2', '3'];

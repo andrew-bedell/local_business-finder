@@ -29,6 +29,7 @@
     { "source": "/employee/messages", "destination": "/employee/admin.html" },
     { "source": "/mipagina", "destination": "/customer/index.html" },
     { "source": "/mipagina/:nombre", "destination": "/customer/index.html" },
+    { "source": "/demo/:id", "destination": "/demo/index.html" },
     { "source": "/ver/:id", "destination": "/preview/index.html" },
     { "source": "/planes/:id", "destination": "/planes/index.html" },
     { "source": "/checkout/confirmacion", "destination": "/checkout/confirmacion.html" },
