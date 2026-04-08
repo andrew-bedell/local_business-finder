@@ -134,7 +134,10 @@ export default async function handler(req, res) {
     const updatedWebsite = patchData[0] || {};
 
     // Send lifecycle email to customer (non-blocking)
-    if (action === 'publish' || action === 'suspend' || action === 'reactivate') {
+    // Skip 'publish' — auto-publish happens at generation time for outreach URLs,
+    // before the business owner has purchased. Only email on suspend/reactivate
+    // (which only apply to paying customers with active sites).
+    if (action === 'suspend' || action === 'reactivate') {
       sendLifecycleEmail(action, business, updatedWebsite, supabaseUrl, supabaseHeaders).catch(err => {
         console.warn('Lifecycle email error (non-blocking):', err);
       });
