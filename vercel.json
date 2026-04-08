@@ -17,7 +17,7 @@
     "api/search/resolve-share.js": {
       "memory": 1024
     },
-    "api/demo/serve.js": {
+    "api/demo-page/serve.js": {
       "includeFiles": "demo-landing/**"
     }
   },
@@ -32,7 +32,7 @@
     { "source": "/employee/messages", "destination": "/employee/admin.html" },
     { "source": "/mipagina", "destination": "/customer/index.html" },
     { "source": "/mipagina/:nombre", "destination": "/customer/index.html" },
-    { "source": "/demo/:id", "destination": "/api/demo/serve" },
+    { "source": "/demo/:id", "destination": "/api/demo-page/serve" },
     { "source": "/ver/:id", "destination": "/preview/index.html" },
     { "source": "/planes/:id", "destination": "/planes/index.html" },
     { "source": "/checkout/confirmacion", "destination": "/checkout/confirmacion.html" },
