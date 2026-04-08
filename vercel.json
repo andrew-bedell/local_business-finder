@@ -16,6 +16,9 @@
   "functions": {
     "api/search/resolve-share.js": {
       "memory": 1024
+    },
+    "api/demo/serve.js": {
+      "includeFiles": "demo-landing/**"
     }
   },
   "rewrites": [
@@ -29,7 +32,7 @@
     { "source": "/employee/messages", "destination": "/employee/admin.html" },
     { "source": "/mipagina", "destination": "/customer/index.html" },
     { "source": "/mipagina/:nombre", "destination": "/customer/index.html" },
-    { "source": "/demo/:id", "destination": "/demo-landing/index.html" },
+    { "source": "/demo/:id", "destination": "/api/demo/serve" },
     { "source": "/ver/:id", "destination": "/preview/index.html" },
     { "source": "/planes/:id", "destination": "/planes/index.html" },
     { "source": "/checkout/confirmacion", "destination": "/checkout/confirmacion.html" },
