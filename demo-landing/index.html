@@ -1039,7 +1039,7 @@
 
   async function init() {
     try {
-      var response = await fetch('/api/demo-page/landing?id=' + encodeURIComponent(websiteId));
+      var response = await fetch('/api/sales-landing/landing?id=' + encodeURIComponent(websiteId));
       if (!response.ok) {
         if (response.status === 404) throw new Error('No encontramos esta pagina.');
         throw new Error('Error al cargar los datos.');
