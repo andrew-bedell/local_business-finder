@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Pagina Web Lista — AhoraTengoPagina</title>
+  <meta name="description" content="Tu negocio ya tiene su pagina web profesional lista. Revisala y lanzala hoy.">
+
+  <!-- OG Tags (static branding) -->
+  <meta property="og:title" content="Tu pagina web ya esta lista — AhoraTengoPagina">
+  <meta property="og:description" content="Creamos una pagina web profesional para tu negocio. Revisala ahora.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.ahoratengopagina.com/assets/images/og-image.jpg">
+  <meta property="og:locale" content="es_MX">
+  <meta property="og:site_name" content="AhoraTengoPagina">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design Tokens (from marketing.css) ── */
+    :root {
+      --m-blue: #1A56DB;
+      --m-blue-dark: #1E40AF;
+      --m-blue-light: #DBEAFE;
+      --m-green: #22C55E;
+      --m-green-dark: #16A34A;
+      --m-bg: #FAFAF7;
+      --m-dark: #0F172A;
+      --m-dark-card: #1E293B;
+      --m-text: #1E293B;
+      --m-text-muted: #64748B;
+      --m-text-light: #94A3B8;
+      --m-border: #E2E8F0;
+      --m-white: #FFFFFF;
+      --m-radius: 8px;
+      --m-radius-lg: 12px;
+      --m-radius-xl: 16px;
+      --m-max-width: 1200px;
+      --m-shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --m-shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --m-shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--m-text);
+      background: var(--m-bg);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    img { max-width: 100%; height: auto; display: block; }
+    a { text-decoration: none; color: inherit; }
+
+    .container {
+      max-width: var(--m-max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Buttons ── */
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 36px;
+      font-size: 17px;
+      font-weight: 700;
+      font-family: inherit;
+      border-radius: var(--m-radius);
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      text-decoration: none;
+    }
+    .btn-cta:active { transform: scale(0.97); }
+
+    .btn-green {
+      background: var(--m-green);
+      color: var(--m-white);
+    }
+    .btn-green:hover { background: var(--m-green-dark); }
+
+    .btn-outline-light {
+      background: transparent;
+      color: var(--m-white);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .btn-outline-light:hover {
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ── Section Tag ── */
+    .section-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .section-tag--blue { color: var(--m-blue); }
+    .section-tag--green { color: var(--m-green); }
+
+    /* ── Loading / Error States ── */
+    .page-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      gap: 16px;
+    }
+    .page-loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--m-border);
+      border-top-color: var(--m-green);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .page-loading-text {
+      font-size: 14px;
+      color: var(--m-text-muted);
+    }
+    .page-error {
+      display: none;
+      text-align: center;
+      padding: 100px 24px;
+    }
+    .page-error-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .page-error-msg {
+      font-size: 16px;
+      color: var(--m-text-muted);
+    }
+
+    /* ============================================================================
+       1. MINI NAV
+       ============================================================================ */
+    .demo-nav {
+      background: var(--m-white);
+      border-bottom: 1px solid var(--m-border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+    }
+    .demo-nav-logo {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--m-blue);
+      letter-spacing: -0.5px;
+    }
+
+    /* ============================================================================
+       2. PERSONALIZED HERO
+       ============================================================================ */
+    .demo-hero {
+      background: var(--m-dark);
+      color: var(--m-white);
+      padding: 72px 0 80px;
+      text-align: center;
+    }
+    .demo-hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .demo-hero h1 .highlight {
+      color: var(--m-green);
+    }
+    .demo-hero-sub {
+      font-size: 17px;
+      color: var(--m-text-light);
+      max-width: 520px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .demo-hero-ctas {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .demo-hero .btn-cta {
+      width: 100%;
+      max-width: 340px;
+    }
+
+    /* ============================================================================
+       3. WEBSITE PREVIEW CARD
+       ============================================================================ */
+    .demo-preview {
+      background: var(--m-bg);
+      padding: 64px 0;
+      text-align: center;
+    }
+    .demo-preview-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--m-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+    .demo-device {
+      max-width: 380px;
+      margin: 0 auto 32px;
+      background: var(--m-white);
+      border-radius: var(--m-radius-xl);
+      box-shadow: var(--m-shadow-lg);
+      overflow: hidden;
+      border: 1px solid var(--m-border);
+    }
+    .demo-device-bar {
+      background: #F1F5F9;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--m-border);
+    }
+    .demo-device-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #CBD5E1;
+    }
+    .demo-device-url {
+      flex: 1;
+      background: var(--m-white);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--m-text-muted);
+      margin-left: 8px;
+      text-align: left;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .demo-device-body {
+      padding: 32px 24px 40px;
+    }
+    .demo-device-body .biz-category {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--m-blue);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .demo-device-body .biz-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--m-text);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    .demo-device-body .biz-location {
+      font-size: 13px;
+      color: var(--m-text-muted);
+      margin-bottom: 20px;
+    }
+    .demo-device-body .biz-features {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .demo-device-body .biz-feature {
+      text-align: center;
+    }
+    .demo-device-body .biz-feature-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--m-blue-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin: 0 auto 6px;
+    }
+    .demo-device-body .biz-feature-label {
+      font-size: 11px;
+      color: var(--m-text-muted);
+      font-weight: 500;
+    }
+    .demo-preview .btn-cta {
+      max-width: 340px;
+      width: 100%;
+    }
+
+    /* ============================================================================
+       4. THE PROBLEM
+       ============================================================================ */
+    .demo-problem {
+      background: var(--m-white);
+      padding: 72px 0;
+    }
+    .demo-problem .container {
+      max-width: 640px;
+    }
+    .demo-problem h2 {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .demo-problem-intro {
+      font-size: 16px;
+      color: var(--m-text-muted);
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+    .demo-problem-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      list-style: none;
+    }
+    .demo-problem-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 15px;
+      color: var(--m-text);
+      line-height: 1.5;
+    }
+    .demo-problem-icon {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      background: #FEF2F2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .demo-problem-text strong {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .demo-problem-text span {
+      color: var(--m-text-muted);
+      font-size: 14px;
+    }
+
+    /* ============================================================================
+       5. THE SOLUTION (3 Steps)
+       ============================================================================ */
+    .demo-solution {
+      background: var(--m-dark);
+      color: var(--m-white);
+      padding: 72px 0;
+      text-align: center;
+    }
+    .demo-solution h2 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .demo-solution-sub {
+      font-size: 16px;
+      color: var(--m-text-light);
+      max-width: 480px;
+      margin: 0 auto 48px;
+    }
+    .demo-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .demo-step {
+      background: var(--m-dark-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--m-radius-lg);
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .demo-step-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      background: var(--m-green);
+      color: var(--m-white);
+      font-size: 16px;
+      font-weight: 800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .demo-step h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .demo-step p {
+      font-size: 14px;
+      color: var(--m-text-light);
+      line-height: 1.5;
+    }
+
+    /* ============================================================================
+       6. WHAT'S INCLUDED
+       ============================================================================ */
+    .demo-features {
+      background: var(--m-bg);
+      padding: 72px 0;
+      text-align: center;
+    }
+    .demo-features h2 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .demo-features-sub {
+      font-size: 16px;
+      color: var(--m-text-muted);
+      max-width: 480px;
+      margin: 0 auto 40px;
+    }
+    .demo-features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .demo-feature-card {
+      background: var(--m-white);
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius-lg);
+      padding: 20px;
+    }
+    .demo-feature-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--m-blue-light);
+      border-radius: var(--m-radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .demo-feature-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .demo-feature-card p {
+      font-size: 13px;
+      color: var(--m-text-muted);
+      line-height: 1.5;
+    }
+
+    /* ============================================================================
+       7. PRICING TEASER
+       ============================================================================ */
+    .demo-pricing {
+      background: var(--m-white);
+      padding: 72px 0;
+      text-align: center;
+    }
+    .demo-pricing h2 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+    .demo-pricing-sub {
+      font-size: 16px;
+      color: var(--m-text-muted);
+      max-width: 480px;
+      margin: 0 auto 36px;
+    }
+    .demo-pricing-card {
+      max-width: 380px;
+      margin: 0 auto;
+      background: var(--m-bg);
+      border: 2px solid var(--m-green);
+      border-radius: var(--m-radius-xl);
+      padding: 32px 24px;
+      text-align: left;
+      position: relative;
+    }
+    .demo-pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--m-green);
+      color: var(--m-white);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .demo-pricing-price {
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--m-text);
+      line-height: 1;
+      margin-bottom: 4px;
+      margin-top: 8px;
+    }
+    .demo-pricing-price span {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--m-text-muted);
+    }
+    .demo-pricing-note {
+      font-size: 14px;
+      color: var(--m-text-muted);
+      margin-bottom: 24px;
+    }
+    .demo-pricing-features {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+      list-style: none;
+    }
+    .demo-pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--m-text);
+    }
+    .demo-pricing-check {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--m-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .demo-pricing .btn-cta {
+      width: 100%;
+    }
+    .demo-pricing-link {
+      display: block;
+      margin-top: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--m-blue);
+      text-align: center;
+    }
+    .demo-pricing-link:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================================================================
+       8. FINAL CTA
+       ============================================================================ */
+    .demo-final-cta {
+      background: var(--m-dark);
+      color: var(--m-white);
+      padding: 80px 0;
+      text-align: center;
+    }
+    .demo-final-cta h2 {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .demo-final-cta p {
+      font-size: 16px;
+      color: var(--m-text-light);
+      margin-bottom: 36px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .demo-final-cta .btn-cta {
+      max-width: 340px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .demo-final-wa {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--m-text-light);
+      transition: color 0.2s;
+    }
+    .demo-final-wa:hover { color: var(--m-white); }
+    .demo-final-wa svg {
+      width: 18px;
+      height: 18px;
+      fill: #25D366;
+    }
+
+    /* ============================================================================
+       9. FOOTER
+       ============================================================================ */
+    .demo-footer {
+      background: var(--m-dark);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 24px 0;
+      text-align: center;
+    }
+    .demo-footer-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .demo-footer-brand {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--m-white);
+    }
+    .demo-footer-links {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+    }
+    .demo-footer-links a {
+      color: var(--m-text-light);
+      transition: color 0.2s;
+    }
+    .demo-footer-links a:hover { color: var(--m-white); }
+    .demo-footer-copy {
+      font-size: 12px;
+      color: var(--m-text-light);
+    }
+
+    /* ============================================================================
+       STICKY MOBILE CTA
+       ============================================================================ */
+    .demo-sticky {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 900;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--m-border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .demo-sticky .btn-cta {
+      width: 100%;
+      max-width: 480px;
+      padding: 14px 32px;
+      font-size: 16px;
+    }
+
+    /* ============================================================================
+       DESKTOP OVERRIDES
+       ============================================================================ */
+    @media (min-width: 769px) {
+      .demo-hero { padding: 100px 0 100px; }
+      .demo-hero h1 { font-size: 48px; }
+      .demo-hero-sub { font-size: 19px; }
+      .demo-hero-ctas {
+        flex-direction: row;
+        justify-content: center;
+      }
+      .demo-hero .btn-cta {
+        width: auto;
+        max-width: none;
+      }
+
+      .demo-preview { padding: 80px 0; }
+      .demo-device { max-width: 440px; }
+
+      .demo-problem,
+      .demo-solution,
+      .demo-features,
+      .demo-pricing { padding: 100px 0; }
+
+      .demo-problem h2,
+      .demo-solution h2,
+      .demo-features h2,
+      .demo-pricing h2,
+      .demo-final-cta h2 { font-size: 36px; }
+
+      .demo-steps {
+        flex-direction: row;
+        max-width: 800px;
+        gap: 20px;
+      }
+      .demo-step {
+        flex: 1;
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+      }
+
+      .demo-features-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 800px;
+        gap: 20px;
+      }
+
+      .demo-final-cta { padding: 100px 0; }
+      .demo-final-cta h2 { font-size: 40px; max-width: 600px; }
+
+      .demo-sticky { display: none; }
+    }
+
+    /* Small phone adjustments */
+    @media (max-width: 380px) {
+      .demo-hero h1 { font-size: 28px; }
+      .demo-features-grid { grid-template-columns: 1fr; }
+      .demo-device-body .biz-features { gap: 12px; }
+    }
+
+    /* Padding for sticky CTA on mobile */
+    @media (max-width: 768px) {
+      .demo-footer { padding-bottom: 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Loading State ── -->
+<div id="page-loading" class="page-loading">
+  <div class="page-loading-spinner"></div>
+  <div class="page-loading-text">Cargando tu pagina...</div>
+</div>
+
+<!-- ── Error State ── -->
+<div id="page-error" class="page-error">
+  <div class="page-error-icon">&#128533;</div>
+  <div id="page-error-msg" class="page-error-msg">No pudimos cargar esta pagina.</div>
+</div>
+
+<!-- ── Page Content (hidden until data loads) ── -->
+<div id="demo-content" style="display:none">
+
+  <!-- 1. MINI NAV -->
+  <nav class="demo-nav">
+    <span class="demo-nav-logo">AhoraTengoPagina</span>
+  </nav>
+
+  <!-- 2. PERSONALIZED HERO -->
+  <section class="demo-hero">
+    <div class="container">
+      <h1 id="hero-heading"><span class="highlight">Tu negocio</span>, tu pagina web ya esta lista</h1>
+      <p class="demo-hero-sub">
+        La creamos con la informacion real de tu negocio en Google: fotos, resenas, horarios y datos de contacto. Solo falta que la veas.
+      </p>
+      <div class="demo-hero-ctas">
+        <a id="cta-hero" href="#" class="btn-cta btn-green">Ver mi pagina web &#8594;</a>
+        <a href="#como-funciona" class="btn-cta btn-outline-light">Como funciona</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. WEBSITE PREVIEW CARD -->
+  <section class="demo-preview">
+    <div class="container">
+      <p class="demo-preview-label">Vista previa de tu pagina</p>
+      <div class="demo-device">
+        <div class="demo-device-bar">
+          <div class="demo-device-dot"></div>
+          <div class="demo-device-dot"></div>
+          <div class="demo-device-dot"></div>
+          <span id="device-url" class="demo-device-url">ahoratengopagina.com/sitio/tu-negocio</span>
+        </div>
+        <div class="demo-device-body">
+          <div id="device-category" class="biz-category"></div>
+          <div id="device-name" class="biz-name">Tu Negocio</div>
+          <div id="device-location" class="biz-location"></div>
+          <div class="biz-features">
+            <div class="biz-feature">
+              <div class="biz-feature-icon">&#128222;</div>
+              <div class="biz-feature-label">Contacto</div>
+            </div>
+            <div class="biz-feature">
+              <div class="biz-feature-icon">&#128247;</div>
+              <div class="biz-feature-label">Fotos</div>
+            </div>
+            <div class="biz-feature">
+              <div class="biz-feature-icon">&#11088;</div>
+              <div class="biz-feature-label">Resenas</div>
+            </div>
+            <div class="biz-feature">
+              <div class="biz-feature-icon">&#128337;</div>
+              <div class="biz-feature-label">Horarios</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a id="cta-preview" href="#" class="btn-cta btn-green">Ver la pagina completa &#8594;</a>
+    </div>
+  </section>
+
+  <!-- 4. THE PROBLEM -->
+  <section class="demo-problem">
+    <div class="container">
+      <span class="section-tag section-tag--blue">El problema</span>
+      <h2>Sin pagina web, tus clientes no te encuentran</h2>
+      <p class="demo-problem-intro">
+        Tu negocio aparece en Google, pero cuando alguien busca mas informacion... no hay donde verla.
+      </p>
+      <ul class="demo-problem-list">
+        <li>
+          <div class="demo-problem-icon">&#128269;</div>
+          <div class="demo-problem-text">
+            <strong>Invisible en busquedas</strong>
+            <span>Sin pagina web, Google no te muestra a nuevos clientes que buscan negocios como el tuyo.</span>
+          </div>
+        </li>
+        <li>
+          <div class="demo-problem-icon">&#128694;</div>
+          <div class="demo-problem-text">
+            <strong>Clientes que se van</strong>
+            <span>Cuando no encuentran precios, fotos o como contactarte, eligen a tu competencia.</span>
+          </div>
+        </li>
+        <li>
+          <div class="demo-problem-icon">&#128196;</div>
+          <div class="demo-problem-text">
+            <strong>Informacion dispersa</strong>
+            <span>Tu horario en Google, fotos en Facebook, resenas en otro lado. Tus clientes quieren todo en un solo lugar.</span>
+          </div>
+        </li>
+        <li>
+          <div class="demo-problem-icon">&#128241;</div>
+          <div class="demo-problem-text">
+            <strong>Sin presencia profesional</strong>
+            <span>Hoy el 76% de la gente busca un negocio en su celular antes de visitarlo. Sin pagina, no existes.</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. THE SOLUTION (3 Steps) -->
+  <section class="demo-solution" id="como-funciona">
+    <div class="container">
+      <span class="section-tag section-tag--green">La solucion</span>
+      <h2>Asi de facil funciona</h2>
+      <p class="demo-solution-sub">Tu pagina ya esta creada. Solo hay que revisarla y lanzarla.</p>
+      <div class="demo-steps">
+        <div class="demo-step">
+          <div class="demo-step-num">1</div>
+          <div>
+            <h3>Ya la creamos</h3>
+            <p>Usamos tu informacion de Google para crear una pagina profesional con tus fotos, resenas y datos de contacto.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-num">2</div>
+          <div>
+            <h3>Tu la revisas</h3>
+            <p>Mira tu pagina, pide los cambios que quieras. No se publica nada sin tu aprobacion.</p>
+          </div>
+        </div>
+        <div class="demo-step">
+          <div class="demo-step-num">3</div>
+          <div>
+            <h3>La lanzamos</h3>
+            <p>Activamos tu pagina para que tus clientes te encuentren en Google, WhatsApp y redes sociales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. WHAT'S INCLUDED -->
+  <section class="demo-features">
+    <div class="container">
+      <span class="section-tag section-tag--blue">Que incluye</span>
+      <h2>Todo lo que tu negocio necesita</h2>
+      <p class="demo-features-sub">Una pagina web completa, lista para recibir clientes.</p>
+      <div class="demo-features-grid">
+        <div class="demo-feature-card">
+          <div class="demo-feature-icon">&#127912;</div>
+          <h3>Diseno profesional</h3>
+          <p>Una pagina moderna y atractiva que refleja la calidad de tu negocio.</p>
+        </div>
+        <div class="demo-feature-card">
+          <div class="demo-feature-icon">&#128241;</div>
+          <h3>Optimizada para celular</h3>
+          <p>Se ve perfecta en cualquier dispositivo. Tus clientes navegan desde el celular.</p>
+        </div>
+        <div class="demo-feature-card">
+          <div class="demo-feature-icon">&#128270;</div>
+          <h3>Visible en Google</h3>
+          <p>Optimizada para que nuevos clientes te encuentren cuando buscan en tu zona.</p>
+        </div>
+        <div class="demo-feature-card">
+          <div class="demo-feature-icon">&#11088;</div>
+          <h3>Tus mejores resenas</h3>
+          <p>Mostramos las resenas reales de tus clientes para generar confianza.</p>
+        </div>
+        <div class="demo-feature-card">
+          <div class="demo-feature-icon">&#128247;</div>
+          <h3>Galeria de fotos</h3>
+          <p>Tus fotos reales organizadas para mostrar lo mejor de tu negocio.</p>
+        </div>
+        <div class="demo-feature-card">
+          <div class="demo-feature-icon">&#128337;</div>
+          <h3>Horarios y contacto</h3>
+          <p>Toda tu informacion importante al alcance de un clic.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. PRICING TEASER -->
+  <section class="demo-pricing">
+    <div class="container">
+      <span class="section-tag section-tag--green">Precio simple</span>
+      <h2>Sin sorpresas, sin contratos</h2>
+      <p class="demo-pricing-sub">Un solo plan con todo incluido. Cancela cuando quieras.</p>
+      <div class="demo-pricing-card">
+        <div class="demo-pricing-badge">Mas popular</div>
+        <div class="demo-pricing-price">$250 <span>MXN/mes</span></div>
+        <div class="demo-pricing-note">Sin costo de instalacion. Sin contratos.</div>
+        <ul class="demo-pricing-features">
+          <li>
+            <span class="demo-pricing-check">&#10003;</span>
+            Pagina web profesional completa
+          </li>
+          <li>
+            <span class="demo-pricing-check">&#10003;</span>
+            Hosting y dominio incluidos
+          </li>
+          <li>
+            <span class="demo-pricing-check">&#10003;</span>
+            Optimizacion para Google (SEO)
+          </li>
+          <li>
+            <span class="demo-pricing-check">&#10003;</span>
+            Certificado de seguridad (SSL)
+          </li>
+          <li>
+            <span class="demo-pricing-check">&#10003;</span>
+            Cambios ilimitados por WhatsApp
+          </li>
+          <li>
+            <span class="demo-pricing-check">&#10003;</span>
+            Soporte personalizado
+          </li>
+        </ul>
+        <a id="cta-pricing" href="#" class="btn-cta btn-green">Ver mi pagina web &#8594;</a>
+        <a id="link-planes" href="#" class="demo-pricing-link">Ver planes y precios detallados &#8594;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. FINAL CTA -->
+  <section class="demo-final-cta">
+    <div class="container">
+      <h2>Tu pagina ya esta lista. Solo falta tu aprobacion.</h2>
+      <p>Revisa tu pagina web personalizada y dinos que te parece. Sin compromiso.</p>
+      <a id="cta-final" href="#" class="btn-cta btn-green">Ver mi pagina web &#8594;</a>
+      <div>
+        <a href="https://wa.me/529991095806?text=Hola,%20quiero%20ver%20mi%20pagina%20web" class="demo-final-wa">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Prefieres hablar por WhatsApp? Escribenos
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. FOOTER -->
+  <footer class="demo-footer">
+    <div class="container">
+      <div class="demo-footer-inner">
+        <span class="demo-footer-brand">AhoraTengoPagina</span>
+        <div class="demo-footer-links">
+          <a href="https://wa.me/529991095806">WhatsApp</a>
+          <a href="/privacy-policy">Privacidad</a>
+        </div>
+        <span class="demo-footer-copy">&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- STICKY MOBILE CTA -->
+  <div class="demo-sticky">
+    <a id="cta-sticky" href="#" class="btn-cta btn-green">Ver mi pagina web &#8594;</a>
+  </div>
+
+</div><!-- /demo-content -->
+
+<script>
+(function() {
+  'use strict';
+
+  var pathParts = window.location.pathname.split('/');
+  var websiteId = pathParts[pathParts.length - 1];
+  if (!websiteId || websiteId === 'demo') { showPageError('Enlace inv\u00e1lido.'); return; }
+
+  init();
+
+  async function init() {
+    try {
+      var response = await fetch('/api/demo/landing?id=' + encodeURIComponent(websiteId));
+      if (!response.ok) {
+        if (response.status === 404) throw new Error('No encontramos esta pagina.');
+        throw new Error('Error al cargar los datos.');
+      }
+
+      var data = await response.json();
+      var previewUrl = '/ver/' + encodeURIComponent(websiteId);
+      var planesUrl = '/planes/' + encodeURIComponent(websiteId);
+
+      // Personalize hero heading
+      if (data.businessName) {
+        document.getElementById('hero-heading').innerHTML =
+          '<span class="highlight">' + escapeHtml(data.businessName) + '</span>, tu pagina web ya esta lista';
+        document.title = escapeHtml(data.businessName) + ' \u2014 Tu Pagina Web Lista | AhoraTengoPagina';
+      }
+
+      // Populate device preview card
+      if (data.businessName) {
+        document.getElementById('device-name').textContent = data.businessName;
+      }
+      if (data.businessCategory) {
+        document.getElementById('device-category').textContent = data.businessCategory;
+      }
+      if (data.businessCity || data.businessCountry) {
+        var locationParts = [data.businessCity, data.businessCountry].filter(Boolean);
+        document.getElementById('device-location').textContent = locationParts.join(', ');
+      }
+      if (data.slug) {
+        document.getElementById('device-url').textContent = 'ahoratengopagina.com/sitio/' + data.slug;
+      }
+
+      // Set all CTA links
+      var ctaIds = ['cta-hero', 'cta-preview', 'cta-pricing', 'cta-final', 'cta-sticky'];
+      ctaIds.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.href = previewUrl;
+      });
+
+      // Set planes link
+      document.getElementById('link-planes').href = planesUrl;
+
+      // Show content
+      document.getElementById('page-loading').style.display = 'none';
+      document.getElementById('demo-content').style.display = '';
+
+      // Track demo_landing_view
+      trackEvent('demo_landing_view');
+    } catch (err) {
+      showPageError(err.message);
+    }
+  }
+
+  function trackEvent(eventType) {
+    try {
+      navigator.sendBeacon('/api/analytics/track', JSON.stringify({
+        website_id: websiteId,
+        event_type: eventType,
+        page_url: window.location.href,
+        referrer: document.referrer ? new URL(document.referrer).hostname : '',
+        device_type: window.innerWidth < 768 ? 'mobile' : window.innerWidth < 1024 ? 'tablet' : 'desktop',
+      }));
+    } catch (e) { /* silent */ }
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  function showPageError(msg) {
+    document.getElementById('page-loading').style.display = 'none';
+    document.getElementById('page-error').style.display = '';
+    document.getElementById('page-error-msg').textContent = msg || 'No pudimos cargar esta pagina.';
+  }
+})();
+</script>
+</body>
+</html>
