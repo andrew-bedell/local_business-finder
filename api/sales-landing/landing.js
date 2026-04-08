@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=id,slug,businesses(name,category,address_city,address_country)`,
+      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=id,businesses(name,slug,category,address_city,address_country)`,
       {
         headers: {
           'apikey': supabaseKey,
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       websiteId: website.id,
-      slug: website.slug || '',
+      slug: business.slug || '',
       businessName: business.name || '',
       businessCategory: business.category || '',
       businessCity: business.address_city || '',
