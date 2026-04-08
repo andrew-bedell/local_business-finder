@@ -771,6 +771,7 @@
       outreachBusinessName: 'Business Name',
       outreachPhone: 'Phone',
       outreachPreviewUrl: 'Website URL',
+      outreachDemoUrl: 'Demo URL',
       outreachCopied: 'Copied!',
       outreachNoPhone: 'No phone number available',
       outreachYourName: 'Your Name',
@@ -1627,6 +1628,7 @@
       outreachBusinessName: 'Nombre del Negocio',
       outreachPhone: 'Teléfono',
       outreachPreviewUrl: 'Link del Sitio',
+      outreachDemoUrl: 'Link Demo',
       outreachCopied: '¡Copiado!',
       outreachNoPhone: 'No hay número de teléfono',
       outreachYourName: 'Tu Nombre',
@@ -3564,6 +3566,15 @@
               </div>
             </div>
           </div>
+          ${demoUrl ? `<div class="outreach-info-row">
+            <div class="outreach-field" style="flex:1">
+              <div class="outreach-label">${t('outreachDemoUrl')}</div>
+              <div class="outreach-value-row">
+                <span class="outreach-value" style="font-size:12px"><a href="${escapeHtml(demoUrl)}" target="_blank" rel="noopener">${escapeHtml(demoUrl.replace(/^https?:\/\//, ''))}</a></span>
+                <button class="btn-outreach-copy" data-copy="demo" title="Copy">📋</button>
+              </div>
+            </div>
+          </div>` : ''}
           <div class="outreach-auto-reply-toggle">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-muted)">
               <input type="checkbox" id="outreach-auto-reply-cb"> ${t('outreachAutoReplyOff')}
@@ -3704,6 +3715,7 @@
         let text = '';
         if (type === 'phone') text = phone;
         else if (type === 'url') text = previewUrl;
+        else if (type === 'demo') text = demoUrl;
         copyToClipboard(text, t('outreachCopied'));
       });
     });
