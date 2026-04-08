@@ -1,43 +1,34 @@
 // Design Engine V2 — Color system
 // Category-specific accent defaults, palette validation, CSS custom property generation
 
+import { normalizeBusinessType } from './taxonomy.js';
+
 const CATEGORY_ACCENTS = {
-  'Restaurant': { accent: '#C25B3A', accentLight: '#D4765C' },
-  'Cafe': { accent: '#8B6F47', accentLight: '#A68B64' },
-  'Bakery': { accent: '#D4956A', accentLight: '#E2B08E' },
-  'Bar': { accent: '#1B3A4B', accentLight: '#2E5A6E' },
-  'Salon': { accent: '#B08D7A', accentLight: '#C4A696' },
-  'Beauty Salon': { accent: '#B08D7A', accentLight: '#C4A696' },
-  'Nail Salon': { accent: '#C5A572', accentLight: '#D4BA8A' },
-  'Spa': { accent: '#7A9E8E', accentLight: '#95B5A6' },
-  'Gym': { accent: '#E63E21', accentLight: '#F06449' },
-  'Dentist': { accent: '#4A90A4', accentLight: '#6AABB8' },
-  'Doctor': { accent: '#2E6B8A', accentLight: '#4A8DAD' },
-  'Veterinarian': { accent: '#5E8B5E', accentLight: '#7AA67A' },
-  'Lawyer': { accent: '#2C3E50', accentLight: '#3D5A73' },
-  'Accountant': { accent: '#2C3E50', accentLight: '#3D5A73' },
-  'Real Estate': { accent: '#1A5632', accentLight: '#2D7A4D' },
-  'Insurance': { accent: '#2E6B8A', accentLight: '#4A8DAD' },
-  'Plumber': { accent: '#D97B2B', accentLight: '#E8954F' },
-  'Electrician': { accent: '#D97B2B', accentLight: '#E8954F' },
-  'Auto Repair': { accent: '#3A3A3A', accentLight: '#5A5A5A' },
-  'Car Wash': { accent: '#2E6B8A', accentLight: '#4A8DAD' },
-  'Hotel': { accent: '#8B7355', accentLight: '#A6906F' },
-  'Florist': { accent: '#C17B8E', accentLight: '#D49AAB' },
-  'Jewelry': { accent: '#B8860B', accentLight: '#D4A82A' },
-  'Locksmith': { accent: '#2C3E50', accentLight: '#3D5A73' },
-  'Painter': { accent: '#8B7355', accentLight: '#A6906F' },
-  'Clothing': { accent: '#2C3E50', accentLight: '#3D5A73' },
-  'Pet Store': { accent: '#5E8B5E', accentLight: '#7AA67A' },
-  'Furniture': { accent: '#8B7355', accentLight: '#A6906F' },
-  'Hardware': { accent: '#D97B2B', accentLight: '#E8954F' },
-  'Pharmacy': { accent: '#5E8B5E', accentLight: '#7AA67A' },
-  'Physiotherapist': { accent: '#4A90A4', accentLight: '#6AABB8' },
-  'Travel': { accent: '#2E6B8A', accentLight: '#4A8DAD' },
-  'Laundry': { accent: '#4A90A4', accentLight: '#6AABB8' },
-  'Moving': { accent: '#2E6B8A', accentLight: '#4A8DAD' },
-  'Roofing': { accent: '#8B4513', accentLight: '#A0522D' },
-  'Storage': { accent: '#D97B2B', accentLight: '#E8954F' },
+  restaurant: { accent: '#C25B3A', accentLight: '#D4765C' },
+  cafe: { accent: '#8B6F47', accentLight: '#A68B64' },
+  bakery: { accent: '#D4956A', accentLight: '#E2B08E' },
+  bar: { accent: '#1B3A4B', accentLight: '#2E5A6E' },
+  salon: { accent: '#B08D7A', accentLight: '#C4A696' },
+  'nail-salon': { accent: '#C5A572', accentLight: '#D4BA8A' },
+  spa: { accent: '#7A9E8E', accentLight: '#95B5A6' },
+  barber: { accent: '#8B7355', accentLight: '#A6906F' },
+  gym: { accent: '#E63E21', accentLight: '#F06449' },
+  dentist: { accent: '#4A90A4', accentLight: '#6AABB8' },
+  doctor: { accent: '#2E6B8A', accentLight: '#4A8DAD' },
+  veterinarian: { accent: '#5E8B5E', accentLight: '#7AA67A' },
+  physiotherapist: { accent: '#4A90A4', accentLight: '#6AABB8' },
+  lawyer: { accent: '#2C3E50', accentLight: '#3D5A73' },
+  accountant: { accent: '#2C3E50', accentLight: '#3D5A73' },
+  'real-estate': { accent: '#1A5632', accentLight: '#2D7A4D' },
+  insurance: { accent: '#2E6B8A', accentLight: '#4A8DAD' },
+  plumber: { accent: '#D97B2B', accentLight: '#E8954F' },
+  electrician: { accent: '#D97B2B', accentLight: '#E8954F' },
+  contractor: { accent: '#8B4513', accentLight: '#A0522D' },
+  'auto-repair': { accent: '#3A3A3A', accentLight: '#5A5A5A' },
+  hotel: { accent: '#8B7355', accentLight: '#A6906F' },
+  furniture: { accent: '#8B7355', accentLight: '#A6906F' },
+  retail: { accent: '#2C3E50', accentLight: '#3D5A73' },
+  travel: { accent: '#2E6B8A', accentLight: '#4A8DAD' },
 };
 
 const DEFAULT_ACCENT = { accent: '#2C3E50', accentLight: '#3D5A73' };
@@ -83,7 +74,8 @@ function lighten(hex, amount) {
  * Generate CSS custom properties for the color palette
  */
 export function getColorCSS(designPalette, category, subcategory) {
-  const catDefaults = CATEGORY_ACCENTS[subcategory] || CATEGORY_ACCENTS[category] || DEFAULT_ACCENT;
+  const businessType = normalizeBusinessType(category, subcategory);
+  const catDefaults = CATEGORY_ACCENTS[businessType] || DEFAULT_ACCENT;
 
   // Use AI-recommended colors if valid, fall back to category defaults
   let primary = designPalette?.primaryColor;

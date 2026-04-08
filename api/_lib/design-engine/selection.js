@@ -1,68 +1,36 @@
 // Design Engine V2 — Selection logic
 // Deterministic variation selection, mood mapping, and category detection
 
+import { normalizeBusinessType } from './taxonomy.js';
+
 const VARIATIONS = ['editorial', 'dynamic', 'minimal', 'immersive'];
 
 const MOOD_MAP = {
-  // Food & Drink
-  'Restaurant': 'warm',
-  'Cafe': 'warm',
-  'Bakery': 'warm',
-  'Bar': 'warm',
-  // Beauty & Personal Care
-  'Salon': 'luxury',
-  'Nail Salon': 'luxury',
-  'Spa': 'luxury',
-  'Beauty Salon': 'luxury',
-  // Health & Fitness
-  'Gym': 'modern',
-  'Doctor': 'clean',
-  'Dentist': 'clean',
-  'Pharmacy': 'clean',
-  'Veterinarian': 'clean',
-  'Physiotherapist': 'clean',
-  // Professional Services
-  'Lawyer': 'professional',
-  'Accountant': 'professional',
-  'Real Estate': 'professional',
-  'Insurance': 'professional',
-  // Home Services & Trades
-  'Plumber': 'artisan',
-  'Electrician': 'artisan',
-  'Painter': 'artisan',
-  'Contractor': 'artisan',
-  'Locksmith': 'artisan',
-  'Roofing': 'artisan',
-  'Moving': 'modern',
-  // Automotive
-  'Auto Repair': 'artisan',
-  'Car Wash': 'modern',
-  'Car Dealer': 'luxury',
-  // Retail
-  'Clothing': 'modern',
-  'Jewelry': 'luxury',
-  'Florist': 'warm',
-  'Pet Store': 'warm',
-  'Furniture': 'artisan',
-  'Hardware': 'artisan',
-  // Hospitality
-  'Hotel': 'luxury',
-  // Other
-  'Laundry': 'clean',
-  'Storage': 'modern',
-  'Travel': 'warm',
-};
-
-// Subcategory overrides (more specific than category)
-const SUBCATEGORY_MOOD = {
-  'Nail Salon': 'luxury',
-  'Hair Salon': 'luxury',
-  'Beauty Salon': 'luxury',
-  'Barber': 'artisan',
-  'Mexican Cuisine': 'warm',
-  'Coffee Shop': 'warm',
-  'CrossFit': 'modern',
-  'Yoga': 'clean',
+  restaurant: 'warm',
+  cafe: 'warm',
+  bakery: 'warm',
+  bar: 'warm',
+  salon: 'luxury',
+  'nail-salon': 'luxury',
+  spa: 'luxury',
+  barber: 'artisan',
+  gym: 'modern',
+  doctor: 'clean',
+  dentist: 'clean',
+  veterinarian: 'clean',
+  physiotherapist: 'clean',
+  lawyer: 'professional',
+  accountant: 'professional',
+  'real-estate': 'professional',
+  insurance: 'professional',
+  plumber: 'artisan',
+  electrician: 'artisan',
+  contractor: 'artisan',
+  'auto-repair': 'artisan',
+  hotel: 'luxury',
+  retail: 'modern',
+  furniture: 'artisan',
+  travel: 'warm',
 };
 
 /**
@@ -78,11 +46,54 @@ export function hashString(str) {
 }
 
 /**
- * Select layout variation by business name hash
+ * Select layout variation using business type first, then deterministic hashing
  * Returns: 'editorial' | 'dynamic' | 'minimal' | 'immersive'
  */
-export function selectVariation(businessName) {
-  return VARIATIONS[hashString(businessName || 'default') % VARIATIONS.length];
+export function selectVariation({ businessName, category, subcategory, content, photoManifest }) {
+  const businessType = normalizeBusinessType(category, subcategory);
+  const photoCount = (photoManifest || []).filter((item) => item && item.url).length;
+  const hasRichMenu = !!(content?.menuHighlights?.categories?.length || content?.dailySpecials?.items?.length);
+  const hasPortfolio = !!(content?.designGallery || content?.gallery);
+
+  let allowed = VARIATIONS;
+
+  switch (businessType) {
+    case 'restaurant':
+    case 'cafe':
+    case 'bakery':
+    case 'bar':
+      allowed = hasRichMenu || photoCount >= 6 ? ['immersive', 'editorial'] : ['editorial', 'minimal'];
+      break;
+    case 'salon':
+    case 'nail-salon':
+    case 'spa':
+    case 'barber':
+      allowed = hasPortfolio || photoCount >= 8 ? ['immersive', 'editorial'] : ['editorial', 'minimal'];
+      break;
+    case 'doctor':
+    case 'dentist':
+    case 'veterinarian':
+    case 'physiotherapist':
+      allowed = ['minimal', 'editorial'];
+      break;
+    case 'plumber':
+    case 'electrician':
+    case 'contractor':
+    case 'auto-repair':
+    case 'gym':
+      allowed = ['dynamic', 'editorial'];
+      break;
+    case 'lawyer':
+    case 'accountant':
+    case 'insurance':
+    case 'real-estate':
+      allowed = ['editorial', 'minimal'];
+      break;
+    default:
+      allowed = VARIATIONS;
+  }
+
+  return allowed[hashString(`${businessType}:${businessName || 'default'}`) % allowed.length];
 }
 
 /**
@@ -90,14 +101,10 @@ export function selectVariation(businessName) {
  * Returns: 'luxury' | 'professional' | 'warm' | 'modern' | 'clean' | 'artisan'
  */
 export function selectMood(category, subcategory, toneRecommendation) {
-  // Subcategory takes priority
-  if (subcategory && SUBCATEGORY_MOOD[subcategory]) {
-    return SUBCATEGORY_MOOD[subcategory];
-  }
+  const businessType = normalizeBusinessType(category, subcategory);
 
-  // Category mapping
-  if (category && MOOD_MAP[category]) {
-    return MOOD_MAP[category];
+  if (MOOD_MAP[businessType]) {
+    return MOOD_MAP[businessType];
   }
 
   // Try to infer from tone recommendation keywords
