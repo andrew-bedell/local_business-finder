@@ -10,6 +10,10 @@ import { getNavCSS } from './css/nav.js';
 import { getFooterCSS } from './css/footer.js';
 import { getResponsiveCSS } from './css/responsive.js';
 import { getRuntimeJS } from './js-runtime.js';
+import {
+  normalizeBusinessType,
+  getBusinessSchemaType,
+} from './taxonomy.js';
 
 import {
   heroSection, aboutSection, servicesSection, whyChooseUsSection,
@@ -38,38 +42,37 @@ const VARIATIONS = { editorial, dynamic, minimal, immersive };
 
 // Map category keywords to section renderers
 function getCategorySections(category, subcategory) {
-  const cat = (category || '').toLowerCase();
-  const sub = (subcategory || '').toLowerCase();
+  const businessType = normalizeBusinessType(category, subcategory);
 
-  if (['restaurant', 'restaurante', 'food', 'comida'].some(k => cat.includes(k))) {
-    return { type: 'restaurant', sections: { menu: menuSection, ambiance: ambianceSection } };
-  }
-  if (['nail', 'uñas', 'manicur', 'pedicur'].some(k => cat.includes(k) || sub.includes(k))) {
-    return { type: 'nail-salon', sections: { nailServices: nailServicesSection, designGallery: designGallerySection } };
-  }
-  if (['salon', 'salón', 'beauty', 'belleza', 'spa', 'peluquería'].some(k => cat.includes(k))) {
-    return { type: 'beauty-salon', sections: { treatments: salonTreatmentsSection, team: teamSection } };
-  }
-  if (['dentist', 'dental', 'odontol'].some(k => cat.includes(k))) {
-    return { type: 'dentist', sections: { dentalServices: dentalServicesSection, insurance: dentistInsuranceSection } };
-  }
-  if (['doctor', 'médico', 'clinic', 'clínica', 'medical', 'health'].some(k => cat.includes(k))) {
-    return { type: 'doctor', sections: { credentials: credentialsSection, insurance: doctorInsuranceSection } };
-  }
-  if (['lawyer', 'abogad', 'legal', 'attorney', 'law firm'].some(k => cat.includes(k))) {
-    return { type: 'lawyer', sections: { practiceAreas: practiceAreasSection } };
-  }
-  if (['gym', 'gimnasio', 'fitness', 'crossfit', 'workout'].some(k => cat.includes(k))) {
-    return { type: 'gym', sections: { memberships: membershipTiersSection, classSchedule: classScheduleSection } };
-  }
-  if (['cafe', 'café', 'coffee', 'bakery', 'panadería'].some(k => cat.includes(k))) {
-    return { type: 'cafe', sections: { menuHighlights: cafeMenuSection, dailySpecials: dailySpecialsSection } };
-  }
-  if (['auto', 'mechanic', 'mecánic', 'taller', 'car repair'].some(k => cat.includes(k))) {
-    return { type: 'auto-repair', sections: { autoServices: autoServicesSection, estimateCTA: estimateCTASection } };
-  }
-  if (['plumber', 'plomero', 'electrician', 'electricista', 'contractor', 'contratista', 'painter', 'pintor', 'handyman'].some(k => cat.includes(k))) {
-    return { type: 'plumber', sections: { emergencyCTA: emergencyCTASection, coverageArea: coverageAreaSection } };
+  switch (businessType) {
+    case 'restaurant':
+      return { type: 'restaurant', sections: { menu: menuSection, ambiance: ambianceSection } };
+    case 'nail-salon':
+      return { type: 'nail-salon', sections: { nailServices: nailServicesSection, designGallery: designGallerySection } };
+    case 'salon':
+    case 'spa':
+    case 'barber':
+      return { type: 'beauty-salon', sections: { treatments: salonTreatmentsSection, team: teamSection } };
+    case 'dentist':
+      return { type: 'dentist', sections: { dentalServices: dentalServicesSection, insurance: dentistInsuranceSection } };
+    case 'doctor':
+    case 'veterinarian':
+    case 'physiotherapist':
+      return { type: 'doctor', sections: { credentials: credentialsSection, insurance: doctorInsuranceSection } };
+    case 'lawyer':
+      return { type: 'lawyer', sections: { practiceAreas: practiceAreasSection } };
+    case 'gym':
+      return { type: 'gym', sections: { memberships: membershipTiersSection, classSchedule: classScheduleSection } };
+    case 'cafe':
+    case 'bakery':
+    case 'bar':
+      return { type: 'cafe', sections: { menuHighlights: cafeMenuSection, dailySpecials: dailySpecialsSection } };
+    case 'auto-repair':
+      return { type: 'auto-repair', sections: { autoServices: autoServicesSection, estimateCTA: estimateCTASection } };
+    case 'plumber':
+    case 'electrician':
+    case 'contractor':
+      return { type: 'plumber', sections: { emergencyCTA: emergencyCTASection, coverageArea: coverageAreaSection } };
   }
 
   return { type: 'generic', sections: {} };
@@ -94,9 +97,16 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   const lang = business.language === 'en' ? 'en' : 'es';
   const report = researchReport || {};
   const photos = photoManifest || [];
+  const businessType = normalizeBusinessType(business.category, business.subcategory);
 
   // 1. Select variation and mood
-  const variationName = selectVariation(business.name);
+  const variationName = selectVariation({
+    businessName: business.name,
+    category: business.category,
+    subcategory: business.subcategory,
+    content,
+    photoManifest: photos,
+  });
   const mood = selectMood(
     business.category,
     business.subcategory,
@@ -141,15 +151,24 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
 
   // 6. Arrange sections using the variation layout
   const bodyHTML = variation.arrangeSections(sectionMap, content, business);
+  const availableSections = new Set(
+    Object.entries(sectionMap)
+      .filter(([, section]) => section && section.html)
+      .map(([key]) => key)
+  );
 
   // 7. Generate nav and WhatsApp FAB
-  const nav = navHTML(business, content?.cta?.buttonText);
+  const nav = navHTML(business, content?.cta?.buttonText, {
+    businessType,
+    availableSections,
+  });
   const fab = whatsappFAB(business);
 
   // 8. Compose meta tags
   const metaTitle = esc(content?.meta?.title || `${business.name} — ${business.category || ''}`);
   const metaDesc = esc(content?.meta?.description || '');
   const metaKeywords = esc(content?.meta?.keywords || '');
+  const schema = buildLocalBusinessSchema({ business, content, businessType });
 
   // 9. Assemble final HTML
   return `<!DOCTYPE html>
@@ -163,6 +182,8 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   <meta property="og:title" content="${metaTitle}">
   <meta property="og:description" content="${metaDesc}">
   <meta property="og:type" content="website">
+  ${business.name ? `<meta property="og:site_name" content="${esc(business.name)}">` : ''}
+  ${schema ? `<script type="application/ld+json">${schema}</script>` : ''}
   <style>
     ${importRule}
     :root {
@@ -187,4 +208,27 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   <script>${getRuntimeJS()}</script>
 </body>
 </html>`;
+}
+
+function buildLocalBusinessSchema({ business, content, businessType }) {
+  if (!business?.name) return '';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': getBusinessSchemaType(businessType),
+    name: business.name,
+    description: content?.meta?.description || undefined,
+    telephone: business.phone || undefined,
+    address: business.address || undefined,
+    image: undefined,
+    sameAs: (business.socialProfiles || [])
+      .map((profile) => profile.url || profile.profile_url)
+      .filter(Boolean),
+    openingHours: Array.isArray(content?.hours?.formatted) && content.hours.formatted.length
+      ? content.hours.formatted
+      : undefined,
+  };
+
+  return JSON.stringify(schema, null, 0)
+    .replace(/</g, '\\u003c');
 }

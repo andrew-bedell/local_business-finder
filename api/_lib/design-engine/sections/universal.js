@@ -1,6 +1,12 @@
 // Design Engine V2 — Universal section renderers
 // Used by all business types: hero, about, services, whyChooseUs, testimonials, gallery, CTA, hours, contact, footer
 
+import {
+  getNavigationItems,
+  getPrimaryActionLabel,
+  normalizeBusinessType,
+} from '../taxonomy.js';
+
 function esc(str) {
   if (!str) return '';
   return String(str)
@@ -36,7 +42,8 @@ export function heroSection(content, photos, business, ctaLabel) {
   const heroPhoto = getPhotoForSection(photos, 'hero') || (photos && photos[0] ? photos[0].url : '');
   const headline = esc(content?.hero?.headline || business.name);
   const subheadline = esc(content?.hero?.subheadline || '');
-  const cta = ctaLabel || content?.cta?.buttonText || 'Contáctanos';
+  const businessType = normalizeBusinessType(business?.category, business?.subcategory);
+  const cta = ctaLabel || content?.cta?.buttonText || getPrimaryActionLabel(businessType);
   const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
 
   const bgStyle = heroPhoto
@@ -314,7 +321,8 @@ export function gallerySection(content, photos) {
 // ── CTA Section ──
 export function ctaSection(content, business) {
   const heading = esc(content?.cta?.heading || '¿Listo para visitarnos?');
-  const btnText = esc(content?.cta?.buttonText || 'Contáctanos');
+  const businessType = normalizeBusinessType(business?.category, business?.subcategory);
+  const btnText = esc(content?.cta?.buttonText || getPrimaryActionLabel(businessType));
   const supporting = esc(content?.cta?.supportingText || '');
   const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
 
@@ -419,8 +427,11 @@ export function footerSection(content, business) {
 }
 
 // ── Nav HTML (not a section, but generated here for convenience) ──
-export function navHTML(business, ctaLabel) {
-  const cta = ctaLabel || 'Contáctanos';
+export function navHTML(business, ctaLabel, options = {}) {
+  const businessType = options.businessType || normalizeBusinessType(business?.category, business?.subcategory);
+  const availableSections = options.availableSections || new Set(['about', 'services', 'gallery', 'testimonials', 'contact']);
+  const navItems = getNavigationItems(businessType, availableSections);
+  const cta = ctaLabel || getPrimaryActionLabel(businessType);
   const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
 
   return `
@@ -428,11 +439,7 @@ export function navHTML(business, ctaLabel) {
     <div class="site-nav__inner">
       <a href="#" class="site-nav__logo">${esc(business.name)}</a>
       <ul class="site-nav__links">
-        <li><a href="#about">Sobre Nosotros</a></li>
-        <li><a href="#services">Servicios</a></li>
-        <li><a href="#gallery">Galería</a></li>
-        <li><a href="#testimonials">Reseñas</a></li>
-        <li><a href="#contact">Contacto</a></li>
+        ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n        ')}
         <li><a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(cta)}</a></li>
       </ul>
       <button class="hamburger" aria-label="Menú">
@@ -441,11 +448,7 @@ export function navHTML(business, ctaLabel) {
     </div>
   </nav>
   <div class="mobile-menu">
-    <a href="#about">Sobre Nosotros</a>
-    <a href="#services">Servicios</a>
-    <a href="#gallery">Galería</a>
-    <a href="#testimonials">Reseñas</a>
-    <a href="#contact">Contacto</a>
+    ${navItems.map((item) => `<a href="${item.href}">${esc(item.label)}</a>`).join('\n    ')}
     <a href="${phoneHref}" class="mobile-cta">${esc(cta)}</a>
   </div>`;
 }
