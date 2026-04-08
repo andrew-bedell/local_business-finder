@@ -3379,8 +3379,9 @@
     const phone = toE164(rawPhone, business.address_country) || rawPhone;
 
     const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
-    const demoUrl = existingWebsiteRecord
-      ? (window.location.origin + '/demo/' + existingWebsiteRecord.id)
+    const anyWebsiteRecord = existingWebsiteRecord || (business.generated_websites || [])[0];
+    const demoUrl = anyWebsiteRecord
+      ? (window.location.origin + '/demo/' + anyWebsiteRecord.id)
       : '';
     const previewUrl = existingWebsiteRecord
       ? (existingWebsiteRecord.published_url || (window.location.origin + '/ver/' + existingWebsiteRecord.id))
