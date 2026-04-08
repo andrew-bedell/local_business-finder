@@ -1,6 +1,5 @@
 .vercel
-.env*.local
-.env
+.env*
 .DS_Store
 node_modules/
 supabase/.temp/
