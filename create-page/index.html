@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#183153">
+  <title>Crea Tu Página Ahora — AhoraTengoPagina</title>
+  <meta name="description" content="Inicia tu página web hoy mismo. Buscamos tu negocio en Google primero y, si hace falta, te pedimos los datos para crear tu borrador.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/create-page/styles.css">
+</head>
+<body class="cp-body">
+  <main class="cp-shell">
+    <section class="cp-hero">
+      <div class="cp-hero-copy">
+        <p class="cp-kicker">Builder directo</p>
+        <h1>Crea tu página web ahora, sin pasar por WhatsApp.</h1>
+        <p class="cp-lead">
+          Primero intentamos encontrar tu negocio en Google para ahorrarte tiempo. Si no aparece, te guiamos para completar tu información, fotos, reseñas, horarios y todo lo necesario para armar tu borrador.
+        </p>
+        <div class="cp-hero-actions">
+          <button class="cp-btn cp-btn-primary" type="button" data-scroll-builder>Empezar ahora</button>
+          <a class="cp-btn cp-btn-secondary" href="/">Volver al sitio principal</a>
+        </div>
+        <ul class="cp-points">
+          <li>Busca por nombre del negocio y ciudad</li>
+          <li>Confirma o corrige datos encontrados en Google</li>
+          <li>Agrega manualmente horas, fundador, reseñas, fotos y servicios si hace falta</li>
+        </ul>
+      </div>
+      <div class="cp-hero-card">
+        <div class="cp-preview">
+          <div class="cp-preview-badge">Flujo nuevo</div>
+          <div class="cp-preview-step">
+            <span>1</span>
+            <div>
+              <strong>Buscar en Google</strong>
+              <p>Nombre del negocio + ciudad</p>
+            </div>
+          </div>
+          <div class="cp-preview-step">
+            <span>2</span>
+            <div>
+              <strong>Completar faltantes</strong>
+              <p>Categoría, horario, fundador, fotos, reseñas</p>
+            </div>
+          </div>
+          <div class="cp-preview-step">
+            <span>3</span>
+            <div>
+              <strong>Guardar el borrador</strong>
+              <p>Lo dejamos listo para el portal y la generación</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cp-builder" id="builder">
+      <div class="cp-builder-header">
+        <p class="cp-kicker">Tu negocio</p>
+        <h2>Lanza el builder</h2>
+        <p>Empieza con la búsqueda en Google. Si no encontramos una ficha, se habilita el formulario completo para capturar los mismos datos manualmente.</p>
+      </div>
+
+      <div class="cp-panel">
+        <form id="cp-search-form" class="cp-form cp-stack" novalidate>
+          <div class="cp-grid cp-grid-2">
+            <label class="cp-field">
+              <span>Nombre del negocio</span>
+              <input id="cp-business-name" name="businessName" type="text" placeholder="Ej: Tacos Don Pepe" required>
+            </label>
+            <label class="cp-field">
+              <span>Ciudad o dirección</span>
+              <input id="cp-business-city" name="city" type="text" placeholder="Ej: Mérida o Calle 60 #500" required>
+            </label>
+          </div>
+
+          <label class="cp-checkbox">
+            <input id="cp-google-toggle" type="checkbox" checked>
+            <span>Intentar buscar mi negocio en Google primero</span>
+          </label>
+
+          <div class="cp-inline-actions">
+            <button class="cp-btn cp-btn-primary" id="cp-search-btn" type="submit">Buscar negocio</button>
+            <button class="cp-btn cp-btn-secondary" id="cp-skip-search-btn" type="button">Llenar todo manualmente</button>
+          </div>
+          <p class="cp-status" id="cp-search-status" aria-live="polite"></p>
+        </form>
+
+        <div id="cp-search-results" class="cp-stack" hidden></div>
+
+        <form id="cp-details-form" class="cp-form cp-stack" hidden novalidate>
+          <div class="cp-section-title">
+            <h3>Datos para tu borrador</h3>
+            <p>Completa o corrige la información. Si encontramos algo en Google, ya vendrá precargado.</p>
+          </div>
+
+          <div class="cp-grid cp-grid-2">
+            <label class="cp-field">
+              <span>Tu nombre</span>
+              <input id="cp-contact-name" name="contactName" type="text" placeholder="Ej: María García" required>
+            </label>
+            <label class="cp-field">
+              <span>Tu correo electrónico</span>
+              <input id="cp-contact-email" name="contactEmail" type="email" placeholder="Ej: maria@gmail.com" required>
+            </label>
+            <label class="cp-field">
+              <span>Tu WhatsApp</span>
+              <input id="cp-contact-whatsapp" name="contactWhatsapp" type="tel" placeholder="Ej: +52 999 123 4567">
+            </label>
+            <label class="cp-field">
+              <span>Teléfono del negocio</span>
+              <input id="cp-business-phone" name="businessPhone" type="tel" placeholder="Ej: 999 123 4567">
+            </label>
+          </div>
+
+          <div class="cp-grid cp-grid-2">
+            <label class="cp-field">
+              <span>Nombre de la empresa</span>
+              <input id="cp-company" name="company" type="text" required>
+            </label>
+            <label class="cp-field">
+              <span>Tipo de negocio</span>
+              <select id="cp-business-type" name="businessType" required></select>
+            </label>
+          </div>
+
+          <div class="cp-grid cp-grid-2">
+            <label class="cp-field">
+              <span>Dirección completa</span>
+              <input id="cp-address-full" name="addressFull" type="text" placeholder="Ej: Calle 60 #500, Centro, Mérida">
+            </label>
+            <label class="cp-field">
+              <span>Ciudad</span>
+              <input id="cp-city-confirm" name="cityConfirm" type="text" placeholder="Ej: Mérida">
+            </label>
+          </div>
+
+          <label class="cp-field">
+            <span>Sobre tu negocio</span>
+            <textarea id="cp-about-business" name="aboutBusiness" rows="4" placeholder="Cuéntanos qué haces, qué te diferencia y qué deberían saber tus clientes."></textarea>
+          </label>
+
+          <div class="cp-section-card">
+            <div class="cp-section-card-header">
+              <div>
+                <h4>Horario de atención</h4>
+                <p>Úsalo tal como quieres que aparezca en tu página.</p>
+              </div>
+              <button class="cp-link-btn" id="cp-copy-hours" type="button">Copiar lunes a todos</button>
+            </div>
+            <div class="cp-hours-grid" id="cp-hours-grid">
+              <label class="cp-field"><span>Lunes</span><input data-day="lunes" type="text" placeholder="9:00 AM - 6:00 PM"></label>
+              <label class="cp-field"><span>Martes</span><input data-day="martes" type="text" placeholder="9:00 AM - 6:00 PM"></label>
+              <label class="cp-field"><span>Miércoles</span><input data-day="miercoles" type="text" placeholder="9:00 AM - 6:00 PM"></label>
+              <label class="cp-field"><span>Jueves</span><input data-day="jueves" type="text" placeholder="9:00 AM - 6:00 PM"></label>
+              <label class="cp-field"><span>Viernes</span><input data-day="viernes" type="text" placeholder="9:00 AM - 6:00 PM"></label>
+              <label class="cp-field"><span>Sábado</span><input data-day="sabado" type="text" placeholder="9:00 AM - 2:00 PM"></label>
+              <label class="cp-field"><span>Domingo</span><input data-day="domingo" type="text" placeholder="Cerrado"></label>
+            </div>
+          </div>
+
+          <div class="cp-grid cp-grid-2">
+            <label class="cp-field">
+              <span>Nombre del fundador o dueño</span>
+              <input id="cp-founder-name" name="founderName" type="text" placeholder="Ej: Andrés Pérez">
+            </label>
+            <label class="cp-field">
+              <span>Historia del fundador</span>
+              <textarea id="cp-founder-story" name="founderStory" rows="4" placeholder="Ej: Empezamos este negocio en familia hace 20 años..."></textarea>
+            </label>
+          </div>
+
+          <div class="cp-section-card">
+            <div class="cp-section-card-header">
+              <div>
+                <h4>Reseñas</h4>
+                <p>Agrega algunas reseñas si Google no las encontró.</p>
+              </div>
+              <button class="cp-btn cp-btn-secondary" id="cp-add-review" type="button">Agregar reseña</button>
+            </div>
+            <div id="cp-reviews-list" class="cp-stack"></div>
+          </div>
+
+          <div class="cp-section-card">
+            <div class="cp-section-card-header">
+              <div>
+                <h4>Servicios o productos</h4>
+                <p>Esto ayuda a que el sitio no dependa solo de texto generado.</p>
+              </div>
+              <button class="cp-btn cp-btn-secondary" id="cp-add-service" type="button">Agregar servicio</button>
+            </div>
+            <div id="cp-services-list" class="cp-stack"></div>
+          </div>
+
+          <div class="cp-section-card">
+            <div class="cp-section-card-header">
+              <div>
+                <h4>Fotos</h4>
+                <p>Sube fotos generales, del equipo, productos, local o fundador.</p>
+              </div>
+            </div>
+            <div class="cp-upload-row">
+              <label class="cp-field">
+                <span>Tipo de foto</span>
+                <select id="cp-photo-type">
+                  <option value="exterior">Exterior</option>
+                  <option value="interior">Interior</option>
+                  <option value="product">Producto</option>
+                  <option value="food">Comida</option>
+                  <option value="team">Equipo</option>
+                  <option value="logo">Logo</option>
+                  <option value="founder">Fundador</option>
+                  <option value="service">Servicio</option>
+                </select>
+              </label>
+              <label class="cp-upload-btn" for="cp-photo-input">Seleccionar fotos</label>
+              <input id="cp-photo-input" type="file" accept="image/*" multiple hidden>
+            </div>
+            <p class="cp-status" id="cp-photo-status" aria-live="polite"></p>
+            <div id="cp-photo-list" class="cp-photo-grid"></div>
+          </div>
+
+          <label class="cp-field">
+            <span>Notas adicionales</span>
+            <textarea id="cp-extra-notes" name="extraNotes" rows="3" placeholder="Promociones, zonas de servicio, links, detalles especiales, etc."></textarea>
+          </label>
+
+          <div class="cp-inline-actions">
+            <button class="cp-btn cp-btn-primary" id="cp-submit-btn" type="submit">Guardar y abrir mi portal</button>
+          </div>
+          <p class="cp-status" id="cp-submit-status" aria-live="polite"></p>
+        </form>
+
+        <section id="cp-success" class="cp-success" hidden>
+          <h3>Tu borrador quedó guardado.</h3>
+          <p id="cp-success-message"></p>
+          <div class="cp-inline-actions">
+            <a class="cp-btn cp-btn-primary" href="/mipagina">Ir al portal</a>
+            <button class="cp-btn cp-btn-secondary" id="cp-restart-btn" type="button">Crear otro borrador</button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <template id="cp-review-template">
+    <div class="cp-repeat-card">
+      <div class="cp-grid cp-grid-3">
+        <label class="cp-field">
+          <span>Nombre del cliente</span>
+          <input data-review="author" type="text" placeholder="Ej: Ana">
+        </label>
+        <label class="cp-field">
+          <span>Calificación</span>
+          <select data-review="rating">
+            <option value="5">5 estrellas</option>
+            <option value="4">4 estrellas</option>
+            <option value="3">3 estrellas</option>
+            <option value="2">2 estrellas</option>
+            <option value="1">1 estrella</option>
+          </select>
+        </label>
+        <button class="cp-remove-btn" data-remove-review type="button">Eliminar</button>
+      </div>
+      <label class="cp-field">
+        <span>Texto de la reseña</span>
+        <textarea data-review="text" rows="3" placeholder="Ej: Excelente servicio, muy recomendado."></textarea>
+      </label>
+    </div>
+  </template>
+
+  <template id="cp-service-template">
+    <div class="cp-repeat-card">
+      <div class="cp-grid cp-grid-4">
+        <label class="cp-field">
+          <span>Nombre</span>
+          <input data-service="name" type="text" placeholder="Ej: Corte de cabello">
+        </label>
+        <label class="cp-field">
+          <span>Precio</span>
+          <input data-service="price" type="number" min="0" step="0.01" placeholder="Ej: 250">
+        </label>
+        <label class="cp-field">
+          <span>Moneda</span>
+          <select data-service="currency">
+            <option value="MXN">MXN</option>
+            <option value="USD">USD</option>
+            <option value="COP">COP</option>
+          </select>
+        </label>
+        <button class="cp-remove-btn" data-remove-service type="button">Eliminar</button>
+      </div>
+      <label class="cp-field">
+        <span>Descripción</span>
+        <textarea data-service="description" rows="3" placeholder="Ej: Incluye lavado, corte y peinado."></textarea>
+      </label>
+    </div>
+  </template>
+
+  <script src="/create-page/app.js"></script>
+</body>
+</html>

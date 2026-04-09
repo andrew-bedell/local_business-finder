@@ -22,6 +22,7 @@
     }
   },
   "rewrites": [
+    { "source": "/crear-tu-pagina", "destination": "/create-page/index.html" },
     { "source": "/employee/explainer", "destination": "/employee/explainer.html" },
     { "source": "/employee/welcome", "destination": "/employee/welcome.html" },
     { "source": "/employee/login", "destination": "/employee/login.html" },
