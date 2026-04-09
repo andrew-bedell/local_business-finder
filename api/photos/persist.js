@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
   try {
     // Fetch matching records that need persisting
-    const idsParam = photoIds.map(id => `"${id}"`).join(',');
+    const idsParam = photoIds.join(',');
     const queryRes = await fetch(
       `${supabaseUrl}/rest/v1/business_photos?id=in.(${idsParam})&storage_path=is.null&source=in.(instagram,facebook)&select=id,business_id,source,photo_type,url,storage_path`,
       {

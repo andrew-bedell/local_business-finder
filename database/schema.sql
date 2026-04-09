@@ -132,6 +132,9 @@ CREATE INDEX IF NOT EXISTS idx_businesses_city_lower ON businesses (LOWER(addres
 -- Business code index for lookups
 CREATE INDEX IF NOT EXISTS idx_businesses_code ON businesses (business_code);
 
+-- Created at index for default sort order (DESC) in admin panel
+CREATE INDEX IF NOT EXISTS idx_businesses_created_at ON businesses (created_at DESC);
+
 
 -- ============================================================================
 -- 1b. BUSINESS_CONTACTS — Multiple contacts per business
