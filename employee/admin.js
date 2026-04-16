@@ -852,6 +852,7 @@
       orProgressTitle: 'Outreach In Progress',
       orCompleteTitle: 'Outreach Complete',
       orThBusiness: 'Business',
+      orThLocation: 'Location',
       orThContact: 'Contact',
       orThProgress: 'Progress',
       orThNextStep: 'Next Step',
@@ -1709,6 +1710,7 @@
       orProgressTitle: 'Contacto en Progreso',
       orCompleteTitle: 'Contacto Completado',
       orThBusiness: 'Negocio',
+      orThLocation: 'Ubicación',
       orThContact: 'Contacto',
       orThProgress: 'Progreso',
       orThNextStep: 'Siguiente Paso',
@@ -4064,6 +4066,10 @@
     return '<a class="or-biz-link" data-biz-id="' + business.id + '">' + escapeHtml(business.name || 'Unnamed') + '</a>';
   }
 
+  function orLocationCell(business) {
+    return escapeHtml(business.search_location || '');
+  }
+
   function orActionBtn(business) {
     return '<button class="btn btn-view or-action-btn" data-biz-id="' + business.id + '">' + t('orOpenOutreach') + '</button>';
   }
@@ -4232,6 +4238,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="followup" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
         + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
@@ -4263,6 +4270,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="ready" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
         + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
@@ -4299,6 +4307,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="progress" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + getOutreachProgressHtml(b) + '</td>'
         + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
@@ -4333,6 +4342,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="complete" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
         + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
@@ -4375,6 +4385,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="cancelled" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + escapeHtml(reason) + '</td>'
         + '<td>' + cancelledAt + '</td>'
@@ -4406,6 +4417,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="today" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + getOutreachProgressHtml(b) + '</td>'
         + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
@@ -4449,6 +4461,7 @@
       html += '<tr>'
         + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="schedule" data-biz-id="' + b.id + '"></td>'
         + '<td>' + orBizLink(b) + '</td>'
+        + '<td>' + orLocationCell(b) + '</td>'
         + '<td>' + getOrContactHtml(b) + '</td>'
         + '<td>' + (dueTime ? orFormatDateTime(dueTime.toISOString()) : '—') + '</td>'
         + '<td>' + overdueLabel + '</td>'
@@ -4676,8 +4689,10 @@
           : escapeHtml(v.businessName || 'Unknown');
         const actionHtml = biz ? orActionBtn(biz) : '';
 
+        const location = biz ? orLocationCell(biz) : '';
         html += '<tr>'
           + '<td>' + bizLink + '</td>'
+          + '<td>' + location + '</td>'
           + '<td>' + contact + '</td>'
           + '<td>' + progress + '</td>'
           + '<td>' + orTimeAgo(v.lastVisit) + '</td>'
