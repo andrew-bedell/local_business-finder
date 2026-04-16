@@ -210,6 +210,10 @@
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
           <span data-i18n="nav_scheduling">Reservas</span>
         </button>
+        <button class="c-nav-item" data-section="operations">
+          <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10l1 2h3v2h-1.1l-1.69 8.39A2 2 0 0116.25 18H8.75a2 2 0 01-1.96-1.61L5.1 8H4V6h3l1-2zm1.24 4l1.32 6h5.88l1.32-6H8.24zM9 20a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z" transform="translate(0 -2)"/></svg>
+          <span data-i18n="nav_operations">Inventario & POS</span>
+        </button>
         <button class="c-nav-item" data-section="wizard">
           <svg class="c-nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
           <span data-i18n="nav_wizard">Completar Datos</span>
@@ -1062,6 +1066,383 @@
             </div>
             <div id="sched-service-list">
               <div class="c-table-empty" data-i18n="sched_svc_loading">Cargando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="section-operations" class="c-section" data-section="operations">
+        <div class="c-topbar">
+          <div class="c-page-title" data-i18n-html="ops_title">Centro de <span>Operaciones</span></div>
+        </div>
+        <p class="c-section-desc" data-i18n="ops_desc">Controla tu inventario, registra compras a proveedores, monitorea cuentas por cobrar/pagar y vende en persona desde un POS simple.</p>
+
+        <div class="c-sched-tabs" id="ops-tabs">
+          <button class="c-sched-tab active" data-ops-tab="overview" data-i18n="ops_tab_overview">Resumen</button>
+          <button class="c-sched-tab" data-ops-tab="inventory" data-i18n="ops_tab_inventory">Inventario</button>
+          <button class="c-sched-tab" data-ops-tab="suppliers" data-i18n="ops_tab_suppliers">Proveedores</button>
+          <button class="c-sched-tab" data-ops-tab="purchases" data-i18n="ops_tab_purchases">Compras</button>
+          <button class="c-sched-tab" data-ops-tab="accounts" data-i18n="ops_tab_accounts">Cuentas</button>
+          <button class="c-sched-tab" data-ops-tab="pos" data-i18n="ops_tab_pos">POS</button>
+        </div>
+
+        <div class="c-sched-content active" id="ops-content-overview" data-ops-content="overview">
+          <div class="c-stats-grid c-ops-stats-grid">
+            <div class="c-stat-card c-ops-stat-card">
+              <span class="c-stat-label" data-i18n="ops_stat_inventory">Inventario</span>
+              <span class="c-stat-value" id="ops-stat-items">0</span>
+              <span class="c-stat-note" id="ops-stat-stock-value">0</span>
+            </div>
+            <div class="c-stat-card c-ops-stat-card">
+              <span class="c-stat-label" data-i18n="ops_stat_low_stock">Bajo stock</span>
+              <span class="c-stat-value" id="ops-stat-low-stock">0</span>
+              <span class="c-stat-note" id="ops-stat-stock-units">0</span>
+            </div>
+            <div class="c-stat-card c-ops-stat-card">
+              <span class="c-stat-label" data-i18n="ops_stat_payable">Por pagar</span>
+              <span class="c-stat-value" id="ops-stat-payable">—</span>
+              <span class="c-stat-note" id="ops-stat-open-po">0</span>
+            </div>
+            <div class="c-stat-card c-ops-stat-card">
+              <span class="c-stat-label" data-i18n="ops_stat_receivable">Por cobrar</span>
+              <span class="c-stat-value" id="ops-stat-receivable">—</span>
+              <span class="c-stat-note" id="ops-stat-open-ar">0</span>
+            </div>
+            <div class="c-stat-card c-ops-stat-card">
+              <span class="c-stat-label" data-i18n="ops_stat_today_sales">Ventas hoy</span>
+              <span class="c-stat-value" id="ops-stat-sales-today">—</span>
+              <span class="c-stat-note" id="ops-stat-sales-count">0</span>
+            </div>
+          </div>
+
+          <div class="c-ops-grid">
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_low_stock_title">Productos por reabastecer</div>
+              </div>
+              <div id="ops-overview-low-stock"></div>
+            </div>
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_recent_sales_title">Ventas recientes</div>
+              </div>
+              <div id="ops-overview-sales"></div>
+            </div>
+          </div>
+
+          <div class="c-ops-grid">
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_payables_title">Cuentas por pagar</div>
+              </div>
+              <div id="ops-overview-payables"></div>
+            </div>
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_receivables_title">Cuentas por cobrar</div>
+              </div>
+              <div id="ops-overview-receivables"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="c-sched-content" id="ops-content-inventory" data-ops-content="inventory" style="display:none;">
+          <div class="c-panel" id="ops-product-form-panel" style="display:none;">
+            <div class="c-panel-title" id="ops-product-form-title" style="margin-bottom:20px;" data-i18n="ops_product_form_title">Agregar producto</div>
+            <form id="ops-product-form" class="c-form" novalidate>
+              <input type="hidden" id="ops-product-id">
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_name">Producto</label>
+                  <input type="text" id="ops-product-name" class="c-input" placeholder="Ej: Shampoo hidratante" required>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_category">Categoría</label>
+                  <input type="text" id="ops-product-category" class="c-input" placeholder="Ej: Belleza, Refacciones">
+                </div>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_sku">SKU</label>
+                  <input type="text" id="ops-product-sku" class="c-input" placeholder="SKU-001">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_barcode">Código de barras</label>
+                  <input type="text" id="ops-product-barcode" class="c-input" placeholder="7501234567890">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_unit">Unidad</label>
+                  <input type="text" id="ops-product-unit" class="c-input" placeholder="pieza, caja, litro">
+                </div>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_sale_price">Precio de venta</label>
+                  <input type="number" id="ops-product-sale-price" class="c-input" min="0" step="0.01" value="0">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_cost_price">Costo</label>
+                  <input type="number" id="ops-product-cost-price" class="c-input" min="0" step="0.01" value="0">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_currency">Moneda</label>
+                  <select id="ops-product-currency" class="c-input c-select">
+                    <option value="MXN">MXN</option>
+                    <option value="USD">USD</option>
+                    <option value="COP">COP</option>
+                    <option value="PEN">PEN</option>
+                    <option value="ARS">ARS</option>
+                    <option value="CLP">CLP</option>
+                  </select>
+                </div>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_stock">Stock actual</label>
+                  <input type="number" id="ops-product-stock" class="c-input" min="0" step="0.001" value="0">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_reorder_point">Punto de reorden</label>
+                  <input type="number" id="ops-product-reorder-point" class="c-input" min="0" step="0.001" value="0">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_reorder_qty">Cantidad sugerida</label>
+                  <input type="number" id="ops-product-reorder-qty" class="c-input" min="0" step="0.001" value="0">
+                </div>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_product_supplier">Proveedor principal</label>
+                  <select id="ops-product-supplier" class="c-input c-select">
+                    <option value="">Sin proveedor</option>
+                  </select>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label">Notas</label>
+                  <input type="text" id="ops-product-notes" class="c-input" placeholder="Observaciones rápidas">
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="ops_product_description">Descripción</label>
+                <textarea id="ops-product-description" class="c-input c-textarea" rows="2" placeholder="Descripción interna del producto"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="c-btn c-btn-primary" id="btn-save-ops-product" data-i18n="ops_save_product">Guardar producto</button>
+                <button type="button" class="c-btn c-btn-ghost" id="btn-cancel-ops-product" data-i18n="ops_cancel">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="c-panel">
+            <div class="c-panel-header">
+              <div class="c-panel-title" data-i18n="ops_inventory_title">Inventario</div>
+              <button type="button" class="c-btn c-btn-primary c-btn--sm" id="btn-add-ops-product" data-i18n="ops_add_product">+ Agregar producto</button>
+            </div>
+            <div id="ops-product-list"></div>
+          </div>
+        </div>
+
+        <div class="c-sched-content" id="ops-content-suppliers" data-ops-content="suppliers" style="display:none;">
+          <div class="c-panel" id="ops-supplier-form-panel" style="display:none;">
+            <div class="c-panel-title" id="ops-supplier-form-title" style="margin-bottom:20px;" data-i18n="ops_supplier_form_title">Agregar proveedor</div>
+            <form id="ops-supplier-form" class="c-form" novalidate>
+              <input type="hidden" id="ops-supplier-id">
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_supplier_name">Proveedor</label>
+                  <input type="text" id="ops-supplier-name" class="c-input" placeholder="Nombre del proveedor" required>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_supplier_contact">Contacto</label>
+                  <input type="text" id="ops-supplier-contact" class="c-input" placeholder="Persona de contacto">
+                </div>
+              </div>
+              <div class="c-form-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_supplier_phone">Teléfono</label>
+                  <input type="tel" id="ops-supplier-phone" class="c-input" placeholder="+52 55 1234 5678">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_supplier_email">Correo</label>
+                  <input type="email" id="ops-supplier-email" class="c-input" placeholder="ventas@proveedor.com">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_supplier_terms">Plazo de pago (días)</label>
+                  <input type="number" id="ops-supplier-terms" class="c-input" min="0" value="0">
+                </div>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label">WhatsApp</label>
+                  <input type="text" id="ops-supplier-whatsapp" class="c-input" placeholder="+52 55 1234 5678">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_supplier_address">Dirección</label>
+                  <input type="text" id="ops-supplier-address" class="c-input" placeholder="Dirección del proveedor">
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label">Notas</label>
+                <textarea id="ops-supplier-notes" class="c-input c-textarea" rows="2" placeholder="Notas internas"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="c-btn c-btn-primary" id="btn-save-ops-supplier" data-i18n="ops_save_supplier">Guardar proveedor</button>
+                <button type="button" class="c-btn c-btn-ghost" id="btn-cancel-ops-supplier" data-i18n="ops_cancel">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="c-panel">
+            <div class="c-panel-header">
+              <div class="c-panel-title" data-i18n="ops_suppliers_title">Proveedores</div>
+              <button type="button" class="c-btn c-btn-primary c-btn--sm" id="btn-add-ops-supplier" data-i18n="ops_add_supplier">+ Agregar proveedor</button>
+            </div>
+            <div id="ops-supplier-list"></div>
+          </div>
+        </div>
+
+        <div class="c-sched-content" id="ops-content-purchases" data-ops-content="purchases" style="display:none;">
+          <div class="c-panel" id="ops-po-form-panel" style="display:none;">
+            <div class="c-panel-title" style="margin-bottom:20px;" data-i18n="ops_po_form_title">Nueva orden de compra</div>
+            <form id="ops-po-form" class="c-form" novalidate>
+              <div class="c-form-row" style="grid-template-columns: 1.5fr 1fr 1fr;">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_po_supplier">Proveedor</label>
+                  <select id="ops-po-supplier" class="c-input c-select" required>
+                    <option value="">Selecciona un proveedor</option>
+                  </select>
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_po_order_date">Fecha de orden</label>
+                  <input type="date" id="ops-po-order-date" class="c-input">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_po_currency">Moneda</label>
+                  <select id="ops-po-currency" class="c-input c-select">
+                    <option value="MXN">MXN</option>
+                    <option value="USD">USD</option>
+                    <option value="COP">COP</option>
+                    <option value="PEN">PEN</option>
+                    <option value="ARS">ARS</option>
+                    <option value="CLP">CLP</option>
+                  </select>
+                </div>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_po_expected_date">Fecha esperada</label>
+                  <input type="date" id="ops-po-expected-date" class="c-input">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_po_due_date">Fecha de pago</label>
+                  <input type="date" id="ops-po-due-date" class="c-input">
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label" data-i18n="ops_po_items">Productos</label>
+                <div id="ops-po-items"></div>
+                <button type="button" class="c-btn c-btn-ghost c-btn--sm" id="btn-ops-add-po-line" data-i18n="ops_add_po_line">+ Agregar línea</button>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label">Notas</label>
+                <textarea id="ops-po-notes" class="c-input c-textarea" rows="2" placeholder="Notas de la orden de compra"></textarea>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="c-btn c-btn-primary" id="btn-save-ops-po" data-i18n="ops_save_po">Guardar orden</button>
+                <button type="button" class="c-btn c-btn-ghost" id="btn-cancel-ops-po" data-i18n="ops_cancel">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="c-panel">
+            <div class="c-panel-header">
+              <div class="c-panel-title" data-i18n="ops_po_list_title">Órdenes de compra</div>
+              <button type="button" class="c-btn c-btn-primary c-btn--sm" id="btn-add-ops-po" data-i18n="ops_add_po">+ Nueva orden</button>
+            </div>
+            <div id="ops-purchase-order-list"></div>
+          </div>
+        </div>
+
+        <div class="c-sched-content" id="ops-content-accounts" data-ops-content="accounts" style="display:none;">
+          <div class="c-ops-grid">
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_receivables_title">Cuentas por cobrar</div>
+              </div>
+              <div id="ops-accounts-receivables"></div>
+            </div>
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_payables_title">Cuentas por pagar</div>
+              </div>
+              <div id="ops-accounts-payables"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="c-sched-content" id="ops-content-pos" data-ops-content="pos" style="display:none;">
+          <div class="c-ops-pos-layout">
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_pos_products_title">Productos para vender</div>
+              </div>
+              <div id="ops-pos-product-grid" class="c-ops-pos-products"></div>
+            </div>
+
+            <div class="c-panel">
+              <div class="c-panel-header">
+                <div class="c-panel-title" data-i18n="ops_pos_cart_title">Carrito / Cobro</div>
+              </div>
+              <div id="ops-pos-cart"></div>
+              <div class="c-form-group" style="margin-top:16px;">
+                <label class="c-label" data-i18n="ops_pos_customer_select">Cliente existente</label>
+                <select id="ops-pos-customer" class="c-input c-select">
+                  <option value="">Venta mostrador / sin cliente</option>
+                </select>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_pos_customer_name">Nombre del cliente</label>
+                  <input type="text" id="ops-pos-customer-name" class="c-input" placeholder="Cliente opcional">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_pos_customer_phone">Teléfono</label>
+                  <input type="text" id="ops-pos-customer-phone" class="c-input" placeholder="+52 55 1234 5678">
+                </div>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_pos_customer_email">Correo</label>
+                  <input type="email" id="ops-pos-customer-email" class="c-input" placeholder="cliente@correo.com">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_pos_payment_method">Forma de pago</label>
+                  <select id="ops-pos-payment-method" class="c-input c-select">
+                    <option value="cash">Efectivo</option>
+                    <option value="card">Tarjeta</option>
+                    <option value="transfer">Transferencia</option>
+                    <option value="credit">Crédito</option>
+                    <option value="mixed">Mixto</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+              </div>
+              <div class="c-form-row">
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_pos_amount_paid">Monto pagado</label>
+                  <input type="number" id="ops-pos-amount-paid" class="c-input" min="0" step="0.01" value="0">
+                </div>
+                <div class="c-form-group">
+                  <label class="c-label" data-i18n="ops_pos_due_date">Fecha de cobro</label>
+                  <input type="date" id="ops-pos-due-date" class="c-input">
+                </div>
+              </div>
+              <div class="c-form-group">
+                <label class="c-label">Notas</label>
+                <textarea id="ops-pos-notes" class="c-input c-textarea" rows="2" placeholder="Notas internas de la venta"></textarea>
+              </div>
+              <div id="ops-pos-totals" class="c-ops-pos-totals"></div>
+              <button type="button" class="c-btn c-btn-primary c-btn--full" id="btn-ops-complete-sale" data-i18n="ops_pos_complete_sale">Completar venta</button>
             </div>
           </div>
         </div>
