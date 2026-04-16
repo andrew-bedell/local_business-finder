@@ -2894,7 +2894,7 @@
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), generated_websites(id, status, site_status, published_url, config), business_contacts(*)');
+        .select('*, business_social_profiles(*), generated_websites(id, template_name, status, site_status, published_url), business_contacts(*)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -3063,15 +3063,66 @@
   }
 
   function hasResearchReport(business) {
-    return (business.generated_websites || []).some(w => w.config && w.config.researchReport) || !!business._cachedReport;
+    return !!findResearchReportRecord(business) || hasGeneratedWebsite(business) || !!business._cachedReport;
   }
 
   function hasGeneratedWebsite(business) {
-    return (business.generated_websites || []).some(w => w.config && w.config.html);
+    return !!findGeneratedWebsiteRecord(business);
   }
 
   function hasDemoWebsite(business) {
-    return (business.generated_websites || []).some(w => w.config && w.config.html);
+    return !!findGeneratedWebsiteRecord(business);
+  }
+
+  function getGeneratedWebsiteRecords(business) {
+    return business && Array.isArray(business.generated_websites) ? business.generated_websites : [];
+  }
+
+  function isResearchReportRecord(record) {
+    if (!record) return false;
+    if (record.config && record.config.researchReport) return true;
+    return record.template_name === 'ai_research_report';
+  }
+
+  function isGeneratedWebsiteRecord(record) {
+    if (!record) return false;
+    if (record.config && record.config.html) return true;
+    return !!record.template_name && record.template_name !== 'ai_research_report';
+  }
+
+  function findResearchReportRecord(business) {
+    return getGeneratedWebsiteRecords(business).find(isResearchReportRecord) || null;
+  }
+
+  function findGeneratedWebsiteRecord(business) {
+    return getGeneratedWebsiteRecords(business).find(isGeneratedWebsiteRecord) || null;
+  }
+
+  function removeResearchReportRecords(records) {
+    return (records || []).filter((record) => !isResearchReportRecord(record));
+  }
+
+  function removeGeneratedWebsiteRecords(records) {
+    return (records || []).filter((record) => !isGeneratedWebsiteRecord(record));
+  }
+
+  async function ensureGeneratedWebsiteConfigsLoaded(business, opts) {
+    const options = opts || {};
+    if (!supabaseClient || !business) return getGeneratedWebsiteRecords(business);
+
+    const current = getGeneratedWebsiteRecords(business);
+    const alreadyLoaded = current.some((record) => record && Object.prototype.hasOwnProperty.call(record, 'config'));
+    if (alreadyLoaded && !options.force) return current;
+
+    const { data, error } = await supabaseClient
+      .from('generated_websites')
+      .select('id, business_id, template_name, status, site_status, published_url, config')
+      .eq('business_id', business.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    business.generated_websites = data || [];
+    return business.generated_websites;
   }
 
   const ENRICHMENT_MAX_ATTEMPTS = 5;
@@ -3211,8 +3262,8 @@
   }
 
   function getWebsiteStatus(business) {
-    if (!business.generated_websites || business.generated_websites.length === 0) return null;
-    return business.generated_websites[0].status || 'draft';
+    const record = findGeneratedWebsiteRecord(business) || getGeneratedWebsiteRecords(business)[0] || null;
+    return record ? (record.status || 'draft') : null;
   }
 
   function getStageBadgeHtml(status) {
@@ -3304,7 +3355,7 @@
   }
 
   function getExistingWebsiteRecord(business) {
-    return (business.generated_websites || []).find(w => w.config && w.config.html) || null;
+    return findGeneratedWebsiteRecord(business);
   }
 
   function getPublishedWebsiteUrl(business) {
@@ -4309,8 +4360,8 @@
     const rawPhone = (primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone)) || business.phone || '';
     const phone = toE164(rawPhone, business.address_country) || rawPhone;
 
-    const existingWebsiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
-    const anyWebsiteRecord = existingWebsiteRecord || (business.generated_websites || [])[0];
+    const existingWebsiteRecord = findGeneratedWebsiteRecord(business);
+    const anyWebsiteRecord = existingWebsiteRecord || getGeneratedWebsiteRecords(business)[0];
     const demoUrl = anyWebsiteRecord
       ? (window.location.origin + '/demo/' + anyWebsiteRecord.id)
       : '';
@@ -5721,8 +5772,8 @@
     }
 
     // Check if there's already a generated website
-    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
-    const reportRecord = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    const existingWebsite = findGeneratedWebsiteRecord(business);
+    const reportRecord = findResearchReportRecord(business);
     const hasReport = !!reportRecord || !!business._cachedReport;
 
     const modal = document.createElement('div');
@@ -6425,7 +6476,7 @@
 
   // ── Report Modal (lightweight) ──
   function openReportModal(business) {
-    const reportRecord = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    const reportRecord = findResearchReportRecord(business);
     const report = business._cachedReport || (reportRecord && reportRecord.config.researchReport);
     if (!report) return;
 
@@ -6463,7 +6514,7 @@
       business._cachedReport = null;
       // Also clear the report from generated_websites so it doesn't short-circuit
       if (business.generated_websites) {
-        business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.researchReport));
+        business.generated_websites = removeResearchReportRecords(business.generated_websites);
       }
       // Find the report button in the table row and trigger generation
       const rows = document.querySelectorAll('.results-table tbody tr');
@@ -6621,7 +6672,10 @@
   }
 
   async function handleAdminTableReport(business, btn) {
-    const existingReport = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    await ensureGeneratedWebsiteConfigsLoaded(business).catch((err) => {
+      console.warn('Failed to load website configs for report check:', err);
+    });
+    const existingReport = findResearchReportRecord(business);
     if (existingReport || business._cachedReport) {
       openReportModal(business);
       return;
@@ -6691,8 +6745,10 @@
       return;
     }
 
-    const report = business._cachedReport ||
-      ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+    await ensureGeneratedWebsiteConfigsLoaded(business).catch((err) => {
+      console.warn('Failed to load website configs for AI photos:', err);
+    });
+    const report = business._cachedReport || (findResearchReportRecord(business) || {}).config?.researchReport;
     if (!report) {
       showToast(t('needsReport'), 'warning');
       return;
@@ -6787,7 +6843,10 @@
   }
 
   async function generateWebsiteFromTable(business, btn) {
-    const hasReport = (business.generated_websites || []).some(w => w.config && w.config.researchReport) || business._cachedReport;
+    await ensureGeneratedWebsiteConfigsLoaded(business).catch((err) => {
+      console.warn('Failed to load website configs for website generation:', err);
+    });
+    const hasReport = !!findResearchReportRecord(business) || !!business._cachedReport;
     if (!hasReport) {
       showToast(t('needsReport'), 'warning');
       return;
@@ -6817,8 +6876,7 @@
         photoInventory.push(...business._cachedGeneratedPhotos);
       }
       const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
-      const report = business._cachedReport ||
-        ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+      const report = business._cachedReport || (findResearchReportRecord(business) || {}).config?.researchReport;
 
       // Build photo manifest
       const photoManifest = buildPhotoManifest(report?.photoAssetPlan || [], photoInventory);
@@ -6895,7 +6953,7 @@
   }
 
   async function handleAdminTableWebsite(business, btn) {
-    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
+    const existingWebsite = findGeneratedWebsiteRecord(business);
     if (existingWebsite) {
       // Show a small popup with Open and Regenerate options
       const popup = document.createElement('div');
@@ -6918,7 +6976,7 @@
         popup.remove();
         // Clear existing website so generateWebsite runs fresh
         if (business.generated_websites) {
-          business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.html));
+          business.generated_websites = removeGeneratedWebsiteRecords(business.generated_websites);
         }
         btn.textContent = t('btnCreateWebsite');
         generateWebsiteFromTable(business, btn);
@@ -7081,7 +7139,7 @@
   // ── Create Website (full pipeline: report → photos → website) ──
   async function handleCreateWebsite(business, btn) {
     // If website already exists, show open/regenerate popup (same as before)
-    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
+    const existingWebsite = findGeneratedWebsiteRecord(business);
     if (existingWebsite) {
       const popup = document.createElement('div');
       popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:1500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
@@ -7108,8 +7166,7 @@
         business._cachedReport = null;
         business._cachedGeneratedPhotos = null;
         if (business.generated_websites) {
-          business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.html));
-          business.generated_websites = business.generated_websites.filter(w => !(w.config && w.config.researchReport));
+          business.generated_websites = removeResearchReportRecords(removeGeneratedWebsiteRecords(business.generated_websites));
         }
         btn.textContent = t('btnCreateWebsite');
         runFullWebsitePipeline(business, btn);
@@ -7146,8 +7203,10 @@
 
     try {
       // Step 1: Research report (skip if already cached)
-      let report = business._cachedReport ||
-        ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+      await ensureGeneratedWebsiteConfigsLoaded(business).catch((err) => {
+        console.warn('Failed to load website configs for full pipeline:', err);
+      });
+      let report = business._cachedReport || (findResearchReportRecord(business) || {}).config?.researchReport;
 
       if (!report) {
         popup.setStep('report', 'running');
@@ -7319,7 +7378,7 @@
     for (const id of ids) {
       const business = currentResults.find(b => String(b.id) === id);
       if (!business) continue;
-      const hasWebsite = (business.generated_websites || []).some(w => w.config && w.config.html);
+      const hasWebsite = !!findGeneratedWebsiteRecord(business);
       if (hasWebsite) {
         alreadyDone++;
         continue;
@@ -7342,7 +7401,10 @@
   // ── Research Report (Modal) ──
   async function generateResearchReport(modal, business, details, btn) {
     // Check for cached report in existing website
-    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+    await ensureGeneratedWebsiteConfigsLoaded(business).catch((err) => {
+      console.warn('Failed to load website configs for modal report:', err);
+    });
+    const existingWebsite = findResearchReportRecord(business);
     if (existingWebsite) {
       btn.style.display = 'none';
       renderResearchReport(modal, existingWebsite.config.researchReport);
@@ -7521,7 +7583,10 @@
   // ── Website Generation ──
   async function generateWebsite(modal, business, details, btn) {
     // Check for cached website
-    const existingWebsite = (business.generated_websites || []).find(w => w.config && w.config.html);
+    await ensureGeneratedWebsiteConfigsLoaded(business).catch((err) => {
+      console.warn('Failed to load website configs for modal website:', err);
+    });
+    const existingWebsite = findGeneratedWebsiteRecord(business);
     if (existingWebsite) {
       btn.style.display = 'none';
       renderWebsitePreview(modal, existingWebsite.config.html, business);
@@ -7550,8 +7615,7 @@
       const businessData = compileBusinessDataForPrompt(business, details);
       const photoInventory = buildPhotoInventory(details);
       const language = business.address_country === 'MX' || business.address_country === 'CO' ? 'es' : 'en';
-      const report = business._cachedReport ||
-        ((business.generated_websites || []).find(w => w.config && w.config.researchReport) || {}).config?.researchReport;
+      const report = business._cachedReport || (findResearchReportRecord(business) || {}).config?.researchReport;
 
       // Build photo manifest
       const photoManifest = buildPhotoManifest(report?.photoAssetPlan || [], photoInventory);
@@ -7638,7 +7702,7 @@
     if (!container) return;
 
     // Find the website record for this business
-    const websiteRecord = (business.generated_websites || []).find(w => w.config && w.config.html);
+    const websiteRecord = findGeneratedWebsiteRecord(business);
     const websiteUuid = websiteRecord ? websiteRecord.id : null;
     const websiteStatus = websiteRecord ? websiteRecord.status : 'draft';
     const siteStatus = websiteRecord ? websiteRecord.site_status : null;
@@ -7803,7 +7867,7 @@
 
     try {
       // Check if a generated_websites row with a report already exists
-      const existing = (business.generated_websites || []).find(w => w.config && w.config.researchReport);
+      const existing = findResearchReportRecord(business);
       if (existing) return; // Already saved
 
       const { data, error } = await supabaseClient
@@ -7817,7 +7881,7 @@
             generatedAt: new Date().toISOString(),
           },
         })
-        .select('id, status, config');
+        .select('id, status, template_name, config');
 
       if (error) {
         console.warn('Report save error:', error);
@@ -7848,7 +7912,7 @@
             generatedAt: new Date().toISOString(),
           },
         })
-        .select('id, status, site_status, published_url, config');
+        .select('id, status, site_status, published_url, template_name, config');
 
       if (error) {
         console.warn('Website save error:', error);
@@ -9673,9 +9737,9 @@
       const sinceDate = c.created_at ? new Date(c.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
       // Website URLs from generated_websites via business
-      const websites = (biz.generated_websites || []);
+      const websites = getGeneratedWebsiteRecords(biz);
       // Pick the website with actual content (config.html exists), fallback to first
-      const websiteRecord = websites.find(w => w.config && w.config.html) || websites[0] || null;
+      const websiteRecord = findGeneratedWebsiteRecord(biz) || websites[0] || null;
       const demoUrl = websiteRecord ? '/ver/' + websiteRecord.id : null;
       const publishedUrl = websiteRecord ? websiteRecord.published_url : null;
       const hasDomain = !!(publishedUrl);
