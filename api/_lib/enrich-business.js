@@ -68,7 +68,14 @@ function reviewHash(source, authorName, text) {
  */
 export async function enrichBusiness({ businessId, placeId, dataId, businessName, businessAddress, supabaseUrl, supabaseKey }) {
   const searchApiKey = process.env.SEARCHAPI_KEY;
-  if (!searchApiKey || !placeId) return;
+  if (!searchApiKey || !placeId) {
+    return {
+      hasFailures: true,
+      steps: {
+        place_detail: { ok: false, reason: !searchApiKey ? 'missing_searchapi_key' : 'missing_place_id' },
+      },
+    };
+  }
 
   const headers = {
     'apikey': supabaseKey,
@@ -77,18 +84,32 @@ export async function enrichBusiness({ businessId, placeId, dataId, businessName
   };
 
   // Run all enrichment steps in parallel
+  const stepNames = ['place_detail', 'reviews', 'photos', 'social_profiles'];
   const results = await Promise.allSettled([
     enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUrl, headers }),
     enrichReviews({ businessId, placeId, dataId, searchApiKey, supabaseUrl, headers }),
-    dataId ? enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) : Promise.resolve(),
-    businessName ? enrichSocialProfiles({ businessId, businessName, businessAddress, searchApiKey, supabaseUrl, headers }) : Promise.resolve(),
+    dataId ? enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) : Promise.resolve({ ok: true, skipped: true, reason: 'missing_data_id' }),
+    businessName ? enrichSocialProfiles({ businessId, businessName, businessAddress, searchApiKey, supabaseUrl, headers }) : Promise.resolve({ ok: true, skipped: true, reason: 'missing_business_name' }),
   ]);
 
-  for (const r of results) {
+  const steps = {};
+  let hasFailures = false;
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i];
+    const stepName = stepNames[i];
     if (r.status === 'rejected') {
       console.warn('Enrichment step failed (non-blocking):', r.reason?.message || r.reason);
+      steps[stepName] = { ok: false, reason: r.reason?.message || String(r.reason || 'unknown_error') };
+      hasFailures = true;
+      continue;
     }
+
+    steps[stepName] = r.value || { ok: true };
+    if (r.value && r.value.ok === false) hasFailures = true;
   }
+
+  return { hasFailures, steps };
 }
 
 /**
@@ -104,7 +125,7 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
     console.warn('SearchAPI place detail failed:', res.status);
-    return;
+    return { ok: false, reason: `place_detail_http_${res.status}` };
   }
 
   const data = await res.json();
@@ -129,11 +150,15 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
   if (parsed.highlights.length) updates.highlights = parsed.highlights;
 
   if (Object.keys(updates).length > 0) {
-    await fetch(`${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`, {
+    const patchRes = await fetch(`${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`, {
       method: 'PATCH',
       headers: { ...headers, 'Prefer': 'return=minimal' },
       body: JSON.stringify(updates),
     });
+    if (!patchRes.ok) {
+      const errText = await patchRes.text().catch(() => '');
+      throw new Error(`place_detail_patch_failed:${errText.substring(0, 120)}`);
+    }
   }
 
   // Extract reviews from place detail response and save
@@ -147,6 +172,13 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
   if (webReviews.length > 0) {
     await saveSocialFromWebReviews({ businessId, webReviews, supabaseUrl, headers });
   }
+
+  return {
+    ok: true,
+    updatedFields: Object.keys(updates).length,
+    reviewCount: Array.isArray(reviews) ? reviews.length : 0,
+    webReviewCount: webReviews.length,
+  };
 }
 
 /**
@@ -164,7 +196,7 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
     console.warn('SearchAPI reviews failed:', res.status);
-    return;
+    return { ok: false, reason: `reviews_http_${res.status}` };
   }
 
   const data = await res.json();
@@ -172,6 +204,8 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
   if (reviews.length > 0) {
     await saveReviews({ businessId, reviews, supabaseUrl, headers });
   }
+
+  return { ok: true, reviewCount: reviews.length };
 }
 
 /**
@@ -179,10 +213,14 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
  */
 async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) {
   // Delete existing google-source photos before inserting fresh ones (supports refresh)
-  await fetch(
+  const deleteRes = await fetch(
     `${supabaseUrl}/rest/v1/business_photos?business_id=eq.${businessId}&source=eq.google`,
     { method: 'DELETE', headers: { ...headers, 'Prefer': 'return=minimal' } }
   );
+  if (!deleteRes.ok) {
+    const errText = await deleteRes.text().catch(() => '');
+    throw new Error(`photo_delete_failed:${errText.substring(0, 120)}`);
+  }
 
   const params = new URLSearchParams({
     engine: 'google_maps_photos',
@@ -193,12 +231,12 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
     console.warn('SearchAPI photos failed:', res.status);
-    return;
+    return { ok: false, reason: `photos_http_${res.status}` };
   }
 
   const data = await res.json();
   const photos = data.photos || [];
-  if (photos.length === 0) return;
+  if (photos.length === 0) return { ok: true, photoCount: 0 };
 
   // Build category lookup for photo_type classification
   const categories = (data.categories || []);
@@ -215,13 +253,19 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
     is_primary: i === 0,
   })).filter(r => r.url);
 
-  if (photoRows.length === 0) return;
+  if (photoRows.length === 0) return { ok: true, photoCount: 0 };
 
-  await fetch(`${supabaseUrl}/rest/v1/business_photos`, {
+  const insertRes = await fetch(`${supabaseUrl}/rest/v1/business_photos`, {
     method: 'POST',
     headers: { ...headers, 'Prefer': 'return=minimal' },
     body: JSON.stringify(photoRows),
   });
+  if (!insertRes.ok) {
+    const errText = await insertRes.text().catch(() => '');
+    throw new Error(`photo_insert_failed:${errText.substring(0, 120)}`);
+  }
+
+  return { ok: true, photoCount: photoRows.length };
 }
 
 /**
@@ -252,7 +296,7 @@ async function saveReviews({ businessId, reviews, supabaseUrl, headers }) {
   if (rows.length === 0) return;
 
   // Upsert: on conflict (business_id, review_hash), update text and sentiment
-  await fetch(`${supabaseUrl}/rest/v1/business_reviews`, {
+  const res = await fetch(`${supabaseUrl}/rest/v1/business_reviews`, {
     method: 'POST',
     headers: {
       ...headers,
@@ -260,6 +304,10 @@ async function saveReviews({ businessId, reviews, supabaseUrl, headers }) {
     },
     body: JSON.stringify(rows),
   });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`review_save_failed:${errText.substring(0, 120)}`);
+  }
 }
 
 /**
@@ -280,7 +328,7 @@ async function enrichSocialProfiles({ businessId, businessName, businessAddress,
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
     console.warn('SearchAPI social discovery failed:', res.status);
-    return;
+    return { ok: false, reason: `social_discovery_http_${res.status}` };
   }
 
   const data = await res.json();
@@ -314,7 +362,7 @@ async function enrichSocialProfiles({ businessId, businessName, businessAddress,
     }
   }
 
-  if (found.size === 0) return;
+  if (found.size === 0) return { ok: true, profileCount: 0 };
 
   const profiles = [];
   for (const [platform, url] of found) {
@@ -322,7 +370,7 @@ async function enrichSocialProfiles({ businessId, businessName, businessAddress,
   }
 
   // Upsert: on conflict (business_id, platform), update url
-  await fetch(`${supabaseUrl}/rest/v1/business_social_profiles`, {
+  const upsertRes = await fetch(`${supabaseUrl}/rest/v1/business_social_profiles`, {
     method: 'POST',
     headers: {
       ...headers,
@@ -330,6 +378,12 @@ async function enrichSocialProfiles({ businessId, businessName, businessAddress,
     },
     body: JSON.stringify(profiles),
   });
+  if (!upsertRes.ok) {
+    const errText = await upsertRes.text().catch(() => '');
+    throw new Error(`social_profile_save_failed:${errText.substring(0, 120)}`);
+  }
+
+  return { ok: true, profileCount: profiles.length };
 }
 
 /**
@@ -383,7 +437,7 @@ async function saveSocialFromWebReviews({ businessId, webReviews, supabaseUrl, h
   if (profiles.length === 0) return;
 
   // Upsert: on conflict (business_id, platform), update url
-  await fetch(`${supabaseUrl}/rest/v1/business_social_profiles`, {
+  const res = await fetch(`${supabaseUrl}/rest/v1/business_social_profiles`, {
     method: 'POST',
     headers: {
       ...headers,
@@ -391,6 +445,10 @@ async function saveSocialFromWebReviews({ businessId, webReviews, supabaseUrl, h
     },
     body: JSON.stringify(profiles),
   });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`web_review_social_save_failed:${errText.substring(0, 120)}`);
+  }
 }
 
 /**

@@ -899,6 +899,7 @@
     try {
       const location = locationInput.value.trim();
       const type = businessType.value;
+      const isNewBusiness = !place._businessId && !savedPlaceIds.has(place.placeId);
 
       // Validate business_status against CHECK constraint
       const status = VALID_BUSINESS_STATUSES.includes(place.status) ? place.status : 'UNKNOWN';
@@ -935,6 +936,15 @@
         highlights: place.highlights || [],
         accessibility_info: (place.accessibility || []).join(', ') || null,
       };
+
+      if (isNewBusiness) {
+        row.enrichment_status = 'pending';
+        row.enrichment_attempts = 0;
+        row.enrichment_last_started_at = null;
+        row.enrichment_last_finished_at = null;
+        row.enrichment_next_retry_at = null;
+        row.enrichment_last_error = null;
+      }
 
       // Upsert business and get back the id for saving reviews
       const { data, error } = await supabaseClient
@@ -1079,7 +1089,7 @@
   }
 
   // ── Post-Search Pipeline ──
-  // Search → dedupe → auto-save → WhatsApp check → conditional enrichment
+  // Search → dedupe → auto-save → WhatsApp check → background enrichment queue
   async function runPostSearchPipeline(results) {
     if (!supabaseClient) {
       // No DB — fall back to plain enrichment
@@ -1159,13 +1169,20 @@
     renderTable();
     showToast(t('pipelineWaDone', waValidCount, toCheck.length), 'success');
 
-    // Phase: Conditional enrichment — only WA-valid businesses
-    const waValid = newBusinesses.filter(p => p._whatsappStatus === 'valid');
-    if (waValid.length > 0) {
-      await runEnrichmentPipeline(waValid, waValid.length);
+    // Phase: Background enrichment queue — search imports are persisted and
+    // picked up by the server-side cron so bulk searches do not have to finish
+    // enrichment in the browser.
+    const queuedForEnrichment = newBusinesses.filter(p => !p._saveFailed && p.placeId);
+    queuedForEnrichment.forEach((place) => {
+      place._backgroundEnrichmentQueued = true;
+    });
+
+    closeEnrichmentBar();
+
+    if (queuedForEnrichment.length > 0) {
+      showToast('Background enrichment queued for ' + queuedForEnrichment.length + ' businesses.', 'success');
     } else {
-      closeEnrichmentBar();
-      showToast(t('pipelineNoWaValid'), 'warning');
+      showToast('No businesses were queued for background enrichment.', 'warning');
     }
   }
 
@@ -2018,9 +2035,30 @@
     // Support both Google Places photo objects (with getURI) and SearchAPI URL objects
     if (!photo) return null;
     if (photo.getURI) return photo.getURI({ maxWidth: maxWidth || 600 });
-    if (photo.url) return photo.url;
+    if (typeof photo.url === 'string') return photo.url;
+    if (typeof photo.thumbnail === 'string') return photo.thumbnail;
+    if (photo.url && typeof photo.url === 'object') {
+      if (typeof photo.url.image === 'string') return photo.url.image;
+      if (typeof photo.url.thumbnail === 'string') return photo.url.thumbnail;
+      if (typeof photo.url.url === 'string') return photo.url.url;
+    }
     if (typeof photo === 'string') return photo;
     return null;
+  }
+
+  function countUsablePhotoUrls(place) {
+    return (place.photos || []).reduce((count, photo) => (
+      getPhotoUrl(photo, 800) ? count + 1 : count
+    ), 0);
+  }
+
+  async function ensurePlacePhotos(place, minimumCount) {
+    const minCount = minimumCount || 6;
+    if (!place || !place.dataId) return;
+    if (countUsablePhotoUrls(place) >= minCount) return;
+
+    await enrichWithSearchAPIPhotos([place]);
+    place._photoInventory = buildPhotoInventoryMap(place);
   }
 
   // ── URL Lookup ──
@@ -2856,7 +2894,7 @@
   // Fetch additional photos via SearchAPI.io dedicated photos engine
   // Only called for businesses that have few or no photos
   async function enrichWithSearchAPIPhotos(results) {
-    const needsPhotos = results.filter(p => p.dataId && (!p.photos || p.photos.length <= 1));
+    const needsPhotos = results.filter(p => p.dataId && countUsablePhotoUrls(p) < 6);
     if (needsPhotos.length === 0) return;
 
     updateProgress(97, t('fetchingPhotos'));
@@ -4212,6 +4250,7 @@
 
   // ── Fetch Report API (shared by modal and table) ──
   async function fetchReportFromApi(place) {
+    await ensurePlacePhotos(place, 3);
     const businessData = compileBusinessDataForPrompt(place);
     const language = getSearchLanguage();
     const res = await withTimeout(
@@ -4323,6 +4362,14 @@
         });
       }
 
+      const hasBasePhotos = countUsablePhotoUrls(place) > 0;
+      if (generated.length === 0 && !hasBasePhotos) {
+        btn.disabled = false;
+        btn.textContent = t('btnPhotos');
+        showToast(t('photosError'), 'error');
+        return;
+      }
+
       place.generatedPhotos = generated;
       btn.disabled = false;
       btn.textContent = '\u2713';
@@ -4356,6 +4403,7 @@
     btn.disabled = true;
     btn.textContent = t('generatingWebsite');
     try {
+      await ensurePlacePhotos(place, 3);
       const businessData = compileBusinessDataForPrompt(place);
       const baseInventory = place._photoInventory || buildPhotoInventoryMap(place);
       // Include AI-generated photos in the inventory
@@ -4644,6 +4692,7 @@
     container.innerHTML = `<div class="report-loading"><span class="spinner"></span><p>${t('websiteGenerating')}</p></div>`;
 
     try {
+      await ensurePlacePhotos(place, 3);
       const businessData = compileBusinessDataForPrompt(place);
       const photoInventory = place._photoInventory || buildPhotoInventoryMap(place);
       const language = getSearchLanguage();
@@ -4769,7 +4818,7 @@
             html: html,
             researchReport: place.researchReport,
             generatedAt: new Date().toISOString(),
-            photoInventory: (place._photoInventory || []).map(p => ({ id: p.id, url: p.url, type: p.type })),
+            photoInventory: (place._photoInventory || buildPhotoInventoryMap(place)).map(p => ({ id: p.id, url: p.url, type: p.type })),
           },
         });
 

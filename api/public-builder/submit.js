@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { buildInitialEnrichmentState } from '../_lib/enrichment-runner.js';
 
 function buildInternalUrl(req, path) {
   var host = req.headers.host || process.env.VERCEL_URL || 'localhost:3000';
@@ -88,7 +89,8 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     contact_name: body.contactName || null,
     contact_email: body.contactEmail || null,
     contact_whatsapp: body.contactWhatsapp || null,
-    notes: body.extraNotes || null
+    notes: body.extraNotes || null,
+    ...buildInitialEnrichmentState(match.placeId)
   };
 
   var insertResult = await fetchJson(supabaseUrl + '/rest/v1/businesses', {
@@ -140,9 +142,10 @@ export default async function handler(req, res) {
     if (selectedGoogleMatch && selectedGoogleMatch.placeId) {
       businessId = await createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, selectedGoogleMatch, body);
     } else {
+      var builderPlaceId = 'builder-' + randomUUID();
       var insertPayload = {
         name: company,
-        place_id: 'builder-' + randomUUID(),
+        place_id: builderPlaceId,
         category: businessType,
         address_full: body.addressFull || null,
         address_city: body.city || null,
@@ -158,7 +161,8 @@ export default async function handler(req, res) {
         contact_name: contactName || null,
         contact_email: contactEmail || null,
         contact_whatsapp: body.contactWhatsapp || null,
-        notes: body.extraNotes || null
+        notes: body.extraNotes || null,
+        ...buildInitialEnrichmentState(builderPlaceId)
       };
 
       var insertResult = await fetchJson(supabaseUrl + '/rest/v1/businesses', {

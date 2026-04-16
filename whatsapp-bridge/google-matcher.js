@@ -215,6 +215,8 @@ async function matchOrCreateFromGoogle(googleMatch, contactInfo) {
     latitude: googleMatch.latitude,
     longitude: googleMatch.longitude,
     pipeline_status: 'prospect',
+    enrichment_status: 'pending',
+    enrichment_attempts: 0,
   };
 
   if (contactInfo.contactName) insertData.contact_name = contactInfo.contactName;

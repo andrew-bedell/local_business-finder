@@ -867,6 +867,9 @@ async function handleEnrich(flowId, flowData, extras = {}) {
         address_city: collected.businessCity || null,
         address_state: collected.businessState || null,
         pipeline_status: 'prospect',
+        enrichment_status: 'skipped',
+        enrichment_attempts: 0,
+        enrichment_last_finished_at: new Date().toISOString(),
       };
 
       if (collected.contactName) insertData.contact_name = collected.contactName;

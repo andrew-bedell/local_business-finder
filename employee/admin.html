@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0f1117">
-  <title>Saved Businesses — Local Business Finder</title>
+  <title>Business Pipeline — Local Business Finder</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -482,11 +482,47 @@
         <button class="btn btn-primary" id="btn-apply-filters" style="margin-top:14px" data-i18n="applyFilters">Apply Filters</button>
       </section>
 
+      <!-- Enrichment Queue -->
+      <section class="card results-card" id="needs-enrichment-section">
+        <div class="results-header">
+          <div>
+            <h2 data-i18n="enrichmentQueueTitle">Needs Enrichment</h2>
+            <p class="results-summary" id="enrichment-queue-summary"></p>
+          </div>
+        </div>
+
+        <div class="results-table-wrapper enrichment-queue-wrapper">
+          <table class="results-table" id="enrichment-queue-table">
+            <thead>
+              <tr>
+                <th data-i18n="thName">Business Name</th>
+                <th data-i18n="thBusinessCode">ID</th>
+                <th data-i18n="thLocation">Location</th>
+                <th data-i18n="thStage">Stage</th>
+                <th data-i18n="thEnrichmentStatus">Enrichment</th>
+                <th data-i18n="thEnrichmentAttempts">Attempts</th>
+                <th data-i18n="thLastActivity">Last Activity</th>
+                <th data-i18n="thNextRetry">Next Retry</th>
+                <th data-i18n="thDetails">Details</th>
+                <th>Maps</th>
+                <th data-i18n="thEnrich">Enrich</th>
+                <th data-i18n="thDelete">Delete</th>
+              </tr>
+            </thead>
+            <tbody id="enrichment-queue-body"></tbody>
+          </table>
+        </div>
+
+        <div class="no-results" id="enrichment-queue-empty" style="display:none;">
+          <p data-i18n="enrichmentQueueEmpty">No businesses are waiting on enrichment right now.</p>
+        </div>
+      </section>
+
       <!-- Results Table -->
       <section class="card results-card" id="results-section">
         <div class="results-header">
           <div>
-            <h2 data-i18n="adminResultsTitle">Saved Businesses</h2>
+            <h2 data-i18n="adminResultsTitle">Enriched Businesses</h2>
             <p class="results-summary" id="results-summary"></p>
           </div>
           <div class="admin-pagination" id="pagination-top">
