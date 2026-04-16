@@ -1,4 +1,4 @@
-import { enrichBusiness } from '../_lib/enrich-business.js';
+import { runTrackedBusinessEnrichment } from '../_lib/enrichment-runner.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,9 +23,9 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
-  // 1. Look up business to get place_id, name, address, whatsapp_status
+  // 1. Look up business to get place_id + context
   const bizRes = await fetch(
-    `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=place_id,name,address_full,whatsapp_status`,
+    `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=place_id,name,address_full`,
     { headers }
   );
   if (!bizRes.ok) return res.status(500).json({ error: 'Failed to fetch business' });
@@ -35,50 +35,28 @@ export default async function handler(req, res) {
   const biz = businesses[0];
   const placeId = biz.place_id;
 
-  if (!placeId || placeId.startsWith('marketing-')) {
+  if (!placeId) {
     return res.status(400).json({ error: 'No Google place ID — cannot enrich' });
   }
 
-  // Skip enrichment for businesses with invalid WhatsApp numbers
-  if (biz.whatsapp_status === 'invalid') {
-    return res.status(200).json({ skipped: true, reason: 'Invalid WhatsApp number — enrichment blocked' });
-  }
-
-  // 2. Search for data_id using SearchAPI google_maps engine
-  let dataId = null;
+  // 2. Run tracked enrichment
   try {
-    const query = [biz.name, biz.address_full].filter(Boolean).join(' ');
-    const params = new URLSearchParams({
-      engine: 'google_maps',
-      q: query,
-      api_key: searchApiKey,
-    });
-    const searchRes = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
-    if (searchRes.ok) {
-      const searchData = await searchRes.json();
-      const results = searchData.local_results || [];
-      // Match by place_id
-      const match = results.find(r => r.place_id === placeId);
-      if (match) dataId = match.data_id || null;
-      // Fallback: use first result if only one returned
-      if (!dataId && results.length === 1) dataId = results[0].data_id || null;
-    }
-  } catch (e) {
-    console.warn('data_id lookup failed (non-blocking):', e.message);
-  }
-
-  // 3. Run enrichment (awaited, not fire-and-forget)
-  try {
-    await enrichBusiness({
+    const result = await runTrackedBusinessEnrichment({
       businessId,
       placeId,
-      dataId,
       businessName: biz.name,
       businessAddress: biz.address_full,
       supabaseUrl,
       supabaseKey,
     });
-    return res.status(200).json({ success: true, dataId: dataId || null });
+
+    return res.status(200).json({
+      success: !!result.success,
+      status: result.status,
+      dataId: result.dataId || null,
+      error: result.error || null,
+      nextRetryAt: result.nextRetryAt || null,
+    });
   } catch (err) {
     console.error('Enrichment failed:', err);
     return res.status(500).json({ error: 'Enrichment failed: ' + err.message });

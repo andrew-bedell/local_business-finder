@@ -3,6 +3,7 @@
 // Operator provides name + WhatsApp, system creates all records + magic login link
 
 import crypto from 'crypto';
+import { buildInitialEnrichmentState } from '../_lib/enrichment-runner.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,8 +39,9 @@ export default async function handler(req, res) {
 
   try {
     // 1. Create business record with synthetic place_id
+    const placeId = 'manual-' + crypto.randomUUID();
     const businessPayload = {
-      place_id: 'manual-' + crypto.randomUUID(),
+      place_id: placeId,
       name: businessName,
       whatsapp: whatsapp,
       category: category || null,
@@ -49,6 +51,7 @@ export default async function handler(req, res) {
       pipeline_status_changed_at: new Date().toISOString(),
       lead_source: 'whatsapp_inbound',
       data_completeness_score: 0,
+      ...buildInitialEnrichmentState(placeId),
     };
 
     const bizRes = await fetch(`${supabaseUrl}/rest/v1/businesses`, {

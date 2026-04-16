@@ -106,6 +106,23 @@ CREATE TABLE IF NOT EXISTS businesses (
   -- Customer-authored content
   founder_description     TEXT,                -- founder story written by customer (100-300 chars)
 
+  -- Enrichment lifecycle
+  enrichment_status       TEXT DEFAULT 'pending'
+                            CHECK (enrichment_status IN (
+                              'pending',
+                              'in_progress',
+                              'completed',
+                              'retry',
+                              'failed',
+                              'skipped'
+                            )),
+  enrichment_attempts     INTEGER DEFAULT 0
+                            CHECK (enrichment_attempts >= 0),
+  enrichment_last_started_at TIMESTAMPTZ,
+  enrichment_last_finished_at TIMESTAMPTZ,
+  enrichment_next_retry_at TIMESTAMPTZ,
+  enrichment_last_error   TEXT,
+
   -- Tracking
   data_completeness_score INTEGER DEFAULT 0    -- 0–100, how much data we've gathered
                             CHECK (data_completeness_score BETWEEN 0 AND 100),
@@ -122,6 +139,8 @@ CREATE INDEX IF NOT EXISTS idx_businesses_lead_source ON businesses (lead_source
 CREATE INDEX IF NOT EXISTS idx_businesses_completeness ON businesses (data_completeness_score);
 CREATE INDEX IF NOT EXISTS idx_businesses_slug ON businesses (slug) WHERE slug IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_businesses_place_id ON businesses (place_id) WHERE place_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_businesses_enrichment_queue ON businesses (enrichment_status, enrichment_next_retry_at);
+CREATE INDEX IF NOT EXISTS idx_businesses_enrichment_started ON businesses (enrichment_last_started_at) WHERE enrichment_status = 'in_progress';
 
 -- Composite: category + city search filter
 CREATE INDEX IF NOT EXISTS idx_businesses_category_city ON businesses (category, address_city);

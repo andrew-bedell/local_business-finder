@@ -56,8 +56,8 @@
 
   const translations = {
     en: {
-      adminTitle: 'Saved Businesses',
-      adminTagline: 'View and manage all businesses saved to the database',
+      adminTitle: 'Business Pipeline',
+      adminTagline: 'Track businesses that are still enriching and the ones ready to use',
       navSearch: 'Search',
       navSaved: 'Saved',
       navPipeline: 'Pipeline',
@@ -141,6 +141,15 @@
       filtersTitle: 'Filters',
       clearFilters: 'Clear Filters',
       applyFilters: 'Apply Filters',
+      tableColumns: 'Columns',
+      tableColumnsTitle: 'Choose table columns',
+      tableColumnsSubtitle: 'Show, hide, and reorder columns. Fixed columns stay pinned.',
+      tableColumnsReset: 'Reset to Default',
+      tableColumnVisible: 'Visible',
+      tableColumnHidden: 'Hidden',
+      tableColumnFixed: 'Fixed',
+      tableMoveUp: 'Move up',
+      tableMoveDown: 'Move down',
       filterLocation: 'Location',
       filterLocationPlaceholder: 'City, state, or zip...',
       filterCountry: 'Country',
@@ -156,12 +165,15 @@
       filterHasFacebook: 'Has Facebook',
       filterHasReport: 'Has Report',
       filterHasWebsite: 'Has Website',
-      adminResultsTitle: 'Saved Businesses',
+      adminResultsTitle: 'Enriched Businesses',
+      enrichmentQueueTitle: 'Needs Enrichment',
+      enrichmentQueueSummary: '{0} businesses are still enriching or waiting to retry.',
+      enrichmentQueueEmpty: 'No businesses are waiting on enrichment right now.',
       prevPage: 'Prev',
       nextPage: 'Next',
       pageInfo: 'Page {0} of {1}',
       showingCount: 'Showing {0} of {1} businesses',
-      adminNoResults: 'No businesses match your filters.',
+      adminNoResults: 'No enriched businesses match your filters.',
       adminFooter: 'Operator Admin — Local Business Finder',
       thName: 'Business Name',
       thLocation: 'Location',
@@ -181,6 +193,10 @@
       thWebsite: 'Website',
       thWebsiteUrl: 'URL',
       thEnrich: 'Enrich',
+      thEnrichmentStatus: 'Enrichment',
+      thEnrichmentAttempts: 'Attempts',
+      thLastActivity: 'Last Activity',
+      thNextRetry: 'Next Retry',
       thActions: 'Actions',
       thDelete: 'Delete',
       btnDelete: 'Delete',
@@ -202,9 +218,22 @@
       badgeNo: '—',
       btnEnrich: 'Enrich',
       enriching: 'Enriching...',
+      enrichmentWorking: 'Working...',
       enrichSuccess: 'Enrichment complete for {0}',
       enrichError: 'Enrichment failed. Please try again.',
       enrichNoPlaceId: 'No Google place ID — cannot enrich',
+      enrichmentStatusPending: 'Pending',
+      enrichmentStatusInProgress: 'In Progress',
+      enrichmentStatusRetry: 'Retry Scheduled',
+      enrichmentStatusFailed: 'Failed',
+      enrichmentStatusCompleted: 'Completed',
+      enrichmentStatusSkipped: 'Skipped',
+      enrichmentAttemptsValue: '{0} / {1}',
+      enrichmentActivityStarted: 'Started {0}',
+      enrichmentActivityFinished: 'Finished {0}',
+      enrichmentActivitySaved: 'Saved {0}',
+      enrichmentNotStarted: 'Not started yet',
+      enrichmentRetryExhausted: 'Retry limit reached',
       btnReport: 'Report',
       btnPhotos: 'Generate Photos',
       generatingPhotos: 'Generating...',
@@ -918,8 +947,8 @@
       orThReason: 'Reason',
     },
     es: {
-      adminTitle: 'Negocios Guardados',
-      adminTagline: 'Ver y gestionar todos los negocios guardados en la base de datos',
+      adminTitle: 'Pipeline de Negocios',
+      adminTagline: 'Seguimiento de negocios aún enriqueciéndose y los que ya están listos',
       navSearch: 'Buscar',
       navSaved: 'Guardados',
       navPipeline: 'Pipeline',
@@ -1003,6 +1032,15 @@
       filtersTitle: 'Filtros',
       clearFilters: 'Limpiar Filtros',
       applyFilters: 'Aplicar Filtros',
+      tableColumns: 'Columnas',
+      tableColumnsTitle: 'Elegir columnas de la tabla',
+      tableColumnsSubtitle: 'Muestra, oculta y reordena columnas. Las columnas fijas permanecen ancladas.',
+      tableColumnsReset: 'Restablecer por Defecto',
+      tableColumnVisible: 'Visible',
+      tableColumnHidden: 'Oculta',
+      tableColumnFixed: 'Fija',
+      tableMoveUp: 'Subir',
+      tableMoveDown: 'Bajar',
       filterLocation: 'Ubicación',
       filterLocationPlaceholder: 'Ciudad, estado o código postal...',
       filterCountry: 'País',
@@ -1018,12 +1056,15 @@
       filterHasFacebook: 'Tiene Facebook',
       filterHasReport: 'Tiene Informe',
       filterHasWebsite: 'Tiene Sitio Web',
-      adminResultsTitle: 'Negocios Guardados',
+      adminResultsTitle: 'Negocios Enriquecidos',
+      enrichmentQueueTitle: 'Pendientes de Enriquecer',
+      enrichmentQueueSummary: '{0} negocios siguen enriqueciéndose o esperando reintento.',
+      enrichmentQueueEmpty: 'No hay negocios esperando enriquecimiento ahora mismo.',
       prevPage: 'Anterior',
       nextPage: 'Siguiente',
       pageInfo: 'Página {0} de {1}',
       showingCount: 'Mostrando {0} de {1} negocios',
-      adminNoResults: 'Ningún negocio coincide con los filtros.',
+      adminNoResults: 'Ningún negocio enriquecido coincide con los filtros.',
       adminFooter: 'Admin del Operador — Buscador de Negocios Locales',
       thName: 'Nombre',
       thLocation: 'Ubicación',
@@ -1043,6 +1084,10 @@
       thWebsite: 'Sitio Web',
       thWebsiteUrl: 'URL',
       thEnrich: 'Enriquecer',
+      thEnrichmentStatus: 'Enriquecimiento',
+      thEnrichmentAttempts: 'Intentos',
+      thLastActivity: 'Última Actividad',
+      thNextRetry: 'Próximo Reintento',
       thActions: 'Acciones',
       thDelete: 'Eliminar',
       btnDelete: 'Eliminar',
@@ -1064,9 +1109,22 @@
       badgeNo: '—',
       btnEnrich: 'Enriquecer',
       enriching: 'Enriqueciendo...',
+      enrichmentWorking: 'En proceso...',
       enrichSuccess: 'Enriquecimiento completo para {0}',
       enrichError: 'Error al enriquecer. Por favor intente de nuevo.',
       enrichNoPlaceId: 'Sin Google place ID — no se puede enriquecer',
+      enrichmentStatusPending: 'Pendiente',
+      enrichmentStatusInProgress: 'En Progreso',
+      enrichmentStatusRetry: 'Reintento Programado',
+      enrichmentStatusFailed: 'Falló',
+      enrichmentStatusCompleted: 'Completado',
+      enrichmentStatusSkipped: 'Omitido',
+      enrichmentAttemptsValue: '{0} / {1}',
+      enrichmentActivityStarted: 'Inició {0}',
+      enrichmentActivityFinished: 'Terminó {0}',
+      enrichmentActivitySaved: 'Guardado {0}',
+      enrichmentNotStarted: 'Aún no inicia',
+      enrichmentRetryExhausted: 'Límite de reintentos alcanzado',
       btnReport: 'Informe',
       btnPhotos: 'Generar Fotos',
       generatingPhotos: 'Generando...',
@@ -1802,8 +1860,8 @@
       btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
     });
     document.title = currentLang === 'es'
-      ? 'Admin del Operador — Buscador de Negocios Locales'
-      : 'Operator Admin — Local Business Finder';
+      ? 'Pipeline de Negocios — Local Business Finder'
+      : 'Business Pipeline — Local Business Finder';
   }
 
   // ── Toast Notifications ──
@@ -2062,6 +2120,7 @@
   let pageSize = 25;
   let totalCount = 0;
   let currentResults = [];
+  let currentQueueResults = [];
   let allFiltered = []; // Full filtered dataset for client-side pagination
   const selectedIds = new Set(); // Selected business IDs for bulk actions
   let allBusinesses = []; // Unfiltered dataset for pipeline counts
@@ -2069,11 +2128,114 @@
   let pipelineStage = 'all'; // Currently selected pipeline filter
   // Cache for detail modal data (keyed by business ID)
   const detailCache = {};
+  const SAVED_COLUMNS_STORAGE_KEY = 'admin_saved_table_columns_v1';
+  const OUTREACH_COLUMNS_STORAGE_PREFIX = 'admin_outreach_table_columns_v1_';
+  const FIXED_SAVED_COLUMNS = ['select', 'rowNumber', 'name'];
+  const OUTREACH_SECTIONS = ['followup', 'today', 'schedule', 'visitors', 'ready', 'progress', 'complete', 'cancelled'];
+  let savedTableConfig = { order: [], visible: {} };
+  const outreachTableConfig = {};
+
+  const SAVED_BUSINESS_COLUMNS = [
+    { id: 'select', labelKey: '', fixed: true, defaultVisible: true, headerClass: 'col-select col-sticky', cellClass: 'td-center col-sticky col-select', width: '36px' },
+    { id: 'rowNumber', label: '#', fixed: true, defaultVisible: true, headerClass: 'col-num col-sticky col-sticky-1', cellClass: 'td-center col-sticky col-sticky-1', width: '40px' },
+    { id: 'name', labelKey: 'thName', fixed: true, defaultVisible: true, headerClass: 'col-name col-sticky col-sticky-2', cellClass: 'td-editable col-sticky col-sticky-2' },
+    { id: 'businessCode', labelKey: 'thBusinessCode', defaultVisible: true },
+    { id: 'location', labelKey: 'thLocation', defaultVisible: true, headerClass: 'col-address' },
+    { id: 'type', labelKey: 'thType', defaultVisible: true },
+    { id: 'stage', labelKey: 'thStage', defaultVisible: true },
+    { id: 'source', labelKey: 'thSource', defaultVisible: true },
+    { id: 'country', labelKey: 'thCountry', defaultVisible: true },
+    { id: 'contacts', labelKey: 'thContacts', defaultVisible: true },
+    { id: 'contactWhatsapp', labelKey: 'thContactWhatsapp', defaultVisible: true },
+    { id: 'contactEmail', labelKey: 'thContactEmail', defaultVisible: true },
+    { id: 'businessPhone', labelKey: 'thPhone', defaultVisible: true, headerClass: 'col-phone' },
+    { id: 'whatsappStatus', labelKey: 'thWhatsappStatus', defaultVisible: true },
+    { id: 'businessEmail', labelKey: 'thEmail', defaultVisible: true },
+    { id: 'rating', labelKey: 'thRating', defaultVisible: true, headerClass: 'col-rating' },
+    { id: 'reviews', labelKey: 'thReviews', defaultVisible: true, headerClass: 'col-reviews' },
+    { id: 'social', labelKey: 'thSocial', defaultVisible: true, headerClass: 'col-social' },
+    { id: 'website', labelKey: 'thWebsite', defaultVisible: true },
+    { id: 'websiteUrl', labelKey: 'thWebsiteUrl', defaultVisible: true },
+    { id: 'outreach', labelKey: 'thOutreach', defaultVisible: true },
+    { id: 'outreachSent', labelKey: 'thOutreachSent', defaultVisible: true },
+    { id: 'details', labelKey: 'thDetails', defaultVisible: true, headerClass: 'col-details' },
+    { id: 'maps', label: 'Maps', defaultVisible: true, headerClass: 'col-maps' },
+    { id: 'enrich', labelKey: 'thEnrich', defaultVisible: true },
+    { id: 'actions', labelKey: 'thActions', defaultVisible: true },
+    { id: 'delete', labelKey: 'thDelete', defaultVisible: true },
+    { id: 'subcategory', label: 'Subcategory', defaultVisible: false, help: 'Normalized business subtype' },
+    { id: 'businessStatus', label: 'Google Status', defaultVisible: false, help: 'Operational / closed status' },
+    { id: 'placeId', label: 'Place ID', defaultVisible: false, help: 'Google place identifier' },
+    { id: 'mapsUrl', label: 'Maps URL', defaultVisible: false, help: 'Stored Google Maps link' },
+    { id: 'dataCompleteness', label: 'Completeness', defaultVisible: false, help: 'Data completeness score' },
+    { id: 'createdAt', label: 'Saved At', defaultVisible: false, help: 'When the business was saved' },
+    { id: 'updatedAt', label: 'Updated At', defaultVisible: false, help: 'Last business record update' },
+    { id: 'notes', label: 'Notes', defaultVisible: false, help: 'Operator notes' },
+    { id: 'description', label: 'Description', defaultVisible: false, help: 'Saved business description' },
+    { id: 'hasReport', label: 'Has Report', defaultVisible: false, help: 'Research report generated' },
+    { id: 'websiteStatus', label: 'Website Status', defaultVisible: false, help: 'Draft / published / suspended' },
+    { id: 'publishedUrl', label: 'Published URL', defaultVisible: false, help: 'Live website URL' },
+    { id: 'contactCount', label: 'Contact Count', defaultVisible: false, help: 'Saved business contacts' },
+    { id: 'primaryContactName', label: 'Primary Contact', defaultVisible: false, help: 'Primary contact name' },
+    { id: 'primaryContactTitle', label: 'Contact Title', defaultVisible: false, help: 'Primary contact role' },
+    { id: 'primaryContactPhone', label: 'Primary Contact Phone', defaultVisible: false, help: 'Primary contact phone' },
+    { id: 'instagramFollowers', label: 'IG Followers', defaultVisible: false, help: 'Instagram followers' },
+    { id: 'instagramPosts', label: 'IG Posts', defaultVisible: false, help: 'Instagram post count' },
+    { id: 'facebookFollowers', label: 'FB Followers', defaultVisible: false, help: 'Facebook followers' },
+    { id: 'socialCount', label: 'Social Profiles', defaultVisible: false, help: 'Connected social profiles' },
+    { id: 'latitude', label: 'Latitude', defaultVisible: false, help: 'Saved coordinates' },
+    { id: 'longitude', label: 'Longitude', defaultVisible: false, help: 'Saved coordinates' },
+    { id: 'lastOutreach', label: 'Last Outreach', defaultVisible: false, help: 'Most recent outreach step' },
+    { id: 'nextOutreachStep', label: 'Next Step', defaultVisible: false, help: 'Next outreach step' },
+  ];
+
+  const OUTREACH_COLUMN_DEFS = [
+    { id: 'select', label: '', selectable: true, help: 'Bulk actions' },
+    { id: 'business', labelKey: 'orThBusiness', help: 'Business name' },
+    { id: 'location', labelKey: 'orThLocation', help: 'Business location' },
+    { id: 'contact', labelKey: 'orThContact', help: 'Primary contact summary' },
+    { id: 'contactWhatsapp', labelKey: 'thContactWhatsapp', help: 'Primary WhatsApp / phone' },
+    { id: 'contactEmail', labelKey: 'thContactEmail', help: 'Primary contact email' },
+    { id: 'progress', labelKey: 'orThProgress', help: 'Outreach progress' },
+    { id: 'firstOutreach', labelKey: 'orThFirstOutreach', help: 'First outreach timestamp' },
+    { id: 'lastOutreach', labelKey: 'orThLastOutreach', help: 'Most recent outreach timestamp' },
+    { id: 'timeSince', labelKey: 'orThTimeSince', help: 'Time since step 3' },
+    { id: 'nextStep', labelKey: 'orThNextStep', help: 'Next recommended step' },
+    { id: 'followupDue', labelKey: 'orThFollowupDue', help: 'Follow-up due time' },
+    { id: 'overdue', labelKey: 'orThOverdue', help: 'Overdue status' },
+    { id: 'status', labelKey: 'orThStatus', help: 'Current outreach status' },
+    { id: 'completedAt', labelKey: 'orThCompletedAt', help: 'Completed timestamp' },
+    { id: 'reason', labelKey: 'orThReason', help: 'Cancellation reason' },
+    { id: 'cancelledAt', labelKey: 'orThCancelledAt', help: 'Cancelled timestamp' },
+    { id: 'lastVisit', labelKey: 'orThLastVisit', help: 'Most recent website visit' },
+    { id: 'views', labelKey: 'orThVisitCount', help: 'Website visit count' },
+    { id: 'stage', labelKey: 'thStage', help: 'Pipeline stage' },
+    { id: 'whatsappStatus', labelKey: 'thWhatsappStatus', help: 'WhatsApp validity' },
+    { id: 'websiteUrl', labelKey: 'thWebsiteUrl', help: 'Preview or live URL' },
+    { id: 'action', labelKey: 'orThAction', help: 'Open outreach actions' },
+  ];
+
+  const OUTREACH_DEFAULT_COLUMNS = {
+    followup: ['select', 'business', 'location', 'contact', 'firstOutreach', 'lastOutreach', 'timeSince', 'action'],
+    today: ['select', 'business', 'location', 'contact', 'progress', 'lastOutreach', 'action'],
+    schedule: ['select', 'business', 'location', 'contact', 'followupDue', 'overdue', 'action'],
+    visitors: ['business', 'location', 'contact', 'progress', 'lastVisit', 'views', 'action'],
+    ready: ['select', 'business', 'location', 'contact', 'firstOutreach', 'lastOutreach', 'nextStep', 'action'],
+    progress: ['select', 'business', 'location', 'contact', 'progress', 'nextStep', 'firstOutreach', 'lastOutreach', 'status', 'action'],
+    complete: ['select', 'business', 'location', 'contact', 'firstOutreach', 'lastOutreach', 'completedAt', 'action'],
+    cancelled: ['select', 'business', 'location', 'contact', 'reason', 'cancelledAt', 'action'],
+  };
 
   // ── DOM refs ──
   const $ = (sel) => document.querySelector(sel);
+  const resultsSection = $('#results-section');
+  const resultsTable = $('#results-table');
   const resultsBody = $('#results-body');
   const resultsSummary = $('#results-summary');
+  const enrichmentQueueSection = $('#needs-enrichment-section');
+  const enrichmentQueueBody = $('#enrichment-queue-body');
+  const enrichmentQueueSummary = $('#enrichment-queue-summary');
+  const enrichmentQueueEmpty = $('#enrichment-queue-empty');
   const pageInfo = $('#page-info');
   const noResults = $('#no-results');
   const btnPrev = $('#btn-prev');
@@ -2093,12 +2255,337 @@
   const filterWebsite = $('#filter-website');
   const pipelineSearch = document.getElementById('pipeline-search');
 
+  function getSavedColumnDef(id) {
+    return SAVED_BUSINESS_COLUMNS.find((col) => col.id === id);
+  }
+
+  function getOutreachColumnDef(id) {
+    return OUTREACH_COLUMN_DEFS.find((col) => col.id === id);
+  }
+
+  function buildDefaultSavedColumns() {
+    return SAVED_BUSINESS_COLUMNS.filter((col) => col.defaultVisible).map((col) => col.id);
+  }
+
+  function buildDefaultOutreachColumns(section) {
+    return (OUTREACH_DEFAULT_COLUMNS[section] || []).slice();
+  }
+
+  function normalizeSavedColumnConfig(value) {
+    const validIds = new Set(SAVED_BUSINESS_COLUMNS.map((col) => col.id));
+    const defaultVisible = new Set(buildDefaultSavedColumns());
+    const fixed = FIXED_SAVED_COLUMNS.filter((id) => validIds.has(id));
+    const incomingOrder = Array.isArray(value && value.order) ? value.order : [];
+    const incomingVisible = (value && typeof value.visible === 'object' && value.visible) ? value.visible : {};
+
+    const seen = new Set();
+    const order = fixed.slice();
+    incomingOrder.forEach((id) => {
+      if (validIds.has(id) && !seen.has(id) && !fixed.includes(id)) {
+        seen.add(id);
+        order.push(id);
+      }
+    });
+    SAVED_BUSINESS_COLUMNS.forEach((col) => {
+      if (!order.includes(col.id)) order.push(col.id);
+    });
+
+    const visible = {};
+    SAVED_BUSINESS_COLUMNS.forEach((col) => {
+      if (col.fixed) visible[col.id] = true;
+      else if (Object.prototype.hasOwnProperty.call(incomingVisible, col.id)) visible[col.id] = !!incomingVisible[col.id];
+      else visible[col.id] = defaultVisible.has(col.id);
+    });
+
+    return { order, visible };
+  }
+
+  function normalizeOutreachColumnConfig(section, value) {
+    const validIds = new Set(OUTREACH_COLUMN_DEFS.map((col) => col.id));
+    const incomingOrder = Array.isArray(value && value.order) ? value.order : [];
+    const incomingVisible = (value && typeof value.visible === 'object' && value.visible) ? value.visible : {};
+    const defaults = new Set(buildDefaultOutreachColumns(section));
+
+    const order = [];
+    incomingOrder.forEach((id) => {
+      if (validIds.has(id) && !order.includes(id)) order.push(id);
+    });
+    OUTREACH_COLUMN_DEFS.forEach((col) => {
+      if (!order.includes(col.id)) order.push(col.id);
+    });
+
+    const visible = {};
+    OUTREACH_COLUMN_DEFS.forEach((col) => {
+      if (Object.prototype.hasOwnProperty.call(incomingVisible, col.id)) visible[col.id] = !!incomingVisible[col.id];
+      else visible[col.id] = defaults.has(col.id);
+    });
+
+    return { order, visible };
+  }
+
+  function buildVisibleSavedColumns() {
+    return savedTableConfig.order.filter((id) => {
+      const def = getSavedColumnDef(id);
+      if (!def) return false;
+      return !!savedTableConfig.visible[id];
+    });
+  }
+
+  function buildVisibleOutreachColumns(section) {
+    const config = outreachTableConfig[section] || normalizeOutreachColumnConfig(section, null);
+    return config.order.filter((id) => {
+      const def = getOutreachColumnDef(id);
+      if (!def) return false;
+      return !!config.visible[id];
+    });
+  }
+
+  function readStoredJson(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function saveStoredJson(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (_) {}
+  }
+
+  function loadTableConfigs() {
+    savedTableConfig = normalizeSavedColumnConfig(readStoredJson(SAVED_COLUMNS_STORAGE_KEY));
+    OUTREACH_SECTIONS.forEach((section) => {
+      outreachTableConfig[section] = normalizeOutreachColumnConfig(section, readStoredJson(OUTREACH_COLUMNS_STORAGE_PREFIX + section));
+    });
+  }
+
+  function persistSavedTableConfig() {
+    saveStoredJson(SAVED_COLUMNS_STORAGE_KEY, savedTableConfig);
+  }
+
+  function persistOutreachTableConfig(section) {
+    saveStoredJson(OUTREACH_COLUMNS_STORAGE_PREFIX + section, outreachTableConfig[section]);
+  }
+
+  function getColumnLabel(def) {
+    return def.labelKey ? t(def.labelKey) : (def.label || def.id);
+  }
+
+  function moveColumn(config, id, direction, fixedIds) {
+    const index = config.order.indexOf(id);
+    if (index < 0) return config;
+    const swapIndex = index + direction;
+    if (swapIndex < 0 || swapIndex >= config.order.length) return config;
+    if (fixedIds && (fixedIds.includes(id) || fixedIds.includes(config.order[swapIndex]))) return config;
+    const next = config.order.slice();
+    const tmp = next[index];
+    next[index] = next[swapIndex];
+    next[swapIndex] = tmp;
+    return { order: next, visible: { ...config.visible } };
+  }
+
+  function createColumnsPanel(defs, opts) {
+    const panel = document.createElement('div');
+    panel.className = 'table-columns-panel';
+    if (opts.panelId) panel.id = opts.panelId;
+
+    const header = document.createElement('div');
+    header.className = 'table-columns-panel-header';
+    header.innerHTML = `
+      <div>
+        <div class="table-columns-panel-title">${escapeHtml(t('tableColumnsTitle'))}</div>
+        <div class="table-columns-panel-subtitle">${escapeHtml(t('tableColumnsSubtitle'))}</div>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm">${escapeHtml(t('tableColumnsReset'))}</button>
+    `;
+    panel.appendChild(header);
+
+    const resetBtn = header.querySelector('button');
+    resetBtn.addEventListener('click', () => opts.onReset());
+
+    const grid = document.createElement('div');
+    grid.className = 'table-columns-grid';
+    panel.appendChild(grid);
+
+    function render() {
+      const config = opts.getConfig();
+      grid.innerHTML = '';
+      config.order.forEach((id, index) => {
+        const def = defs.find((item) => item.id === id);
+        if (!def) return;
+        const visible = !!config.visible[id];
+        const row = document.createElement('div');
+        row.className = 'table-column-item' + (visible ? '' : ' is-hidden');
+
+        const canMoveUp = index > 0 && !(opts.fixedIds || []).includes(id) && !(opts.fixedIds || []).includes(config.order[index - 1]);
+        const canMoveDown = index < config.order.length - 1 && !(opts.fixedIds || []).includes(id) && !(opts.fixedIds || []).includes(config.order[index + 1]);
+
+        row.innerHTML = `
+          <div class="table-column-main">
+            <input type="checkbox" class="pipeline-checkbox" ${visible ? 'checked' : ''} ${def.fixed ? 'disabled' : ''}>
+            <div class="table-column-meta">
+              <span class="table-column-label">${escapeHtml(getColumnLabel(def))}</span>
+              <span class="table-column-help">${escapeHtml(def.fixed ? t('tableColumnFixed') : (def.help || (visible ? t('tableColumnVisible') : t('tableColumnHidden'))))}</span>
+            </div>
+          </div>
+          <div class="table-column-actions">
+            ${def.fixed ? `<span class="table-column-fixed">${escapeHtml(t('tableColumnFixed'))}</span>` : ''}
+            <button type="button" class="table-column-btn" data-move="-1" ${canMoveUp ? '' : 'disabled'} title="${escapeHtml(t('tableMoveUp'))}">↑</button>
+            <button type="button" class="table-column-btn" data-move="1" ${canMoveDown ? '' : 'disabled'} title="${escapeHtml(t('tableMoveDown'))}">↓</button>
+          </div>
+        `;
+
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox && !def.fixed) {
+          checkbox.addEventListener('change', () => opts.onToggle(id, checkbox.checked));
+        }
+        row.querySelectorAll('.table-column-btn').forEach((btn) => {
+          btn.addEventListener('click', () => opts.onMove(id, parseInt(btn.dataset.move, 10)));
+        });
+        grid.appendChild(row);
+      });
+    }
+
+    panel.__refresh = render;
+    render();
+    return panel;
+  }
+
+  function setColumnsPanelOpen(panel, button, isOpen) {
+    if (!panel || !button) return;
+    panel.classList.toggle('open', !!isOpen);
+    button.dataset.panelOpen = isOpen ? '1' : '0';
+    button.textContent = isOpen ? t('closeBtn') : t('tableColumns');
+  }
+
+  function ensureResultsColumnsUI() {
+    if (!resultsSection) return;
+    resultsSection.classList.add('card-wide');
+    const wrapper = resultsSection.querySelector('.results-table-wrapper');
+    if (wrapper) wrapper.classList.add('is-configurable-table');
+    if (resultsSection.querySelector('.table-columns-panel')) return;
+
+    const controls = document.createElement('div');
+    controls.className = 'table-controls-row';
+    controls.innerHTML = `
+      <div class="table-controls-actions">
+        <button type="button" class="btn btn-secondary btn-sm">${escapeHtml(t('tableColumns'))}</button>
+      </div>
+    `;
+
+    const button = controls.querySelector('button');
+    const panel = createColumnsPanel(SAVED_BUSINESS_COLUMNS, {
+      getConfig: () => savedTableConfig,
+      fixedIds: FIXED_SAVED_COLUMNS,
+      onToggle: (id, checked) => {
+        savedTableConfig.visible[id] = checked;
+        persistSavedTableConfig();
+        panel.__refresh();
+        renderTable();
+      },
+      onMove: (id, direction) => {
+        savedTableConfig = moveColumn(savedTableConfig, id, direction, FIXED_SAVED_COLUMNS);
+        persistSavedTableConfig();
+        panel.__refresh();
+        renderTable();
+      },
+      onReset: () => {
+        savedTableConfig = normalizeSavedColumnConfig(null);
+        persistSavedTableConfig();
+        panel.__refresh();
+        renderTable();
+      },
+    });
+
+    button.addEventListener('click', () => {
+      const open = !panel.classList.contains('open');
+      setColumnsPanelOpen(panel, button, open);
+    });
+
+    const bulkBar = resultsSection.querySelector('#bulk-actions-bar');
+    if (bulkBar && bulkBar.parentNode) {
+      bulkBar.parentNode.insertBefore(controls, bulkBar.nextSibling);
+      controls.parentNode.insertBefore(panel, controls.nextSibling);
+    }
+  }
+
+  function ensureOutreachColumnsUI() {
+    document.querySelectorAll('.or-table-card').forEach((card) => {
+      card.classList.add('card-wide');
+      const section = card.id.replace(/^or-/, '').replace(/-card$/, '');
+      const wrapper = card.querySelector('.results-table-wrapper');
+      const header = card.querySelector('.card-header');
+      if (!section || !header || !wrapper) return;
+      wrapper.classList.add('is-configurable-table');
+      if (card.querySelector('.table-columns-panel')) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-secondary btn-sm';
+      button.textContent = t('tableColumns');
+      header.appendChild(button);
+
+      const panel = createColumnsPanel(OUTREACH_COLUMN_DEFS, {
+        getConfig: () => outreachTableConfig[section],
+        fixedIds: [],
+        onToggle: (id, checked) => {
+          outreachTableConfig[section].visible[id] = checked;
+          persistOutreachTableConfig(section);
+          panel.__refresh();
+          loadOutreach();
+        },
+        onMove: (id, direction) => {
+          outreachTableConfig[section] = moveColumn(outreachTableConfig[section], id, direction, []);
+          persistOutreachTableConfig(section);
+          panel.__refresh();
+          loadOutreach();
+        },
+        onReset: () => {
+          outreachTableConfig[section] = normalizeOutreachColumnConfig(section, null);
+          persistOutreachTableConfig(section);
+          panel.__refresh();
+          loadOutreach();
+        },
+      });
+
+      button.addEventListener('click', () => {
+        const open = !panel.classList.contains('open');
+        setColumnsPanelOpen(panel, button, open);
+      });
+
+      card.insertBefore(panel, wrapper);
+    });
+  }
+
+  function refreshColumnPanels() {
+    document.querySelectorAll('.table-columns-panel').forEach((panel) => {
+      const title = panel.querySelector('.table-columns-panel-title');
+      const subtitle = panel.querySelector('.table-columns-panel-subtitle');
+      const resetBtn = panel.querySelector('.table-columns-panel-header .btn');
+      if (title) title.textContent = t('tableColumnsTitle');
+      if (subtitle) subtitle.textContent = t('tableColumnsSubtitle');
+      if (resetBtn) resetBtn.textContent = t('tableColumnsReset');
+      if (typeof panel.__refresh === 'function') panel.__refresh();
+    });
+    document.querySelectorAll('.table-controls-row .btn, .or-table-card .card-header > .btn.btn-secondary.btn-sm').forEach((button) => {
+      if (!button.closest('.table-columns-panel-header')) {
+        button.textContent = button.dataset.panelOpen === '1' ? t('closeBtn') : t('tableColumns');
+      }
+    });
+  }
+
   // ── Initialize ──
   async function init() {
     // Initialize Supabase from server config before anything else
     await initSupabaseFromConfig();
+    loadTableConfigs();
 
     applyLanguage();
+    ensureResultsColumnsUI();
+    ensureOutreachColumnsUI();
 
     // Language switcher
     document.querySelectorAll('.lang-btn').forEach((btn) => {
@@ -2106,8 +2593,9 @@
         currentLang = btn.getAttribute('data-lang');
         localStorage.setItem('app_lang', currentLang);
         applyLanguage();
-        // Re-render table with new language
-        if (currentResults.length > 0) renderTable();
+        refreshColumnPanels();
+        renderEnrichmentQueueTable();
+        renderCurrentPage();
       });
     });
 
@@ -2326,6 +2814,68 @@
     }
   }
 
+  function getPipelineStageFilteredBusinesses() {
+    let filtered = allBusinesses;
+    if (pipelineStage === 'cold_outreach_ready') {
+      const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+      filtered = src.filter(b => {
+        if (isOutreachCancelled(b)) return false;
+        if (b.whatsapp_status === 'invalid') return false;
+        if (!hasDemoWebsite(b)) return false;
+        const contacts = b.business_contacts || [];
+        const primary = contacts.find(c => c.is_primary) || contacts[0];
+        const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
+        if (!phone) return false;
+        const steps = b.outreach_steps || {};
+        const hasFollowup = steps.followup && steps.followup.sent_at;
+        return !hasFollowup;
+      });
+    } else if (pipelineStage === 'no_whatsapp') {
+      const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
+      filtered = src.filter(b => b.whatsapp_status === 'invalid');
+    } else if (pipelineStage !== 'all') {
+      filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
+    }
+    return filtered;
+  }
+
+  function applyPipelineSearchToBusinesses(businesses) {
+    const search = (pipelineSearch ? pipelineSearch.value : '').toLowerCase().trim();
+    if (!search) return businesses;
+    return businesses.filter((b) => {
+      const contactFields = (b.business_contacts || []).flatMap(c => [c.contact_name, c.contact_email, c.contact_phone, c.contact_whatsapp, c.contact_title]);
+      const haystack = [
+        b.name, b.phone, b.email, b.business_code, b.contact_name, b.contact_email, b.contact_phone, b.contact_whatsapp, b.address_full, b.address_country, b.whatsapp,
+        ...contactFields
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(search);
+    });
+  }
+
+  function refreshVisibleBusinessTables(opts) {
+    const options = opts || {};
+    const stageFiltered = getPipelineStageFilteredBusinesses();
+    const searched = applyPipelineSearchToBusinesses(stageFiltered);
+    const partitioned = partitionBusinessesByEnrichment(searched);
+
+    currentQueueResults = partitioned.queue;
+    renderEnrichmentQueueTable();
+
+    allFiltered = partitioned.enriched;
+    totalCount = allFiltered.length;
+    syncSelectedIdsWithVisibleBusinesses(allFiltered);
+
+    if (options.resetPage) {
+      currentPage = 0;
+    } else {
+      const maxPage = Math.max(0, Math.ceil(totalCount / pageSize) - 1);
+      currentPage = Math.min(currentPage, maxPage);
+    }
+
+    renderCurrentPage();
+    updateBulkActionsBar();
+  }
+
   // ── Load Businesses ──
   async function loadBusinesses() {
     if (!supabaseClient) {
@@ -2333,8 +2883,13 @@
       return;
     }
 
-    resultsBody.innerHTML = `<tr><td colspan="23" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    resultsBody.innerHTML = `<tr><td colspan="${Math.max(buildVisibleSavedColumns().length, 1)}" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
     noResults.style.display = 'none';
+    if (enrichmentQueueBody) {
+      enrichmentQueueBody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text-muted)">${t('loadingData')}</td></tr>`;
+    }
+    if (enrichmentQueueEmpty) enrichmentQueueEmpty.style.display = 'none';
+    if (enrichmentQueueSummary) enrichmentQueueSummary.textContent = '';
 
     try {
       let query = supabaseClient
@@ -2415,18 +2970,15 @@
       // Store unfiltered-by-pipeline for counts, then apply pipeline filter
       allBusinesses = filtered;
       updatePipelineCounts(allBusinesses);
-
-      if (pipelineStage !== 'all') {
-        filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
-      }
-
-      allFiltered = filtered;
-      totalCount = allFiltered.length;
-      renderCurrentPage();
+      refreshVisibleBusinessTables();
     } catch (err) {
       console.error('Load businesses error:', err);
       showToast(t('errorLoading'), 'error');
       resultsBody.innerHTML = '';
+      currentQueueResults = [];
+      allFiltered = [];
+      totalCount = 0;
+      renderEnrichmentQueueTable();
     }
   }
 
@@ -2471,45 +3023,7 @@
     document.querySelectorAll('.pipeline-pill').forEach(pill => {
       pill.classList.toggle('active', pill.getAttribute('data-stage') === pipelineStage);
     });
-    // Re-filter from allBusinesses
-    let filtered = allBusinesses;
-    if (pipelineStage === 'cold_outreach_ready') {
-      // Dynamic: has website + phone + outreach not fully complete, exclude cancelled + invalid whatsapp
-      const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
-      filtered = src.filter(b => {
-        if (isOutreachCancelled(b)) return false;
-        if (b.whatsapp_status === 'invalid') return false;
-        if (!hasDemoWebsite(b)) return false;
-        const contacts = b.business_contacts || [];
-        const primary = contacts.find(c => c.is_primary) || contacts[0];
-        const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : b.phone;
-        if (!phone) return false;
-        const steps = b.outreach_steps || {};
-        const hasFollowup = steps.followup && steps.followup.sent_at;
-        return !hasFollowup;
-      });
-    } else if (pipelineStage === 'no_whatsapp') {
-      const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
-      filtered = src.filter(b => b.whatsapp_status === 'invalid');
-    } else if (pipelineStage !== 'all') {
-      filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
-    }
-    // Apply search
-    const search = (pipelineSearch ? pipelineSearch.value : '').toLowerCase().trim();
-    if (search) {
-      filtered = filtered.filter(b => {
-        const contactFields = (b.business_contacts || []).flatMap(c => [c.contact_name, c.contact_email, c.contact_phone, c.contact_whatsapp, c.contact_title]);
-        const haystack = [
-          b.name, b.phone, b.email, b.business_code, b.contact_name, b.contact_email, b.contact_phone, b.contact_whatsapp, b.address_full, b.address_country, b.whatsapp,
-          ...contactFields
-        ].filter(Boolean).join(' ').toLowerCase();
-        return haystack.includes(search);
-      });
-    }
-    allFiltered = filtered;
-    totalCount = allFiltered.length;
-    currentPage = 0;
-    renderCurrentPage();
+    refreshVisibleBusinessTables({ resetPage: true });
   }
 
   // ── Helpers ──
@@ -2558,6 +3072,142 @@
 
   function hasDemoWebsite(business) {
     return (business.generated_websites || []).some(w => w.config && w.config.html);
+  }
+
+  const ENRICHMENT_MAX_ATTEMPTS = 5;
+  const ENRICHMENT_STATUSES = new Set(['pending', 'in_progress', 'completed', 'retry', 'failed', 'skipped']);
+  const ENRICHMENT_SKIPPED_PREFIXES = ['marketing-', 'manual-', 'builder-', 'onboarding-'];
+
+  function isSyntheticPlaceId(placeId) {
+    if (!placeId) return true;
+    return ENRICHMENT_SKIPPED_PREFIXES.some((prefix) => String(placeId).startsWith(prefix));
+  }
+
+  function hasEnrichmentEvidence(business) {
+    return !!(
+      hasResearchReport(business)
+      || hasGeneratedWebsite(business)
+      || ((business.business_social_profiles || []).length > 0)
+      || ((business.service_options || []).length > 0)
+      || ((business.highlights || []).length > 0)
+      || ((business.amenities || []).length > 0)
+    );
+  }
+
+  function getEffectiveEnrichmentStatus(business) {
+    const rawStatus = String(business && business.enrichment_status || '').toLowerCase();
+    if (ENRICHMENT_STATUSES.has(rawStatus)) return rawStatus;
+    if (hasEnrichmentEvidence(business)) return 'completed';
+    if (isSyntheticPlaceId(business && business.place_id)) return 'skipped';
+    return 'pending';
+  }
+
+  function isBusinessEnriched(business) {
+    const status = getEffectiveEnrichmentStatus(business);
+    return status === 'completed' || status === 'skipped';
+  }
+
+  function getEnrichmentStatusBadgeHtml(status) {
+    const labelMap = {
+      pending: 'enrichmentStatusPending',
+      in_progress: 'enrichmentStatusInProgress',
+      retry: 'enrichmentStatusRetry',
+      failed: 'enrichmentStatusFailed',
+      completed: 'enrichmentStatusCompleted',
+      skipped: 'enrichmentStatusSkipped',
+    };
+    const classMap = {
+      pending: 'badge-enrichment-pending',
+      in_progress: 'badge-enrichment-in-progress',
+      retry: 'badge-enrichment-retry',
+      failed: 'badge-enrichment-failed',
+      completed: 'badge-enrichment-completed',
+      skipped: 'badge-enrichment-skipped',
+    };
+    return `<span class="badge-stage ${classMap[status] || 'badge-enrichment-pending'}">${escapeHtml(t(labelMap[status] || 'enrichmentStatusPending'))}</span>`;
+  }
+
+  function formatAdminDateTime(dateStr) {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return '—';
+    const locale = currentLang === 'es' ? 'es-MX' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  function getEnrichmentActivityText(business) {
+    const status = getEffectiveEnrichmentStatus(business);
+    if (status === 'in_progress' && business.enrichment_last_started_at) {
+      return t('enrichmentActivityStarted', formatAdminDateTime(business.enrichment_last_started_at));
+    }
+    if (business.enrichment_last_finished_at) {
+      return t('enrichmentActivityFinished', formatAdminDateTime(business.enrichment_last_finished_at));
+    }
+    if (business.enrichment_last_started_at) {
+      return t('enrichmentActivityStarted', formatAdminDateTime(business.enrichment_last_started_at));
+    }
+    if (business.created_at) {
+      return t('enrichmentActivitySaved', formatAdminDateTime(business.created_at));
+    }
+    return t('enrichmentNotStarted');
+  }
+
+  function getEnrichmentRetryText(business) {
+    if (business.enrichment_next_retry_at) {
+      return formatAdminDateTime(business.enrichment_next_retry_at);
+    }
+    if (getEffectiveEnrichmentStatus(business) === 'failed') {
+      return t('enrichmentRetryExhausted');
+    }
+    return '—';
+  }
+
+  function compareEnrichmentQueueBusinesses(a, b) {
+    const priority = {
+      in_progress: 0,
+      retry: 1,
+      failed: 2,
+      pending: 3,
+      completed: 4,
+      skipped: 5,
+    };
+    const statusDiff = (priority[getEffectiveEnrichmentStatus(a)] || 99) - (priority[getEffectiveEnrichmentStatus(b)] || 99);
+    if (statusDiff !== 0) return statusDiff;
+
+    const aTime = new Date(a.enrichment_next_retry_at || a.enrichment_last_started_at || a.enrichment_last_finished_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.enrichment_next_retry_at || b.enrichment_last_started_at || b.enrichment_last_finished_at || b.created_at || 0).getTime();
+    return bTime - aTime;
+  }
+
+  function partitionBusinessesByEnrichment(businesses) {
+    const queue = [];
+    const enriched = [];
+    businesses.forEach((business) => {
+      if (isBusinessEnriched(business)) enriched.push(business);
+      else queue.push(business);
+    });
+    queue.sort(compareEnrichmentQueueBusinesses);
+    return { queue, enriched };
+  }
+
+  function syncSelectedIdsWithVisibleBusinesses(businesses) {
+    const visibleIds = new Set((businesses || []).map((business) => String(business.id)));
+    Array.from(selectedIds).forEach((id) => {
+      if (!visibleIds.has(String(id))) selectedIds.delete(String(id));
+    });
+  }
+
+  function getMapsLinkHtml(business) {
+    if (business.maps_url) {
+      return `<a href="${escapeHtml(business.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`;
+    }
+    const query = encodeURIComponent((business.name || '') + ' ' + (business.address_full || ''));
+    return `<a href="https://www.google.com/maps/search/?api=1&query=${query}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
   }
 
   function getWebsiteStatus(business) {
@@ -2648,6 +3298,333 @@
     return `<span class="social-cell">${icons}${extra}</span>`;
   }
 
+  function getPrimaryContact(business) {
+    const contacts = business.business_contacts || [];
+    return contacts.find(c => c.is_primary) || contacts[0] || null;
+  }
+
+  function getExistingWebsiteRecord(business) {
+    return (business.generated_websites || []).find(w => w.config && w.config.html) || null;
+  }
+
+  function getPublishedWebsiteUrl(business) {
+    const record = getExistingWebsiteRecord(business);
+    if (!record) return '';
+    return record.published_url || '/ver/' + record.id;
+  }
+
+  function getSocialFollowerCount(business, platform) {
+    const profile = getProfile(business, platform);
+    return profile && profile.follower_count ? profile.follower_count : 0;
+  }
+
+  function getSocialPostCount(business, platform) {
+    const profile = getProfile(business, platform);
+    return profile && profile.post_count ? profile.post_count : 0;
+  }
+
+  function getLastOutreachTimeValue(business) {
+    return getLastStepSentTime(business) || '';
+  }
+
+  function getSavedBusinessCellHtml(columnId, business, rowIndex, offset) {
+    const profiles = business.business_social_profiles || [];
+    const socialCellHtml = buildSocialCellHtml(profiles);
+    const existingWebsiteRecord = getExistingWebsiteRecord(business);
+    const createWebsiteBtnLabel = existingWebsiteRecord ? '\u2713' : t('btnCreateWebsite');
+    const primaryContact = getPrimaryContact(business);
+    const contacts = business.business_contacts || [];
+    const contactsCount = contacts.length;
+    const websiteStatus = getWebsiteStatus(business);
+    const websiteUrl = getPublishedWebsiteUrl(business);
+    const mapsLink = getMapsLinkHtml(business);
+
+    let contactsCellHtml;
+    if (contactsCount === 0) {
+      contactsCellHtml = '<span class="td-empty-placeholder">+</span>';
+    } else {
+      const nameDisplay = primaryContact && primaryContact.contact_name ? escapeHtml(primaryContact.contact_name) : '(unnamed)';
+      const titleDisplay = primaryContact && primaryContact.contact_title ? ` <span style="color:var(--text-dim);font-size:11px">${escapeHtml(primaryContact.contact_title)}</span>` : '';
+      const countBadge = contactsCount > 1 ? ` <span class="contacts-count-badge">${contactsCount}</span>` : '';
+      contactsCellHtml = nameDisplay + titleDisplay + countBadge;
+    }
+
+    let websiteUrlHtml = '<span style="color:var(--text-dim)">—</span>';
+    if (existingWebsiteRecord) {
+      websiteUrlHtml = `<a href="${escapeHtml(websiteUrl)}" target="_blank" rel="noopener" class="website-url-link" style="color:var(--primary);font-size:12px;text-decoration:underline;cursor:pointer" title="${escapeHtml(websiteUrl)}">${existingWebsiteRecord.published_url ? 'Live' : 'Preview'}</a>
+        <button class="btn-copy-url" data-url="${escapeHtml(websiteUrl)}" title="Copy URL" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:2px 4px">📋</button>`;
+    }
+
+    const isChecked = selectedIds.has(String(business.id));
+
+    switch (columnId) {
+      case 'select':
+        return `<td class="td-center col-sticky col-select"><input type="checkbox" class="pipeline-checkbox row-select" data-id="${business.id}" ${isChecked ? 'checked' : ''}></td>`;
+      case 'rowNumber':
+        return `<td class="td-center col-sticky col-sticky-1">${offset + rowIndex + 1}</td>`;
+      case 'name':
+        return `<td class="td-editable col-sticky col-sticky-2" data-id="${business.id}" data-field="name" data-value="${escapeHtml(business.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(business.name)}</strong></td>`;
+      case 'businessCode':
+        return `<td class="td-center td-copyable" style="font-size:11px;color:var(--text-dim);font-family:monospace;cursor:pointer" data-copy-value="${escapeHtml(business.business_code || '')}" title="${t('clickToCopy')}">${escapeHtml(business.business_code || '—')}</td>`;
+      case 'location':
+        return `<td class="td-editable" data-id="${business.id}" data-field="address_full" data-value="${escapeHtml(business.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(business.address_full || '—')}</td>`;
+      case 'type':
+        return `<td style="text-transform:capitalize">${escapeHtml(extractCategory(business.types))}</td>`;
+      case 'subcategory':
+        return `<td>${escapeHtml(business.subcategory || '—')}</td>`;
+      case 'stage':
+        return `<td class="td-center td-editable td-editable-stage" data-id="${business.id}" data-field="pipeline_status" data-value="${escapeHtml(business.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(business.pipeline_status)}</td>`;
+      case 'source':
+        return `<td style="font-size:11px;color:var(--text-muted)">${t('src' + (business.lead_source || 'other').replace(/(^|_)([a-z])/g, (_, __, c) => c.toUpperCase()))}</td>`;
+      case 'country':
+        return `<td class="td-editable" data-id="${business.id}" data-field="address_country" data-value="${escapeHtml(business.address_country || '')}" title="${business.address_country ? t('clickToEdit') : t('clickToAdd')}">${business.address_country ? escapeHtml(business.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>`;
+      case 'contacts':
+        return `<td class="td-contacts" data-id="${business.id}" title="${t('clickToEdit')}" style="cursor:pointer">${contactsCellHtml}</td>`;
+      case 'contactCount':
+        return `<td class="td-center">${contactsCount}</td>`;
+      case 'primaryContactName':
+        return `<td>${primaryContact && primaryContact.contact_name ? escapeHtml(primaryContact.contact_name) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'primaryContactTitle':
+        return `<td>${primaryContact && primaryContact.contact_title ? escapeHtml(primaryContact.contact_title) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'primaryContactPhone':
+      case 'contactWhatsapp':
+        return `<td>${primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone) ? escapeHtml(primaryContact.contact_whatsapp || primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'contactEmail':
+        return `<td>${primaryContact && primaryContact.contact_email ? escapeHtml(primaryContact.contact_email) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'businessPhone':
+        return `<td class="td-editable" data-id="${business.id}" data-field="phone" data-value="${escapeHtml(business.phone || '')}" title="${business.phone ? t('clickToEdit') : t('clickToAdd')}">${business.phone ? escapeHtml(business.phone) : '<span class="td-empty-placeholder">+</span>'}</td>`;
+      case 'whatsappStatus':
+        return `<td class="td-center"><span class="badge ${business.whatsapp_status === 'valid' ? 'badge-has-site' : business.whatsapp_status === 'invalid' ? 'badge-no-site' : ''}" style="font-size:11px">${business.whatsapp_status === 'valid' ? t('waValid') : business.whatsapp_status === 'invalid' ? t('waInvalid') : t('waUnchecked')}</span></td>`;
+      case 'businessEmail':
+        return `<td class="td-editable" data-id="${business.id}" data-field="email" data-value="${escapeHtml(business.email || '')}" title="${business.email ? t('clickToEdit') : t('clickToAdd')}">${business.email ? escapeHtml(business.email) : '<span class="td-empty-placeholder">+</span>'}</td>`;
+      case 'rating':
+        return `<td class="td-center"><span class="stars">${renderStars(business.rating)}</span> <span class="rating-num">${business.rating ? business.rating.toFixed(1) : '—'}</span></td>`;
+      case 'reviews':
+        return `<td class="td-center">${business.review_count ? business.review_count.toLocaleString() : '0'}</td>`;
+      case 'social':
+        return `<td class="td-center">${socialCellHtml}</td>`;
+      case 'socialCount':
+        return `<td class="td-center">${profiles.length}</td>`;
+      case 'instagramFollowers':
+        return `<td class="td-center">${getSocialFollowerCount(business, 'instagram') || '—'}</td>`;
+      case 'instagramPosts':
+        return `<td class="td-center">${getSocialPostCount(business, 'instagram') || '—'}</td>`;
+      case 'facebookFollowers':
+        return `<td class="td-center">${getSocialFollowerCount(business, 'facebook') || '—'}</td>`;
+      case 'website':
+        return `<td class="td-center"><button class="btn btn-view btn-create-website" data-id="${business.id}">${createWebsiteBtnLabel}</button></td>`;
+      case 'websiteUrl':
+        return `<td class="td-center">${websiteUrlHtml}</td>`;
+      case 'publishedUrl':
+        return `<td>${websiteUrl ? escapeHtml(websiteUrl) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'websiteStatus':
+        return `<td>${websiteStatus ? escapeHtml(websiteStatus) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'hasReport':
+        return `<td class="td-center">${hasResearchReport(business) ? '<span class="badge badge-has-site">Yes</span>' : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'outreach':
+        return `<td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach${business.whatsapp_status === 'invalid' ? ' btn-outreach-invalid' : ''}" data-id="${business.id}">${t('outreachBtnLabel')}</button>` : ''}</td>`;
+      case 'outreachSent':
+        return `<td class="td-center">${existingWebsiteRecord ? getOutreachProgressHtml(business) : ''}</td>`;
+      case 'lastOutreach':
+        return `<td>${getLastOutreachTimeValue(business) ? escapeHtml(orTimeAgo(getLastOutreachTimeValue(business))) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'nextOutreachStep':
+        return `<td>${escapeHtml(getNextStepLabel(business) || '—')}</td>`;
+      case 'details':
+        return `<td class="td-center"><button class="btn btn-view btn-detail" data-id="${business.id}">${t('viewBtn')}</button></td>`;
+      case 'maps':
+        return `<td class="td-center">${mapsLink}</td>`;
+      case 'mapsUrl':
+        return `<td>${business.maps_url ? `<a href="${escapeHtml(business.maps_url)}" target="_blank" rel="noopener">${escapeHtml(business.maps_url)}</a>` : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'enrich':
+        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${business.description ? '\u2713' : t('btnEnrich')}</button></td>`;
+      case 'actions':
+        return `<td class="td-center">${business.phone ? `<button class="btn-msg" data-id="${business.id}" data-phone="${escapeHtml(business.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>`;
+      case 'delete':
+        return `<td class="td-center"><button class="btn btn-view btn-delete" data-id="${business.id}" data-name="${escapeHtml(business.name)}" style="color:var(--danger);border-color:var(--danger)">${t('btnDelete')}</button></td>`;
+      case 'businessStatus':
+        return `<td>${escapeHtml(business.business_status || '—')}</td>`;
+      case 'placeId':
+        return `<td style="font-family:monospace;font-size:11px">${escapeHtml(business.place_id || '—')}</td>`;
+      case 'dataCompleteness':
+        return `<td class="td-center">${business.data_completeness_score != null ? escapeHtml(String(business.data_completeness_score)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'createdAt':
+        return `<td>${business.created_at ? escapeHtml(formatDate(business.created_at)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'updatedAt':
+        return `<td>${business.updated_at ? escapeHtml(formatDate(business.updated_at)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'notes':
+        return `<td>${business.notes ? escapeHtml(business.notes) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'description':
+        return `<td>${business.description ? escapeHtml(business.description) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'latitude':
+        return `<td>${business.latitude != null ? escapeHtml(String(business.latitude)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'longitude':
+        return `<td>${business.longitude != null ? escapeHtml(String(business.longitude)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      default:
+        return `<td><span class="td-empty-placeholder">—</span></td>`;
+    }
+  }
+
+  function renderSavedTableHeader() {
+    if (!resultsTable) return;
+    const thead = resultsTable.querySelector('thead');
+    if (!thead) return;
+    const columns = buildVisibleSavedColumns();
+    thead.innerHTML = '<tr>' + columns.map((id) => {
+      const def = getSavedColumnDef(id);
+      if (!def) return '';
+      const label = getColumnLabel(def);
+      if (id === 'select') {
+        return `<th class="${escapeHtml(def.headerClass || '')}" style="${def.width ? `width:${def.width}` : ''}"><input type="checkbox" id="select-all" class="pipeline-checkbox" title="Select all"></th>`;
+      }
+      return `<th class="${escapeHtml(def.headerClass || '')}" ${def.width ? `style="width:${def.width}"` : ''}>${escapeHtml(label)}</th>`;
+    }).join('') + '</tr>';
+  }
+
+  function renderOutreachTableHeader(section, bodyId) {
+    const body = document.getElementById(bodyId);
+    const table = body ? body.closest('table') : null;
+    const thead = table ? table.querySelector('thead') : null;
+    if (!thead) return;
+    const columns = buildVisibleOutreachColumns(section);
+    thead.innerHTML = '<tr>' + columns.map((id) => {
+      const def = getOutreachColumnDef(id);
+      if (!def) return '';
+      if (id === 'select') {
+        return `<th class="col-select"><input type="checkbox" class="or-select-all" data-section="${escapeHtml(section)}"></th>`;
+      }
+      return `<th>${escapeHtml(getColumnLabel(def))}</th>`;
+    }).join('') + '</tr>';
+  }
+
+  function getOutreachRowCellHtml(section, columnId, row) {
+    const business = row.business || null;
+    switch (columnId) {
+      case 'select':
+        return `<td class="td-center"><input type="checkbox" class="or-row-select" data-section="${escapeHtml(section)}" data-biz-id="${business ? business.id : ''}"></td>`;
+      case 'business':
+        return `<td>${business ? orBizLink(business) : escapeHtml(row.businessName || 'Unknown')}</td>`;
+      case 'location':
+        return `<td>${business ? orLocationCell(business) : (row.location || '')}</td>`;
+      case 'contact':
+        return `<td>${business ? getOrContactHtml(business) : (row.contact || '—')}</td>`;
+      case 'contactWhatsapp': {
+        const primary = business ? getPrimaryContact(business) : null;
+        const phone = primary ? (primary.contact_whatsapp || primary.contact_phone) : (business ? business.phone : '');
+        return `<td>${phone ? escapeHtml(phone) : '—'}</td>`;
+      }
+      case 'contactEmail': {
+        const primary = business ? getPrimaryContact(business) : null;
+        return `<td>${primary && primary.contact_email ? escapeHtml(primary.contact_email) : '—'}</td>`;
+      }
+      case 'progress':
+        return `<td>${business ? getOutreachProgressHtml(business) : '—'}</td>`;
+      case 'firstOutreach':
+        return `<td>${business ? orFormatDateTime(getFirstOutreachTime(business)) : '—'}</td>`;
+      case 'lastOutreach':
+        return `<td>${business ? orFormatDateTime(getLastStepSentTime(business)) : (row.lastVisit ? orTimeAgo(row.lastVisit) : '—')}</td>`;
+      case 'timeSince':
+        return `<td>${row.timeSince || '—'}</td>`;
+      case 'nextStep':
+        return `<td>${business ? escapeHtml(getNextStepLabel(business)) : '—'}</td>`;
+      case 'followupDue':
+        return `<td>${row.followupDue || '—'}</td>`;
+      case 'overdue':
+        return `<td>${row.overdue || '—'}</td>`;
+      case 'status':
+        return `<td>${row.status || '—'}</td>`;
+      case 'completedAt':
+        return `<td>${row.completedAt || '—'}</td>`;
+      case 'reason':
+        return `<td>${row.reason || '—'}</td>`;
+      case 'cancelledAt':
+        return `<td>${row.cancelledAt || '—'}</td>`;
+      case 'lastVisit':
+        return `<td>${row.lastVisit ? orTimeAgo(row.lastVisit) : '—'}</td>`;
+      case 'views':
+        return `<td>${row.views != null ? row.views : '—'}</td>`;
+      case 'stage':
+        return `<td>${business ? getStageBadgeHtml(business.pipeline_status) : '—'}</td>`;
+      case 'whatsappStatus':
+        return business
+          ? `<td class="td-center"><span class="badge ${business.whatsapp_status === 'valid' ? 'badge-has-site' : business.whatsapp_status === 'invalid' ? 'badge-no-site' : ''}" style="font-size:11px">${business.whatsapp_status === 'valid' ? t('waValid') : business.whatsapp_status === 'invalid' ? t('waInvalid') : t('waUnchecked')}</span></td>`
+          : '<td>—</td>';
+      case 'websiteUrl': {
+        const url = business ? getPublishedWebsiteUrl(business) : '';
+        return `<td>${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>` : '—'}</td>`;
+      }
+      case 'action':
+        return `<td>${row.actionHtml || (business ? orActionBtn(business) : '')}</td>`;
+      default:
+        return '<td>—</td>';
+    }
+  }
+
+  function renderEnrichmentQueueTable() {
+    if (!enrichmentQueueBody || !enrichmentQueueSummary || !enrichmentQueueEmpty) return;
+
+    enrichmentQueueSummary.textContent = t('enrichmentQueueSummary', currentQueueResults.length);
+
+    if (currentQueueResults.length === 0) {
+      enrichmentQueueBody.innerHTML = '';
+      enrichmentQueueEmpty.style.display = '';
+      return;
+    }
+
+    enrichmentQueueEmpty.style.display = 'none';
+    enrichmentQueueBody.innerHTML = currentQueueResults.map((business) => {
+      const status = getEffectiveEnrichmentStatus(business);
+      const attempts = Number(business.enrichment_attempts || 0);
+      const statusHtml = [
+        getEnrichmentStatusBadgeHtml(status),
+        business.enrichment_last_error ? `<div class="enrichment-queue-error">${escapeHtml(business.enrichment_last_error)}</div>` : ''
+      ].join('');
+      const enrichActionHtml = status === 'in_progress'
+        ? `<button class="btn btn-secondary btn-sm" disabled>${escapeHtml(t('enrichmentWorking'))}</button>`
+        : `<button class="btn btn-view btn-enrich" data-id="${business.id}">${escapeHtml(t('btnEnrich'))}</button>`;
+
+      return `
+        <tr>
+          <td><strong>${escapeHtml(business.name || '—')}</strong></td>
+          <td style="font-family:monospace;font-size:11px;color:var(--text-dim)">${escapeHtml(business.business_code || '—')}</td>
+          <td>${escapeHtml(business.address_full || '—')}</td>
+          <td class="td-center">${getStageBadgeHtml(business.pipeline_status)}</td>
+          <td>${statusHtml}</td>
+          <td class="td-center">${escapeHtml(t('enrichmentAttemptsValue', attempts, ENRICHMENT_MAX_ATTEMPTS))}</td>
+          <td>${escapeHtml(getEnrichmentActivityText(business))}</td>
+          <td>${escapeHtml(getEnrichmentRetryText(business))}</td>
+          <td class="td-center"><button class="btn btn-view btn-detail" data-id="${business.id}">${escapeHtml(t('viewBtn'))}</button></td>
+          <td class="td-center">${getMapsLinkHtml(business)}</td>
+          <td class="td-center">${enrichActionHtml}</td>
+          <td class="td-center"><button class="btn btn-view btn-delete" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}" style="color:var(--danger);border-color:var(--danger)">${escapeHtml(t('btnDelete'))}</button></td>
+        </tr>
+      `;
+    }).join('');
+
+    enrichmentQueueBody.querySelectorAll('.btn-detail').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentQueueResults.find((item) => String(item.id) === String(businessId));
+        if (business) openDetailModal(business);
+      });
+    });
+
+    enrichmentQueueBody.querySelectorAll('.btn-enrich').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const business = currentQueueResults.find((item) => String(item.id) === String(businessId));
+        if (business) handleEnrich(business, btn);
+      });
+    });
+
+    enrichmentQueueBody.querySelectorAll('.btn-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const businessId = btn.getAttribute('data-id');
+        const name = btn.getAttribute('data-name');
+        deleteBusiness(businessId, name);
+      });
+    });
+  }
+
   // ── Paginate from cached filtered results ──
   function renderCurrentPage() {
     const from = currentPage * pageSize;
@@ -2659,6 +3636,7 @@
 
   // ── Render Table ──
   function renderTable() {
+    renderSavedTableHeader();
     if (currentResults.length === 0) {
       resultsBody.innerHTML = '';
       noResults.style.display = '';
@@ -2670,71 +3648,9 @@
     resultsSummary.textContent = t('showingCount', currentResults.length, totalCount);
 
     const offset = currentPage * pageSize;
+    const visibleColumns = buildVisibleSavedColumns();
     resultsBody.innerHTML = currentResults.map((b, i) => {
-      const profiles = b.business_social_profiles || [];
-      const websiteStatus = getWebsiteStatus(b);
-
-      const socialCellHtml = buildSocialCellHtml(profiles);
-
-      const existingWebsiteRecord = (b.generated_websites || []).find(w => w.config && w.config.html);
-      const createWebsiteBtnLabel = existingWebsiteRecord ? '\u2713' : t('btnCreateWebsite');
-
-      // Website URL column
-      let websiteUrlHtml = '<span style="color:var(--text-dim)">—</span>';
-      if (existingWebsiteRecord) {
-        const wUrl = existingWebsiteRecord.published_url || '/ver/' + existingWebsiteRecord.id;
-        websiteUrlHtml = `<a href="${escapeHtml(wUrl)}" target="_blank" rel="noopener" class="website-url-link" style="color:var(--primary);font-size:12px;text-decoration:underline;cursor:pointer" title="${escapeHtml(wUrl)}">${existingWebsiteRecord.published_url ? 'Live' : 'Preview'}</a>
-          <button class="btn-copy-url" data-url="${escapeHtml(wUrl)}" title="Copy URL" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:2px 4px">📋</button>`;
-      }
-
-      const mapsLink = b.maps_url
-        ? `<a href="${escapeHtml(b.maps_url)}" target="_blank" rel="noopener" class="maps-link" title="Open in Google Maps">\u{1F4CD}</a>`
-        : `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.name + ' ' + (b.address_full || ''))}" target="_blank" rel="noopener" class="maps-link" title="Search on Google Maps">\u{1F4CD}</a>`;
-
-      // Build contacts cell
-      const contacts = b.business_contacts || [];
-      const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
-      const contactsCount = contacts.length;
-      let contactsCellHtml;
-      if (contactsCount === 0) {
-        contactsCellHtml = '<span class="td-empty-placeholder">+</span>';
-      } else {
-        const nameDisplay = primaryContact.contact_name ? escapeHtml(primaryContact.contact_name) : '(unnamed)';
-        const titleDisplay = primaryContact.contact_title ? ` <span style="color:var(--text-dim);font-size:11px">${escapeHtml(primaryContact.contact_title)}</span>` : '';
-        const countBadge = contactsCount > 1 ? ` <span class="contacts-count-badge">${contactsCount}</span>` : '';
-        contactsCellHtml = nameDisplay + titleDisplay + countBadge;
-      }
-
-      const isChecked = selectedIds.has(String(b.id));
-      return `<tr>
-        <td class="td-center col-sticky col-select"><input type="checkbox" class="pipeline-checkbox row-select" data-id="${b.id}" ${isChecked ? 'checked' : ''}></td>
-        <td class="td-center col-sticky col-sticky-1">${offset + i + 1}</td>
-        <td class="td-editable col-sticky col-sticky-2" data-id="${b.id}" data-field="name" data-value="${escapeHtml(b.name || '')}" title="${t('clickToEdit')}"><strong>${escapeHtml(b.name)}</strong></td>
-        <td class="td-center td-copyable" style="font-size:11px;color:var(--text-dim);font-family:monospace;cursor:pointer" data-copy-value="${escapeHtml(b.business_code || '')}" title="${t('clickToCopy')}">${escapeHtml(b.business_code || '—')}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="address_full" data-value="${escapeHtml(b.address_full || '')}" title="${t('clickToEdit')}">${escapeHtml(b.address_full || '—')}</td>
-        <td style="text-transform:capitalize">${escapeHtml(extractCategory(b.types))}</td>
-        <td class="td-center td-editable td-editable-stage" data-id="${b.id}" data-field="pipeline_status" data-value="${escapeHtml(b.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(b.pipeline_status)}</td>
-        <td style="font-size:11px;color:var(--text-muted)">${t('src' + (b.lead_source || 'other').replace(/(^|_)([a-z])/g, (_, __, c) => c.toUpperCase()))}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="address_country" data-value="${escapeHtml(b.address_country || '')}" title="${b.address_country ? t('clickToEdit') : t('clickToAdd')}">${b.address_country ? escapeHtml(b.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>
-        <td class="td-contacts" data-id="${b.id}" title="${t('clickToEdit')}" style="cursor:pointer">${contactsCellHtml}</td>
-        <td>${primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone) ? escapeHtml(primaryContact.contact_whatsapp || primaryContact.contact_phone) : '<span class="td-empty-placeholder">—</span>'}</td>
-        <td>${primaryContact && primaryContact.contact_email ? escapeHtml(primaryContact.contact_email) : '<span class="td-empty-placeholder">—</span>'}</td>
-        <td class="td-editable" data-id="${b.id}" data-field="phone" data-value="${escapeHtml(b.phone || '')}" title="${b.phone ? t('clickToEdit') : t('clickToAdd')}">${b.phone ? escapeHtml(b.phone) : '<span class="td-empty-placeholder">+</span>'}</td>
-        <td class="td-center"><span class="badge ${b.whatsapp_status === 'valid' ? 'badge-has-site' : b.whatsapp_status === 'invalid' ? 'badge-no-site' : ''}" style="font-size:11px">${b.whatsapp_status === 'valid' ? t('waValid') : b.whatsapp_status === 'invalid' ? t('waInvalid') : t('waUnchecked')}</span></td>
-        <td class="td-editable" data-id="${b.id}" data-field="email" data-value="${escapeHtml(b.email || '')}" title="${b.email ? t('clickToEdit') : t('clickToAdd')}">${b.email ? escapeHtml(b.email) : '<span class="td-empty-placeholder">+</span>'}</td>
-        <td class="td-center"><span class="stars">${renderStars(b.rating)}</span> <span class="rating-num">${b.rating ? b.rating.toFixed(1) : '—'}</span></td>
-        <td class="td-center">${b.review_count ? b.review_count.toLocaleString() : '0'}</td>
-        <td class="td-center">${socialCellHtml}</td>
-        <td class="td-center"><button class="btn btn-view btn-create-website" data-id="${b.id}">${createWebsiteBtnLabel}</button></td>
-        <td class="td-center">${websiteUrlHtml}</td>
-        <td class="td-center">${existingWebsiteRecord ? `<button class="btn-outreach${b.whatsapp_status === 'invalid' ? ' btn-outreach-invalid' : ''}" data-id="${b.id}">${t('outreachBtnLabel')}</button>` : ''}</td>
-        <td class="td-center">${existingWebsiteRecord ? getOutreachProgressHtml(b) : ''}</td>
-        <td class="td-center"><button class="btn btn-view btn-detail" data-id="${b.id}">${t('viewBtn')}</button></td>
-        <td class="td-center">${mapsLink}</td>
-        <td class="td-center"><button class="btn btn-view btn-enrich" data-id="${b.id}">${b.description ? '\u2713' : t('btnEnrich')}</button></td>
-        <td class="td-center">${b.phone ? `<button class="btn-msg" data-id="${b.id}" data-phone="${escapeHtml(b.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>
-        <td class="td-center"><button class="btn btn-view btn-delete" data-id="${b.id}" data-name="${escapeHtml(b.name)}" style="color:var(--danger);border-color:var(--danger)">${t('btnDelete')}</button></td>
-      </tr>`;
+      return '<tr>' + visibleColumns.map((columnId) => getSavedBusinessCellHtml(columnId, b, i, offset)).join('') + '</tr>';
     }).join('');
 
     // Bind create website buttons (full pipeline: report → photos → website)
@@ -2855,6 +3771,19 @@
         updateSelectAllCheckbox();
       });
     });
+    const selectAllCb = document.getElementById('select-all');
+    if (selectAllCb) {
+      selectAllCb.addEventListener('change', () => {
+        const pageIds = currentResults.map(b => String(b.id));
+        if (selectAllCb.checked) pageIds.forEach(id => selectedIds.add(id));
+        else pageIds.forEach(id => selectedIds.delete(id));
+        resultsBody.querySelectorAll('.row-select').forEach(cb => {
+          cb.checked = selectAllCb.checked;
+        });
+        updateBulkActionsBar();
+        updateSelectAllCheckbox();
+      });
+    }
     updateSelectAllCheckbox();
   }
 
@@ -2922,7 +3851,7 @@
     if (selectedIds.size === 0) return;
 
     const businesses = currentResults.filter(b => selectedIds.has(String(b.id)));
-    const enrichable = businesses.filter(b => b.place_id && !b.place_id.startsWith('marketing-') && b.whatsapp_status !== 'invalid');
+    const enrichable = businesses.filter(b => !isSyntheticPlaceId(b.place_id) && b.whatsapp_status !== 'invalid');
 
     if (enrichable.length === 0) {
       showToast(t('enrichNoPlaceId'), 'error');
@@ -4217,158 +5146,80 @@
     loadOrVisitors();
   }
 
-  function renderOrFollowupTable(businesses) {
-    const body = document.getElementById('or-followup-body');
-    const wrapper = document.getElementById('or-followup-wrapper');
-    const empty = document.getElementById('or-followup-empty');
-    const countEl = document.getElementById('or-followup-count');
-    if (countEl) countEl.textContent = businesses.length;
+  function renderOutreachRows(section, bodyId, businessesOrRows, options) {
+    const body = document.getElementById(bodyId);
+    const wrapper = document.getElementById(options.wrapperId);
+    const empty = document.getElementById(options.emptyId);
+    const countEl = document.getElementById(options.countId);
+    const rows = businessesOrRows || [];
 
-    if (!businesses.length) {
+    renderOutreachTableHeader(section, bodyId);
+    if (countEl) countEl.textContent = rows.length;
+
+    if (!rows.length) {
       if (wrapper) wrapper.style.display = 'none';
       if (empty) empty.style.display = '';
+      if (body) body.innerHTML = '';
       return;
     }
+
     if (wrapper) wrapper.style.display = '';
     if (empty) empty.style.display = 'none';
 
-    let html = '';
-    businesses.forEach(b => {
-      const lastStepTime = b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at;
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="followup" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
-        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
-        + '<td>' + orTimeAgo(lastStepTime) + '</td>'
-        + '<td>' + orActionBtn(b) + '</td>'
-        + '</tr>';
+    const visibleColumns = buildVisibleOutreachColumns(section);
+    if (body) {
+      body.innerHTML = rows.map((row) => {
+        const rowModel = row && row.business !== undefined ? row : { business: row };
+        return '<tr>' + visibleColumns.map((columnId) => getOutreachRowCellHtml(section, columnId, rowModel)).join('') + '</tr>';
+      }).join('');
+    }
+    bindOrTableEvents(bodyId);
+  }
+
+  function renderOrFollowupTable(businesses) {
+    renderOutreachRows('followup', 'or-followup-body', businesses.map((b) => ({
+      business: b,
+      timeSince: orTimeAgo(b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at),
+    })), {
+      wrapperId: 'or-followup-wrapper',
+      emptyId: 'or-followup-empty',
+      countId: 'or-followup-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-followup-body');
   }
 
   function renderOrReadyTable(businesses) {
-    const body = document.getElementById('or-ready-body');
-    const wrapper = document.getElementById('or-ready-wrapper');
-    const empty = document.getElementById('or-ready-empty');
-    const countEl = document.getElementById('or-ready-count');
-    if (countEl) countEl.textContent = businesses.length;
-
-    if (!businesses.length) {
-      if (wrapper) wrapper.style.display = 'none';
-      if (empty) empty.style.display = '';
-      return;
-    }
-    if (wrapper) wrapper.style.display = '';
-    if (empty) empty.style.display = 'none';
-
-    let html = '';
-    businesses.forEach(b => {
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="ready" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
-        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
-        + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
-        + '<td>' + orActionBtn(b) + '</td>'
-        + '</tr>';
+    renderOutreachRows('ready', 'or-ready-body', businesses, {
+      wrapperId: 'or-ready-wrapper',
+      emptyId: 'or-ready-empty',
+      countId: 'or-ready-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-ready-body');
   }
 
   function renderOrProgressTable(businesses) {
-    const body = document.getElementById('or-progress-body');
-    const wrapper = document.getElementById('or-progress-wrapper');
-    const empty = document.getElementById('or-progress-empty');
-    const countEl = document.getElementById('or-progress-count');
-    if (countEl) countEl.textContent = businesses.length;
-
-    if (!businesses.length) {
-      if (wrapper) wrapper.style.display = 'none';
-      if (empty) empty.style.display = '';
-      return;
-    }
-    if (wrapper) wrapper.style.display = '';
-    if (empty) empty.style.display = 'none';
-
-    let html = '';
-    businesses.forEach(b => {
-      const count = getOutreachStepCount(b);
-      const stale = isStaleOutreach(b);
-      const statusBadge = stale
+    renderOutreachRows('progress', 'or-progress-body', businesses.map((b) => ({
+      business: b,
+      status: isStaleOutreach(b)
         ? '<span class="or-stale-badge">' + t('orStatStale') + '</span>'
-        : '<span class="or-ontrack-badge">On Track</span>';
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="progress" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + getOutreachProgressHtml(b) + '</td>'
-        + '<td>' + escapeHtml(getNextStepLabel(b)) + '</td>'
-        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
-        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
-        + '<td>' + statusBadge + '</td>'
-        + '<td>' + orActionBtn(b) + '</td>'
-        + '</tr>';
+        : '<span class="or-ontrack-badge">On Track</span>',
+    })), {
+      wrapperId: 'or-progress-wrapper',
+      emptyId: 'or-progress-empty',
+      countId: 'or-progress-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-progress-body');
   }
 
   function renderOrCompleteTable(businesses) {
-    const body = document.getElementById('or-complete-body');
-    const wrapper = document.getElementById('or-complete-wrapper');
-    const empty = document.getElementById('or-complete-empty');
-    const countEl = document.getElementById('or-complete-count');
-    if (countEl) countEl.textContent = businesses.length;
-
-    if (!businesses.length) {
-      if (wrapper) wrapper.style.display = 'none';
-      if (empty) empty.style.display = '';
-      return;
-    }
-    if (wrapper) wrapper.style.display = '';
-    if (empty) empty.style.display = 'none';
-
-    let html = '';
-    businesses.forEach(b => {
-      const followupTime = b.outreach_steps && b.outreach_steps.followup && b.outreach_steps.followup.sent_at;
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="complete" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + orFormatDateTime(getFirstOutreachTime(b)) + '</td>'
-        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
-        + '<td>' + orTimeAgo(followupTime) + '</td>'
-        + '<td>' + orActionBtn(b) + '</td>'
-        + '</tr>';
+    renderOutreachRows('complete', 'or-complete-body', businesses.map((b) => ({
+      business: b,
+      completedAt: orTimeAgo(b.outreach_steps && b.outreach_steps.followup && b.outreach_steps.followup.sent_at),
+    })), {
+      wrapperId: 'or-complete-wrapper',
+      emptyId: 'or-complete-empty',
+      countId: 'or-complete-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-complete-body');
   }
 
   function renderOrCancelledTable(businesses) {
-    const body = document.getElementById('or-cancelled-body');
-    const wrapper = document.getElementById('or-cancelled-wrapper');
-    const empty = document.getElementById('or-cancelled-empty');
-    const countEl = document.getElementById('or-cancelled-count');
-    if (countEl) countEl.textContent = businesses.length;
-
-    if (!businesses.length) {
-      if (wrapper) wrapper.style.display = 'none';
-      if (empty) empty.style.display = '';
-      return;
-    }
-    if (wrapper) wrapper.style.display = '';
-    if (empty) empty.style.display = 'none';
-
     const cancelReasonLabels = {
       no_whatsapp: t('outreachCancelNoWhatsapp'),
       wrong_number: t('outreachCancelWrongNumber'),
@@ -4376,75 +5227,33 @@
       not_interested: t('outreachCancelNotInterested'),
       other: t('outreachCancelOther'),
     };
-
-    let html = '';
-    businesses.forEach(b => {
+    renderOutreachRows('cancelled', 'or-cancelled-body', businesses.map((b) => {
       const cancelled = b.outreach_steps && b.outreach_steps._cancelled;
       const reason = cancelled ? (cancelReasonLabels[cancelled.reason] || cancelled.reason) : '';
-      const cancelledAt = cancelled ? orTimeAgo(cancelled.at) : '';
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="cancelled" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + escapeHtml(reason) + '</td>'
-        + '<td>' + cancelledAt + '</td>'
-        + '<td><button class="btn btn-view or-reactivate-btn" data-biz-id="' + b.id + '">' + t('outreachUncancelBtn') + '</button></td>'
-        + '</tr>';
+      return {
+        business: b,
+        reason: escapeHtml(reason),
+        cancelledAt: cancelled ? orTimeAgo(cancelled.at) : '',
+        actionHtml: '<button class="btn btn-view or-reactivate-btn" data-biz-id="' + b.id + '">' + t('outreachUncancelBtn') + '</button>',
+      };
+    }), {
+      wrapperId: 'or-cancelled-wrapper',
+      emptyId: 'or-cancelled-empty',
+      countId: 'or-cancelled-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-cancelled-body');
     bindOrCancelledTableEvents();
   }
 
   function renderOrMessagedTodayTable(businesses) {
-    const body = document.getElementById('or-today-body');
-    const wrapper = document.getElementById('or-today-wrapper');
-    const empty = document.getElementById('or-today-empty');
-    const countEl = document.getElementById('or-today-count');
-    if (countEl) countEl.textContent = businesses.length;
-
-    if (!businesses.length) {
-      if (wrapper) wrapper.style.display = 'none';
-      if (empty) empty.style.display = '';
-      return;
-    }
-    if (wrapper) wrapper.style.display = '';
-    if (empty) empty.style.display = 'none';
-
-    let html = '';
-    businesses.forEach(b => {
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="today" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + getOutreachProgressHtml(b) + '</td>'
-        + '<td>' + orFormatDateTime(getLastStepSentTime(b)) + '</td>'
-        + '<td>' + orActionBtn(b) + '</td>'
-        + '</tr>';
+    renderOutreachRows('today', 'or-today-body', businesses, {
+      wrapperId: 'or-today-wrapper',
+      emptyId: 'or-today-empty',
+      countId: 'or-today-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-today-body');
   }
 
   function renderOrFollowupScheduleTable(businesses) {
-    const body = document.getElementById('or-schedule-body');
-    const wrapper = document.getElementById('or-schedule-wrapper');
-    const empty = document.getElementById('or-schedule-empty');
-    const countEl = document.getElementById('or-schedule-count');
-    if (countEl) countEl.textContent = businesses.length;
-
-    if (!businesses.length) {
-      if (wrapper) wrapper.style.display = 'none';
-      if (empty) empty.style.display = '';
-      return;
-    }
-    if (wrapper) wrapper.style.display = '';
-    if (empty) empty.style.display = 'none';
-
-    let html = '';
-    businesses.forEach(b => {
+    renderOutreachRows('schedule', 'or-schedule-body', businesses.map((b) => {
       const step3Time = b.outreach_steps && b.outreach_steps['3'] && b.outreach_steps['3'].sent_at;
       const dueTime = step3Time ? new Date(new Date(step3Time).getTime() + 24 * 60 * 60 * 1000) : null;
       const hoursUntilDue = dueTime ? (dueTime.getTime() - Date.now()) / (1000 * 60 * 60) : 0;
@@ -4458,18 +5267,16 @@
       } else {
         overdueLabel = '<span class="badge badge-has-site" style="font-size:11px">' + t('orDueInLabel', Math.round(hoursUntilDue)) + '</span>';
       }
-      html += '<tr>'
-        + '<td class="td-center"><input type="checkbox" class="or-row-select" data-section="schedule" data-biz-id="' + b.id + '"></td>'
-        + '<td>' + orBizLink(b) + '</td>'
-        + '<td>' + orLocationCell(b) + '</td>'
-        + '<td>' + getOrContactHtml(b) + '</td>'
-        + '<td>' + (dueTime ? orFormatDateTime(dueTime.toISOString()) : '—') + '</td>'
-        + '<td>' + overdueLabel + '</td>'
-        + '<td>' + orActionBtn(b) + '</td>'
-        + '</tr>';
+      return {
+        business: b,
+        followupDue: dueTime ? orFormatDateTime(dueTime.toISOString()) : '—',
+        overdue: overdueLabel,
+      };
+    }), {
+      wrapperId: 'or-schedule-wrapper',
+      emptyId: 'or-schedule-empty',
+      countId: 'or-schedule-count',
     });
-    if (body) body.innerHTML = html;
-    bindOrTableEvents('or-schedule-body');
   }
 
   function bindOrCancelledTableEvents() {
@@ -4524,31 +5331,33 @@
     if (bindOrSelectionEventsOnce._bound) return;
     bindOrSelectionEventsOnce._bound = true;
 
-    // Select-all checkboxes
-    document.querySelectorAll('.or-select-all').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const section = cb.dataset.section;
-        const card = cb.closest('.or-table-card');
-        const rows = card ? card.querySelectorAll('.or-row-select[data-section="' + section + '"]') : [];
-        rows.forEach(r => {
-          r.checked = cb.checked;
-          const bizId = r.dataset.bizId;
-          if (cb.checked) orSelectedIds[section].add(bizId);
-          else orSelectedIds[section].delete(bizId);
-        });
-        updateOrBulkBar(section);
-      });
-    });
-
     // Individual row checkboxes (delegated from card level)
     document.querySelectorAll('.or-table-card').forEach(card => {
       card.addEventListener('change', (e) => {
+        const selectAll = e.target.closest('.or-select-all');
+        if (selectAll) {
+          const section = selectAll.dataset.section;
+          const rows = card.querySelectorAll('.or-row-select[data-section="' + section + '"]');
+          rows.forEach(r => {
+            r.checked = selectAll.checked;
+            const bizId = r.dataset.bizId;
+            if (selectAll.checked) orSelectedIds[section].add(bizId);
+            else orSelectedIds[section].delete(bizId);
+          });
+          updateOrBulkBar(section);
+          return;
+        }
         const cb = e.target.closest('.or-row-select');
         if (!cb) return;
         const section = cb.dataset.section;
         const bizId = cb.dataset.bizId;
         if (cb.checked) orSelectedIds[section].add(bizId);
         else orSelectedIds[section].delete(bizId);
+        const sectionRows = card.querySelectorAll('.or-row-select[data-section="' + section + '"]');
+        const sectionSelectAll = card.querySelector('.or-select-all[data-section="' + section + '"]');
+        if (sectionSelectAll) {
+          sectionSelectAll.checked = sectionRows.length > 0 && Array.from(sectionRows).every(row => row.checked);
+        }
         updateOrBulkBar(section);
       });
     });
@@ -4648,6 +5457,7 @@
     const wrapper = document.getElementById('or-visitors-wrapper');
     const empty = document.getElementById('or-visitors-empty');
     const countEl = document.getElementById('or-visitors-count');
+    renderOutreachTableHeader('visitors', 'or-visitors-body');
 
     try {
       const res = await fetch('/api/analytics/demo-stats?days=7&limit=200');
@@ -4673,40 +5483,36 @@
       if (!visitors.length) {
         if (wrapper) wrapper.style.display = 'none';
         if (empty) empty.style.display = '';
+        if (body) body.innerHTML = '';
         return;
       }
       if (wrapper) wrapper.style.display = '';
       if (empty) empty.style.display = 'none';
 
-      let html = '';
-      visitors.forEach(v => {
+      const rows = visitors.map(v => {
         const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
         const biz = src.find(b => String(b.id) === String(v.businessId));
-        const progress = biz ? getOutreachProgressHtml(biz) : '—';
-        const contact = biz ? getOrContactHtml(biz) : '—';
-        const bizLink = biz
-          ? orBizLink(biz)
-          : escapeHtml(v.businessName || 'Unknown');
-        const actionHtml = biz ? orActionBtn(biz) : '';
-
-        const location = biz ? orLocationCell(biz) : '';
-        html += '<tr>'
-          + '<td>' + bizLink + '</td>'
-          + '<td>' + location + '</td>'
-          + '<td>' + contact + '</td>'
-          + '<td>' + progress + '</td>'
-          + '<td>' + orTimeAgo(v.lastVisit) + '</td>'
-          + '<td>' + v.views + '</td>'
-          + '<td>' + actionHtml + '</td>'
-          + '</tr>';
+        return {
+          business: biz,
+          businessName: v.businessName,
+          lastVisit: v.lastVisit,
+          views: v.views,
+          actionHtml: biz ? orActionBtn(biz) : '',
+          contact: biz ? getOrContactHtml(biz) : '—',
+          location: biz ? orLocationCell(biz) : '',
+        };
       });
-      if (body) body.innerHTML = html;
-      bindOrTableEvents('or-visitors-body');
+      renderOutreachRows('visitors', 'or-visitors-body', rows, {
+        wrapperId: 'or-visitors-wrapper',
+        emptyId: 'or-visitors-empty',
+        countId: 'or-visitors-count',
+      });
     } catch (err) {
       console.error('Failed to load outreach visitors:', err);
       if (countEl) countEl.textContent = '0';
       if (wrapper) wrapper.style.display = 'none';
       if (empty) empty.style.display = '';
+      if (body) body.innerHTML = '';
     }
   }
 
@@ -5771,10 +6577,10 @@
       }
 
       showToast(t('deleteSuccess', businessName), 'success');
-      // Remove from current results and re-render
-      currentResults = currentResults.filter(b => String(b.id) !== String(businessId));
-      totalCount = Math.max(0, totalCount - 1);
-      renderTable();
+      selectedIds.delete(String(businessId));
+      updateBulkActionsBar();
+      await loadBusinesses();
+      loadStats();
     } catch (err) {
       console.error('Delete business error:', err);
       showToast(t('deleteError'), 'error');
@@ -5783,7 +6589,7 @@
 
   async function handleEnrich(business, btn) {
     const placeId = business.place_id;
-    if (!placeId || placeId.startsWith('marketing-')) {
+    if (isSyntheticPlaceId(placeId)) {
       showToast(t('enrichNoPlaceId'), 'error');
       return;
     }
@@ -5798,9 +6604,14 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Unknown error');
+      if (!data.success) {
+        await loadBusinesses();
+        throw new Error(data.error || data.status || 'Enrichment failed');
+      }
       btn.textContent = '\u2713';
       btn.disabled = false;
       showToast(t('enrichSuccess', business.name), 'success');
+      await loadBusinesses();
     } catch (err) {
       console.error('Enrich failed:', err);
       btn.textContent = origText;
@@ -7136,7 +7947,7 @@
   function switchTab(tab) {
     activeTab = tab;
     const sections = {
-      saved: ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section'],
+      saved: ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section'],
       audiences: ['audiences-section'],
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
@@ -7153,7 +7964,7 @@
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });

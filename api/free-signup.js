@@ -5,7 +5,7 @@
 import { sendEmail } from './_lib/sendgrid.js';
 import { getTemplateForTrigger } from './_lib/email-templates.js';
 import { matchOrCreateBusiness } from './_lib/match-business.js';
-import { enrichBusiness } from './_lib/enrich-business.js';
+import { runTrackedBusinessEnrichment } from './_lib/enrichment-runner.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -197,10 +197,9 @@ export default async function handler(req, res) {
 
     // 5. Trigger enrichment if we have a real place_id (non-blocking, fire-and-forget)
     if (googleData?.place_id && !googleData.place_id.startsWith('marketing-')) {
-      enrichBusiness({
+      runTrackedBusinessEnrichment({
         businessId,
         placeId: googleData.place_id,
-        dataId: googleData.data_id || null,
         businessName: googleData.name || businessName || null,
         businessAddress: googleData.address || address || null,
         supabaseUrl,

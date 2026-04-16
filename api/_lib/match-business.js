@@ -2,6 +2,7 @@
 // Used by free-signup.js and stripe/create-subscription.js
 
 import { toE164, normalizePhone, countryFromDialCode } from './phone-utils.js';
+import { buildInitialEnrichmentState } from './enrichment-runner.js';
 export { normalizePhone };
 
 /**
@@ -372,6 +373,7 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       contact_whatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
       pipeline_status: 'saved',
       lead_source: leadSource || 'website_form',
+      ...buildInitialEnrichmentState(googleData.place_id),
     };
   } else {
     // Synthetic business (no Google data available) — still save form address + country
@@ -391,6 +393,7 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
       contact_whatsapp: contactWhatsapp ? normalizePhone(contactWhatsapp) : null,
       pipeline_status: 'saved',
       lead_source: leadSource || 'website_form',
+      ...buildInitialEnrichmentState(syntheticPlaceId),
     };
   }
 

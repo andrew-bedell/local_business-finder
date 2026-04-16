@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/generate-websites",
       "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/enrich-businesses",
+      "schedule": "*/10 * * * *"
     }
   ],
   "functions": {

@@ -330,7 +330,7 @@ function normalizePlaceResult(place) {
     placeId: place.place_id || '',
     dataId: place.data_id || '',
     reviewData: [],
-    photos: (place.images || []).map(url => ({ url })),
+    photos: normalizePlaceImages(place.images),
     hours: hours,
     latitude: place.gps_coordinates ? place.gps_coordinates.latitude : null,
     longitude: place.gps_coordinates ? place.gps_coordinates.longitude : null,
@@ -344,6 +344,36 @@ function normalizePlaceResult(place) {
     accessibility: extensions.accessibility,
     source: 'searchapi',
   };
+}
+
+function normalizePlaceImages(images) {
+  if (!Array.isArray(images)) return [];
+
+  return images.map((image) => {
+    if (!image) return null;
+
+    if (typeof image === 'string') {
+      return { url: image, thumbnail: image, photoType: null };
+    }
+
+    const url = image.image || image.thumbnail || image.url || '';
+    if (!url || typeof url !== 'string') return null;
+
+    return {
+      url,
+      thumbnail: typeof image.thumbnail === 'string' ? image.thumbnail : url,
+      photoType: mapImageTitleToPhotoType(image.title),
+      title: image.title || '',
+    };
+  }).filter(Boolean);
+}
+
+function mapImageTitleToPhotoType(title) {
+  const normalized = (title || '').toLowerCase();
+  if (normalized.includes('owner')) return 'team';
+  if (normalized.includes('interior') || normalized.includes('inside')) return 'interior';
+  if (normalized.includes('exterior') || normalized.includes('outside')) return 'exterior';
+  return null;
 }
 
 // Parse SearchAPI.io extensions array into categorized arrays
