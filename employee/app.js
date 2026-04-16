@@ -372,6 +372,27 @@
       lookupNotFound: 'Place not found. Check the URL or Place ID and try again.',
       lookupError: 'Failed to look up business. Please try again.',
       lookupSuccess: '"{0}" added to results.',
+      // Post-search pipeline
+      pipelineDedupeDone: '{0} duplicate(s) already in database — skipped',
+      pipelineAllDuplicates: 'All businesses are already in the database',
+      pipelineAutoSaving: 'Saving businesses to database...',
+      pipelineAutoSavingDone: 'Businesses saved',
+      pipelineWaCheckLabel: 'Checking WhatsApp numbers...',
+      pipelineWaCheckDone: 'WhatsApp check complete',
+      pipelineWaChecking: 'Checking WhatsApp... {0} of {1}',
+      pipelineWaDone: 'WhatsApp: {0} of {1} valid',
+      pipelineNoWaValid: 'No businesses with valid WhatsApp — click Enrich to enrich manually',
+      pipelineWaValid: 'WA ✓',
+      pipelineWaInvalid: 'No WA',
+      pipelineWaNoPhone: 'No phone',
+      pipelineDupBadge: 'DUP',
+      pipelineEnrichBtn: 'Enrich',
+      pipelineEnrichAuto: 'Auto',
+      // Enrichment re-saving
+      enrichmentReSaving: 'Re-saving enriched data...',
+      enrichmentReSavingDone: 'Enriched data saved',
+      thWa: 'WA',
+      thEnrich: 'Enrich',
     },
     es: {
       // Header
@@ -738,6 +759,27 @@
       lookupNotFound: 'Negocio no encontrado. Verifica la URL o Place ID e intenta de nuevo.',
       lookupError: 'Error al buscar el negocio. Por favor intenta de nuevo.',
       lookupSuccess: '"{0}" agregado a los resultados.',
+      // Post-search pipeline
+      pipelineDedupeDone: '{0} duplicado(s) ya en la base de datos — omitidos',
+      pipelineAllDuplicates: 'Todos los negocios ya están en la base de datos',
+      pipelineAutoSaving: 'Guardando negocios en la base de datos...',
+      pipelineAutoSavingDone: 'Negocios guardados',
+      pipelineWaCheckLabel: 'Verificando números de WhatsApp...',
+      pipelineWaCheckDone: 'Verificación de WhatsApp completa',
+      pipelineWaChecking: 'Verificando WhatsApp... {0} de {1}',
+      pipelineWaDone: 'WhatsApp: {0} de {1} válidos',
+      pipelineNoWaValid: 'Ningún negocio con WhatsApp válido — haz clic en Enriquecer para hacerlo manualmente',
+      pipelineWaValid: 'WA ✓',
+      pipelineWaInvalid: 'Sin WA',
+      pipelineWaNoPhone: 'Sin teléfono',
+      pipelineDupBadge: 'DUP',
+      pipelineEnrichBtn: 'Enriquecer',
+      pipelineEnrichAuto: 'Auto',
+      // Enrichment re-saving
+      enrichmentReSaving: 'Re-guardando datos enriquecidos...',
+      enrichmentReSavingDone: 'Datos enriquecidos guardados',
+      thWa: 'WA',
+      thEnrich: 'Enriquecer',
     },
   };
 
@@ -995,50 +1037,150 @@
       await Promise.all(parallelOps);
 
       savedPlaceIds.add(place.placeId);
+      place._businessId = businessId;
       document.dispatchEvent(new CustomEvent('business-saved', { detail: { placeId: place.placeId } }));
 
-      return true;
+      return businessId || true;
     } catch (err) {
       console.error('Save error (exception):', err);
+      return null;
+    }
+  }
+
+  // ── WhatsApp Check ──
+  async function checkWhatsAppNumber(place) {
+    if (!place.phone || !place._businessId) return false;
+    try {
+      const country = countrySelect ? countrySelect.value.toUpperCase() : null;
+      const res = await withTimeout(
+        fetch('/api/whatsapp/check-number', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: place.phone,
+            businessId: place._businessId,
+            addressCountry: country,
+          }),
+        }),
+        15000,
+        'WhatsApp check'
+      );
+      if (res.status === 503) {
+        console.warn('WhatsApp bridge not configured (503)');
+        return false;
+      }
+      if (!res.ok) return false;
+      const data = await res.json();
+      return !!data.registered;
+    } catch (err) {
+      console.warn('WhatsApp check failed for', place.name, err);
       return false;
     }
   }
 
-  async function saveAllBusinesses() {
+  // ── Post-Search Pipeline ──
+  // Search → dedupe → auto-save → WhatsApp check → conditional enrichment
+  async function runPostSearchPipeline(results) {
     if (!supabaseClient) {
-      showToast(t('dbNotAvailable'), 'error');
-      return;
-    }
-    if (filteredResults.length === 0) {
-      showToast(t('noResultsToSave'), 'warning');
+      // No DB — fall back to plain enrichment
+      runEnrichmentPipeline(results).catch((err) => {
+        console.warn('Enrichment pipeline error:', err);
+      });
       return;
     }
 
-    const btn = document.getElementById('btn-save-all');
-    btn.disabled = true;
-    btn.textContent = t('savingBtn');
+    const totalCount = results.length;
 
-    let savedCount = 0;
-    for (const place of filteredResults) {
+    // Phase: Dedupe
+    const newBusinesses = [];
+    for (const place of results) {
       if (savedPlaceIds.has(place.placeId)) {
-        savedCount++;
-        continue;
+        place._isDuplicate = true;
+      } else {
+        place._isDuplicate = false;
+        newBusinesses.push(place);
       }
-      const ok = await saveBusiness(place);
-      if (ok) savedCount++;
+    }
+    const dupCount = totalCount - newBusinesses.length;
+    if (dupCount > 0) {
+      showToast(t('pipelineDedupeDone', dupCount), 'warning');
+    }
+    renderTable();
+
+    if (newBusinesses.length === 0) {
+      showToast(t('pipelineAllDuplicates'), 'warning');
+      return;
     }
 
-    btn.textContent = t('savedCount', savedCount, filteredResults.length);
-    btn.disabled = false;
-    setTimeout(() => { btn.textContent = t('saveAllBtn'); }, 3000);
-
+    // Phase: Auto-save
+    showEnrichmentBar(newBusinesses.length);
+    updateEnrichmentStep('auto-saving', 'active');
+    let savedCount = 0;
+    for (let i = 0; i < newBusinesses.length; i++) {
+      updateEnrichmentBizProgress(i + 1, newBusinesses.length);
+      const result = await saveBusiness(newBusinesses[i]);
+      if (result) {
+        savedCount++;
+      } else {
+        newBusinesses[i]._saveFailed = true;
+      }
+    }
+    updateEnrichmentStep('auto-saving', 'done');
+    renderTable();
     if (savedCount > 0) {
-      showToast(t('saveAllSuccessToast', savedCount, filteredResults.length), 'success');
-    } else {
-      showToast(t('saveError'), 'error');
+      showToast(t('autoSaveComplete', savedCount), 'success');
     }
 
-    // Re-render to update individual save buttons
+    // Phase: WhatsApp check
+    updateEnrichmentStep('whatsapp-check', 'active');
+    const toCheck = newBusinesses.filter(p => p.phone && !p._saveFailed);
+    let waValidCount = 0;
+    for (let i = 0; i < toCheck.length; i++) {
+      const place = toCheck[i];
+      updateEnrichmentBizProgress(i + 1, toCheck.length);
+      updateEnrichmentStep('whatsapp-check', 'active', t('pipelineWaChecking', i + 1, toCheck.length));
+      const isValid = await checkWhatsAppNumber(place);
+      place._whatsappStatus = isValid ? 'valid' : 'invalid';
+      if (isValid) waValidCount++;
+      // Update table row WA cell in real time
+      renderTable();
+      // Rate limit: 500ms between checks
+      if (i < toCheck.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    // Mark no-phone businesses
+    for (const place of newBusinesses) {
+      if (!place.phone) {
+        place._whatsappStatus = 'no_phone';
+      }
+    }
+    updateEnrichmentStep('whatsapp-check', 'done');
+    renderTable();
+    showToast(t('pipelineWaDone', waValidCount, toCheck.length), 'success');
+
+    // Phase: Conditional enrichment — only WA-valid businesses
+    const waValid = newBusinesses.filter(p => p._whatsappStatus === 'valid');
+    if (waValid.length > 0) {
+      await runEnrichmentPipeline(waValid, waValid.length);
+    } else {
+      closeEnrichmentBar();
+      showToast(t('pipelineNoWaValid'), 'warning');
+    }
+  }
+
+  // ── Enrich Single Business ──
+  // Called from the manual "Enrich" button for businesses without WhatsApp
+  async function enrichSingleBusiness(place) {
+    if (place._enriching) return;
+    place._enriching = true;
+    renderTable();
+    try {
+      await runEnrichmentPipeline([place], 1);
+    } catch (err) {
+      console.warn('Single enrichment error:', err);
+    }
+    place._enriching = false;
     renderTable();
   }
 
@@ -1099,7 +1241,6 @@
     sortSelect.addEventListener('change', applyFilterAndSort);
     btnExportCsv.addEventListener('click', exportCsv);
     btnClear.addEventListener('click', clearResults);
-    document.getElementById('btn-save-all').addEventListener('click', saveAllBusinesses);
     countrySelect.addEventListener('change', onCountryChange);
     btnLookup.addEventListener('click', lookupByUrl);
     lookupInput.addEventListener('keydown', (e) => {
@@ -1322,9 +1463,9 @@
       // Show results immediately, then enrich in background
       showResults();
 
-      // Background enrichment pipeline (non-blocking)
-      runEnrichmentPipeline(allResults).catch((err) => {
-        console.warn('Enrichment pipeline error:', err);
+      // Background pipeline: dedupe → auto-save → WA check → conditional enrichment
+      runPostSearchPipeline(allResults).catch((err) => {
+        console.warn('Post-search pipeline error:', err);
       });
     } catch (err) {
       console.error('Search error:', err);
@@ -1481,19 +1622,44 @@
         ? `<button class="btn btn-view" data-idx="${idx}">${t('viewBtn')}</button>`
         : `<span style="color:var(--text-dim);font-size:12px">${t('noData')}</span>`;
 
-      const isSaved = savedPlaceIds.has(place.placeId);
-      const saveBtnHtml = isSaved
-        ? `<span class="badge badge-saved">${t('savedBtn')}</span>`
-        : `<button class="btn btn-save-row" data-idx="${idx}">${t('saveBtn')}</button>`;
+      // WhatsApp status badge
+      let waCellHtml;
+      if (place._whatsappStatus === 'valid') {
+        waCellHtml = `<span class="badge badge-saved">${t('pipelineWaValid')}</span>`;
+      } else if (place._whatsappStatus === 'invalid') {
+        waCellHtml = `<span class="badge badge-no-site">${t('pipelineWaInvalid')}</span>`;
+      } else if (place._whatsappStatus === 'no_phone') {
+        waCellHtml = `<span style="color:var(--text-dim);font-size:12px">${t('pipelineWaNoPhone')}</span>`;
+      } else {
+        waCellHtml = `<span style="color:var(--text-dim);font-size:12px">—</span>`;
+      }
+
+      // Enrich column
+      let enrichCellHtml;
+      if (place._enriched) {
+        enrichCellHtml = `<span class="badge badge-saved">✓</span>`;
+      } else if (place._enriching) {
+        enrichCellHtml = `<span style="color:var(--text-muted);font-size:12px">${t('enriching')}...</span>`;
+      } else if (place._whatsappStatus === 'valid') {
+        enrichCellHtml = `<span style="color:var(--text-dim);font-size:12px">${t('pipelineEnrichAuto')}</span>`;
+      } else if (place._isDuplicate) {
+        enrichCellHtml = `<span style="color:var(--text-dim);font-size:12px">—</span>`;
+      } else if (place._whatsappStatus === 'invalid' || place._whatsappStatus === 'no_phone') {
+        enrichCellHtml = `<button class="btn btn-view btn-enrich-row" data-idx="${idx}">${t('pipelineEnrichBtn')}</button>`;
+      } else {
+        enrichCellHtml = `<span style="color:var(--text-dim);font-size:12px">—</span>`;
+      }
 
       const socialCellHtml = buildSocialCellHtml(place.socialProfiles);
 
       const categoryDisplay = formatCategory(place) || getTypeLabel(place.searchType || businessType.value);
 
+      const dupBadge = place._isDuplicate ? ` <span class="badge badge-no-site" style="font-size:10px;padding:1px 6px">${t('pipelineDupBadge')}</span>` : '';
+
       tr.innerHTML = `
         <td class="td-center">${idx + 1}</td>
         <td>${escapeHtml(categoryDisplay)}</td>
-        <td><strong>${escapeHtml(place.name)}</strong></td>
+        <td><strong>${escapeHtml(place.name)}</strong>${dupBadge}</td>
         <td>${escapeHtml(place.address)}</td>
         <td>${escapeHtml(place.phone) || '<span style="color:var(--text-dim)">N/A</span>'}</td>
         <td class="td-center">
@@ -1508,7 +1674,8 @@
         <td class="td-center"><button class="btn btn-view btn-website" data-idx="${idx}" ${place.generatedPhotos ? '' : 'disabled'}>${place.generatedWebsiteHtml ? '✓' : t('btnWebsite')}</button></td>
         <td class="td-center">${viewBtnHtml}</td>
         <td class="td-center">${mapsLink}</td>
-        <td class="td-center">${saveBtnHtml}</td>
+        <td class="td-center">${waCellHtml}</td>
+        <td class="td-center">${enrichCellHtml}</td>
       `;
 
       // Attach click handler for Report button
@@ -1530,30 +1697,16 @@
       }
 
       // Attach click handler for View button
-      const viewBtn = tr.querySelector('.btn-view:not(.btn-report):not(.btn-photos):not(.btn-website)');
+      const viewBtn = tr.querySelector('.btn-view:not(.btn-report):not(.btn-photos):not(.btn-website):not(.btn-enrich-row)');
       if (viewBtn) {
         viewBtn.addEventListener('click', () => openDetailModal(place));
       }
 
-      // Attach click handler for Save button
-      const saveRowBtn = tr.querySelector('.btn-save-row');
-      if (saveRowBtn) {
-        saveRowBtn.addEventListener('click', async function () {
-          if (!supabaseClient) {
-            showToast(t('dbNotAvailable'), 'error');
-            return;
-          }
-          this.disabled = true;
-          this.textContent = t('savingBtn');
-          const ok = await saveBusiness(place);
-          if (ok) {
-            this.outerHTML = `<span class="badge badge-saved">${t('savedBtn')}</span>`;
-            showToastWithLink(t('saveRowSuccess', place.name), 'success', t('viewInPipeline'), 'pipeline-anchor');
-          } else {
-            this.textContent = t('saveError');
-            this.disabled = false;
-            showToast(t('saveRowError', place.name), 'error');
-          }
+      // Attach click handler for manual Enrich button
+      const enrichRowBtn = tr.querySelector('.btn-enrich-row');
+      if (enrichRowBtn) {
+        enrichRowBtn.addEventListener('click', function () {
+          enrichSingleBusiness(place);
         });
       }
 
@@ -2336,6 +2489,8 @@
   // ── Enrichment Status Bar ──
   // Non-blocking bottom bar that shows enrichment progress while user can interact with results.
   const ENRICHMENT_STEPS = [
+    { id: 'auto-saving', labelKey: 'pipelineAutoSaving', doneKey: 'pipelineAutoSavingDone' },
+    { id: 'whatsapp-check', labelKey: 'pipelineWaCheckLabel', doneKey: 'pipelineWaCheckDone' },
     { id: 'social-profiles', labelKey: 'enrichmentSocialProfiles', doneKey: 'enrichmentSocialProfilesDone' },
     { id: 'google-reviews', labelKey: 'enrichmentGoogleReviews', doneKey: 'enrichmentGoogleReviewsDone' },
     { id: 'place-details', labelKey: 'enrichmentPlaceDetails', doneKey: 'enrichmentPlaceDetailsDone' },
@@ -2343,7 +2498,7 @@
     { id: 'photos', labelKey: 'enrichmentPhotos', doneKey: 'enrichmentPhotosDone' },
     { id: 'facebook', labelKey: 'enrichmentFacebook', doneKey: 'enrichmentFacebookDone' },
     { id: 'instagram', labelKey: 'enrichmentInstagram', doneKey: 'enrichmentInstagramDone' },
-    { id: 'saving', labelKey: 'enrichmentSaving', doneKey: 'enrichmentSavingDone' },
+    { id: 're-saving', labelKey: 'enrichmentReSaving', doneKey: 'enrichmentReSavingDone' },
   ];
 
   let enrichmentBarCurrentStep = '';
@@ -2524,23 +2679,21 @@
     }
     updateEnrichmentStep('instagram', 'done');
 
-    // Phase 8: Save everything to database (after ALL enrichment is done)
+    // Phase 8: Re-save all enriched businesses to update with enriched data
     if (supabaseClient) {
-      updateEnrichmentStep('saving', 'active');
-      const toSave = batch.filter((p) => !savedPlaceIds.has(p.placeId));
-      let savedCount = 0;
-      for (let i = 0; i < toSave.length; i++) {
-        updateEnrichmentBizProgress(i + 1, toSave.length);
-        const ok = await saveBusiness(toSave[i]);
-        if (ok) savedCount++;
+      updateEnrichmentStep('re-saving', 'active');
+      let reSavedCount = 0;
+      for (let i = 0; i < batch.length; i++) {
+        updateEnrichmentBizProgress(i + 1, batch.length);
+        const ok = await saveBusiness(batch[i]);
+        if (ok) reSavedCount++;
       }
-      if (savedCount > 0) {
-        showToast(t('autoSaveComplete', savedCount), 'success');
+      if (reSavedCount > 0) {
         renderTable();
       }
-      updateEnrichmentStep('saving', 'done');
+      updateEnrichmentStep('re-saving', 'done');
     } else {
-      updateEnrichmentStep('saving', 'skipped', 'Database not connected');
+      updateEnrichmentStep('re-saving', 'skipped', 'Database not connected');
     }
 
     // Mark batch as enriched so they won't be re-enriched

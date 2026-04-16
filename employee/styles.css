@@ -1081,7 +1081,12 @@ select.input {
   color: var(--success);
 }
 
-.col-save {
+.col-wa {
+  width: 70px;
+  text-align: center !important;
+}
+
+.col-enrich {
   width: 80px;
   text-align: center !important;
 }
