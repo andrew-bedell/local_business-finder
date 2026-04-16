@@ -148,6 +148,75 @@
       sched_confirm_delete_staff: '¿Eliminar este miembro del personal?',
       sched_confirm_delete_service: '¿Eliminar este servicio?',
 
+      // Operations
+      nav_operations: 'Inventario & POS',
+      ops_title: 'Centro de <span>Operaciones</span>',
+      ops_desc: 'Controla tu inventario, registra compras a proveedores, monitorea cuentas por cobrar/pagar y vende en persona desde un POS simple.',
+      ops_tab_overview: 'Resumen',
+      ops_tab_inventory: 'Inventario',
+      ops_tab_suppliers: 'Proveedores',
+      ops_tab_purchases: 'Compras',
+      ops_tab_accounts: 'Cuentas',
+      ops_tab_pos: 'POS',
+      ops_stat_inventory: 'Inventario',
+      ops_stat_low_stock: 'Bajo stock',
+      ops_stat_payable: 'Por pagar',
+      ops_stat_receivable: 'Por cobrar',
+      ops_stat_today_sales: 'Ventas hoy',
+      ops_low_stock_title: 'Productos por reabastecer',
+      ops_recent_sales_title: 'Ventas recientes',
+      ops_payables_title: 'Cuentas por pagar',
+      ops_receivables_title: 'Cuentas por cobrar',
+      ops_product_form_title: 'Agregar producto',
+      ops_product_name: 'Producto',
+      ops_product_category: 'Categoría',
+      ops_product_sku: 'SKU',
+      ops_product_barcode: 'Código de barras',
+      ops_product_unit: 'Unidad',
+      ops_product_sale_price: 'Precio de venta',
+      ops_product_cost_price: 'Costo',
+      ops_product_currency: 'Moneda',
+      ops_product_stock: 'Stock actual',
+      ops_product_reorder_point: 'Punto de reorden',
+      ops_product_reorder_qty: 'Cantidad sugerida',
+      ops_product_supplier: 'Proveedor principal',
+      ops_product_description: 'Descripción',
+      ops_save_product: 'Guardar producto',
+      ops_cancel: 'Cancelar',
+      ops_inventory_title: 'Inventario',
+      ops_add_product: '+ Agregar producto',
+      ops_supplier_form_title: 'Agregar proveedor',
+      ops_supplier_name: 'Proveedor',
+      ops_supplier_contact: 'Contacto',
+      ops_supplier_phone: 'Teléfono',
+      ops_supplier_email: 'Correo',
+      ops_supplier_terms: 'Plazo de pago (días)',
+      ops_supplier_address: 'Dirección',
+      ops_save_supplier: 'Guardar proveedor',
+      ops_suppliers_title: 'Proveedores',
+      ops_add_supplier: '+ Agregar proveedor',
+      ops_po_form_title: 'Nueva orden de compra',
+      ops_po_supplier: 'Proveedor',
+      ops_po_order_date: 'Fecha de orden',
+      ops_po_currency: 'Moneda',
+      ops_po_expected_date: 'Fecha esperada',
+      ops_po_due_date: 'Fecha de pago',
+      ops_po_items: 'Productos',
+      ops_add_po_line: '+ Agregar línea',
+      ops_save_po: 'Guardar orden',
+      ops_po_list_title: 'Órdenes de compra',
+      ops_add_po: '+ Nueva orden',
+      ops_pos_products_title: 'Productos para vender',
+      ops_pos_cart_title: 'Carrito / Cobro',
+      ops_pos_customer_select: 'Cliente existente',
+      ops_pos_customer_name: 'Nombre del cliente',
+      ops_pos_customer_phone: 'Teléfono',
+      ops_pos_customer_email: 'Correo',
+      ops_pos_payment_method: 'Forma de pago',
+      ops_pos_amount_paid: 'Monto pagado',
+      ops_pos_due_date: 'Fecha de cobro',
+      ops_pos_complete_sale: 'Completar venta',
+
       // Wizard
       nav_wizard: 'Completar Datos',
       nav_wizard_short: 'Datos',
@@ -362,6 +431,75 @@
       sched_delete: 'Delete',
       sched_confirm_delete_staff: 'Remove this staff member?',
       sched_confirm_delete_service: 'Remove this service?',
+
+      // Operations
+      nav_operations: 'Inventory & POS',
+      ops_title: 'Operations <span>Center</span>',
+      ops_desc: 'Track inventory, log supplier purchases, monitor what you owe and what customers owe you, and sell in person from a simple POS.',
+      ops_tab_overview: 'Overview',
+      ops_tab_inventory: 'Inventory',
+      ops_tab_suppliers: 'Suppliers',
+      ops_tab_purchases: 'Purchases',
+      ops_tab_accounts: 'Accounts',
+      ops_tab_pos: 'POS',
+      ops_stat_inventory: 'Inventory',
+      ops_stat_low_stock: 'Low stock',
+      ops_stat_payable: 'Payable',
+      ops_stat_receivable: 'Receivable',
+      ops_stat_today_sales: 'Sales today',
+      ops_low_stock_title: 'Products to reorder',
+      ops_recent_sales_title: 'Recent sales',
+      ops_payables_title: 'Accounts payable',
+      ops_receivables_title: 'Accounts receivable',
+      ops_product_form_title: 'Add product',
+      ops_product_name: 'Product',
+      ops_product_category: 'Category',
+      ops_product_sku: 'SKU',
+      ops_product_barcode: 'Barcode',
+      ops_product_unit: 'Unit',
+      ops_product_sale_price: 'Sale price',
+      ops_product_cost_price: 'Cost',
+      ops_product_currency: 'Currency',
+      ops_product_stock: 'Current stock',
+      ops_product_reorder_point: 'Reorder point',
+      ops_product_reorder_qty: 'Suggested reorder qty',
+      ops_product_supplier: 'Primary supplier',
+      ops_product_description: 'Description',
+      ops_save_product: 'Save product',
+      ops_cancel: 'Cancel',
+      ops_inventory_title: 'Inventory',
+      ops_add_product: '+ Add product',
+      ops_supplier_form_title: 'Add supplier',
+      ops_supplier_name: 'Supplier',
+      ops_supplier_contact: 'Contact',
+      ops_supplier_phone: 'Phone',
+      ops_supplier_email: 'Email',
+      ops_supplier_terms: 'Payment terms (days)',
+      ops_supplier_address: 'Address',
+      ops_save_supplier: 'Save supplier',
+      ops_suppliers_title: 'Suppliers',
+      ops_add_supplier: '+ Add supplier',
+      ops_po_form_title: 'New purchase order',
+      ops_po_supplier: 'Supplier',
+      ops_po_order_date: 'Order date',
+      ops_po_currency: 'Currency',
+      ops_po_expected_date: 'Expected date',
+      ops_po_due_date: 'Due date',
+      ops_po_items: 'Products',
+      ops_add_po_line: '+ Add line',
+      ops_save_po: 'Save order',
+      ops_po_list_title: 'Purchase orders',
+      ops_add_po: '+ New order',
+      ops_pos_products_title: 'Products to sell',
+      ops_pos_cart_title: 'Cart / Checkout',
+      ops_pos_customer_select: 'Existing customer',
+      ops_pos_customer_name: 'Customer name',
+      ops_pos_customer_phone: 'Phone',
+      ops_pos_customer_email: 'Email',
+      ops_pos_payment_method: 'Payment method',
+      ops_pos_amount_paid: 'Amount paid',
+      ops_pos_due_date: 'Collection date',
+      ops_pos_complete_sale: 'Complete sale',
 
       // Wizard
       nav_wizard: 'Complete Data',
@@ -2066,7 +2204,7 @@
     var normalizedId = sectionId.replace(/^section-/, '');
 
     // Force wizard if no website exists (except account section for logout/settings)
-    if (!websiteData && normalizedId !== 'wizard' && normalizedId !== 'account') {
+    if (!websiteData && normalizedId !== 'wizard' && normalizedId !== 'account' && normalizedId !== 'operations') {
       normalizedId = 'wizard';
     }
 
@@ -2114,6 +2252,11 @@
     // Load scheduling when section is shown
     if (normalizedId === 'scheduling') {
       loadSchedulingSection();
+    }
+
+    // Load inventory / POS operations when section is shown
+    if (normalizedId === 'operations') {
+      loadOperationsSection();
     }
 
     // Load wizard when section is shown
@@ -2374,6 +2517,15 @@
     } catch (e) {
       return '$' + Number(amount).toFixed(2) + ' ' + currency;
     }
+  }
+
+  function formatQuantity(quantity) {
+    var value = Number(quantity);
+    if (!Number.isFinite(value)) return '0';
+    if (Math.abs(value - Math.round(value)) < 0.0001) {
+      return String(Math.round(value));
+    }
+    return value.toFixed(3).replace(/\.?0+$/, '');
   }
 
   // ── Toast ──
@@ -4256,6 +4408,1227 @@
     } catch (err) {
       console.error('Delete service error:', err);
       showToast(t('sched_svc_error'), 'error');
+    }
+  }
+
+  // ── Operations Center ──
+
+  var opsOverviewData = null;
+  var opsProductsData = [];
+  var opsSuppliersData = [];
+  var opsCustomersData = [];
+  var opsPurchaseOrdersData = [];
+  var opsSalesData = [];
+  var opsCart = [];
+  var opsEventsBound = false;
+  var opsPosAmountDirty = false;
+
+  async function fetchOperationsJson(path, options) {
+    var token = await getAuthToken();
+    if (!token) throw new Error('No session');
+
+    var reqOptions = Object.assign({}, options || {});
+    var headers = Object.assign({}, (reqOptions.headers || {}), {
+      'Authorization': 'Bearer ' + token
+    });
+
+    if (reqOptions.body && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    reqOptions.headers = headers;
+
+    var response = await fetch(path, reqOptions);
+    var data = await response.json().catch(function () { return {}; });
+    if (!response.ok) {
+      throw new Error(data.error || 'Error');
+    }
+    return data;
+  }
+
+  async function loadOperationsSection() {
+    bindOperationsEvents();
+    await loadOperationsData();
+  }
+
+  async function loadOperationsData() {
+    try {
+      var results = await Promise.all([
+        fetchOperationsJson('/api/commerce/overview'),
+        fetchOperationsJson('/api/commerce/products'),
+        fetchOperationsJson('/api/commerce/suppliers'),
+        fetchOperationsJson('/api/commerce/customers'),
+        fetchOperationsJson('/api/commerce/purchase-orders'),
+        fetchOperationsJson('/api/commerce/sales'),
+      ]);
+
+      opsOverviewData = results[0] || {};
+      opsProductsData = Array.isArray(results[1]) ? results[1] : [];
+      opsSuppliersData = Array.isArray(results[2]) ? results[2] : [];
+      opsCustomersData = Array.isArray(results[3]) ? results[3] : [];
+      opsPurchaseOrdersData = Array.isArray(results[4]) ? results[4] : [];
+      opsSalesData = Array.isArray(results[5]) ? results[5] : [];
+
+      renderOperationsOverview();
+      renderOperationsInventory();
+      renderOperationsSuppliers();
+      renderOperationsPurchaseOrders();
+      renderOperationsAccounts();
+      renderOperationsPos();
+    } catch (err) {
+      console.error('Load operations error:', err);
+      showToast('Error al cargar el centro de operaciones.', 'error');
+    }
+  }
+
+  function bindOperationsEvents() {
+    if (opsEventsBound) return;
+    opsEventsBound = true;
+
+    var tabs = document.querySelectorAll('[data-ops-tab]');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        switchOperationsTab(tab.getAttribute('data-ops-tab'));
+      });
+    });
+
+    var productForm = document.getElementById('ops-product-form');
+    if (productForm) {
+      productForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveOperationsProduct();
+      });
+    }
+
+    var btnAddProduct = document.getElementById('btn-add-ops-product');
+    if (btnAddProduct) {
+      btnAddProduct.addEventListener('click', function () {
+        showOperationsProductForm(null);
+      });
+    }
+
+    var btnCancelProduct = document.getElementById('btn-cancel-ops-product');
+    if (btnCancelProduct) {
+      btnCancelProduct.addEventListener('click', function () {
+        hideOperationsProductForm();
+      });
+    }
+
+    var supplierForm = document.getElementById('ops-supplier-form');
+    if (supplierForm) {
+      supplierForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        saveOperationsSupplier();
+      });
+    }
+
+    var btnAddSupplier = document.getElementById('btn-add-ops-supplier');
+    if (btnAddSupplier) {
+      btnAddSupplier.addEventListener('click', function () {
+        showOperationsSupplierForm(null);
+      });
+    }
+
+    var btnCancelSupplier = document.getElementById('btn-cancel-ops-supplier');
+    if (btnCancelSupplier) {
+      btnCancelSupplier.addEventListener('click', function () {
+        hideOperationsSupplierForm();
+      });
+    }
+
+    var poForm = document.getElementById('ops-po-form');
+    if (poForm) {
+      poForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        savePurchaseOrder();
+      });
+    }
+
+    var btnAddPo = document.getElementById('btn-add-ops-po');
+    if (btnAddPo) {
+      btnAddPo.addEventListener('click', function () {
+        showPurchaseOrderForm();
+      });
+    }
+
+    var btnCancelPo = document.getElementById('btn-cancel-ops-po');
+    if (btnCancelPo) {
+      btnCancelPo.addEventListener('click', function () {
+        hidePurchaseOrderForm();
+      });
+    }
+
+    var btnAddPoLine = document.getElementById('btn-ops-add-po-line');
+    if (btnAddPoLine) {
+      btnAddPoLine.addEventListener('click', function () {
+        appendPurchaseOrderLine();
+      });
+    }
+
+    var poItemsContainer = document.getElementById('ops-po-items');
+    if (poItemsContainer) {
+      poItemsContainer.addEventListener('click', function (e) {
+        var btn = e.target.closest('.c-ops-po-line-remove');
+        if (!btn) return;
+        var line = btn.closest('.c-ops-po-line');
+        if (line) line.remove();
+      });
+    }
+
+    var poSupplierSelect = document.getElementById('ops-po-supplier');
+    if (poSupplierSelect) {
+      poSupplierSelect.addEventListener('change', function () {
+        var supplier = getSupplierById(poSupplierSelect.value);
+        var dueDate = document.getElementById('ops-po-due-date');
+        var orderDate = document.getElementById('ops-po-order-date');
+        if (supplier && dueDate && orderDate && !dueDate.value && supplier.payment_terms_days) {
+          var date = new Date((orderDate.value || new Date().toISOString().slice(0, 10)) + 'T00:00:00');
+          if (!isNaN(date.getTime())) {
+            date.setDate(date.getDate() + Number(supplier.payment_terms_days || 0));
+            dueDate.value = date.toISOString().slice(0, 10);
+          }
+        }
+      });
+    }
+
+    var posCustomer = document.getElementById('ops-pos-customer');
+    if (posCustomer) {
+      posCustomer.addEventListener('change', handlePosCustomerChange);
+    }
+
+    var posAmountPaid = document.getElementById('ops-pos-amount-paid');
+    if (posAmountPaid) {
+      posAmountPaid.addEventListener('input', function () {
+        opsPosAmountDirty = true;
+        renderOperationsPosTotals();
+      });
+    }
+
+    var posPaymentMethod = document.getElementById('ops-pos-payment-method');
+    if (posPaymentMethod) {
+      posPaymentMethod.addEventListener('change', function () {
+        if (posPaymentMethod.value === 'credit') {
+          opsPosAmountDirty = false;
+        }
+        syncPosSuggestedPayment();
+      });
+    }
+
+    var btnCompleteSale = document.getElementById('btn-ops-complete-sale');
+    if (btnCompleteSale) {
+      btnCompleteSale.addEventListener('click', function () {
+        completePosSale();
+      });
+    }
+  }
+
+  function switchOperationsTab(tabId) {
+    var tabs = document.querySelectorAll('[data-ops-tab]');
+    tabs.forEach(function (tab) {
+      tab.classList.toggle('active', tab.getAttribute('data-ops-tab') === tabId);
+    });
+
+    var contents = document.querySelectorAll('[data-ops-content]');
+    contents.forEach(function (content) {
+      var match = content.getAttribute('data-ops-content') === tabId;
+      content.style.display = match ? '' : 'none';
+      content.classList.toggle('active', match);
+    });
+  }
+
+  function getOpsCurrency() {
+    return (opsOverviewData && opsOverviewData.summary && opsOverviewData.summary.currency)
+      || (opsProductsData[0] && opsProductsData[0].currency)
+      || 'MXN';
+  }
+
+  function getSupplierById(supplierId) {
+    return opsSuppliersData.find(function (supplier) { return supplier.id === supplierId; }) || null;
+  }
+
+  function getCustomerById(customerId) {
+    return opsCustomersData.find(function (customer) { return customer.id === customerId; }) || null;
+  }
+
+  function getProductById(productId) {
+    return opsProductsData.find(function (product) { return product.id === productId; }) || null;
+  }
+
+  function renderOpsList(targetId, html, emptyLabel) {
+    var target = document.getElementById(targetId);
+    if (!target) return;
+    if (!html) {
+      target.innerHTML = '<div class="c-ops-empty">' + escapeHtml(emptyLabel || 'Sin registros todavía.') + '</div>';
+      return;
+    }
+    target.innerHTML = '<div class="c-ops-list">' + html + '</div>';
+  }
+
+  function getStatusBadge(status) {
+    var safeStatus = String(status || '').toLowerCase();
+    var className = 'is-info';
+    if (safeStatus === 'paid' || safeStatus === 'received' || safeStatus === 'completed') className = 'is-success';
+    if (safeStatus === 'pending' || safeStatus === 'ordered') className = 'is-warning';
+    if (safeStatus === 'partial' || safeStatus === 'partially_received') className = 'is-info';
+    if (safeStatus === 'cancelled' || safeStatus === 'refunded') className = 'is-danger';
+    return '<span class="c-ops-badge ' + className + '">' + escapeHtml(String(status || '')) + '</span>';
+  }
+
+  function renderOperationsOverview() {
+    var summary = (opsOverviewData && opsOverviewData.summary) || {};
+    var currency = summary.currency || getOpsCurrency();
+
+    var statItems = document.getElementById('ops-stat-items');
+    if (statItems) statItems.textContent = formatQuantity(summary.inventoryItems || 0);
+    var statLowStock = document.getElementById('ops-stat-low-stock');
+    if (statLowStock) statLowStock.textContent = formatQuantity(summary.lowStockCount || 0);
+    var statPayable = document.getElementById('ops-stat-payable');
+    if (statPayable) statPayable.textContent = formatCurrency(summary.accountsPayable || 0, currency);
+    var statReceivable = document.getElementById('ops-stat-receivable');
+    if (statReceivable) statReceivable.textContent = formatCurrency(summary.accountsReceivable || 0, currency);
+    var statToday = document.getElementById('ops-stat-sales-today');
+    if (statToday) statToday.textContent = formatCurrency(summary.todaySalesTotal || 0, currency);
+
+    var stockValue = document.getElementById('ops-stat-stock-value');
+    if (stockValue) stockValue.textContent = formatCurrency(summary.inventoryValue || 0, currency);
+    var stockUnits = document.getElementById('ops-stat-stock-units');
+    if (stockUnits) stockUnits.textContent = formatQuantity(summary.stockUnits || 0) + ' unidades';
+    var openPo = document.getElementById('ops-stat-open-po');
+    if (openPo) openPo.textContent = formatQuantity(summary.openPurchaseOrders || 0) + ' órdenes abiertas';
+    var openAr = document.getElementById('ops-stat-open-ar');
+    if (openAr) openAr.textContent = formatQuantity((opsSalesData || []).filter(function (sale) { return Number(sale.balance_due || 0) > 0; }).length) + ' ventas pendientes';
+    var salesCount = document.getElementById('ops-stat-sales-count');
+    if (salesCount) salesCount.textContent = formatQuantity(summary.todaySalesCount || 0) + ' ventas registradas';
+
+    renderLowStockList('ops-overview-low-stock', (opsOverviewData && opsOverviewData.lowStockItems) || []);
+    renderSalesList('ops-overview-sales', (opsOverviewData && opsOverviewData.recentSales) || [], false);
+    renderPayablesList('ops-overview-payables', (opsOverviewData && opsOverviewData.openPayables) || [], false);
+    renderReceivablesList('ops-overview-receivables', (opsOverviewData && opsOverviewData.openReceivables) || [], false);
+  }
+
+  function renderLowStockList(targetId, items) {
+    var html = (items || []).map(function (item) {
+      return '<div class="c-ops-card">'
+        + '<div class="c-ops-card-head">'
+        + '<div><div class="c-ops-card-title">' + escapeHtml(item.name || '') + '</div>'
+        + '<div class="c-ops-card-sub">' + escapeHtml(item.category || 'Sin categoría') + '</div></div>'
+        + '<div class="c-ops-card-amount">' + formatQuantity(item.current_stock || 0) + '</div>'
+        + '</div>'
+        + '<div class="c-ops-badges">'
+        + '<span class="c-ops-badge is-danger">Reorden ' + escapeHtml(formatQuantity(item.reorder_point || 0)) + '</span>'
+        + '<span class="c-ops-badge">' + escapeHtml(item.sku || 'Sin SKU') + '</span>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    renderOpsList(targetId, html, 'Todo está bien abastecido por ahora.');
+  }
+
+  function renderSalesList(targetId, sales, withActions) {
+    var html = (sales || []).map(function (sale) {
+      var actionHtml = '';
+      if (withActions && Number(sale.balance_due || 0) > 0) {
+        actionHtml = '<div class="c-ops-card-actions">'
+          + '<button type="button" class="c-btn c-btn-primary c-btn--sm" data-action="collect-sale" data-id="' + escapeHtml(sale.id) + '">Registrar cobro</button>'
+          + '</div>';
+      }
+      return '<div class="c-ops-card">'
+        + '<div class="c-ops-card-head">'
+        + '<div><div class="c-ops-card-title">' + escapeHtml(sale.sale_number || 'Venta') + '</div>'
+        + '<div class="c-ops-card-sub">' + escapeHtml(sale.customer_name || 'Cliente mostrador') + '</div></div>'
+        + '<div class="c-ops-card-amount">' + formatCurrency(sale.total_amount || 0, sale.currency || getOpsCurrency()) + '</div>'
+        + '</div>'
+        + '<div class="c-ops-badges">' + getStatusBadge(sale.payment_status || 'pending') + '</div>'
+        + '<div class="c-ops-card-line"><span>Vendida</span><strong>' + escapeHtml(formatDate(sale.sold_at)) + '</strong></div>'
+        + (Number(sale.balance_due || 0) > 0 ? '<div class="c-ops-card-line"><span>Saldo</span><strong>' + formatCurrency(sale.balance_due || 0, sale.currency || getOpsCurrency()) + '</strong></div>' : '')
+        + actionHtml
+        + '</div>';
+    }).join('');
+    renderOpsList(targetId, html, 'Todavía no hay ventas registradas.');
+
+    if (withActions) {
+      var target = document.getElementById(targetId);
+      if (target) {
+        target.querySelectorAll('[data-action="collect-sale"]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            recordSalePayment(btn.getAttribute('data-id'));
+          });
+        });
+      }
+    }
+  }
+
+  function renderPayablesList(targetId, orders, withActions) {
+    var html = (orders || []).map(function (order) {
+      var receiveHtml = '';
+      if (withActions !== false && Array.isArray(order.items)) {
+        receiveHtml = order.items.map(function (item) {
+          var remaining = Number(item.quantity_ordered || 0) - Number(item.quantity_received || 0);
+          if (remaining <= 0) return '';
+          return '<div class="c-ops-card-line">'
+            + '<span>' + escapeHtml(item.item_name || item.description || 'Producto') + ' · ' + escapeHtml(formatQuantity(item.quantity_received || 0)) + '/' + escapeHtml(formatQuantity(item.quantity_ordered || 0)) + '</span>'
+            + '<button type="button" class="c-btn c-btn-ghost c-btn--sm" data-action="receive-po-item" data-order-id="' + escapeHtml(order.id) + '" data-line-id="' + escapeHtml(item.id) + '" data-remaining="' + escapeHtml(String(remaining)) + '">Recibir</button>'
+            + '</div>';
+        }).join('');
+      }
+
+      var paymentHtml = '';
+      if (withActions && Number(order.balance_due || 0) > 0) {
+        paymentHtml = '<button type="button" class="c-btn c-btn-primary c-btn--sm" data-action="pay-order" data-id="' + escapeHtml(order.id) + '">Registrar pago</button>';
+      }
+
+      return '<div class="c-ops-card">'
+        + '<div class="c-ops-card-head">'
+        + '<div><div class="c-ops-card-title">' + escapeHtml(order.po_number || 'PO') + '</div>'
+        + '<div class="c-ops-card-sub">' + escapeHtml(order.supplier_name || 'Proveedor') + '</div></div>'
+        + '<div class="c-ops-card-amount">' + formatCurrency(order.balance_due || 0, order.currency || getOpsCurrency()) + '</div>'
+        + '</div>'
+        + '<div class="c-ops-badges">' + getStatusBadge(order.status || 'ordered') + getStatusBadge(order.payment_status || 'pending') + '</div>'
+        + '<div class="c-ops-kv">'
+        + '<div><strong>Total</strong>' + formatCurrency(order.total_amount || 0, order.currency || getOpsCurrency()) + '</div>'
+        + '<div><strong>Vence</strong>' + escapeHtml(formatDate(order.due_date || order.expected_date || order.order_date)) + '</div>'
+        + '</div>'
+        + (receiveHtml ? '<div class="c-ops-card-body">' + receiveHtml + '</div>' : '')
+        + (paymentHtml ? '<div class="c-ops-card-actions">' + paymentHtml + '</div>' : '')
+        + '</div>';
+    }).join('');
+    renderOpsList(targetId, html, 'No hay compras pendientes.');
+
+    if (withActions) {
+      var target = document.getElementById(targetId);
+      if (target) {
+        target.querySelectorAll('[data-action="pay-order"]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            recordPurchaseOrderPayment(btn.getAttribute('data-id'));
+          });
+        });
+        target.querySelectorAll('[data-action="receive-po-item"]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            receivePurchaseOrderItem(btn.getAttribute('data-order-id'), btn.getAttribute('data-line-id'), btn.getAttribute('data-remaining'));
+          });
+        });
+      }
+    }
+  }
+
+  function renderReceivablesList(targetId, sales, withActions) {
+    var html = (sales || []).map(function (sale) {
+      var paymentHtml = '';
+      if (withActions && Number(sale.balance_due || 0) > 0) {
+        paymentHtml = '<div class="c-ops-card-actions">'
+          + '<button type="button" class="c-btn c-btn-primary c-btn--sm" data-action="collect-sale" data-id="' + escapeHtml(sale.id) + '">Registrar cobro</button>'
+          + '</div>';
+      }
+
+      return '<div class="c-ops-card">'
+        + '<div class="c-ops-card-head">'
+        + '<div><div class="c-ops-card-title">' + escapeHtml(sale.customer_name || 'Cliente mostrador') + '</div>'
+        + '<div class="c-ops-card-sub">' + escapeHtml(sale.sale_number || 'Venta') + '</div></div>'
+        + '<div class="c-ops-card-amount">' + formatCurrency(sale.balance_due || 0, sale.currency || getOpsCurrency()) + '</div>'
+        + '</div>'
+        + '<div class="c-ops-badges">' + getStatusBadge(sale.payment_status || 'pending') + '</div>'
+        + '<div class="c-ops-kv">'
+        + '<div><strong>Total</strong>' + formatCurrency(sale.total_amount || 0, sale.currency || getOpsCurrency()) + '</div>'
+        + '<div><strong>Vence</strong>' + escapeHtml(formatDate(sale.due_date || sale.sold_at)) + '</div>'
+        + '</div>'
+        + paymentHtml
+        + '</div>';
+    }).join('');
+    renderOpsList(targetId, html, 'No hay cuentas por cobrar pendientes.');
+
+    if (withActions) {
+      var target = document.getElementById(targetId);
+      if (target) {
+        target.querySelectorAll('[data-action="collect-sale"]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            recordSalePayment(btn.getAttribute('data-id'));
+          });
+        });
+      }
+    }
+  }
+
+  function renderOperationsInventory() {
+    var supplierSelect = document.getElementById('ops-product-supplier');
+    if (supplierSelect) {
+      supplierSelect.innerHTML = '<option value="">Sin proveedor</option>' + opsSuppliersData.map(function (supplier) {
+        return '<option value="' + escapeHtml(supplier.id) + '">' + escapeHtml(supplier.name) + '</option>';
+      }).join('');
+    }
+
+    var html = opsProductsData.map(function (product) {
+      var supplier = getSupplierById(product.primary_supplier_id);
+      var stockClass = Number(product.reorder_point || 0) > 0 && Number(product.current_stock || 0) <= Number(product.reorder_point || 0)
+        ? 'is-danger'
+        : 'is-success';
+
+      return '<div class="c-ops-card">'
+        + '<div class="c-ops-card-head">'
+        + '<div><div class="c-ops-card-title">' + escapeHtml(product.name || '') + '</div>'
+        + '<div class="c-ops-card-sub">' + escapeHtml(product.category || 'Sin categoría') + (product.sku ? ' · ' + escapeHtml(product.sku) : '') + '</div></div>'
+        + '<div class="c-ops-card-amount">' + formatCurrency(product.sale_price || 0, product.currency || getOpsCurrency()) + '</div>'
+        + '</div>'
+        + '<div class="c-ops-badges">'
+        + '<span class="c-ops-badge ' + stockClass + '">Stock ' + escapeHtml(formatQuantity(product.current_stock || 0)) + '</span>'
+        + '<span class="c-ops-badge">Reorden ' + escapeHtml(formatQuantity(product.reorder_point || 0)) + '</span>'
+        + '</div>'
+        + '<div class="c-ops-kv">'
+        + '<div><strong>Costo</strong>' + formatCurrency(product.cost_price || 0, product.currency || getOpsCurrency()) + '</div>'
+        + '<div><strong>Proveedor</strong>' + escapeHtml(supplier ? supplier.name : 'Sin proveedor') + '</div>'
+        + '<div><strong>Unidad</strong>' + escapeHtml(product.unit_name || 'pieza') + '</div>'
+        + '<div><strong>Código</strong>' + escapeHtml(product.barcode || '—') + '</div>'
+        + '</div>'
+        + '<div class="c-ops-card-actions">'
+        + '<button type="button" class="c-btn c-btn-ghost c-btn--sm" data-action="edit-product" data-id="' + escapeHtml(product.id) + '">' + escapeHtml(t('sched_edit')) + '</button>'
+        + '<button type="button" class="c-btn c-btn-ghost c-btn--sm" data-action="adjust-product" data-id="' + escapeHtml(product.id) + '">Ajustar stock</button>'
+        + '<button type="button" class="c-btn c-btn-ghost c-btn--sm" data-action="delete-product" data-id="' + escapeHtml(product.id) + '" style="color:var(--c-danger);">' + escapeHtml(t('sched_delete')) + '</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    renderOpsList('ops-product-list', html, 'Todavía no has agregado productos a tu inventario.');
+
+    var listEl = document.getElementById('ops-product-list');
+    if (listEl) {
+      listEl.querySelectorAll('[data-action="edit-product"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showOperationsProductForm(getProductById(btn.getAttribute('data-id')));
+        });
+      });
+      listEl.querySelectorAll('[data-action="adjust-product"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          adjustProductStock(btn.getAttribute('data-id'));
+        });
+      });
+      listEl.querySelectorAll('[data-action="delete-product"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          deleteOperationsProduct(btn.getAttribute('data-id'));
+        });
+      });
+    }
+  }
+
+  function showOperationsProductForm(product) {
+    var panel = document.getElementById('ops-product-form-panel');
+    if (!panel) return;
+    panel.style.display = '';
+
+    document.getElementById('ops-product-id').value = product ? (product.id || '') : '';
+    document.getElementById('ops-product-name').value = product ? (product.name || '') : '';
+    document.getElementById('ops-product-category').value = product ? (product.category || '') : '';
+    document.getElementById('ops-product-sku').value = product ? (product.sku || '') : '';
+    document.getElementById('ops-product-barcode').value = product ? (product.barcode || '') : '';
+    document.getElementById('ops-product-unit').value = product ? (product.unit_name || 'pieza') : 'pieza';
+    document.getElementById('ops-product-sale-price').value = product ? (product.sale_price || 0) : 0;
+    document.getElementById('ops-product-cost-price').value = product ? (product.cost_price || 0) : 0;
+    document.getElementById('ops-product-currency').value = product ? (product.currency || 'MXN') : getOpsCurrency();
+    document.getElementById('ops-product-stock').value = product ? (product.current_stock || 0) : 0;
+    document.getElementById('ops-product-reorder-point').value = product ? (product.reorder_point || 0) : 0;
+    document.getElementById('ops-product-reorder-qty').value = product ? (product.reorder_quantity || 0) : 0;
+    document.getElementById('ops-product-supplier').value = product ? (product.primary_supplier_id || '') : '';
+    document.getElementById('ops-product-notes').value = product ? (product.notes || '') : '';
+    document.getElementById('ops-product-description').value = product ? (product.description || '') : '';
+
+    var title = document.getElementById('ops-product-form-title');
+    if (title) {
+      title.textContent = product ? ('Editar producto — ' + (product.name || '')) : t('ops_product_form_title');
+    }
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function hideOperationsProductForm() {
+    var panel = document.getElementById('ops-product-form-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  async function saveOperationsProduct() {
+    var btn = document.getElementById('btn-save-ops-product');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+    }
+
+    try {
+      var id = (document.getElementById('ops-product-id') || {}).value;
+      var payload = {
+        name: (document.getElementById('ops-product-name') || {}).value || '',
+        category: (document.getElementById('ops-product-category') || {}).value || '',
+        sku: (document.getElementById('ops-product-sku') || {}).value || '',
+        barcode: (document.getElementById('ops-product-barcode') || {}).value || '',
+        unit_name: (document.getElementById('ops-product-unit') || {}).value || 'pieza',
+        sale_price: parseFloat((document.getElementById('ops-product-sale-price') || {}).value) || 0,
+        cost_price: parseFloat((document.getElementById('ops-product-cost-price') || {}).value) || 0,
+        currency: (document.getElementById('ops-product-currency') || {}).value || 'MXN',
+        reorder_point: parseFloat((document.getElementById('ops-product-reorder-point') || {}).value) || 0,
+        reorder_quantity: parseFloat((document.getElementById('ops-product-reorder-qty') || {}).value) || 0,
+        primary_supplier_id: (document.getElementById('ops-product-supplier') || {}).value || null,
+        notes: (document.getElementById('ops-product-notes') || {}).value || '',
+        description: (document.getElementById('ops-product-description') || {}).value || '',
+      };
+      if (!payload.name.trim()) {
+        showToast('Escribe el nombre del producto.', 'warning');
+        return;
+      }
+
+      var stockValue = parseFloat((document.getElementById('ops-product-stock') || {}).value) || 0;
+      var method = id ? 'PATCH' : 'POST';
+      if (id) {
+        payload.id = id;
+        payload.current_stock = stockValue;
+      } else {
+        payload.initial_stock = stockValue;
+      }
+
+      await fetchOperationsJson('/api/commerce/products', {
+        method: method,
+        body: JSON.stringify(payload),
+      });
+
+      showToast('Producto guardado.', 'success');
+      hideOperationsProductForm();
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Save product error:', err);
+      showToast(err.message || 'Error al guardar el producto.', 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = t('ops_save_product');
+      }
+    }
+  }
+
+  async function adjustProductStock(productId) {
+    var product = getProductById(productId);
+    if (!product) return;
+
+    var amount = window.prompt('Ajuste de inventario para "' + product.name + '" (+ entra / - sale):', '1');
+    if (amount === null) return;
+    var delta = parseFloat(amount);
+    if (!delta || isNaN(delta)) return;
+
+    try {
+      await fetchOperationsJson('/api/commerce/products', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: productId,
+          stock_adjustment: delta,
+          adjustment_reason: 'Ajuste manual desde portal',
+        }),
+      });
+      showToast('Inventario actualizado.', 'success');
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Adjust stock error:', err);
+      showToast(err.message || 'No se pudo ajustar el inventario.', 'error');
+    }
+  }
+
+  async function deleteOperationsProduct(productId) {
+    if (!window.confirm('¿Eliminar este producto del inventario?')) return;
+    try {
+      await fetchOperationsJson('/api/commerce/products?id=' + encodeURIComponent(productId), {
+        method: 'DELETE',
+      });
+      showToast('Producto eliminado.', 'success');
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Delete product error:', err);
+      showToast(err.message || 'No se pudo eliminar el producto.', 'error');
+    }
+  }
+
+  function renderOperationsSuppliers() {
+    renderOperationsInventory();
+
+    var poSupplier = document.getElementById('ops-po-supplier');
+    if (poSupplier) {
+      poSupplier.innerHTML = '<option value="">Selecciona un proveedor</option>' + opsSuppliersData.map(function (supplier) {
+        return '<option value="' + escapeHtml(supplier.id) + '">' + escapeHtml(supplier.name) + '</option>';
+      }).join('');
+    }
+
+    var html = opsSuppliersData.map(function (supplier) {
+      return '<div class="c-ops-card">'
+        + '<div class="c-ops-card-head">'
+        + '<div><div class="c-ops-card-title">' + escapeHtml(supplier.name || '') + '</div>'
+        + '<div class="c-ops-card-sub">' + escapeHtml(supplier.contact_name || 'Sin contacto principal') + '</div></div>'
+        + '<div class="c-ops-card-amount">' + formatCurrency(supplier.open_balance || 0, getOpsCurrency()) + '</div>'
+        + '</div>'
+        + '<div class="c-ops-kv">'
+        + '<div><strong>Teléfono</strong>' + escapeHtml(supplier.phone || supplier.whatsapp || '—') + '</div>'
+        + '<div><strong>Correo</strong>' + escapeHtml(supplier.email || '—') + '</div>'
+        + '<div><strong>Plazo</strong>' + escapeHtml(String(supplier.payment_terms_days || 0)) + ' días</div>'
+        + '<div><strong>Dirección</strong>' + escapeHtml(supplier.address || '—') + '</div>'
+        + '</div>'
+        + '<div class="c-ops-card-actions">'
+        + '<button type="button" class="c-btn c-btn-ghost c-btn--sm" data-action="edit-supplier" data-id="' + escapeHtml(supplier.id) + '">' + escapeHtml(t('sched_edit')) + '</button>'
+        + '<button type="button" class="c-btn c-btn-ghost c-btn--sm" data-action="delete-supplier" data-id="' + escapeHtml(supplier.id) + '" style="color:var(--c-danger);">' + escapeHtml(t('sched_delete')) + '</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    renderOpsList('ops-supplier-list', html, 'Todavía no has agregado proveedores.');
+
+    var listEl = document.getElementById('ops-supplier-list');
+    if (listEl) {
+      listEl.querySelectorAll('[data-action="edit-supplier"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          showOperationsSupplierForm(getSupplierById(btn.getAttribute('data-id')));
+        });
+      });
+      listEl.querySelectorAll('[data-action="delete-supplier"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          deleteOperationsSupplier(btn.getAttribute('data-id'));
+        });
+      });
+    }
+  }
+
+  function showOperationsSupplierForm(supplier) {
+    var panel = document.getElementById('ops-supplier-form-panel');
+    if (!panel) return;
+    panel.style.display = '';
+
+    document.getElementById('ops-supplier-id').value = supplier ? (supplier.id || '') : '';
+    document.getElementById('ops-supplier-name').value = supplier ? (supplier.name || '') : '';
+    document.getElementById('ops-supplier-contact').value = supplier ? (supplier.contact_name || '') : '';
+    document.getElementById('ops-supplier-phone').value = supplier ? (supplier.phone || '') : '';
+    document.getElementById('ops-supplier-email').value = supplier ? (supplier.email || '') : '';
+    document.getElementById('ops-supplier-terms').value = supplier ? (supplier.payment_terms_days || 0) : 0;
+    document.getElementById('ops-supplier-whatsapp').value = supplier ? (supplier.whatsapp || '') : '';
+    document.getElementById('ops-supplier-address').value = supplier ? (supplier.address || '') : '';
+    document.getElementById('ops-supplier-notes').value = supplier ? (supplier.notes || '') : '';
+
+    var title = document.getElementById('ops-supplier-form-title');
+    if (title) {
+      title.textContent = supplier ? ('Editar proveedor — ' + (supplier.name || '')) : t('ops_supplier_form_title');
+    }
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function hideOperationsSupplierForm() {
+    var panel = document.getElementById('ops-supplier-form-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  async function saveOperationsSupplier() {
+    var btn = document.getElementById('btn-save-ops-supplier');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+    }
+
+    try {
+      var id = (document.getElementById('ops-supplier-id') || {}).value;
+      var payload = {
+        name: (document.getElementById('ops-supplier-name') || {}).value || '',
+        contact_name: (document.getElementById('ops-supplier-contact') || {}).value || '',
+        phone: (document.getElementById('ops-supplier-phone') || {}).value || '',
+        email: (document.getElementById('ops-supplier-email') || {}).value || '',
+        payment_terms_days: parseInt((document.getElementById('ops-supplier-terms') || {}).value, 10) || 0,
+        whatsapp: (document.getElementById('ops-supplier-whatsapp') || {}).value || '',
+        address: (document.getElementById('ops-supplier-address') || {}).value || '',
+        notes: (document.getElementById('ops-supplier-notes') || {}).value || '',
+      };
+      if (!payload.name.trim()) {
+        showToast('Escribe el nombre del proveedor.', 'warning');
+        return;
+      }
+
+      if (id) payload.id = id;
+
+      await fetchOperationsJson('/api/commerce/suppliers', {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      showToast('Proveedor guardado.', 'success');
+      hideOperationsSupplierForm();
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Save supplier error:', err);
+      showToast(err.message || 'Error al guardar el proveedor.', 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = t('ops_save_supplier');
+      }
+    }
+  }
+
+  async function deleteOperationsSupplier(supplierId) {
+    if (!window.confirm('¿Eliminar este proveedor?')) return;
+    try {
+      await fetchOperationsJson('/api/commerce/suppliers?id=' + encodeURIComponent(supplierId), {
+        method: 'DELETE',
+      });
+      showToast('Proveedor eliminado.', 'success');
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Delete supplier error:', err);
+      showToast(err.message || 'No se pudo eliminar el proveedor.', 'error');
+    }
+  }
+
+  function showPurchaseOrderForm() {
+    var panel = document.getElementById('ops-po-form-panel');
+    if (!panel) return;
+    panel.style.display = '';
+
+    document.getElementById('ops-po-supplier').value = '';
+    document.getElementById('ops-po-order-date').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('ops-po-expected-date').value = '';
+    document.getElementById('ops-po-due-date').value = '';
+    document.getElementById('ops-po-currency').value = getOpsCurrency();
+    document.getElementById('ops-po-notes').value = '';
+
+    var lines = document.getElementById('ops-po-items');
+    if (lines) lines.innerHTML = '';
+    appendPurchaseOrderLine();
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function hidePurchaseOrderForm() {
+    var panel = document.getElementById('ops-po-form-panel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  function buildPurchaseOrderLineOptions(selectedId) {
+    return '<option value="">Selecciona un producto</option>' + opsProductsData.map(function (product) {
+      var selected = String(selectedId || '') === String(product.id) ? ' selected' : '';
+      return '<option value="' + escapeHtml(product.id) + '"' + selected + '>' + escapeHtml(product.name) + '</option>';
+    }).join('');
+  }
+
+  function appendPurchaseOrderLine(lineData) {
+    var container = document.getElementById('ops-po-items');
+    if (!container) return;
+
+    var row = document.createElement('div');
+    row.className = 'c-ops-po-line';
+    row.innerHTML = ''
+      + '<div class="c-form-group">'
+      + '<label class="c-label">Producto</label>'
+      + '<select class="c-input c-select" data-field="item_id">' + buildPurchaseOrderLineOptions(lineData && lineData.item_id) + '</select>'
+      + '</div>'
+      + '<div class="c-form-group">'
+      + '<label class="c-label">Cantidad</label>'
+      + '<input type="number" class="c-input" data-field="quantity_ordered" min="0.001" step="0.001" value="' + escapeHtml(String((lineData && lineData.quantity_ordered) || 1)) + '">'
+      + '</div>'
+      + '<div class="c-form-group">'
+      + '<label class="c-label">Costo</label>'
+      + '<input type="number" class="c-input" data-field="unit_cost" min="0" step="0.01" value="' + escapeHtml(String((lineData && lineData.unit_cost) || 0)) + '">'
+      + '</div>'
+      + '<button type="button" class="c-btn c-btn-danger c-ops-po-line-remove">×</button>';
+    container.appendChild(row);
+  }
+
+  async function savePurchaseOrder() {
+    var btn = document.getElementById('btn-save-ops-po');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+    }
+
+    try {
+      var supplierId = (document.getElementById('ops-po-supplier') || {}).value;
+      if (!supplierId) {
+        showToast('Selecciona un proveedor.', 'warning');
+        return;
+      }
+
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#ops-po-items .c-ops-po-line'));
+      var items = rows.map(function (row) {
+        return {
+          item_id: (row.querySelector('[data-field="item_id"]') || {}).value || '',
+          quantity_ordered: parseFloat((row.querySelector('[data-field="quantity_ordered"]') || {}).value) || 0,
+          unit_cost: parseFloat((row.querySelector('[data-field="unit_cost"]') || {}).value) || 0,
+        };
+      }).filter(function (item) {
+        return item.item_id && item.quantity_ordered > 0;
+      });
+
+      if (items.length === 0) {
+        showToast('Agrega al menos un producto a la orden.', 'warning');
+        return;
+      }
+
+      await fetchOperationsJson('/api/commerce/purchase-orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          supplier_id: supplierId,
+          order_date: (document.getElementById('ops-po-order-date') || {}).value || '',
+          expected_date: (document.getElementById('ops-po-expected-date') || {}).value || '',
+          due_date: (document.getElementById('ops-po-due-date') || {}).value || '',
+          currency: (document.getElementById('ops-po-currency') || {}).value || getOpsCurrency(),
+          notes: (document.getElementById('ops-po-notes') || {}).value || '',
+          items: items,
+        }),
+      });
+
+      showToast('Orden de compra guardada.', 'success');
+      hidePurchaseOrderForm();
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Save purchase order error:', err);
+      showToast(err.message || 'Error al guardar la orden de compra.', 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = t('ops_save_po');
+      }
+    }
+  }
+
+  function renderOperationsPurchaseOrders() {
+    renderPayablesList('ops-purchase-order-list', opsPurchaseOrdersData, true);
+  }
+
+  async function receivePurchaseOrderItem(orderId, lineItemId, remaining) {
+    var value = window.prompt('¿Cuánta mercancía llegó?', String(remaining || '1'));
+    if (value === null) return;
+    var qty = parseFloat(value);
+    if (!qty || isNaN(qty) || qty <= 0) return;
+
+    try {
+      await fetchOperationsJson('/api/commerce/purchase-orders', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: orderId,
+          action: 'receive',
+          line_item_id: lineItemId,
+          quantity: qty,
+        }),
+      });
+
+      showToast('Inventario recibido y actualizado.', 'success');
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Receive purchase order item error:', err);
+      showToast(err.message || 'No se pudo registrar la recepción.', 'error');
+    }
+  }
+
+  async function recordPurchaseOrderPayment(orderId) {
+    var order = opsPurchaseOrdersData.find(function (entry) { return entry.id === orderId; });
+    if (!order) return;
+
+    var amount = window.prompt('Monto a pagar al proveedor:', String(order.balance_due || 0));
+    if (amount === null) return;
+    var numericAmount = parseFloat(amount);
+    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) return;
+    var paymentMethod = window.prompt('Método de pago (cash/card/transfer/credit/other):', 'transfer');
+    if (paymentMethod === null) return;
+
+    try {
+      await fetchOperationsJson('/api/commerce/purchase-orders', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: orderId,
+          action: 'record_payment',
+          amount: numericAmount,
+          payment_method: paymentMethod || 'transfer',
+        }),
+      });
+
+      showToast('Pago registrado.', 'success');
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Record purchase order payment error:', err);
+      showToast(err.message || 'No se pudo registrar el pago.', 'error');
+    }
+  }
+
+  function renderOperationsAccounts() {
+    var receivables = opsSalesData.filter(function (sale) {
+      return Number(sale.balance_due || 0) > 0;
+    });
+    var payables = opsPurchaseOrdersData.filter(function (order) {
+      return Number(order.balance_due || 0) > 0 && order.status !== 'cancelled';
+    });
+
+    renderReceivablesList('ops-accounts-receivables', receivables, true);
+    renderPayablesList('ops-accounts-payables', payables, true);
+  }
+
+  function renderOperationsPos() {
+    renderOperationsPosProducts();
+    renderOperationsPosCustomers();
+    renderOperationsPosCart();
+    syncPosSuggestedPayment();
+  }
+
+  function renderOperationsPosProducts() {
+    var grid = document.getElementById('ops-pos-product-grid');
+    if (!grid) return;
+
+    if (!opsProductsData.length) {
+      grid.innerHTML = '<div class="c-ops-empty">Agrega productos al inventario para empezar a vender.</div>';
+      return;
+    }
+
+    grid.innerHTML = opsProductsData.map(function (product) {
+      var disabled = product.track_inventory !== false && Number(product.current_stock || 0) <= 0;
+      return '<div class="c-ops-pos-product-card">'
+        + '<h4>' + escapeHtml(product.name || '') + '</h4>'
+        + '<div class="c-ops-pos-product-meta">' + escapeHtml(product.category || 'Sin categoría') + '</div>'
+        + '<div class="c-ops-pos-product-price">' + formatCurrency(product.sale_price || 0, product.currency || getOpsCurrency()) + '</div>'
+        + '<div class="c-ops-pos-product-meta">Stock: ' + escapeHtml(formatQuantity(product.current_stock || 0)) + '</div>'
+        + '<button type="button" class="c-btn c-btn-primary c-btn--sm" data-action="pos-add-product" data-id="' + escapeHtml(product.id) + '"' + (disabled ? ' disabled' : '') + '>Agregar</button>'
+        + '</div>';
+    }).join('');
+
+    grid.querySelectorAll('[data-action="pos-add-product"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        addProductToCart(btn.getAttribute('data-id'));
+      });
+    });
+  }
+
+  function renderOperationsPosCustomers() {
+    var select = document.getElementById('ops-pos-customer');
+    if (!select) return;
+
+    var currentValue = select.value || '';
+    select.innerHTML = '<option value="">Venta mostrador / sin cliente</option>' + opsCustomersData.map(function (customer) {
+      return '<option value="' + escapeHtml(customer.id) + '">' + escapeHtml(customer.name || '') + (customer.open_balance ? ' · Saldo ' + escapeHtml(formatCurrency(customer.open_balance, getOpsCurrency())) : '') + '</option>';
+    }).join('');
+    select.value = currentValue;
+  }
+
+  function handlePosCustomerChange() {
+    var select = document.getElementById('ops-pos-customer');
+    if (!select) return;
+    var customer = getCustomerById(select.value);
+    if (!customer) {
+      document.getElementById('ops-pos-customer-name').value = '';
+      document.getElementById('ops-pos-customer-phone').value = '';
+      document.getElementById('ops-pos-customer-email').value = '';
+      return;
+    }
+    document.getElementById('ops-pos-customer-name').value = customer.name || '';
+    document.getElementById('ops-pos-customer-phone').value = customer.phone || '';
+    document.getElementById('ops-pos-customer-email').value = customer.email || '';
+  }
+
+  function addProductToCart(productId) {
+    var product = getProductById(productId);
+    if (!product) return;
+
+    var existing = opsCart.find(function (line) { return line.item_id === productId; });
+    if (existing) {
+      if (product.track_inventory !== false && existing.quantity >= Number(product.current_stock || 0)) {
+        showToast('No hay más stock disponible para este producto.', 'warning');
+        return;
+      }
+      existing.quantity += 1;
+    } else {
+      opsCart.push({
+        item_id: product.id,
+        name: product.name,
+        unit_price: Number(product.sale_price || 0),
+        currency: product.currency || getOpsCurrency(),
+        quantity: 1,
+      });
+    }
+
+    renderOperationsPosCart();
+    syncPosSuggestedPayment();
+  }
+
+  function updateCartItemQuantity(productId, delta) {
+    var line = opsCart.find(function (item) { return item.item_id === productId; });
+    var product = getProductById(productId);
+    if (!line || !product) return;
+
+    var nextQty = line.quantity + delta;
+    if (nextQty <= 0) {
+      opsCart = opsCart.filter(function (item) { return item.item_id !== productId; });
+    } else {
+      if (product.track_inventory !== false && nextQty > Number(product.current_stock || 0)) {
+        showToast('La cantidad excede el stock disponible.', 'warning');
+        return;
+      }
+      line.quantity = nextQty;
+    }
+
+    renderOperationsPosCart();
+    syncPosSuggestedPayment();
+  }
+
+  function getCartTotals() {
+    var subtotal = opsCart.reduce(function (sum, line) {
+      return sum + (Number(line.unit_price || 0) * Number(line.quantity || 0));
+    }, 0);
+    var amountPaid = parseFloat((document.getElementById('ops-pos-amount-paid') || {}).value) || 0;
+    var due = Math.max(0, subtotal - amountPaid);
+    return {
+      subtotal: subtotal,
+      amountPaid: amountPaid,
+      due: due,
+      currency: (opsCart[0] && opsCart[0].currency) || getOpsCurrency(),
+    };
+  }
+
+  function renderOperationsPosCart() {
+    var target = document.getElementById('ops-pos-cart');
+    if (!target) return;
+
+    if (!opsCart.length) {
+      target.innerHTML = '<div class="c-ops-empty">Tu carrito está vacío.</div>';
+      renderOperationsPosTotals();
+      return;
+    }
+
+    target.innerHTML = '<div class="c-ops-cart">'
+      + opsCart.map(function (line) {
+        return '<div class="c-ops-cart-item">'
+          + '<div>'
+          + '<div class="c-ops-cart-item-name">' + escapeHtml(line.name || '') + '</div>'
+          + '<div class="c-ops-cart-item-sub">' + formatCurrency(line.unit_price || 0, line.currency || getOpsCurrency()) + ' c/u</div>'
+          + '</div>'
+          + '<div class="c-ops-cart-controls">'
+          + '<button type="button" class="c-ops-qty-btn" data-action="cart-dec" data-id="' + escapeHtml(line.item_id) + '">−</button>'
+          + '<strong>' + escapeHtml(formatQuantity(line.quantity || 0)) + '</strong>'
+          + '<button type="button" class="c-ops-qty-btn" data-action="cart-inc" data-id="' + escapeHtml(line.item_id) + '">+</button>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+      + '</div>';
+
+    target.querySelectorAll('[data-action="cart-dec"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        updateCartItemQuantity(btn.getAttribute('data-id'), -1);
+      });
+    });
+    target.querySelectorAll('[data-action="cart-inc"]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        updateCartItemQuantity(btn.getAttribute('data-id'), 1);
+      });
+    });
+
+    renderOperationsPosTotals();
+  }
+
+  function syncPosSuggestedPayment() {
+    var method = (document.getElementById('ops-pos-payment-method') || {}).value || 'cash';
+    var amountInput = document.getElementById('ops-pos-amount-paid');
+    var dueDateInput = document.getElementById('ops-pos-due-date');
+    var totals = getCartTotals();
+
+    if (amountInput && !opsPosAmountDirty) {
+      amountInput.value = method === 'credit' ? '0' : totals.subtotal.toFixed(2);
+    }
+
+    if (dueDateInput && method !== 'credit' && !dueDateInput.value) {
+      dueDateInput.value = '';
+    }
+
+    renderOperationsPosTotals();
+  }
+
+  function renderOperationsPosTotals() {
+    var target = document.getElementById('ops-pos-totals');
+    if (!target) return;
+
+    var totals = getCartTotals();
+    target.innerHTML = '<div class="c-ops-pos-total-row"><span>Subtotal</span><strong>' + formatCurrency(totals.subtotal || 0, totals.currency) + '</strong></div>'
+      + '<div class="c-ops-pos-total-row"><span>Pagado</span><strong>' + formatCurrency(totals.amountPaid || 0, totals.currency) + '</strong></div>'
+      + '<div class="c-ops-pos-total-row is-grand"><span>Saldo</span><strong>' + formatCurrency(totals.due || 0, totals.currency) + '</strong></div>';
+  }
+
+  async function completePosSale() {
+    if (!opsCart.length) {
+      showToast('Agrega productos al carrito primero.', 'warning');
+      return;
+    }
+
+    var btn = document.getElementById('btn-ops-complete-sale');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Procesando...';
+    }
+
+    try {
+      var payload = {
+        items: opsCart.map(function (line) {
+          return {
+            item_id: line.item_id,
+            quantity: line.quantity,
+            unit_price: line.unit_price,
+          };
+        }),
+        customer_id: (document.getElementById('ops-pos-customer') || {}).value || null,
+        customer_name: (document.getElementById('ops-pos-customer-name') || {}).value || '',
+        customer_phone: (document.getElementById('ops-pos-customer-phone') || {}).value || '',
+        customer_email: (document.getElementById('ops-pos-customer-email') || {}).value || '',
+        payment_method: (document.getElementById('ops-pos-payment-method') || {}).value || 'cash',
+        amount_paid: parseFloat((document.getElementById('ops-pos-amount-paid') || {}).value) || 0,
+        due_date: (document.getElementById('ops-pos-due-date') || {}).value || '',
+        notes: (document.getElementById('ops-pos-notes') || {}).value || '',
+        save_customer: !!((document.getElementById('ops-pos-customer-name') || {}).value || '').trim(),
+      };
+
+      await fetchOperationsJson('/api/commerce/pos', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      opsCart = [];
+      opsPosAmountDirty = false;
+      if (document.getElementById('ops-pos-customer')) document.getElementById('ops-pos-customer').value = '';
+      if (document.getElementById('ops-pos-customer-name')) document.getElementById('ops-pos-customer-name').value = '';
+      if (document.getElementById('ops-pos-customer-phone')) document.getElementById('ops-pos-customer-phone').value = '';
+      if (document.getElementById('ops-pos-customer-email')) document.getElementById('ops-pos-customer-email').value = '';
+      if (document.getElementById('ops-pos-payment-method')) document.getElementById('ops-pos-payment-method').value = 'cash';
+      if (document.getElementById('ops-pos-amount-paid')) document.getElementById('ops-pos-amount-paid').value = '0';
+      if (document.getElementById('ops-pos-due-date')) document.getElementById('ops-pos-due-date').value = '';
+      if (document.getElementById('ops-pos-notes')) document.getElementById('ops-pos-notes').value = '';
+
+      showToast('Venta registrada correctamente.', 'success');
+      await loadOperationsData();
+      switchOperationsTab('pos');
+    } catch (err) {
+      console.error('Complete POS sale error:', err);
+      showToast(err.message || 'No se pudo completar la venta.', 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = t('ops_pos_complete_sale');
+      }
+    }
+  }
+
+  async function recordSalePayment(saleId) {
+    var sale = opsSalesData.find(function (entry) { return entry.id === saleId; });
+    if (!sale) return;
+
+    var amount = window.prompt('Monto a cobrar:', String(sale.balance_due || 0));
+    if (amount === null) return;
+    var numericAmount = parseFloat(amount);
+    if (!numericAmount || isNaN(numericAmount) || numericAmount <= 0) return;
+    var paymentMethod = window.prompt('Método de pago (cash/card/transfer/other):', 'cash');
+    if (paymentMethod === null) return;
+
+    try {
+      await fetchOperationsJson('/api/commerce/sales', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: saleId,
+          action: 'record_payment',
+          amount: numericAmount,
+          payment_method: paymentMethod || 'cash',
+        }),
+      });
+
+      showToast('Cobro registrado.', 'success');
+      await loadOperationsData();
+    } catch (err) {
+      console.error('Record sale payment error:', err);
+      showToast(err.message || 'No se pudo registrar el cobro.', 'error');
     }
   }
 
