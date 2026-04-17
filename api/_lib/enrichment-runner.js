@@ -3,6 +3,7 @@ import { enrichBusiness } from './enrich-business.js';
 const SYNTHETIC_PLACE_PREFIXES = ['marketing-', 'manual-', 'builder-', 'onboarding-'];
 const RETRY_DELAYS_MINUTES = [10, 30, 60, 180, 360];
 const MAX_ENRICHMENT_ATTEMPTS = 5;
+let cachedEnrichmentTrackingSchemaSupport = null;
 
 export function isEnrichablePlaceId(placeId) {
   if (!placeId) return false;
@@ -29,6 +30,38 @@ export function buildInitialEnrichmentState(placeId) {
     enrichment_next_retry_at: null,
     enrichment_last_error: null,
   };
+}
+
+function isMissingEnrichmentTrackingSchemaError(message) {
+  const normalized = String(message || '').toLowerCase();
+  return (
+    normalized.includes('42703')
+    && normalized.includes('enrichment_')
+  ) || normalized.includes('column businesses.enrichment_');
+}
+
+export async function supportsEnrichmentTrackingSchema({ supabaseUrl, headers }) {
+  if (cachedEnrichmentTrackingSchemaSupport !== null) {
+    return cachedEnrichmentTrackingSchemaSupport;
+  }
+
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/businesses?select=id,enrichment_attempts&limit=1`,
+    { headers }
+  );
+
+  if (res.ok) {
+    cachedEnrichmentTrackingSchemaSupport = true;
+    return true;
+  }
+
+  const text = await res.text().catch(() => '');
+  if (isMissingEnrichmentTrackingSchemaError(text)) {
+    cachedEnrichmentTrackingSchemaSupport = false;
+    return false;
+  }
+
+  throw new Error(`Failed to detect enrichment schema support: ${text.substring(0, 200)}`);
 }
 
 export async function resolveGoogleDataId({ placeId, businessName, businessAddress, searchApiKey }) {
@@ -73,42 +106,57 @@ export async function runTrackedBusinessEnrichment({
     'Authorization': `Bearer ${supabaseKey}`,
     'Content-Type': 'application/json',
   };
+  const trackingSupported = await supportsEnrichmentTrackingSchema({ supabaseUrl, headers });
 
   if (!isEnrichablePlaceId(placeId)) {
+    if (trackingSupported) {
+      await patchBusinessEnrichmentState({
+        businessId,
+        supabaseUrl,
+        headers,
+        patch: {
+          enrichment_status: 'skipped',
+          enrichment_last_finished_at: new Date().toISOString(),
+          enrichment_next_retry_at: null,
+          enrichment_last_error: null,
+        },
+      });
+    }
+
+    return { success: true, status: 'skipped', dataId: null, trackingSupported };
+  }
+
+  const attempts = trackingSupported
+    ? ((await fetchBusinessEnrichmentState({ businessId, supabaseUrl, headers }))?.enrichment_attempts || 0) + 1
+    : 1;
+
+  if (trackingSupported) {
     await patchBusinessEnrichmentState({
       businessId,
       supabaseUrl,
       headers,
       patch: {
-        enrichment_status: 'skipped',
-        enrichment_last_finished_at: new Date().toISOString(),
+        enrichment_status: 'in_progress',
+        enrichment_attempts: attempts,
+        enrichment_last_started_at: new Date().toISOString(),
         enrichment_next_retry_at: null,
         enrichment_last_error: null,
       },
     });
-
-    return { success: true, status: 'skipped', dataId: null };
   }
-
-  const business = await fetchBusinessEnrichmentState({ businessId, supabaseUrl, headers });
-  const attempts = (business?.enrichment_attempts || 0) + 1;
-  const startedAt = new Date().toISOString();
-
-  await patchBusinessEnrichmentState({
-    businessId,
-    supabaseUrl,
-    headers,
-    patch: {
-      enrichment_status: 'in_progress',
-      enrichment_attempts: attempts,
-      enrichment_last_started_at: startedAt,
-      enrichment_next_retry_at: null,
-      enrichment_last_error: null,
-    },
-  });
 
   const searchApiKey = process.env.SEARCHAPI_KEY;
   if (!searchApiKey) {
+    if (!trackingSupported) {
+      return {
+        success: false,
+        status: 'failed',
+        attempts,
+        error: 'SEARCHAPI_KEY not configured',
+        trackingSupported,
+      };
+    }
+
     return await finalizeEnrichmentFailure({
       businessId,
       attempts,
@@ -137,36 +185,49 @@ export async function runTrackedBusinessEnrichment({
       supabaseKey,
     });
 
-    const stats = await fetchBusinessEnrichmentStats({ businessId, supabaseUrl, headers });
-    const missingGooglePhotos = !dataId && stats.googlePhotoCount === 0;
-    const hardFailure = summary?.hasFailures || false;
+    const snapshot = await fetchBusinessEnrichmentSnapshot({ businessId, supabaseUrl, headers });
+    const reasons = [];
+    if (dataIdLookupError) reasons.push(dataIdLookupError.message || 'data_id_lookup_failed');
+    if (summary?.hasFailures) reasons.push('enrichment_step_failed');
+    if (!dataId && snapshot.stats.googlePhotoCount === 0) reasons.push('no_data_id_and_no_google_photos');
 
-    if (dataIdLookupError || hardFailure || missingGooglePhotos) {
-      const reasons = [];
-      if (dataIdLookupError) reasons.push(dataIdLookupError.message || 'data_id_lookup_failed');
-      if (hardFailure) reasons.push('enrichment_step_failed');
-      if (missingGooglePhotos) reasons.push('no_data_id_and_no_google_photos');
+    if (!hasEnrichmentEvidence(snapshot)) {
+      const errorMessage = reasons.length ? reasons.join('; ') : 'no_enrichment_evidence';
+      if (!trackingSupported) {
+        return {
+          success: false,
+          status: 'failed',
+          attempts,
+          error: errorMessage,
+          dataId: dataId || null,
+          summary,
+          stats: snapshot.stats,
+          trackingSupported,
+        };
+      }
 
       return await finalizeEnrichmentFailure({
         businessId,
         attempts,
-        errorMessage: reasons.join('; '),
+        errorMessage,
         supabaseUrl,
         headers,
       });
     }
 
-    await patchBusinessEnrichmentState({
-      businessId,
-      supabaseUrl,
-      headers,
-      patch: {
-        enrichment_status: 'completed',
-        enrichment_last_finished_at: new Date().toISOString(),
-        enrichment_next_retry_at: null,
-        enrichment_last_error: null,
-      },
-    });
+    if (trackingSupported) {
+      await patchBusinessEnrichmentState({
+        businessId,
+        supabaseUrl,
+        headers,
+        patch: {
+          enrichment_status: 'completed',
+          enrichment_last_finished_at: new Date().toISOString(),
+          enrichment_next_retry_at: null,
+          enrichment_last_error: null,
+        },
+      });
+    }
 
     return {
       success: true,
@@ -174,9 +235,21 @@ export async function runTrackedBusinessEnrichment({
       dataId: dataId || null,
       attempts,
       summary,
-      stats,
+      stats: snapshot.stats,
+      trackingSupported,
+      warnings: reasons.length ? reasons : null,
     };
   } catch (err) {
+    if (!trackingSupported) {
+      return {
+        success: false,
+        status: 'failed',
+        attempts,
+        error: err.message || 'enrichment_failed',
+        trackingSupported,
+      };
+    }
+
     return await finalizeEnrichmentFailure({
       businessId,
       attempts,
@@ -185,6 +258,49 @@ export async function runTrackedBusinessEnrichment({
       headers,
     });
   }
+}
+
+async function fetchBusinessCoreSnapshot({ businessId, supabaseUrl, headers }) {
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=id,description,service_options,amenities,highlights`,
+    { headers }
+  );
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Failed to fetch business enrichment snapshot: ${text.substring(0, 200)}`);
+  }
+
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error('Business not found');
+  }
+
+  return rows[0];
+}
+
+async function fetchBusinessEnrichmentSnapshot({ businessId, supabaseUrl, headers }) {
+  const [business, stats] = await Promise.all([
+    fetchBusinessCoreSnapshot({ businessId, supabaseUrl, headers }),
+    fetchBusinessEnrichmentStats({ businessId, supabaseUrl, headers }),
+  ]);
+
+  return { business, stats };
+}
+
+function hasEnrichmentEvidence(snapshot) {
+  const business = snapshot?.business || {};
+  const stats = snapshot?.stats || {};
+
+  return !!(
+    stats.googlePhotoCount > 0
+    || stats.googleReviewCount > 0
+    || stats.socialProfileCount > 0
+    || !!String(business.description || '').trim()
+    || (Array.isArray(business.service_options) && business.service_options.length > 0)
+    || (Array.isArray(business.amenities) && business.amenities.length > 0)
+    || (Array.isArray(business.highlights) && business.highlights.length > 0)
+  );
 }
 
 async function fetchBusinessEnrichmentState({ businessId, supabaseUrl, headers }) {
