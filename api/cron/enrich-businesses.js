@@ -1,4 +1,8 @@
-import { runTrackedBusinessEnrichment } from '../_lib/enrichment-runner.js';
+import {
+  isEnrichablePlaceId,
+  runTrackedBusinessEnrichment,
+  supportsEnrichmentTrackingSchema,
+} from '../_lib/enrichment-runner.js';
 
 export const config = { maxDuration: 300 };
 
@@ -58,16 +62,28 @@ export default async function handler(req, res) {
   const now = new Date();
 
   try {
-    const dueBusinesses = await fetchDueBusinesses({
-      supabaseUrl,
-      headers,
-      now,
-      batchSize,
-      staleMinutes,
-    });
+    const trackingSupported = await supportsEnrichmentTrackingSchema({ supabaseUrl, headers });
+    const dueBusinesses = trackingSupported
+      ? await fetchDueBusinesses({
+        supabaseUrl,
+        headers,
+        now,
+        batchSize,
+        staleMinutes,
+      })
+      : await fetchLegacyDueBusinesses({
+        supabaseUrl,
+        headers,
+        batchSize,
+      });
 
     if (dueBusinesses.length === 0) {
-      return res.status(200).json({ message: 'No businesses due for enrichment' });
+      return res.status(200).json({
+        message: trackingSupported
+          ? 'No businesses due for enrichment'
+          : 'No businesses due for legacy enrichment fallback',
+        trackingSupported,
+      });
     }
 
     const startedAt = Date.now();
@@ -93,7 +109,7 @@ export default async function handler(req, res) {
         results.push({
           businessId: business.id,
           name: business.name,
-          previousStatus: business.enrichment_status || 'pending',
+          previousStatus: business.enrichment_status || (trackingSupported ? 'pending' : 'legacy_pending'),
           status: result.status,
           success: !!result.success,
           nextRetryAt: result.nextRetryAt || null,
@@ -104,7 +120,7 @@ export default async function handler(req, res) {
         results.push({
           businessId: business.id,
           name: business.name,
-          previousStatus: business.enrichment_status || 'pending',
+          previousStatus: business.enrichment_status || (trackingSupported ? 'pending' : 'legacy_pending'),
           status: 'failed',
           success: false,
           error: err.message || 'Background enrichment failed',
@@ -113,6 +129,7 @@ export default async function handler(req, res) {
     }
 
     return res.status(200).json({
+      trackingSupported,
       processed,
       selected: dueBusinesses.length,
       remaining: Math.max(dueBusinesses.length - processed, 0),
@@ -190,6 +207,37 @@ async function fetchDueBusinesses({ supabaseUrl, headers, now, batchSize, staleM
   return due.slice(0, batchSize);
 }
 
+async function fetchLegacyDueBusinesses({ supabaseUrl, headers, batchSize }) {
+  const scanLimit = Math.min(Math.max(batchSize * 20, 200), 400);
+  const params = new URLSearchParams({
+    select: 'id,place_id,name,address_full,created_at,description,service_options,amenities,highlights',
+    limit: String(scanLimit),
+    order: 'created_at.desc',
+  });
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/businesses?${params.toString()}`, { headers });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Failed to query businesses for legacy enrichment: ${text.substring(0, 200)}`);
+  }
+
+  const rows = await response.json();
+  const candidates = Array.isArray(rows) ? rows : [];
+  const due = [];
+
+  for (const business of candidates) {
+    if (due.length >= batchSize) break;
+    if (!business || !isEnrichablePlaceId(business.place_id)) continue;
+
+    const stats = await fetchLegacyBusinessStats({ businessId: business.id, supabaseUrl, headers });
+    if (!hasLegacyEnrichmentEvidence(business, stats)) {
+      due.push(business);
+    }
+  }
+
+  return due;
+}
+
 async function fetchBusinessBatch({ supabaseUrl, headers, filterValue, order, limit }) {
   const params = new URLSearchParams({
     select: BUSINESS_SELECT,
@@ -206,6 +254,47 @@ async function fetchBusinessBatch({ supabaseUrl, headers, filterValue, order, li
 
   const rows = await response.json();
   return Array.isArray(rows) ? rows : [];
+}
+
+async function fetchLegacyBusinessStats({ businessId, supabaseUrl, headers }) {
+  const [photosRes, reviewsRes, socialsRes] = await Promise.all([
+    fetch(
+      `${supabaseUrl}/rest/v1/business_photos?business_id=eq.${businessId}&source=eq.google&select=id&limit=1`,
+      { headers }
+    ),
+    fetch(
+      `${supabaseUrl}/rest/v1/business_reviews?business_id=eq.${businessId}&source=eq.google&select=id&limit=1`,
+      { headers }
+    ),
+    fetch(
+      `${supabaseUrl}/rest/v1/business_social_profiles?business_id=eq.${businessId}&select=id&limit=1`,
+      { headers }
+    ),
+  ]);
+
+  const [photos, reviews, socials] = await Promise.all([
+    photosRes.ok ? photosRes.json() : [],
+    reviewsRes.ok ? reviewsRes.json() : [],
+    socialsRes.ok ? socialsRes.json() : [],
+  ]);
+
+  return {
+    googlePhotoCount: Array.isArray(photos) ? photos.length : 0,
+    googleReviewCount: Array.isArray(reviews) ? reviews.length : 0,
+    socialProfileCount: Array.isArray(socials) ? socials.length : 0,
+  };
+}
+
+function hasLegacyEnrichmentEvidence(business, stats) {
+  return !!(
+    stats.googlePhotoCount > 0
+    || stats.googleReviewCount > 0
+    || stats.socialProfileCount > 0
+    || !!String(business.description || '').trim()
+    || (Array.isArray(business.service_options) && business.service_options.length > 0)
+    || (Array.isArray(business.amenities) && business.amenities.length > 0)
+    || (Array.isArray(business.highlights) && business.highlights.length > 0)
+  );
 }
 
 function clampInteger(value, fallback, min, max) {

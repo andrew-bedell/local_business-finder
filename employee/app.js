@@ -894,6 +894,13 @@
   // Valid business_status values per database CHECK constraint
   const VALID_BUSINESS_STATUSES = ['OPERATIONAL', 'CLOSED_TEMPORARILY', 'CLOSED_PERMANENTLY', 'UNKNOWN'];
 
+  function isMissingEnrichmentColumnError(error) {
+    const text = String(
+      error && (error.message || error.details || error.hint || error.code || error)
+    ).toLowerCase();
+    return text.includes('enrichment_') && (text.includes('column') || text.includes('schema cache'));
+  }
+
   async function saveBusiness(place) {
     if (!supabaseClient) return false;
     try {
@@ -947,10 +954,27 @@
       }
 
       // Upsert business and get back the id for saving reviews
-      const { data, error } = await supabaseClient
+      let upsertResult = await supabaseClient
         .from('businesses')
         .upsert(row, { onConflict: 'place_id' })
         .select('id');
+
+      if (upsertResult.error && isMissingEnrichmentColumnError(upsertResult.error)) {
+        const legacyRow = { ...row };
+        delete legacyRow.enrichment_status;
+        delete legacyRow.enrichment_attempts;
+        delete legacyRow.enrichment_last_started_at;
+        delete legacyRow.enrichment_last_finished_at;
+        delete legacyRow.enrichment_next_retry_at;
+        delete legacyRow.enrichment_last_error;
+
+        upsertResult = await supabaseClient
+          .from('businesses')
+          .upsert(legacyRow, { onConflict: 'place_id' })
+          .select('id');
+      }
+
+      const { data, error } = upsertResult;
 
       if (error) {
         console.error('Save error:', error);
