@@ -1,15 +1,19 @@
 // Design Engine V2 — Responsive CSS
-// 900px breakpoint, mobile overrides
+// 1100px breakpoint, mobile overrides
 
 export function getResponsiveCSS() {
   return `
-    @media (max-width: 900px) {
+    @media (max-width: 1100px) {
       /* Nav: show hamburger, hide desktop links */
       .hamburger { display: flex; }
       .site-nav__links { display: none; }
       .site-nav__cta--desktop { display: none; }
 
       .site-nav__inner { padding: 0 1.5rem; }
+      .site-nav__logo {
+        flex: 1 1 auto;
+        max-width: none;
+      }
 
       /* Container */
       .container { padding: 0 1.5rem; }

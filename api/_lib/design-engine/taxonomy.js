@@ -193,7 +193,7 @@ export function getNavigationItems(businessType, availableSections = new Set()) 
 
     default:
       return [
-        has('about') && { href: '#about', label: 'Sobre Nosotros' },
+        has('about') && { href: '#about', label: 'Nosotros' },
         has('services') && { href: '#services', label: 'Servicios' },
         has('gallery') && { href: '#gallery', label: 'Galería' },
         has('testimonials') && { href: '#testimonials', label: 'Reseñas' },

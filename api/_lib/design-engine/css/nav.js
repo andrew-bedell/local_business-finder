@@ -27,22 +27,37 @@ export function getNavCSS() {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 1.25rem;
     }
 
     .site-nav__logo {
+      display: block;
+      flex: 0 1 28rem;
+      min-width: 0;
+      max-width: min(30rem, 36vw);
       font-family: var(--font-heading);
       font-size: 1.4rem;
       font-weight: 400;
       color: #fff;
       text-decoration: none;
       letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .site-nav__links {
       display: flex;
+      flex: 0 1 auto;
+      min-width: 0;
       align-items: center;
-      gap: 2.5rem;
+      justify-content: flex-end;
+      gap: clamp(1rem, 1.8vw, 2.5rem);
       list-style: none;
+    }
+
+    .site-nav__links li {
+      flex: 0 0 auto;
     }
 
     .site-nav__links a {
@@ -54,6 +69,7 @@ export function getNavCSS() {
       color: #fff;
       text-decoration: none;
       transition: opacity 0.3s ease;
+      white-space: nowrap;
     }
 
     .site-nav__links a:hover {
@@ -62,6 +78,9 @@ export function getNavCSS() {
 
     /* Nav CTA button */
     .site-nav__cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       font-family: var(--font-body);
       font-size: 0.75rem;
       font-weight: 500;
@@ -75,6 +94,7 @@ export function getNavCSS() {
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       cursor: pointer;
       mix-blend-mode: normal;
+      white-space: nowrap;
     }
 
     .site-nav__cta:hover {
@@ -91,6 +111,7 @@ export function getNavCSS() {
       cursor: pointer;
       padding: 8px;
       z-index: 1001;
+      flex-shrink: 0;
       flex-direction: column;
       gap: 5px;
     }
