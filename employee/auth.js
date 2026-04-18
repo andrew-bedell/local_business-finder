@@ -13,6 +13,71 @@
   var supabase = null;
   var isLoginPage = window.location.pathname.indexOf('/employee/login') !== -1;
   var isRecoveryMode = false;
+  var currentLang = localStorage.getItem('app_lang') || 'en';
+  var translations = {
+    en: {
+      page_title: 'Employee Login — Local Business Finder',
+      loading_access: 'Checking access…',
+      login_subtitle: 'Employee Login',
+      email_label: 'Email',
+      email_placeholder: 'you@company.com',
+      password_label: 'Password',
+      password_placeholder: 'Enter your password',
+      login_submit: 'Log In',
+      forgot_password: 'Forgot password?',
+      reset_subtitle: 'Reset Password',
+      reset_submit: 'Send Reset Link',
+      back_to_login: 'Back to login',
+      new_password_subtitle: 'Set New Password',
+      new_password_label: 'New Password',
+      new_password_placeholder: 'Enter new password',
+      confirm_password_label: 'Confirm Password',
+      confirm_password_placeholder: 'Confirm new password',
+      set_password_submit: 'Set Password',
+      unauthorized_access: 'You do not have employee access. Contact your administrator.',
+      logging_in: 'Logging in…',
+      invalid_credentials: 'Invalid email or password.',
+      login_failed: 'Login failed. Please try again.',
+      sending_reset: 'Sending…',
+      reset_success: 'Check your email for the reset link.',
+      reset_failed: 'Failed to send reset email.',
+      password_min_length: 'Password must be at least 6 characters.',
+      passwords_do_not_match: 'Passwords do not match.',
+      setting_password: 'Setting password…',
+      set_password_failed: 'Failed to set password. Please try again.'
+    },
+    es: {
+      page_title: 'Inicio de Empleados — Local Business Finder',
+      loading_access: 'Verificando acceso…',
+      login_subtitle: 'Inicio de Empleados',
+      email_label: 'Correo electrónico',
+      email_placeholder: 'tu@empresa.com',
+      password_label: 'Contraseña',
+      password_placeholder: 'Ingresa tu contraseña',
+      login_submit: 'Iniciar sesión',
+      forgot_password: '¿Olvidaste tu contraseña?',
+      reset_subtitle: 'Restablecer contraseña',
+      reset_submit: 'Enviar enlace',
+      back_to_login: 'Volver al inicio',
+      new_password_subtitle: 'Crear nueva contraseña',
+      new_password_label: 'Nueva contraseña',
+      new_password_placeholder: 'Ingresa la nueva contraseña',
+      confirm_password_label: 'Confirmar contraseña',
+      confirm_password_placeholder: 'Confirma la nueva contraseña',
+      set_password_submit: 'Guardar contraseña',
+      unauthorized_access: 'No tienes acceso de empleado. Ponte en contacto con tu administrador.',
+      logging_in: 'Iniciando sesión…',
+      invalid_credentials: 'Correo o contraseña incorrectos.',
+      login_failed: 'No se pudo iniciar sesión. Inténtalo de nuevo.',
+      sending_reset: 'Enviando…',
+      reset_success: 'Revisa tu correo para ver el enlace de restablecimiento.',
+      reset_failed: 'No se pudo enviar el correo de restablecimiento.',
+      password_min_length: 'La contraseña debe tener al menos 6 caracteres.',
+      passwords_do_not_match: 'Las contraseñas no coinciden.',
+      setting_password: 'Guardando contraseña…',
+      set_password_failed: 'No se pudo guardar la contraseña. Inténtalo de nuevo.'
+    }
+  };
 
   // Fetch Supabase credentials from server, then initialize
   initFromConfig().then(function () {
@@ -102,6 +167,9 @@
 
   // ── Login Page Logic ──
   function initLoginPage() {
+    bindLanguageControls();
+    applyLanguage();
+
     // Check URL hash for recovery/invite tokens
     var hash = window.location.hash || '';
     if (hash.indexOf('type=recovery') !== -1 || hash.indexOf('type=invite') !== -1) {
@@ -111,7 +179,7 @@
     // Check for error params
     var params = new URLSearchParams(window.location.search);
     if (params.get('error') === 'unauthorized') {
-      showError('login-error', 'You do not have employee access. Contact your administrator.');
+      showError('login-error', t('unauthorized_access'), 'unauthorized_access');
     }
 
     // Listen for auth state changes (handles recovery/invite token processing)
@@ -191,23 +259,23 @@
 
     hideError('login-error');
     btn.disabled = true;
-    btn.textContent = 'Logging in…';
+    btn.textContent = t('logging_in');
 
     supabase.auth.signInWithPassword({ email: email, password: password })
       .then(function (result) {
         if (result.error) {
-          showError('login-error', 'Invalid email or password.');
+          showError('login-error', t('invalid_credentials'), 'invalid_credentials');
           btn.disabled = false;
-          btn.textContent = 'Log In';
+          btn.textContent = t('login_submit');
           return;
         }
         verifyAndRedirect(result.data.session);
       })
       .catch(function (err) {
         console.error('Login error:', err);
-        showError('login-error', 'Login failed. Please try again.');
+        showError('login-error', t('login_failed'), 'login_failed');
         btn.disabled = false;
-        btn.textContent = 'Log In';
+        btn.textContent = t('login_submit');
       });
   }
 
@@ -220,9 +288,9 @@
       .then(function (empResult) {
         if (empResult.error || !empResult.data) {
           supabase.auth.signOut();
-          showError('login-error', 'You do not have employee access. Contact your administrator.');
+          showError('login-error', t('unauthorized_access'), 'unauthorized_access');
           var btn = document.getElementById('login-btn');
-          if (btn) { btn.disabled = false; btn.textContent = 'Log In'; }
+          if (btn) { btn.disabled = false; btn.textContent = t('login_submit'); }
           showScreen('login-screen');
           return;
         }
@@ -270,27 +338,23 @@
 
     hideError('reset-error');
     btn.disabled = true;
-    btn.textContent = 'Sending…';
+    btn.textContent = t('sending_reset');
 
     supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + '/employee/login'
     }).then(function (result) {
       btn.disabled = false;
-      btn.textContent = 'Send Reset Link';
+      btn.textContent = t('reset_submit');
       if (result.error) {
         showError('reset-error', result.error.message);
       } else {
-        var successEl = document.getElementById('reset-success');
-        if (successEl) {
-          successEl.textContent = 'Check your email for the reset link.';
-          successEl.classList.add('visible');
-        }
+        showSuccess('reset-success', t('reset_success'), 'reset_success');
       }
     }).catch(function (err) {
       console.error('Reset error:', err);
-      showError('reset-error', 'Failed to send reset email.');
+      showError('reset-error', t('reset_failed'), 'reset_failed');
       btn.disabled = false;
-      btn.textContent = 'Send Reset Link';
+      btn.textContent = t('reset_submit');
     });
   }
 
@@ -300,24 +364,24 @@
     var btn = document.getElementById('set-password-btn');
 
     if (!password || password.length < 6) {
-      showError('new-password-error', 'Password must be at least 6 characters.');
+      showError('new-password-error', t('password_min_length'), 'password_min_length');
       return;
     }
     if (password !== confirm) {
-      showError('new-password-error', 'Passwords do not match.');
+      showError('new-password-error', t('passwords_do_not_match'), 'passwords_do_not_match');
       return;
     }
 
     hideError('new-password-error');
     btn.disabled = true;
-    btn.textContent = 'Setting password…';
+    btn.textContent = t('setting_password');
 
     supabase.auth.updateUser({ password: password })
       .then(function (result) {
         if (result.error) {
           showError('new-password-error', result.error.message);
           btn.disabled = false;
-          btn.textContent = 'Set Password';
+          btn.textContent = t('set_password_submit');
           return;
         }
         isRecoveryMode = false;
@@ -332,9 +396,9 @@
       })
       .catch(function (err) {
         console.error('Set password error:', err);
-        showError('new-password-error', 'Failed to set password. Please try again.');
+        showError('new-password-error', t('set_password_failed'), 'set_password_failed');
         btn.disabled = false;
-        btn.textContent = 'Set Password';
+        btn.textContent = t('set_password_submit');
       });
   }
 
@@ -370,10 +434,20 @@
     if (loadingEl) loadingEl.style.display = 'none';
   }
 
-  function showError(elementId, message) {
+  function showError(elementId, message, key) {
     var el = document.getElementById(elementId);
     if (el) {
       el.textContent = message;
+      el.dataset.i18nKey = key || '';
+      el.classList.add('visible');
+    }
+  }
+
+  function showSuccess(elementId, message, key) {
+    var el = document.getElementById(elementId);
+    if (el) {
+      el.textContent = message;
+      el.dataset.i18nKey = key || '';
       el.classList.add('visible');
     }
   }
@@ -382,7 +456,61 @@
     var el = document.getElementById(elementId);
     if (el) {
       el.textContent = '';
+      el.dataset.i18nKey = '';
       el.classList.remove('visible');
+    }
+  }
+
+  function t(key) {
+    var lang = translations[currentLang] || translations.en;
+    return lang[key] || (translations.en[key] || key);
+  }
+
+  function bindLanguageControls() {
+    var langButtons = document.querySelectorAll('.lang-btn[data-lang]');
+    for (var i = 0; i < langButtons.length; i++) {
+      langButtons[i].addEventListener('click', function () {
+        var nextLang = this.getAttribute('data-lang');
+        if (!nextLang || nextLang === currentLang) return;
+        currentLang = nextLang;
+        localStorage.setItem('app_lang', currentLang);
+        applyLanguage();
+      });
+    }
+  }
+
+  function applyLanguage() {
+    if (!isLoginPage) return;
+
+    document.documentElement.lang = currentLang;
+    document.title = t('page_title');
+
+    var loadingText = document.querySelector('.auth-loading-text');
+    if (loadingText) loadingText.textContent = t('loading_access');
+
+    var textEls = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < textEls.length; i++) {
+      var key = textEls[i].getAttribute('data-i18n');
+      if (key) textEls[i].textContent = t(key);
+    }
+
+    var placeholderEls = document.querySelectorAll('[data-i18n-placeholder]');
+    for (var j = 0; j < placeholderEls.length; j++) {
+      var placeholderKey = placeholderEls[j].getAttribute('data-i18n-placeholder');
+      if (placeholderKey) placeholderEls[j].placeholder = t(placeholderKey);
+    }
+
+    var langButtons = document.querySelectorAll('.lang-btn[data-lang]');
+    for (var k = 0; k < langButtons.length; k++) {
+      langButtons[k].classList.toggle('active', langButtons[k].getAttribute('data-lang') === currentLang);
+    }
+
+    var feedbackEls = document.querySelectorAll('.auth-error.visible, .auth-success.visible');
+    for (var m = 0; m < feedbackEls.length; m++) {
+      var feedbackKey = feedbackEls[m].dataset.i18nKey;
+      if (feedbackKey) {
+        feedbackEls[m].textContent = t(feedbackKey);
+      }
     }
   }
 })();

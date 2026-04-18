@@ -40,6 +40,9 @@
   <!-- ══════════════════════════════════════════════════════════ -->
   <section id="login-screen" class="c-auth-screen" style="display:none;">
     <div class="c-auth-card">
+      <div class="c-auth-lang">
+        <button type="button" class="c-lang-btn" data-lang-toggle>EN</button>
+      </div>
       <div class="c-auth-logo">
         <a href="/" class="c-brand">AhoraTengoPagina</a>
       </div>
@@ -52,8 +55,8 @@
           <input type="email" id="login-email" class="c-input" placeholder="tu@email.com" data-i18n-placeholder="login_email_ph" autocomplete="email" required>
         </div>
         <div class="c-form-group">
-          <label for="login-password" class="c-label">Contraseña</label>
-          <input type="password" id="login-password" class="c-input" placeholder="Tu contraseña" autocomplete="current-password" required>
+          <label for="login-password" class="c-label" data-i18n="login_password_label">Contraseña</label>
+          <input type="password" id="login-password" class="c-input" placeholder="Tu contraseña" data-i18n-placeholder="login_password_ph" autocomplete="current-password" required>
         </div>
         <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-login" data-i18n="login_submit">
           Enviar enlace de acceso
@@ -61,7 +64,7 @@
       </form>
 
       <div class="c-auth-footer">
-        <button type="button" class="c-auth-link" id="btn-forgot-password">
+        <button type="button" class="c-auth-link" id="btn-forgot-password" data-i18n="login_forgot_password">
           ¿Olvidaste tu contraseña?
         </button>
       </div>
@@ -77,24 +80,27 @@
   <!-- ══════════════════════════════════════════════════════════ -->
   <section id="reset-screen" class="c-auth-screen" style="display:none;">
     <div class="c-auth-card">
+      <div class="c-auth-lang">
+        <button type="button" class="c-lang-btn" data-lang-toggle>EN</button>
+      </div>
       <div class="c-auth-logo">
         <a href="/" class="c-brand">AhoraTengoPagina</a>
       </div>
-      <h1 class="c-auth-title">Recuperar Contraseña</h1>
-      <p class="c-auth-subtitle">Te enviaremos un enlace para restablecer tu contraseña</p>
+      <h1 class="c-auth-title" data-i18n="reset_title">Recuperar Contraseña</h1>
+      <p class="c-auth-subtitle" data-i18n="reset_hint">Te enviaremos un enlace para restablecer tu contraseña</p>
 
       <form id="reset-form" class="c-auth-form" novalidate>
         <div class="c-form-group">
-          <label for="reset-email" class="c-label">Correo electrónico</label>
-          <input type="email" id="reset-email" class="c-input" placeholder="tu@correo.com" autocomplete="email" required>
+          <label for="reset-email" class="c-label" data-i18n="reset_email_label">Correo electrónico</label>
+          <input type="email" id="reset-email" class="c-input" placeholder="tu@correo.com" data-i18n-placeholder="reset_email_ph" autocomplete="email" required>
         </div>
-        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-send-reset">
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-send-reset" data-i18n="reset_submit">
           Enviar Enlace
         </button>
       </form>
 
       <div class="c-auth-footer">
-        <button type="button" class="c-auth-link" id="btn-back-to-login">
+        <button type="button" class="c-auth-link" id="btn-back-to-login" data-i18n="reset_back_to_login">
           Volver a Iniciar Sesión
         </button>
       </div>
@@ -106,22 +112,25 @@
   <!-- ══════════════════════════════════════════════════════════ -->
   <section id="new-password-screen" class="c-auth-screen" style="display:none;">
     <div class="c-auth-card">
+      <div class="c-auth-lang">
+        <button type="button" class="c-lang-btn" data-lang-toggle>EN</button>
+      </div>
       <div class="c-auth-logo">
         <a href="/" class="c-brand">AhoraTengoPagina</a>
       </div>
-      <h1 class="c-auth-title">Nueva Contraseña</h1>
-      <p class="c-auth-subtitle">Ingresa tu nueva contraseña para restablecer el acceso a tu cuenta</p>
+      <h1 class="c-auth-title" data-i18n="new_password_title">Nueva Contraseña</h1>
+      <p class="c-auth-subtitle" data-i18n="new_password_hint">Ingresa tu nueva contraseña para restablecer el acceso a tu cuenta</p>
 
       <form id="new-password-form" class="c-auth-form" novalidate>
         <div class="c-form-group">
-          <label for="recovery-new-password" class="c-label">Nueva contraseña</label>
-          <input type="password" id="recovery-new-password" class="c-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+          <label for="recovery-new-password" class="c-label" data-i18n="new_password_label">Nueva contraseña</label>
+          <input type="password" id="recovery-new-password" class="c-input" placeholder="Mínimo 6 caracteres" data-i18n-placeholder="new_password_ph" autocomplete="new-password" required>
         </div>
         <div class="c-form-group">
-          <label for="recovery-confirm-password" class="c-label">Confirmar nueva contraseña</label>
-          <input type="password" id="recovery-confirm-password" class="c-input" placeholder="Repite la nueva contraseña" autocomplete="new-password" required>
+          <label for="recovery-confirm-password" class="c-label" data-i18n="confirm_password_label">Confirmar nueva contraseña</label>
+          <input type="password" id="recovery-confirm-password" class="c-input" placeholder="Repite la nueva contraseña" data-i18n-placeholder="confirm_password_ph" autocomplete="new-password" required>
         </div>
-        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-set-new-password">
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-set-new-password" data-i18n="new_password_submit">
           Restablecer Contraseña
         </button>
       </form>
@@ -133,26 +142,29 @@
   <!-- ══════════════════════════════════════════════════════════ -->
   <section id="setup-screen" class="c-auth-screen" style="display:none;">
     <div class="c-auth-card">
+      <div class="c-auth-lang">
+        <button type="button" class="c-lang-btn" data-lang-toggle>EN</button>
+      </div>
       <div class="c-auth-logo">
         <a href="/" class="c-brand">AhoraTengoPagina</a>
       </div>
-      <h1 class="c-auth-title">Configura tu cuenta</h1>
-      <p class="c-auth-subtitle">Ingresa tu correo electrónico y crea una contraseña para acceder a tu portal.</p>
+      <h1 class="c-auth-title" data-i18n="setup_title">Configura tu cuenta</h1>
+      <p class="c-auth-subtitle" data-i18n="setup_hint">Ingresa tu correo electrónico y crea una contraseña para acceder a tu portal.</p>
 
       <form id="setup-form" class="c-auth-form" novalidate>
         <div class="c-form-group">
-          <label for="setup-email" class="c-label">Tu correo electrónico</label>
-          <input type="email" id="setup-email" class="c-input" placeholder="tu@correo.com" autocomplete="email" required>
+          <label for="setup-email" class="c-label" data-i18n="setup_email_label">Tu correo electrónico</label>
+          <input type="email" id="setup-email" class="c-input" placeholder="tu@correo.com" data-i18n-placeholder="setup_email_ph" autocomplete="email" required>
         </div>
         <div class="c-form-group">
-          <label for="setup-password" class="c-label">Crea una contraseña</label>
-          <input type="password" id="setup-password" class="c-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required>
+          <label for="setup-password" class="c-label" data-i18n="setup_password_label">Crea una contraseña</label>
+          <input type="password" id="setup-password" class="c-input" placeholder="Mínimo 6 caracteres" data-i18n-placeholder="setup_password_ph" autocomplete="new-password" required>
         </div>
         <div class="c-form-group">
-          <label for="setup-confirm" class="c-label">Confirma tu contraseña</label>
-          <input type="password" id="setup-confirm" class="c-input" placeholder="Repite la contraseña" autocomplete="new-password" required>
+          <label for="setup-confirm" class="c-label" data-i18n="setup_confirm_label">Confirma tu contraseña</label>
+          <input type="password" id="setup-confirm" class="c-input" placeholder="Repite la contraseña" data-i18n-placeholder="setup_confirm_ph" autocomplete="new-password" required>
         </div>
-        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-setup-account">
+        <button type="submit" class="c-btn c-btn-primary c-btn--full" id="btn-setup-account" data-i18n="setup_submit">
           Crear mi cuenta
         </button>
       </form>
@@ -242,9 +254,12 @@
     <!-- ── Mobile Header ── -->
     <header class="c-mobile-header">
       <div class="c-mobile-header-brand">Ahora<span>Tengo</span>Página</div>
-      <button type="button" class="c-mobile-menu-btn" id="btn-mobile-menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-      </button>
+      <div class="c-mobile-header-actions">
+        <button type="button" class="c-lang-btn c-lang-btn--mobile" data-lang-toggle>EN</button>
+        <button type="button" class="c-mobile-menu-btn" id="btn-mobile-menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+      </div>
     </header>
 
     <!-- ── Mobile Sidebar Overlay ── -->
