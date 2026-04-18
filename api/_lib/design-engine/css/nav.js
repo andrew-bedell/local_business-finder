@@ -34,16 +34,17 @@ export function getNavCSS() {
       display: block;
       flex: 0 1 28rem;
       min-width: 0;
-      max-width: min(30rem, 36vw);
+      max-width: min(32rem, 42vw);
       font-family: var(--font-heading);
-      font-size: 1.4rem;
+      font-size: clamp(1.05rem, 0.8rem + 0.8vw, 1.4rem);
       font-weight: 400;
       color: #fff;
       text-decoration: none;
       letter-spacing: -0.02em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      text-wrap: balance;
+      line-height: 1.15;
     }
 
     .site-nav__links {
@@ -86,7 +87,7 @@ export function getNavCSS() {
       font-weight: 500;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #fff;
+      color: var(--color-text-light, #fff);
       background: var(--color-accent);
       padding: 0.7rem 1.6rem;
       border: none;
@@ -95,6 +96,16 @@ export function getNavCSS() {
       cursor: pointer;
       mix-blend-mode: normal;
       white-space: nowrap;
+      isolation: isolate;
+      position: relative;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.22);
+    }
+
+    .site-nav__cta,
+    .site-nav__cta:visited,
+    .site-nav__cta:hover,
+    .site-nav__cta:focus {
+      color: var(--color-text-light, #fff);
     }
 
     .site-nav__cta:hover {
