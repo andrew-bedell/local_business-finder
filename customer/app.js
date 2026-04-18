@@ -306,8 +306,33 @@
       login_title: 'Inicia sesión en tu panel',
       login_email_label: 'Tu correo electrónico',
       login_email_ph: 'tu@email.com',
+      login_password_label: 'Contraseña',
+      login_password_ph: 'Tu contraseña',
+      login_forgot_password: '¿Olvidaste tu contraseña?',
       login_submit: 'Enviar enlace de acceso',
-      login_hint: 'Te enviaremos un enlace mágico — sin contraseña necesaria.'
+      login_hint: 'Te enviaremos un enlace mágico — sin contraseña necesaria.',
+      reset_title: 'Recuperar Contraseña',
+      reset_hint: 'Te enviaremos un enlace para restablecer tu contraseña',
+      reset_email_label: 'Correo electrónico',
+      reset_email_ph: 'tu@correo.com',
+      reset_submit: 'Enviar Enlace',
+      reset_back_to_login: 'Volver a Iniciar Sesión',
+      new_password_title: 'Nueva Contraseña',
+      new_password_hint: 'Ingresa tu nueva contraseña para restablecer el acceso a tu cuenta',
+      new_password_label: 'Nueva contraseña',
+      new_password_ph: 'Mínimo 6 caracteres',
+      confirm_password_label: 'Confirmar nueva contraseña',
+      confirm_password_ph: 'Repite la nueva contraseña',
+      new_password_submit: 'Restablecer Contraseña',
+      setup_title: 'Configura tu cuenta',
+      setup_hint: 'Ingresa tu correo electrónico y crea una contraseña para acceder a tu portal.',
+      setup_email_label: 'Tu correo electrónico',
+      setup_email_ph: 'tu@correo.com',
+      setup_password_label: 'Crea una contraseña',
+      setup_password_ph: 'Mínimo 6 caracteres',
+      setup_confirm_label: 'Confirma tu contraseña',
+      setup_confirm_ph: 'Repite la contraseña',
+      setup_submit: 'Crear mi cuenta'
     },
     en: {
       // Sidebar
@@ -590,8 +615,33 @@
       login_title: 'Sign in to your dashboard',
       login_email_label: 'Your email address',
       login_email_ph: 'you@email.com',
+      login_password_label: 'Password',
+      login_password_ph: 'Your password',
+      login_forgot_password: 'Forgot your password?',
       login_submit: 'Send access link',
-      login_hint: 'We\'ll send you a magic link — no password needed.'
+      login_hint: 'We\'ll send you a magic link — no password needed.',
+      reset_title: 'Reset Password',
+      reset_hint: 'We\'ll send you a link to reset your password',
+      reset_email_label: 'Email address',
+      reset_email_ph: 'you@email.com',
+      reset_submit: 'Send Link',
+      reset_back_to_login: 'Back to Sign In',
+      new_password_title: 'New Password',
+      new_password_hint: 'Enter your new password to restore access to your account',
+      new_password_label: 'New password',
+      new_password_ph: 'Minimum 6 characters',
+      confirm_password_label: 'Confirm new password',
+      confirm_password_ph: 'Repeat the new password',
+      new_password_submit: 'Reset Password',
+      setup_title: 'Set up your account',
+      setup_hint: 'Enter your email and create a password to access your portal.',
+      setup_email_label: 'Your email address',
+      setup_email_ph: 'you@email.com',
+      setup_password_label: 'Create a password',
+      setup_password_ph: 'Minimum 6 characters',
+      setup_confirm_label: 'Confirm your password',
+      setup_confirm_ph: 'Repeat the password',
+      setup_submit: 'Create my account'
     }
   };
 
@@ -623,10 +673,10 @@
     });
 
     // Update toggle button text
-    var toggleBtn = $('#c-lang-toggle');
-    if (toggleBtn) {
-      toggleBtn.textContent = currentLang === 'es' ? 'EN' : 'ES';
-    }
+    var toggleBtns = document.querySelectorAll('[data-lang-toggle], #c-lang-toggle');
+    toggleBtns.forEach(function (btn) {
+      btn.textContent = currentLang === 'es' ? 'EN' : 'ES';
+    });
   }
 
   function toggleLanguage() {
@@ -809,12 +859,12 @@
     }
 
     // Language toggle
-    var btnLangToggle = $('#c-lang-toggle');
-    if (btnLangToggle) {
+    var langToggleButtons = document.querySelectorAll('[data-lang-toggle], #c-lang-toggle');
+    langToggleButtons.forEach(function (btnLangToggle) {
       btnLangToggle.addEventListener('click', function () {
         toggleLanguage();
       });
-    }
+    });
 
     // Mobile hamburger menu
     var btnMobileMenu = $('#btn-mobile-menu');

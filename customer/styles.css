@@ -439,6 +439,12 @@ body.c-body a { text-decoration: none; color: inherit; }
   padding: 40px 32px;
 }
 
+.c-auth-lang {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
 .c-auth-logo {
   text-align: center;
   margin-bottom: 8px;
@@ -700,6 +706,16 @@ body.c-body a { text-decoration: none; color: inherit; }
 
 .c-mobile-header-brand span {
   color: var(--c-accent2);
+}
+
+.c-mobile-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.c-lang-btn--mobile {
+  padding: 6px 12px;
 }
 
 .c-mobile-menu-btn {
