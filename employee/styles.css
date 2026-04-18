@@ -3385,6 +3385,33 @@ select.input {
   margin-bottom: 12px;
 }
 
+.outreach-info-row-top {
+  margin-bottom: 16px;
+}
+
+.outreach-field-compact {
+  flex: 0 1 220px;
+}
+
+.outreach-business-summary {
+  margin-bottom: 12px;
+}
+
+.outreach-business-title-row {
+  align-items: flex-start;
+}
+
+.outreach-business-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.outreach-value-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 .outreach-auto-reply-toggle {
   margin-bottom: 4px;
 }
@@ -3482,6 +3509,16 @@ select.input {
 .outreach-step-actions .btn-outreach-mark {
   padding: 6px 14px;
   font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .outreach-info-row {
+    flex-direction: column;
+  }
+
+  .outreach-field-compact {
+    flex: 1 1 auto;
+  }
 }
 
 /* Step states */
