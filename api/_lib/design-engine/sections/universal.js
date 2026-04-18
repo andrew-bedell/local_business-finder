@@ -6,6 +6,7 @@ import {
   getPrimaryActionLabel,
   normalizeBusinessType,
 } from '../taxonomy.js';
+import { formatBusinessName } from '../../format-business-name.js';
 
 function esc(str) {
   if (!str) return '';
@@ -49,13 +50,13 @@ function splitTitleParts(value) {
 }
 
 function deriveNavBrandName(business, content) {
-  const explicitBrand = collapseWhitespace(content?.brand?.shortName || content?.brandName);
+  const explicitBrand = formatBusinessName(collapseWhitespace(content?.brand?.shortName || content?.brandName));
   if (explicitBrand) return explicitBrand;
 
-  const name = collapseWhitespace(business?.name);
+  const name = formatBusinessName(collapseWhitespace(business?.name));
   const metaParts = splitTitleParts(content?.meta?.title);
   if (metaParts.length > 0) {
-    const candidate = metaParts[0];
+    const candidate = formatBusinessName(metaParts[0]);
     if (candidate.length >= 3 && candidate.length <= 32) {
       return candidate;
     }
@@ -63,7 +64,7 @@ function deriveNavBrandName(business, content) {
 
   const nameParts = splitTitleParts(name);
   if (nameParts.length > 0) {
-    const candidate = nameParts[0];
+    const candidate = formatBusinessName(nameParts[0]);
     if (candidate.length >= 3 && candidate.length <= 32) {
       return candidate;
     }

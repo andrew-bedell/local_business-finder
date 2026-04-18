@@ -1,6 +1,8 @@
 // Vercel serverless function: Serve published websites as full HTML pages
 // GET — serves website HTML by slug or custom domain
 
+import { escapeRegExp, formatBusinessName } from '../_lib/format-business-name.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).send('Method not allowed');
@@ -126,9 +128,12 @@ export default async function handler(req, res) {
 })();
 </script>`;
 
-    const finalHtml = html.includes('</body>')
+    const finalHtml = applyPublishedSiteFixups(
+      html.includes('</body>')
       ? html.replace('</body>', trackingScript + '\n</body>')
-      : html + trackingScript;
+      : html + trackingScript,
+      business
+    );
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
@@ -137,6 +142,50 @@ export default async function handler(req, res) {
     console.error('Serve website error:', err);
     return res.status(500).send(notFoundPage());
   }
+}
+
+function applyPublishedSiteFixups(html, business) {
+  let output = String(html || '');
+  const rawName = String(business?.name || '').trim();
+  const formattedName = formatBusinessName(rawName);
+
+  if (rawName && formattedName && rawName !== formattedName) {
+    output = output.replace(new RegExp(escapeRegExp(rawName), 'g'), formattedName);
+  }
+
+  const navFixupCss = `
+<style id="atp-site-fixups">
+  .site-nav__logo {
+    max-width: min(32rem, 42vw) !important;
+    font-size: clamp(1.05rem, 0.8rem + 0.8vw, 1.4rem) !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+
+  .site-nav__cta,
+  .site-nav__cta:visited,
+  .site-nav__cta:hover,
+  .site-nav__cta:focus,
+  .site-nav__cta span {
+    color: var(--color-text-light, #fff) !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.22);
+  }
+
+  .site-nav__cta {
+    isolation: isolate;
+    position: relative;
+  }
+<\/style>`;
+
+  if (output.includes('</head>')) {
+    output = output.replace('</head>', navFixupCss + '\n</head>');
+  } else {
+    output = navFixupCss + output;
+  }
+
+  return output;
 }
 
 function notFoundPage() {
