@@ -82,7 +82,7 @@
       thContactPhone: 'Contact Phone',
       thContactWhatsapp: 'Contact WhatsApp',
       thContactEmail: 'Contact Email',
-      thBusinessCode: 'ID',
+      thBusinessCode: 'Business ID',
       contactName: 'Contact Name',
       contactPhone: 'Contact Phone',
       contactEmail: 'Contact Email',
@@ -798,6 +798,7 @@
       outreachBtnLabel: 'Outreach',
       outreachModalTitle: 'WhatsApp Outreach',
       outreachBusinessName: 'Business Name',
+      outreachBusinessId: 'Business ID',
       outreachPhone: 'Phone',
       outreachPreviewUrl: 'Website URL',
       outreachDemoUrl: 'Demo URL',
@@ -973,7 +974,7 @@
       thContactPhone: 'Tel. Contacto',
       thContactWhatsapp: 'WhatsApp de Contacto',
       thContactEmail: 'Correo de Contacto',
-      thBusinessCode: 'ID',
+      thBusinessCode: 'ID del Negocio',
       contactName: 'Nombre de Contacto',
       contactPhone: 'Teléfono de Contacto',
       contactEmail: 'Correo de Contacto',
@@ -1685,6 +1686,7 @@
       outreachBtnLabel: 'Contactar',
       outreachModalTitle: 'Contacto por WhatsApp',
       outreachBusinessName: 'Nombre del Negocio',
+      outreachBusinessId: 'ID del Negocio',
       outreachPhone: 'Teléfono',
       outreachPreviewUrl: 'Link del Sitio',
       outreachDemoUrl: 'Link Demo',
@@ -2192,6 +2194,7 @@
   const OUTREACH_COLUMN_DEFS = [
     { id: 'select', label: '', selectable: true, help: 'Bulk actions' },
     { id: 'business', labelKey: 'orThBusiness', help: 'Business name' },
+    { id: 'businessCode', labelKey: 'thBusinessCode', help: 'Business ID / code' },
     { id: 'location', labelKey: 'orThLocation', help: 'Business location' },
     { id: 'contact', labelKey: 'orThContact', help: 'Primary contact summary' },
     { id: 'contactWhatsapp', labelKey: 'thContactWhatsapp', help: 'Primary WhatsApp / phone' },
@@ -3554,6 +3557,8 @@
         return `<td class="td-center"><input type="checkbox" class="or-row-select" data-section="${escapeHtml(section)}" data-biz-id="${business ? business.id : ''}"></td>`;
       case 'business':
         return `<td>${business ? orBizLink(business) : escapeHtml(row.businessName || 'Unknown')}</td>`;
+      case 'businessCode':
+        return `<td class="td-center td-copyable" style="font-size:11px;color:var(--text-dim);font-family:monospace;cursor:pointer" data-copy-value="${escapeHtml(business && business.business_code ? business.business_code : '')}" title="${t('clickToCopy')}">${business && business.business_code ? escapeHtml(business.business_code) : '—'}</td>`;
       case 'location':
         return `<td>${business ? orLocationCell(business) : (row.location || '')}</td>`;
       case 'contact':
@@ -4359,6 +4364,7 @@
     const primaryContact = contacts.find(c => c.is_primary) || contacts[0];
     const rawPhone = (primaryContact && (primaryContact.contact_whatsapp || primaryContact.contact_phone)) || business.phone || '';
     const phone = toE164(rawPhone, business.address_country) || rawPhone;
+    const businessCode = business.business_code || '';
 
     const existingWebsiteRecord = findGeneratedWebsiteRecord(business);
     const anyWebsiteRecord = existingWebsiteRecord || getGeneratedWebsiteRecords(business)[0];
@@ -4518,12 +4524,27 @@
       <div class="modal-content" style="max-width:580px">
         <div class="modal-header">
           <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
-            <h2 style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t('outreachModalTitle')} — ${escapeHtml(business.name)}</h2>
+            <h2 style="margin:0">${t('outreachModalTitle')}</h2>
             ${cancelBtnHtml}
           </div>
           <button class="modal-close" id="outreach-close">&times;</button>
         </div>
         <div class="modal-body">
+          <div class="outreach-field outreach-business-summary">
+            <div class="outreach-label">${t('outreachBusinessName')}</div>
+            <div class="outreach-value-row outreach-business-title-row">
+              <span class="outreach-value outreach-business-title">${escapeHtml(business.name || '—')}</span>
+            </div>
+          </div>
+          <div class="outreach-info-row outreach-info-row-top">
+            <div class="outreach-field outreach-field-compact">
+              <div class="outreach-label">${t('outreachBusinessId')}</div>
+              <div class="outreach-value-row">
+                <span class="outreach-value outreach-value-mono">${escapeHtml(businessCode || '—')}</span>
+                ${businessCode ? '<button class="btn-outreach-copy" data-copy="business-code" title="Copy">📋</button>' : ''}
+              </div>
+            </div>
+          </div>
           ${cancelledBannerHtml}
           <div id="outreach-cancel-picker" style="display:none;background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius);padding:12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:600;margin-bottom:8px">${t('outreachCancelConfirm')}</div>
@@ -4699,6 +4720,7 @@
         if (type === 'phone') text = phone;
         else if (type === 'url') text = previewUrl;
         else if (type === 'demo') text = demoUrl;
+        else if (type === 'business-code') text = businessCode;
         copyToClipboard(text, t('outreachCopied'));
       });
     });
