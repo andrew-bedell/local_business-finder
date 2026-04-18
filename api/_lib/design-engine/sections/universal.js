@@ -493,11 +493,13 @@ export function navHTML(business, ctaLabel, options = {}) {
   return `
   <nav class="site-nav">
     <div class="site-nav__inner">
-      <a href="#" class="site-nav__logo" title="${esc(business.name)}">${esc(navBrand || business.name)}</a>
-      <ul class="site-nav__links">
-        ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n        ')}
-        <li><a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(compactCTA || cta)}</a></li>
-      </ul>
+      <div class="site-nav__primary">
+        <a href="#" class="site-nav__logo" title="${esc(business.name)}">${esc(navBrand || business.name)}</a>
+        <ul class="site-nav__links">
+          ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n          ')}
+        </ul>
+      </div>
+      <a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(compactCTA || cta)}</a>
       <button class="hamburger" aria-label="Menú">
         <span></span><span></span><span></span>
       </button>

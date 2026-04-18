@@ -149,7 +149,7 @@ export default async function handler(req, res) {
 }
 
 function applyPublishedSiteFixups(html, business) {
-  let output = String(html || '');
+  let output = normalizeLegacyNavStructure(String(html || ''));
   const rawName = String(business?.name || '').trim();
   const formattedName = formatBusinessName(rawName);
   const accent = extractAccentColor(output);
@@ -165,6 +165,28 @@ function applyPublishedSiteFixups(html, business) {
   :root {
     --color-on-accent: ${onAccent};
     --color-on-accent-rgb: ${onAccentRgb.r}, ${onAccentRgb.g}, ${onAccentRgb.b};
+  }
+
+  .site-nav {
+    mix-blend-mode: normal !important;
+  }
+
+  .site-nav__inner {
+    gap: 1.25rem !important;
+  }
+
+  .site-nav__primary {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 1.25rem !important;
+    mix-blend-mode: difference !important;
+  }
+
+  .site-nav.scrolled .site-nav__primary {
+    mix-blend-mode: normal !important;
   }
 
   .site-nav__logo {
@@ -186,8 +208,7 @@ function applyPublishedSiteFixups(html, business) {
   }
 
   .site-nav__cta {
-    isolation: isolate;
-    position: relative;
+    flex: 0 0 auto !important;
   }
 
   .btn--primary,
@@ -218,6 +239,14 @@ function applyPublishedSiteFixups(html, business) {
   .emergency-badge {
     border-color: var(--color-on-accent) !important;
   }
+
+  .hamburger {
+    mix-blend-mode: difference !important;
+  }
+
+  .site-nav.scrolled .hamburger {
+    mix-blend-mode: normal !important;
+  }
 <\/style>`;
 
   if (output.includes('</head>')) {
@@ -227,6 +256,28 @@ function applyPublishedSiteFixups(html, business) {
   }
 
   return output;
+}
+
+function normalizeLegacyNavStructure(html) {
+  const source = String(html || '');
+  if (!source.includes('site-nav__cta--desktop')) return source;
+  if (source.includes('site-nav__primary')) return source;
+
+  return source.replace(
+    /<div class="site-nav__inner">\s*<a href="#" class="site-nav__logo"(?: title="([^"]*)")?>([\s\S]*?)<\/a>\s*<ul class="site-nav__links">([\s\S]*?)<li><a href="([^"]*)" class="site-nav__cta site-nav__cta--desktop">([\s\S]*?)<\/a><\/li>\s*<\/ul>\s*<button class="hamburger"/,
+    (_match, title, label, items, ctaHref, ctaLabel) => {
+      const cleanedItems = String(items || '').trimEnd();
+      return `<div class="site-nav__inner">
+      <div class="site-nav__primary">
+        <a href="#" class="site-nav__logo"${title ? ` title="${title}"` : ''}>${label}</a>
+        <ul class="site-nav__links">
+${cleanedItems}
+        </ul>
+      </div>
+      <a href="${ctaHref}" class="site-nav__cta site-nav__cta--desktop">${ctaLabel}</a>
+      <button class="hamburger"`;
+    }
+  );
 }
 
 function extractAccentColor(html) {
