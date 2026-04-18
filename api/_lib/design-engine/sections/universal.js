@@ -37,6 +37,59 @@ function getAllPhotos(photos) {
   return photos.map(p => p.url).filter(Boolean);
 }
 
+function collapseWhitespace(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function splitTitleParts(value) {
+  return collapseWhitespace(value)
+    .split(/\s+[—–-]\s+|\s+\|\s+|\s*:\s*/)
+    .map((part) => collapseWhitespace(part))
+    .filter(Boolean);
+}
+
+function deriveNavBrandName(business, content) {
+  const explicitBrand = collapseWhitespace(content?.brand?.shortName || content?.brandName);
+  if (explicitBrand) return explicitBrand;
+
+  const name = collapseWhitespace(business?.name);
+  const metaParts = splitTitleParts(content?.meta?.title);
+  if (metaParts.length > 0) {
+    const candidate = metaParts[0];
+    if (candidate.length >= 3 && candidate.length <= 32) {
+      return candidate;
+    }
+  }
+
+  const nameParts = splitTitleParts(name);
+  if (nameParts.length > 0) {
+    const candidate = nameParts[0];
+    if (candidate.length >= 3 && candidate.length <= 32) {
+      return candidate;
+    }
+  }
+
+  return name;
+}
+
+function compactNavCTALabel(label) {
+  const fullLabel = collapseWhitespace(label);
+  if (!fullLabel) return '';
+
+  let compact = fullLabel
+    .replace(/\s+en\s+l[ií]nea\b/ig, '')
+    .replace(/\s+por\s+tel[eé]fono\b/ig, '')
+    .replace(/\s+ahora\b/ig, '');
+  compact = collapseWhitespace(compact);
+
+  if (!compact) compact = fullLabel;
+  if (compact.length <= 18) return compact;
+
+  const words = compact.split(' ').filter(Boolean);
+  if (words.length <= 2) return compact;
+  return words.slice(0, 2).join(' ');
+}
+
 // ── Hero Section ──
 export function heroSection(content, photos, business, ctaLabel) {
   const heroPhoto = getPhotoForSection(photos, 'hero') || (photos && photos[0] ? photos[0].url : '');
@@ -432,15 +485,17 @@ export function navHTML(business, ctaLabel, options = {}) {
   const availableSections = options.availableSections || new Set(['about', 'services', 'gallery', 'testimonials', 'contact']);
   const navItems = getNavigationItems(businessType, availableSections);
   const cta = ctaLabel || getPrimaryActionLabel(businessType);
+  const navBrand = deriveNavBrandName(business, options.content);
+  const compactCTA = compactNavCTALabel(cta);
   const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
 
   return `
   <nav class="site-nav">
     <div class="site-nav__inner">
-      <a href="#" class="site-nav__logo">${esc(business.name)}</a>
+      <a href="#" class="site-nav__logo" title="${esc(business.name)}">${esc(navBrand || business.name)}</a>
       <ul class="site-nav__links">
         ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n        ')}
-        <li><a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(cta)}</a></li>
+        <li><a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(compactCTA || cta)}</a></li>
       </ul>
       <button class="hamburger" aria-label="Menú">
         <span></span><span></span><span></span>

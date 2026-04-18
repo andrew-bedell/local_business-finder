@@ -161,6 +161,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   const nav = navHTML(business, content?.cta?.buttonText, {
     businessType,
     availableSections,
+    content,
   });
   const fab = whatsappFAB(business);
 
