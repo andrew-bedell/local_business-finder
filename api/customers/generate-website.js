@@ -3,6 +3,7 @@
 // Pipeline: fetch data → research report → AI photos → write content → generate HTML → publish
 
 import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+import { buildWebsiteConfig } from '../_lib/website-config.js';
 import {
   compileBusinessDataForPrompt,
   buildPhotoInventory,
@@ -69,10 +70,11 @@ export default async function handler(req, res) {
     // Step 4: Rate limit check
     // Updates: 1 per hour. New generation: 1 per 24 hours.
     const existingWebRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&select=id,created_at,last_edited_at,version&order=created_at.desc&limit=1`,
+      `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&select=id,created_at,last_edited_at,version,status,published_url,config&order=created_at.desc&limit=1`,
       { headers: supabaseHeaders }
     );
     const existingWebData = await existingWebRes.json();
+    const latestWebsite = Array.isArray(existingWebData) && existingWebData.length > 0 ? existingWebData[0] : null;
     if (Array.isArray(existingWebData) && existingWebData.length > 0) {
       const existing = existingWebData[0];
       const lastTime = new Date(existing.last_edited_at || existing.created_at);
@@ -117,58 +119,8 @@ export default async function handler(req, res) {
     console.log('[GenerateWebsite] Step 7: Generating research report...');
     const researchReport = await generateResearchReport(businessData, business.name, language);
 
-    // Step 8: Create or update generated_websites row
-    let websiteId;
-    if (isUpdate) {
-      // Update existing website record
-      console.log(`[GenerateWebsite] Step 8: Updating website record ${existingWebsiteId}...`);
-      const existingVersion = (Array.isArray(existingWebData) && existingWebData.length > 0) ? (existingWebData[0].version || 1) : 1;
-      const updateWebRes = await fetch(
-        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${existingWebsiteId}`,
-        {
-          method: 'PATCH',
-          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-          body: JSON.stringify({
-            status: 'draft',
-            version: existingVersion + 1,
-            last_edited_at: new Date().toISOString(),
-            config: { researchReport },
-          }),
-        }
-      );
-      const updateWebData = await updateWebRes.json();
-      if (!updateWebRes.ok || !Array.isArray(updateWebData) || updateWebData.length === 0) {
-        console.error('[GenerateWebsite] Failed to update website record:', updateWebData);
-        return res.status(502).json({ error: 'Failed to update website record' });
-      }
-      websiteId = existingWebsiteId;
-    } else {
-      // Create new website record
-      console.log('[GenerateWebsite] Step 8: Creating website record...');
-      const insertWebRes = await fetch(
-        `${supabaseUrl}/rest/v1/generated_websites`,
-        {
-          method: 'POST',
-          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-          body: JSON.stringify({
-            business_id: businessId,
-            template_name: 'ai_generated',
-            status: 'draft',
-            version: 1,
-            config: { researchReport },
-          }),
-        }
-      );
-      const insertWebData = await insertWebRes.json();
-      if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
-        console.error('[GenerateWebsite] Failed to create website record:', insertWebData);
-        return res.status(502).json({ error: 'Failed to create website record' });
-      }
-      websiteId = insertWebData[0].id;
-    }
-
-    // Step 9: Generate AI photos for generate_ai slots (max 3 parallel)
-    console.log('[GenerateWebsite] Step 9: Generating AI photos...');
+    // Step 8: Generate AI photos for generate_ai slots (max 3 parallel)
+    console.log('[GenerateWebsite] Step 8: Generating AI photos...');
     const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders);
 
     // Add AI photos to inventory
@@ -184,12 +136,12 @@ export default async function handler(req, res) {
       });
     });
 
-    // Step 10: Build photo manifest
-    console.log('[GenerateWebsite] Step 10: Building photo manifest...');
+    // Step 9: Build photo manifest
+    console.log('[GenerateWebsite] Step 9: Building photo manifest...');
     const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory);
 
-    // Step 11: Call /api/ai/write-content
-    console.log('[GenerateWebsite] Step 11: Writing website content...');
+    // Step 10: Call /api/ai/write-content
+    console.log('[GenerateWebsite] Step 10: Writing website content...');
     const writeContentRes = await fetch(`${API_BASE}/api/ai/write-content`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -211,8 +163,8 @@ export default async function handler(req, res) {
       throw new Error('Content writing returned incomplete content');
     }
 
-    // Step 12: Call /api/ai/generate-website
-    console.log('[GenerateWebsite] Step 12: Generating website HTML...');
+    // Step 11: Call /api/ai/generate-website
+    console.log('[GenerateWebsite] Step 11: Generating website HTML...');
     const generateHtmlRes = await fetch(`${API_BASE}/api/ai/generate-website`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -245,52 +197,85 @@ export default async function handler(req, res) {
       throw new Error('Website generation returned no HTML');
     }
 
-    // Step 13: Update generated_websites row with HTML
-    console.log('[GenerateWebsite] Step 13: Saving HTML to website record...');
-    const updateWebRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${websiteId}`,
-      {
-        method: 'PATCH',
-        headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({
-          status: 'draft',
-          config: {
-            researchReport,
-            websiteContent,
-            draft_html: generateResult.html,
-            html: generateResult.html,
-          },
-        }),
-      }
-    );
-    if (!updateWebRes.ok) {
-      const errText = await updateWebRes.text().catch(() => '');
-      console.error('[GenerateWebsite] Failed to save HTML:', errText);
-      throw new Error('Failed to save generated HTML');
-    }
-
-    // Step 14: Publish website
-    console.log('[GenerateWebsite] Step 14: Publishing website...');
-    const publishRes = await fetch(`${API_BASE}/api/websites/publish`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ websiteId, action: 'publish' }),
+    // Step 12: Save generated HTML only after it exists, so we never leave an empty preview row behind.
+    let websiteId = existingWebsiteId;
+    const savedConfig = buildWebsiteConfig({
+      existingConfig: latestWebsite?.config,
+      researchReport,
+      websiteContent,
+      html: generateResult.html,
     });
-    if (!publishRes.ok) {
-      const errText = await publishRes.text().catch(() => '');
-      console.error('[GenerateWebsite] Publish failed:', errText);
-      // Website was generated but not published — return partial success
-      return res.status(200).json({
-        success: true,
-        websiteId,
-        publishedUrl: null,
-        warning: 'Website generated but publishing failed. It can be published manually.',
-      });
-    }
-    const publishResult = await publishRes.json();
-    const publishedUrl = publishResult?.website?.published_url;
 
-    // Step 15: Return success
+    if (isUpdate) {
+      console.log(`[GenerateWebsite] Step 12: Saving HTML to existing website ${existingWebsiteId}...`);
+      const existingVersion = latestWebsite?.version || 1;
+      const updateWebRes = await fetch(
+        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${existingWebsiteId}`,
+        {
+          method: 'PATCH',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            version: existingVersion + 1,
+            last_edited_at: new Date().toISOString(),
+            config: savedConfig,
+          }),
+        }
+      );
+      if (!updateWebRes.ok) {
+        const errText = await updateWebRes.text().catch(() => '');
+        console.error('[GenerateWebsite] Failed to save HTML:', errText);
+        throw new Error('Failed to save generated HTML');
+      }
+    } else {
+      console.log('[GenerateWebsite] Step 12: Creating website record with completed HTML...');
+      const insertWebRes = await fetch(
+        `${supabaseUrl}/rest/v1/generated_websites`,
+        {
+          method: 'POST',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+          body: JSON.stringify({
+            business_id: businessId,
+            template_name: 'ai_generated',
+            status: 'draft',
+            version: 1,
+            config: savedConfig,
+          }),
+        }
+      );
+      const insertWebData = await insertWebRes.json();
+      if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
+        console.error('[GenerateWebsite] Failed to create website record:', insertWebData);
+        return res.status(502).json({ error: 'Failed to create website record' });
+      }
+      websiteId = insertWebData[0].id;
+    }
+
+    // Step 13: Publish only when needed.
+    let publishedUrl = latestWebsite?.published_url || null;
+    const shouldPublish = !isUpdate || latestWebsite?.status !== 'published' || !latestWebsite?.published_url;
+
+    if (shouldPublish) {
+      console.log('[GenerateWebsite] Step 13: Publishing website...');
+      const publishRes = await fetch(`${API_BASE}/api/websites/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ websiteId, action: 'publish' }),
+      });
+      if (!publishRes.ok) {
+        const errText = await publishRes.text().catch(() => '');
+        console.error('[GenerateWebsite] Publish failed:', errText);
+        return res.status(200).json({
+          success: true,
+          websiteId,
+          publishedUrl,
+          warning: 'Website generated but publishing failed. It can be published manually.',
+        });
+      }
+      const publishResult = await publishRes.json();
+      publishedUrl = publishResult?.website?.published_url || publishedUrl;
+    }
+
+    // Step 14: Return success
     console.log(`[GenerateWebsite] Complete! Published URL: ${publishedUrl}`);
     return res.status(200).json({
       success: true,

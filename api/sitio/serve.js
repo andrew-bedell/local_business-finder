@@ -2,6 +2,7 @@
 // GET — serves website HTML by slug or custom domain
 
 import { escapeRegExp, formatBusinessName } from '../_lib/format-business-name.js';
+import { getWebsiteHtml } from '../_lib/website-config.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
     }
 
     // Extract HTML from config
-    const html = website.config && website.config.html;
+    const html = getWebsiteHtml(website.config);
     if (!html) {
       return res.status(404).send(notFoundPage());
     }
