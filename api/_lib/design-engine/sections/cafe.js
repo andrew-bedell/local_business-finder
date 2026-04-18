@@ -1,6 +1,8 @@
 // Design Engine V2 — Cafe-specific section renderers
 // Menu highlights and daily specials for cafe/coffee shop websites
 
+import { getMenuCategorySectionCss, renderMenuCategories } from './menu-media.js';
+
 function esc(str) {
   if (!str) return '';
   return String(str)
@@ -11,7 +13,7 @@ function esc(str) {
 }
 
 // ── Menu Highlights Section ──
-export function menuHighlightsSection(content) {
+export function menuHighlightsSection(content, photos) {
   const heading = esc(content?.menuHighlights?.heading || 'Nuestro Menu');
   const categories = content?.menuHighlights?.categories || [];
 
@@ -26,22 +28,11 @@ export function menuHighlightsSection(content) {
           <h2>${heading}</h2>
         </div>
         <div class="reveal" style="max-width:700px;margin:0 auto;">
-          ${categories.map(cat => `
-          <div class="menu-category">
-            <h3>${esc(cat.name)}</h3>
-            ${(cat.items || []).map(item => `
-            <div class="menu-item">
-              <div>
-                <div class="menu-item__name">${esc(item.name)}</div>
-                ${item.description ? `<div class="menu-item__desc">${esc(item.description)}</div>` : ''}
-              </div>
-              ${item.price ? `<span class="menu-item__price">${esc(item.price)}</span>` : ''}
-            </div>`).join('')}
-          </div>`).join('')}
+          ${renderMenuCategories(categories, photos)}
         </div>
       </div>
     </section>`,
-    css: '',
+    css: getMenuCategorySectionCss(),
   };
 }
 
