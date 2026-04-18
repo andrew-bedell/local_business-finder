@@ -4,6 +4,14 @@ const SYNTHETIC_PLACE_PREFIXES = ['marketing-', 'manual-', 'builder-', 'onboardi
 const RETRY_DELAYS_MINUTES = [10, 30, 60, 180, 360];
 const MAX_ENRICHMENT_ATTEMPTS = 5;
 let cachedEnrichmentTrackingSchemaSupport = null;
+const ENRICHMENT_TRACKING_FIELDS = [
+  'enrichment_status',
+  'enrichment_attempts',
+  'enrichment_last_started_at',
+  'enrichment_last_finished_at',
+  'enrichment_next_retry_at',
+  'enrichment_last_error',
+];
 
 export function isEnrichablePlaceId(placeId) {
   if (!placeId) return false;
@@ -32,12 +40,44 @@ export function buildInitialEnrichmentState(placeId) {
   };
 }
 
-function isMissingEnrichmentTrackingSchemaError(message) {
+export function isMissingEnrichmentTrackingSchemaError(message) {
   const normalized = String(message || '').toLowerCase();
   return (
     normalized.includes('42703')
     && normalized.includes('enrichment_')
   ) || normalized.includes('column businesses.enrichment_');
+}
+
+export function stripEnrichmentTrackingFields(payload) {
+  const copy = { ...(payload || {}) };
+  for (const field of ENRICHMENT_TRACKING_FIELDS) {
+    delete copy[field];
+  }
+  return copy;
+}
+
+export async function insertBusinessWithSchemaFallback({ supabaseUrl, headers, payload }) {
+  const createBusiness = (body) => fetch(`${supabaseUrl}/rest/v1/businesses`, {
+    method: 'POST',
+    headers: { ...headers, 'Prefer': 'return=representation' },
+    body: JSON.stringify(body),
+  });
+
+  const initialRes = await createBusiness(payload);
+  if (initialRes.ok) return initialRes;
+
+  const initialErrText = await initialRes.text().catch(() => '');
+  if (!isMissingEnrichmentTrackingSchemaError(initialErrText)) {
+    throw new Error(initialErrText || `Failed to create business (HTTP ${initialRes.status})`);
+  }
+
+  console.warn('Businesses insert missing enrichment schema; retrying without enrichment tracking fields');
+
+  const fallbackRes = await createBusiness(stripEnrichmentTrackingFields(payload));
+  if (fallbackRes.ok) return fallbackRes;
+
+  const fallbackErrText = await fallbackRes.text().catch(() => '');
+  throw new Error(fallbackErrText || `Failed to create business after legacy fallback (HTTP ${fallbackRes.status})`);
 }
 
 export async function supportsEnrichmentTrackingSchema({ supabaseUrl, headers }) {
