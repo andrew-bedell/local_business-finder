@@ -203,6 +203,7 @@ export default async function handler(req, res) {
       existingConfig: latestWebsite?.config,
       researchReport,
       websiteContent,
+      photoManifest,
       html: generateResult.html,
     });
 
