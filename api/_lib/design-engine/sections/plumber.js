@@ -24,9 +24,9 @@ export function emergencyCTASection(content, photos, business) {
       <div class="container reveal">
         ${available247 ? `<span class="emergency-badge">24/7</span>` : ''}
         <h2>${heading}</h2>
-        ${description ? `<p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(255,255,255,0.9)">${description}</p>` : ''}
+        ${description ? `<p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(var(--color-on-accent-rgb),0.88)">${description}</p>` : ''}
         <a href="${phoneHref}" class="btn btn--white">${buttonText} <span class="btn-arrow">&rarr;</span></a>
-        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.3rem;font-weight:500;"><a href="${phoneHref}" style="color:#fff;font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
+        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.3rem;font-weight:500;"><a href="${phoneHref}" style="color:var(--color-on-accent);font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
       </div>
     </section>`,
     css: `
@@ -37,9 +37,9 @@ export function emergencyCTASection(content, photos, business) {
       font-weight: 700;
       letter-spacing: 0.1em;
       padding: 0.5rem 1.4rem;
-      border: 2px solid #fff;
+      border: 2px solid var(--color-on-accent);
       border-radius: 2rem;
-      color: #fff;
+      color: var(--color-on-accent);
       margin-bottom: 1.5rem;
     }`,
   };
