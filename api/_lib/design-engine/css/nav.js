@@ -10,12 +10,11 @@ export function getNavCSS() {
       z-index: 1000;
       padding: 1.5rem 0;
       transition: padding 0.3s ease, background 0.3s ease;
-      mix-blend-mode: difference;
+      mix-blend-mode: normal;
     }
 
     .site-nav.scrolled {
       padding: 0.8rem 0;
-      mix-blend-mode: normal;
       background: rgba(26, 23, 20, 0.95);
       backdrop-filter: blur(12px);
     }
@@ -28,6 +27,20 @@ export function getNavCSS() {
       justify-content: space-between;
       align-items: center;
       gap: 1.25rem;
+    }
+
+    .site-nav__primary {
+      display: flex;
+      flex: 1 1 auto;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      mix-blend-mode: difference;
+    }
+
+    .site-nav.scrolled .site-nav__primary {
+      mix-blend-mode: normal;
     }
 
     .site-nav__logo {
@@ -94,11 +107,9 @@ export function getNavCSS() {
       text-decoration: none;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       cursor: pointer;
-      mix-blend-mode: normal;
       white-space: nowrap;
-      isolation: isolate;
-      position: relative;
       text-shadow: none;
+      flex: 0 0 auto;
     }
 
     .site-nav__cta,
@@ -125,6 +136,11 @@ export function getNavCSS() {
       flex-shrink: 0;
       flex-direction: column;
       gap: 5px;
+      mix-blend-mode: difference;
+    }
+
+    .site-nav.scrolled .hamburger {
+      mix-blend-mode: normal;
     }
 
     .hamburger span {
