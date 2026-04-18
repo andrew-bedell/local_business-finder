@@ -87,7 +87,7 @@ export function getNavCSS() {
       font-weight: 500;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: var(--color-text-light, #fff);
+      color: var(--color-on-accent, #fff);
       background: var(--color-accent);
       padding: 0.7rem 1.6rem;
       border: none;
@@ -98,14 +98,14 @@ export function getNavCSS() {
       white-space: nowrap;
       isolation: isolate;
       position: relative;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.22);
+      text-shadow: none;
     }
 
     .site-nav__cta,
     .site-nav__cta:visited,
     .site-nav__cta:hover,
     .site-nav__cta:focus {
-      color: var(--color-text-light, #fff);
+      color: var(--color-on-accent, #fff);
     }
 
     .site-nav__cta:hover {
@@ -192,7 +192,7 @@ export function getNavCSS() {
       letter-spacing: 0.15em;
       text-transform: uppercase;
       background: var(--color-accent);
-      color: #fff;
+      color: var(--color-on-accent, #fff);
       padding: 1rem 2.5rem;
       text-decoration: none;
     }

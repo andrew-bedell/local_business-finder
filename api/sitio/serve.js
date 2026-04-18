@@ -4,6 +4,9 @@
 import { escapeRegExp, formatBusinessName } from '../_lib/format-business-name.js';
 import { getWebsiteHtml } from '../_lib/website-config.js';
 
+const DEFAULT_ACCENT = '#2C3E50';
+const DEFAULT_ON_ACCENT = '#F7F3EE';
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).send('Method not allowed');
@@ -149,6 +152,9 @@ function applyPublishedSiteFixups(html, business) {
   let output = String(html || '');
   const rawName = String(business?.name || '').trim();
   const formattedName = formatBusinessName(rawName);
+  const accent = extractAccentColor(output);
+  const onAccent = pickOnAccentColor(accent);
+  const onAccentRgb = hexToRgb(onAccent);
 
   if (rawName && formattedName && rawName !== formattedName) {
     output = output.replace(new RegExp(escapeRegExp(rawName), 'g'), formattedName);
@@ -156,6 +162,11 @@ function applyPublishedSiteFixups(html, business) {
 
   const navFixupCss = `
 <style id="atp-site-fixups">
+  :root {
+    --color-on-accent: ${onAccent};
+    --color-on-accent-rgb: ${onAccentRgb.r}, ${onAccentRgb.g}, ${onAccentRgb.b};
+  }
+
   .site-nav__logo {
     max-width: min(32rem, 42vw) !important;
     font-size: clamp(1.05rem, 0.8rem + 0.8vw, 1.4rem) !important;
@@ -170,13 +181,42 @@ function applyPublishedSiteFixups(html, business) {
   .site-nav__cta:hover,
   .site-nav__cta:focus,
   .site-nav__cta span {
-    color: var(--color-text-light, #fff) !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.22);
+    color: var(--color-on-accent, #fff) !important;
+    text-shadow: none !important;
   }
 
   .site-nav__cta {
     isolation: isolate;
     position: relative;
+  }
+
+  .btn--primary,
+  .btn--primary:visited,
+  .btn--primary:hover,
+  .btn--primary:focus,
+  .btn--primary .btn-arrow,
+  .btn--outline:hover,
+  .btn--outline:hover .btn-arrow,
+  .mobile-menu .mobile-cta,
+  .mobile-menu .mobile-cta:visited,
+  .mobile-menu .mobile-cta:hover,
+  .mobile-menu .mobile-cta:focus,
+  .tier-card--featured::before,
+  .section--accent,
+  .section--accent h2,
+  .section--accent h3,
+  .section--accent a:not(.btn),
+  .section--accent strong,
+  .emergency-badge {
+    color: var(--color-on-accent) !important;
+  }
+
+  .section--accent p {
+    color: rgba(var(--color-on-accent-rgb), 0.88) !important;
+  }
+
+  .emergency-badge {
+    border-color: var(--color-on-accent) !important;
   }
 <\/style>`;
 
@@ -187,6 +227,45 @@ function applyPublishedSiteFixups(html, business) {
   }
 
   return output;
+}
+
+function extractAccentColor(html) {
+  const match = String(html || '').match(/--color-accent:\s*(#[0-9a-fA-F]{6})\s*;/);
+  return match ? match[1] : DEFAULT_ACCENT;
+}
+
+function hexToRgb(hex) {
+  const normalized = String(hex || DEFAULT_ACCENT).replace('#', '').trim();
+  return {
+    r: parseInt(normalized.slice(0, 2), 16),
+    g: parseInt(normalized.slice(2, 4), 16),
+    b: parseInt(normalized.slice(4, 6), 16),
+  };
+}
+
+function srgbToLinear(channel) {
+  const normalized = channel / 255;
+  return normalized <= 0.04045
+    ? normalized / 12.92
+    : ((normalized + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  return 0.2126 * srgbToLinear(r) + 0.7152 * srgbToLinear(g) + 0.0722 * srgbToLinear(b);
+}
+
+function contrastRatio(background, foreground) {
+  const lighter = Math.max(relativeLuminance(background), relativeLuminance(foreground));
+  const darker = Math.min(relativeLuminance(background), relativeLuminance(foreground));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function pickOnAccentColor(accent) {
+  const candidates = ['#1A1714', DEFAULT_ON_ACCENT];
+  return candidates
+    .map((candidate) => ({ candidate, contrast: contrastRatio(accent, candidate) }))
+    .sort((a, b) => b.contrast - a.contrast)[0].candidate;
 }
 
 function notFoundPage() {

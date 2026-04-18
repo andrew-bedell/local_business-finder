@@ -385,9 +385,9 @@ export function ctaSection(content, business) {
     <section id="cta-section" class="section section--accent" style="text-align:center;">
       <div class="container reveal">
         <h2>${heading}</h2>
-        <p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(255,255,255,0.9)">${supporting}</p>
+        <p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(var(--color-on-accent-rgb),0.88)">${supporting}</p>
         <a href="${phoneHref}" class="btn btn--white">${btnText} <span class="btn-arrow">→</span></a>
-        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.1rem;"><a href="${phoneHref}" style="color:#fff;font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
+        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.1rem;"><a href="${phoneHref}" style="color:var(--color-on-accent);font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
       </div>
     </section>`,
     css: '',
