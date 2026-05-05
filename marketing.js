@@ -447,12 +447,17 @@
     });
   });
 
-  // ── Lead Capture Modal ──
+  // ── Create-Page CTAs ──
+  // Every "Empieza gratis" / "Crear mi página" button on marketing pages now leads into
+  // the in-app WhatsApp-style chat flow at /crear-tu-pagina/chat. The legacy lead modal
+  // is kept in the DOM for now but no longer opened from these CTAs.
+  var CHAT_URL = '/crear-tu-pagina/chat';
+  function goToChat(e) {
+    if (e) e.preventDefault();
+    window.location.href = CHAT_URL;
+  }
   document.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      openModal();
-    });
+    btn.addEventListener('click', goToChat);
   });
 
   function openModal() {
@@ -620,10 +625,7 @@
   if (stickyCta) {
     var stickyBtn = stickyCta.querySelector('[data-open-modal]');
     if (stickyBtn) {
-      stickyBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        openModal();
-      });
+      stickyBtn.addEventListener('click', goToChat);
     }
     // Show sticky CTA after scrolling past hero
     var heroEl = document.querySelector('.m-hero');
@@ -671,12 +673,9 @@
           return renderPricingCard(p, isFeatured);
         }).join('');
 
-        // Attach CTA click handlers
+        // Attach CTA click handlers — free-tier pricing cards lead into the chat flow
         pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            openModal();
-          });
+          btn.addEventListener('click', goToChat);
         });
 
         // Add reveal animation
@@ -739,10 +738,7 @@
       '</div>';
 
     pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        openModal();
-      });
+      btn.addEventListener('click', goToChat);
     });
   }
 
