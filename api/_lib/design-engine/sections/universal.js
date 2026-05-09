@@ -2,8 +2,11 @@
 // Used by all business types: hero, about, services, whyChooseUs, testimonials, gallery, CTA, hours, contact, footer
 
 import {
+  buildWhatsAppHref,
+  getOfferConfig,
   getNavigationItems,
   getPrimaryActionLabel,
+  getStickyWhatsappLabel,
   normalizeBusinessType,
 } from '../taxonomy.js';
 import { buildResponsiveImageTag, getOptimizedBackgroundUrl } from '../image-helpers.js';
@@ -25,18 +28,76 @@ function starsHTML(count) {
 
 function getPhotoForSection(photos, sectionName) {
   if (!photos || !photos.length) return null;
-  const match = photos.find(p => p.section && p.section.toLowerCase().includes(sectionName.toLowerCase()));
+  const match = photos.find((photo) => photo.section && photo.section.toLowerCase().includes(sectionName.toLowerCase()));
   return match ? match.url : null;
 }
 
 function getPhotosForSection(photos, sectionName) {
   if (!photos || !photos.length) return [];
-  return photos.filter(p => p.section && p.section.toLowerCase().includes(sectionName.toLowerCase())).map(p => p.url);
+  return photos
+    .filter((photo) => photo.section && photo.section.toLowerCase().includes(sectionName.toLowerCase()))
+    .map((photo) => photo.url)
+    .filter(Boolean);
 }
 
 function getAllPhotos(photos) {
   if (!photos || !photos.length) return [];
-  return photos.map(p => p.url).filter(Boolean);
+  return photos.map((photo) => photo.url).filter(Boolean);
+}
+
+function matchesBusinessKeyword(business, keywords) {
+  const haystack = [
+    business?.name,
+    business?.category,
+    business?.subcategory,
+  ].join(' ').toLowerCase();
+  return keywords.some((keyword) => haystack.includes(keyword));
+}
+
+function buildLaundryFallbackHero() {
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#dff4ff"/>
+        <stop offset="50%" stop-color="#b9ebd3"/>
+        <stop offset="100%" stop-color="#f2fbff"/>
+      </linearGradient>
+      <linearGradient id="washer" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="100%" stop-color="#e8f4ef"/>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#bg)"/>
+    <circle cx="1350" cy="170" r="110" fill="rgba(255,255,255,0.55)"/>
+    <circle cx="1210" cy="280" r="46" fill="rgba(255,255,255,0.72)"/>
+    <circle cx="1420" cy="330" r="26" fill="rgba(255,255,255,0.8)"/>
+    <circle cx="260" cy="180" r="92" fill="rgba(255,255,255,0.5)"/>
+    <circle cx="190" cy="300" r="36" fill="rgba(255,255,255,0.72)"/>
+    <rect x="520" y="165" rx="44" ry="44" width="560" height="560" fill="url(#washer)" stroke="#d0e6dc" stroke-width="8"/>
+    <circle cx="800" cy="445" r="180" fill="#8dd7c1" opacity="0.35"/>
+    <circle cx="800" cy="445" r="142" fill="#ffffff" stroke="#9fd9c8" stroke-width="10"/>
+    <path d="M705 445c34-42 71-55 103-55 44 0 90 24 131 76 25 31 44 46 68 53-19 33-57 62-105 74-74 20-166-9-197-64z" fill="#7bc7f2" opacity="0.85"/>
+    <path d="M742 413c22 28 46 42 77 42 31 0 63-15 96-45 10 49-12 98-60 123-60 31-144 11-177-44-13-20-18-47-13-76 24 8 49 8 77 0z" fill="#5ab79b" opacity="0.88"/>
+    <circle cx="675" cy="330" r="20" fill="#ffffff" opacity="0.82"/>
+    <circle cx="940" cy="308" r="16" fill="#ffffff" opacity="0.7"/>
+    <circle cx="980" cy="610" r="18" fill="#ffffff" opacity="0.7"/>
+    <circle cx="640" cy="598" r="12" fill="#ffffff" opacity="0.85"/>
+    <rect x="610" y="205" width="88" height="18" rx="9" fill="#cde5da"/>
+    <circle cx="970" cy="214" r="12" fill="#8dd7c1"/>
+    <circle cx="1008" cy="214" r="12" fill="#a9d8fb"/>
+    <path d="M1160 700c55-74 102-115 142-123 37-7 68 6 96 39-10 36-28 67-53 93-32 34-67 53-109 56-26 2-52-3-76-15z" fill="#ffffff" opacity="0.6"/>
+    <path d="M255 700c70-17 118-14 145 10 26 23 37 58 34 106-36 13-74 15-114 6-52-12-93-39-123-80-18-25-32-52-42-82 36-6 69-6 100 0z" fill="#ffffff" opacity="0.5"/>
+  </svg>`;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function getFallbackHeroPhoto(business) {
+  if (matchesBusinessKeyword(business, ['laundry', 'lavander', 'tintorer', 'dry clean'])) {
+    return buildLaundryFallbackHero();
+  }
+  return '';
 }
 
 function collapseWhitespace(value) {
@@ -92,15 +153,79 @@ function compactNavCTALabel(label) {
   return words.slice(0, 2).join(' ');
 }
 
+function formatStoredPrice(item) {
+  if (!item || item.price === null || item.price === undefined || item.price === '') return '';
+  return `${item.currency || '$'}${item.price}`;
+}
+
+function mergeCommercialItems({ mode, content, business, photos }) {
+  const aiItems = mode === 'products'
+    ? (content?.products?.items || [])
+    : (content?.services?.items || []);
+  const businessItems = mode === 'products'
+    ? ((business?.products && business.products.length > 0) ? business.products : (business?.services || []))
+    : (business?.services || []);
+  const sectionPhotos = mode === 'products'
+    ? Array.from(new Set(
+      getPhotosForSection(photos, 'products')
+        .concat(getPhotosForSection(photos, 'product'))
+        .concat(getPhotosForSection(photos, 'services'))
+        .concat(getPhotosForSection(photos, 'gallery'))
+    ))
+    : getPhotosForSection(photos, 'services');
+  const mergedItems = [];
+  const seenNames = new Set();
+
+  businessItems.forEach((item, index) => {
+    const normalized = String(item?.name || '').toLowerCase().trim();
+    if (!normalized || seenNames.has(normalized)) return;
+    seenNames.add(normalized);
+    mergedItems.push({
+      name: item.name,
+      description: item.description || '',
+      price: formatStoredPrice(item),
+      photoUrl: item.photo_url || sectionPhotos[index] || '',
+    });
+  });
+
+  aiItems.forEach((item, index) => {
+    const normalized = String(item?.name || '').toLowerCase().trim();
+    if (!normalized || seenNames.has(normalized)) return;
+    const isDuplicate = Array.from(seenNames).some((name) => (
+      name === normalized || name.includes(normalized) || normalized.includes(name)
+    ));
+    if (isDuplicate) return;
+    seenNames.add(normalized);
+    mergedItems.push({
+      name: item.name,
+      description: item.description || '',
+      price: item.price || item.priceRange || '',
+      photoUrl: sectionPhotos[index] || '',
+    });
+  });
+
+  return mergedItems;
+}
+
 // ── Hero Section ──
-export function heroSection(content, photos, business, ctaLabel) {
-  const heroPhoto = getPhotoForSection(photos, 'hero') || (photos && photos[0] ? photos[0].url : '');
+export function heroSection(content, photos, business, pageContext = {}) {
+  const heroPhoto =
+    getPhotoForSection(photos, 'hero') ||
+    getPhotoForSection(photos, 'gallery') ||
+    getPhotoForSection(photos, 'services') ||
+    getPhotoForSection(photos, 'products') ||
+    (photos && photos[0] ? photos[0].url : '') ||
+    getFallbackHeroPhoto(business);
   const optimizedHeroPhoto = getOptimizedBackgroundUrl(heroPhoto, 'hero');
   const headline = esc(content?.hero?.headline || business.name);
   const subheadline = esc(content?.hero?.subheadline || '');
-  const businessType = normalizeBusinessType(business?.category, business?.subcategory);
-  const cta = ctaLabel || content?.cta?.buttonText || getPrimaryActionLabel(businessType);
-  const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
+  const language = pageContext.language || business?.language || 'es';
+  const businessType = pageContext.businessType || normalizeBusinessType(business?.category, business?.subcategory);
+  const offer = pageContext.offer || getOfferConfig(businessType, new Set(), language);
+  const cta = content?.cta?.buttonText || pageContext.primaryActionLabel || getPrimaryActionLabel(businessType, language);
+  const whatsappHref = pageContext.whatsappHref || buildWhatsAppHref(business, { businessType, language });
+  const primaryHref = whatsappHref || '#contact';
+  const primaryAttrs = whatsappHref ? ' target="_blank" rel="noopener"' : '';
 
   const bgStyle = optimizedHeroPhoto
     ? `background: linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7)), url('${esc(optimizedHeroPhoto)}') center/cover no-repeat;`
@@ -114,7 +239,8 @@ export function heroSection(content, photos, business, ctaLabel) {
         <h1 class="hero-animate">${headline}</h1>
         ${subheadline ? `<p class="hero__sub hero-animate">${subheadline}</p>` : ''}
         <div class="hero__actions hero-animate">
-          <a href="${phoneHref}" class="btn btn--primary">${esc(cta)} <span class="btn-arrow">→</span></a>
+          <a href="${offer.targetHref}" class="btn btn--ghost-light">${esc(offer.actionLabel)} <span class="btn-arrow">→</span></a>
+          <a href="${primaryHref}" class="btn btn--primary"${primaryAttrs}>${esc(cta)} <span class="btn-arrow">→</span></a>
         </div>
       </div>
       <div class="scroll-indicator">↓</div>
@@ -166,22 +292,21 @@ export function aboutSection(content, photos, business) {
   const heading = esc(content?.about?.heading || 'Sobre Nosotros');
   const paragraphs = content?.about?.paragraphs || [];
 
-  // Founder info from customer-provided data
-  const founderName = (business && business.founderName) || '';
-  const founderDesc = (business && business.founderDescription) || '';
+  const founderName = business?.founderName || '';
+  const founderDesc = business?.founderDescription || '';
   const founderPhoto = getPhotoForSection(photos, 'founder');
   const hasFounder = founderName || founderDesc;
 
   return {
     html: `
     <section id="about" class="section">
-      <div class="container split${aboutPhoto ? '' : ''}">
+      <div class="container split">
         <div class="reveal">
           <div class="section-header">
             <span class="eyebrow">Nuestra historia</span>
             <h2>${heading}</h2>
           </div>
-          ${paragraphs.map(p => `<p>${esc(p)}</p>`).join('\n          ')}
+          ${paragraphs.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('\n          ')}
         </div>
         ${aboutPhoto ? `
         <div class="reveal-right img-rounded aspect-4-3">
@@ -226,46 +351,29 @@ export function aboutSection(content, photos, business) {
   };
 }
 
-// ── Services Section ──
+// ── Services / Products Fallback Section ──
 export function servicesSection(content, photos, business) {
-  const heading = esc(content?.services?.heading || 'Servicios');
-  const aiItems = content?.services?.items || [];
-  const customerServices = (business && business.services) || [];
+  const language = business?.language || 'es';
+  const businessType = normalizeBusinessType(business?.category, business?.subcategory);
+  const offer = getOfferConfig(businessType, new Set(['services']), language);
+  const headingSource = offer.mode === 'products'
+    ? (content?.products?.heading || content?.services?.heading)
+    : content?.services?.heading;
+  const heading = esc(headingSource || offer.sectionHeading);
+  const mergedItems = mergeCommercialItems({ mode: offer.mode, content, business, photos });
 
-  // Merge: customer-provided services take priority, then AI-generated ones fill in
-  const mergedItems = [];
-
-  // Add customer-provided services first (they have real data from the business owner)
-  customerServices.forEach(svc => {
-    const photoUrl = svc.photo_url || '';
-    mergedItems.push({
-      name: svc.name,
-      description: svc.description || '',
-      price: svc.price ? `${svc.currency || '$'}${svc.price}` : '',
-      photoUrl,
-    });
-  });
-
-  // Add AI-generated items that don't duplicate customer services (by name similarity)
-  const customerNames = customerServices.map(s => (s.name || '').toLowerCase().trim());
-  aiItems.forEach(item => {
-    const nameLower = (item.name || '').toLowerCase().trim();
-    const isDuplicate = customerNames.some(cn => cn === nameLower || cn.includes(nameLower) || nameLower.includes(cn));
-    if (!isDuplicate) {
-      mergedItems.push({ name: item.name, description: item.description, price: item.price || '', photoUrl: '' });
-    }
-  });
+  if (!mergedItems.length) return { html: '', css: '' };
 
   return {
     html: `
     <section id="services" class="section section--alt">
       <div class="container">
         <div class="section-header reveal" style="text-align:center;">
-          <span class="eyebrow">Lo que ofrecemos</span>
+          <span class="eyebrow">${esc(offer.eyebrow)}</span>
           <h2>${heading}</h2>
         </div>
         <div class="service-grid reveal">
-          ${mergedItems.map(item => `
+          ${mergedItems.map((item) => `
           <div class="service-grid__item">
             ${item.photoUrl ? `<div class="service-grid__photo">${buildResponsiveImageTag({ url: item.photoUrl, alt: item.name, preset: 'card', sizes: '(max-width: 768px) 100vw, 33vw', className: 'img-cover' })}</div>` : ''}
             <h3>${esc(item.name)}</h3>
@@ -305,11 +413,11 @@ export function whyChooseUsSection(content) {
           <h2>${heading}</h2>
         </div>
         <div class="grid grid--3 reveal">
-          ${points.map((p, i) => `
-          <div class="card card--bordered stagger-${i + 1}">
-            <h3>${esc(p.title)}</h3>
+          ${points.map((point, index) => `
+          <div class="card card--bordered stagger-${index + 1}">
+            <h3>${esc(point.title)}</h3>
             <div class="divider"></div>
-            <p style="color:var(--color-text-muted)">${esc(p.description)}</p>
+            <p style="color:var(--color-text-muted)">${esc(point.description)}</p>
           </div>`).join('')}
         </div>
       </div>
@@ -332,11 +440,11 @@ export function testimonialsSection(content) {
           <h2>${heading}</h2>
         </div>
         <div class="grid grid--${Math.min(reviews.length, 3)} reveal">
-          ${reviews.map((r, i) => `
-          <div class="card card--dark stagger-${i + 1}">
-            ${starsHTML(r.stars)}
-            <p class="quote">"${esc(r.quote)}"</p>
-            <p class="quote-author">— ${esc(r.author)}</p>
+          ${reviews.map((review, index) => `
+          <div class="card card--dark stagger-${index + 1}">
+            ${starsHTML(review.stars)}
+            <p class="quote">"${esc(review.quote)}"</p>
+            <p class="quote-author">— ${esc(review.author)}</p>
           </div>`).join('')}
         </div>
       </div>
@@ -349,7 +457,6 @@ export function testimonialsSection(content) {
 export function gallerySection(content, photos) {
   const heading = esc(content?.gallery?.heading || 'Galería');
   const galleryPhotos = getPhotosForSection(photos, 'gallery') || [];
-  // If not enough gallery-tagged photos, use all remaining
   const allPhotos = galleryPhotos.length >= 4 ? galleryPhotos : getAllPhotos(photos).slice(0, 8);
 
   if (allPhotos.length === 0) return { html: '', css: '' };
@@ -364,9 +471,9 @@ export function gallerySection(content, photos) {
         </div>
       </div>
       <div class="h-scroll reveal" style="padding-left:3rem;">
-        ${allPhotos.map((url, i) => `
+        ${allPhotos.map((url, index) => `
         <div class="h-scroll__item">
-          ${buildResponsiveImageTag({ url, alt: `Foto ${i + 1}`, preset: 'gallery', sizes: '(max-width: 768px) 82vw, 36vw' })}
+          ${buildResponsiveImageTag({ url, alt: `Foto ${index + 1}`, preset: 'gallery', sizes: '(max-width: 768px) 82vw, 36vw' })}
         </div>`).join('')}
       </div>
     </section>`,
@@ -375,21 +482,25 @@ export function gallerySection(content, photos) {
 }
 
 // ── CTA Section ──
-export function ctaSection(content, business) {
-  const heading = esc(content?.cta?.heading || '¿Listo para visitarnos?');
-  const businessType = normalizeBusinessType(business?.category, business?.subcategory);
-  const btnText = esc(content?.cta?.buttonText || getPrimaryActionLabel(businessType));
+export function ctaSection(content, business, pageContext = {}) {
+  const language = pageContext.language || business?.language || 'es';
+  const businessType = pageContext.businessType || normalizeBusinessType(business?.category, business?.subcategory);
+  const whatsappHref = pageContext.whatsappHref || buildWhatsAppHref(business, { businessType, language });
+  const heading = esc(content?.cta?.heading || (language === 'en' ? 'Ready to message us?' : '¿Listo para escribirnos?'));
+  const btnText = esc(content?.cta?.buttonText || pageContext.primaryActionLabel || getPrimaryActionLabel(businessType, language));
   const supporting = esc(content?.cta?.supportingText || '');
-  const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
+  const contactValue = esc(business.whatsapp || business.phone || '');
+  const buttonHref = whatsappHref || '#contact';
+  const buttonAttrs = whatsappHref ? ' target="_blank" rel="noopener"' : '';
 
   return {
     html: `
     <section id="cta-section" class="section section--accent" style="text-align:center;">
       <div class="container reveal">
         <h2>${heading}</h2>
-        <p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(var(--color-on-accent-rgb),0.88)">${supporting}</p>
-        <a href="${phoneHref}" class="btn btn--white">${btnText} <span class="btn-arrow">→</span></a>
-        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.1rem;"><a href="${phoneHref}" style="color:var(--color-on-accent);font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
+        <p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(255,255,255,0.9)">${supporting}</p>
+        <a href="${buttonHref}" class="btn btn--white"${buttonAttrs}>${btnText} <span class="btn-arrow">→</span></a>
+        ${contactValue ? `<p style="margin-top:1.5rem;font-size:1.1rem;"><a href="${buttonHref}"${buttonAttrs} style="color:#fff;font-family:var(--font-heading);font-weight:400">${contactValue}</a></p>` : ''}
       </div>
     </section>`,
     css: '',
@@ -412,7 +523,7 @@ export function hoursSection(content) {
           <h2>${heading}</h2>
         </div>
         <div class="reveal">
-          ${formatted.map(line => `<p style="text-align:center;padding:0.4rem 0;color:var(--color-text-muted);border-bottom:1px solid rgba(0,0,0,0.04)">${esc(line)}</p>`).join('\n          ')}
+          ${formatted.map((line) => `<p style="text-align:center;padding:0.4rem 0;color:var(--color-text-muted);border-bottom:1px solid rgba(0,0,0,0.04)">${esc(line)}</p>`).join('\n          ')}
         </div>
       </div>
     </section>`,
@@ -421,13 +532,19 @@ export function hoursSection(content) {
 }
 
 // ── Contact Section ──
-export function contactSection(content, business, photos) {
+export function contactSection(content, business, photos, pageContext = {}) {
+  const language = pageContext.language || business?.language || 'es';
+  const businessType = pageContext.businessType || normalizeBusinessType(business?.category, business?.subcategory);
   const heading = esc(content?.contact?.heading || 'Contacto');
   const phone = esc(content?.contact?.phone || business.phone || '');
+  const whatsapp = esc(business.whatsapp || '');
+  const whatsappHref = pageContext.whatsappHref || buildWhatsAppHref(business, { businessType, language });
+  const quickActionLabel = esc(getStickyWhatsappLabel(language));
   const address = esc(content?.contact?.address || business.address || '');
   const directionsText = esc(content?.contact?.directionsText || 'Cómo llegar');
   const mapsUrl = esc(business.mapsUrl || `https://www.google.com/maps/search/${encodeURIComponent(address)}`);
   const contactPhoto = getPhotoForSection(photos, 'contact') || getPhotoForSection(photos, 'ubicaci');
+  const showPhone = phone && (!whatsapp || whatsapp !== phone);
 
   return {
     html: `
@@ -438,9 +555,13 @@ export function contactSection(content, business, photos) {
             <span class="eyebrow">Encuéntranos</span>
             <h2>${heading}</h2>
           </div>
-          ${phone ? `<p style="margin-bottom:1rem"><strong>Teléfono:</strong><br><a href="tel:${phone.replace(/\s/g, '')}" style="font-family:var(--font-heading);font-size:1.2rem">${phone}</a></p>` : ''}
+          ${whatsappHref ? `<p style="margin-bottom:1rem"><strong>WhatsApp:</strong><br><a href="${whatsappHref}" target="_blank" rel="noopener" style="font-family:var(--font-heading);font-size:1.2rem">${whatsapp || quickActionLabel}</a></p>` : ''}
+          ${showPhone ? `<p style="margin-bottom:1rem"><strong>Teléfono:</strong><br><a href="tel:${phone.replace(/\s/g, '')}" style="font-family:var(--font-heading);font-size:1.2rem">${phone}</a></p>` : ''}
           ${address ? `<p style="margin-bottom:1rem;color:var(--color-text-muted)">${address}</p>` : ''}
-          ${address ? `<a href="${mapsUrl}" target="_blank" class="btn btn--outline" style="margin-top:0.5rem">${directionsText} <span class="btn-arrow">→</span></a>` : ''}
+          <div style="display:flex;gap:0.85rem;flex-wrap:wrap;margin-top:0.5rem;">
+            ${whatsappHref ? `<a href="${whatsappHref}" target="_blank" rel="noopener" class="btn btn--primary">${quickActionLabel} <span class="btn-arrow">→</span></a>` : ''}
+            ${address ? `<a href="${mapsUrl}" target="_blank" class="btn btn--outline">${directionsText} <span class="btn-arrow">→</span></a>` : ''}
+          </div>
         </div>
         ${contactPhoto ? `
         <div class="reveal-right img-rounded aspect-4-3">
@@ -469,7 +590,7 @@ export function footerSection(content, business) {
           </div>
           ${socials.length ? `
           <div class="site-footer__social">
-            ${socials.map(s => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.platform)}</a>`).join('\n            ')}
+            ${socials.map((social) => `<a href="${esc(social.url)}" target="_blank" rel="noopener">${esc(social.platform)}</a>`).join('\n            ')}
           </div>` : ''}
         </div>
         <div class="site-footer__bottom">
@@ -484,13 +605,16 @@ export function footerSection(content, business) {
 
 // ── Nav HTML (not a section, but generated here for convenience) ──
 export function navHTML(business, ctaLabel, options = {}) {
+  const language = options.language || business?.language || 'es';
   const businessType = options.businessType || normalizeBusinessType(business?.category, business?.subcategory);
   const availableSections = options.availableSections || new Set(['about', 'services', 'gallery', 'testimonials', 'contact']);
-  const navItems = getNavigationItems(businessType, availableSections);
-  const cta = ctaLabel || getPrimaryActionLabel(businessType);
+  const navItems = getNavigationItems(businessType, availableSections, language);
+  const whatsappHref = options.whatsappHref || buildWhatsAppHref(business, { businessType, language });
+  const cta = whatsappHref ? getStickyWhatsappLabel(language) : (language === 'en' ? 'Contact' : 'Contacto');
   const navBrand = deriveNavBrandName(business, options.content);
-  const compactCTA = compactNavCTALabel(cta);
-  const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
+  const compactCTA = compactNavCTALabel(whatsappHref ? cta : (ctaLabel || cta));
+  const ctaHref = whatsappHref || '#contact';
+  const ctaAttrs = whatsappHref ? ' target="_blank" rel="noopener"' : '';
 
   return `
   <nav class="site-nav">
@@ -501,7 +625,7 @@ export function navHTML(business, ctaLabel, options = {}) {
           ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n          ')}
         </ul>
       </div>
-      <a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(compactCTA || cta)}</a>
+      <a href="${ctaHref}" class="site-nav__cta site-nav__cta--desktop"${ctaAttrs}>${esc(compactCTA || cta)}</a>
       <button class="hamburger" aria-label="Menú">
         <span></span><span></span><span></span>
       </button>
@@ -509,23 +633,25 @@ export function navHTML(business, ctaLabel, options = {}) {
   </nav>
   <div class="mobile-menu">
     ${navItems.map((item) => `<a href="${item.href}">${esc(item.label)}</a>`).join('\n    ')}
-    <a href="${phoneHref}" class="mobile-cta">${esc(cta)}</a>
+    <a href="${ctaHref}" class="mobile-cta"${ctaAttrs}>${esc(cta)}</a>
   </div>`;
 }
 
-// ── WhatsApp FAB HTML ──
-export function whatsappFAB(business) {
-  if (!business.whatsapp && !business.phone) return '';
-
-  // wa.me requires international format digits only (no +, spaces, dashes)
-  const raw = (business.whatsapp || business.phone || '').replace(/[^\d]/g, '');
-  // If number doesn't look international (too short), skip — wa.me won't resolve it
-  if (raw.length < 10) return '';
-  const message = encodeURIComponent(`Hola! Me gustaría más información sobre ${business.name || 'sus servicios'}.`);
-  const href = `https://wa.me/${raw}?text=${message}`;
+export function stickyBottomActions(business, pageContext = {}) {
+  const language = pageContext.language || business?.language || 'es';
+  const businessType = pageContext.businessType || normalizeBusinessType(business?.category, business?.subcategory);
+  const offer = pageContext.offer || getOfferConfig(businessType, new Set(), language);
+  const whatsappHref = pageContext.whatsappHref || buildWhatsAppHref(business, { businessType, language });
+  const primaryLabel = whatsappHref ? getStickyWhatsappLabel(language) : (language === 'en' ? 'Contact' : 'Contacto');
+  const primaryHref = whatsappHref || '#contact';
+  const primaryAttrs = whatsappHref ? ' target="_blank" rel="noopener"' : '';
 
   return `
-  <a href="${href}" target="_blank" rel="noopener" class="whatsapp-fab" aria-label="WhatsApp">
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-  </a>`;
+  <div class="sticky-cta-spacer" aria-hidden="true"></div>
+  <div class="sticky-cta-bar" aria-label="Quick actions">
+    <div class="sticky-cta-bar__inner">
+      <a href="${offer.targetHref}" class="sticky-cta-btn sticky-cta-btn--secondary">${esc(offer.actionLabel)}</a>
+      <a href="${primaryHref}" class="sticky-cta-btn sticky-cta-btn--primary"${primaryAttrs}>${esc(primaryLabel)}</a>
+    </div>
+  </div>`;
 }

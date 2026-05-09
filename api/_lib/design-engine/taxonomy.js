@@ -9,6 +9,14 @@ function includesAny(value, needles) {
   return needles.some((needle) => value.includes(needle));
 }
 
+function normalizeLanguage(language) {
+  return language === 'en' ? 'en' : 'es';
+}
+
+function labelForLanguage(language, english, spanish) {
+  return normalizeLanguage(language) === 'en' ? english : spanish;
+}
+
 export function normalizeBusinessType(category, subcategory) {
   const cat = lower(category);
   const sub = lower(subcategory);
@@ -55,43 +63,209 @@ export function normalizeBusinessType(category, subcategory) {
   if (includesAny(combined, ['hotel'])) return 'hotel';
   if (includesAny(combined, ['travel'])) return 'travel';
   if (includesAny(combined, ['furniture', 'muebles'])) return 'furniture';
-  if (includesAny(combined, ['retail', 'store', 'shop'])) return 'retail';
+  if (includesAny(combined, [
+    'retail',
+    'store',
+    'shop',
+    'boutique',
+    'clothing',
+    'apparel',
+    'fashion',
+    'ropa',
+    'jewelry',
+    'joyer',
+    'shoe',
+    'zapato',
+    'gift',
+    'regalo',
+  ])) return 'retail';
 
   return 'generic';
 }
 
-export function getPrimaryActionLabel(businessType) {
+function getOfferCopy(businessType, language = 'es') {
+  const lang = normalizeLanguage(language);
+
   switch (businessType) {
     case 'restaurant':
     case 'cafe':
     case 'bakery':
     case 'bar':
-      return 'Llámanos';
+      return lang === 'en'
+        ? { mode: 'menu', navLabel: 'Menu', actionLabel: 'See Menu', sectionHeading: 'Menu & Pricing', eyebrow: 'Menu' }
+        : { mode: 'menu', navLabel: 'Menú', actionLabel: 'Ver Menú', sectionHeading: 'Menú y Precios', eyebrow: 'Menú' };
+
+    case 'retail':
+    case 'furniture':
+      return lang === 'en'
+        ? { mode: 'products', navLabel: 'Products', actionLabel: 'See Our Products', sectionHeading: 'Featured Products', eyebrow: 'Products' }
+        : { mode: 'products', navLabel: 'Productos', actionLabel: 'Ver Productos', sectionHeading: 'Productos Destacados', eyebrow: 'Productos' };
+
+    case 'gym':
+      return lang === 'en'
+        ? { mode: 'services', navLabel: 'Plans', actionLabel: 'See Plans', sectionHeading: 'Plans & Pricing', eyebrow: 'Plans' }
+        : { mode: 'services', navLabel: 'Planes', actionLabel: 'Ver Planes', sectionHeading: 'Planes y Precios', eyebrow: 'Planes' };
+
+    default:
+      return lang === 'en'
+        ? { mode: 'services', navLabel: 'Services', actionLabel: 'See Our Services', sectionHeading: 'Services & Pricing', eyebrow: 'Services' }
+        : { mode: 'services', navLabel: 'Servicios', actionLabel: 'Ver Servicios', sectionHeading: 'Servicios y Precios', eyebrow: 'Servicios' };
+  }
+}
+
+export function getOfferMode(businessType) {
+  return getOfferCopy(businessType).mode;
+}
+
+function getOfferSectionHref(sectionKey) {
+  switch (sectionKey) {
+    case 'menu':
+    case 'menuHighlights':
+      return '#menu';
+    case 'nailServices':
+      return '#nail-services';
+    case 'treatments':
+      return '#treatments';
+    case 'dentalServices':
+      return '#dental-services';
+    case 'practiceAreas':
+      return '#practice-areas';
+    case 'memberships':
+      return '#memberships';
+    case 'autoServices':
+      return '#auto-services';
+    case 'products':
+      return '#products';
+    case 'services':
+    default:
+      return '#services';
+  }
+}
+
+export function getOfferSectionCandidates(businessType) {
+  switch (businessType) {
+    case 'restaurant':
+    case 'cafe':
+    case 'bakery':
+    case 'bar':
+      return ['menu', 'menuHighlights'];
+    case 'nail-salon':
+      return ['nailServices', 'services'];
+    case 'salon':
+    case 'spa':
+    case 'barber':
+      return ['treatments', 'services'];
+    case 'dentist':
+      return ['dentalServices', 'services'];
+    case 'lawyer':
+      return ['practiceAreas', 'services'];
+    case 'gym':
+      return ['memberships', 'services'];
+    case 'auto-repair':
+      return ['autoServices', 'services'];
+    case 'retail':
+    case 'furniture':
+      return ['products', 'services'];
+    default:
+      return ['services'];
+  }
+}
+
+export function shouldUseGenericServicesSection(businessType) {
+  return ![
+    'restaurant',
+    'cafe',
+    'bakery',
+    'bar',
+    'nail-salon',
+    'salon',
+    'spa',
+    'barber',
+    'dentist',
+    'lawyer',
+    'gym',
+    'auto-repair',
+    'retail',
+    'furniture',
+  ].includes(businessType);
+}
+
+export function getOfferConfig(businessType, availableSections = new Set(), language = 'es') {
+  const copy = getOfferCopy(businessType, language);
+  const candidates = getOfferSectionCandidates(businessType);
+  const targetKey = candidates.find((key) => availableSections.has(key)) || candidates[0] || 'services';
+
+  return {
+    ...copy,
+    targetKey,
+    targetHref: getOfferSectionHref(targetKey),
+  };
+}
+
+export function getStickyWhatsappLabel(language = 'es') {
+  return normalizeLanguage(language) === 'en' ? 'WhatsApp' : 'WhatsApp';
+}
+
+export function getPrimaryActionLabel(businessType, language = 'es') {
+  const lang = normalizeLanguage(language);
+
+  switch (businessType) {
+    case 'restaurant':
+    case 'cafe':
+    case 'bakery':
+    case 'bar':
+      return lang === 'en' ? 'Order on WhatsApp' : 'Pide por WhatsApp';
     case 'salon':
     case 'nail-salon':
     case 'spa':
     case 'barber':
-      return 'Reserva por teléfono';
+    case 'gym':
+      return lang === 'en' ? 'Book on WhatsApp' : 'Reserva por WhatsApp';
     case 'doctor':
     case 'dentist':
     case 'veterinarian':
     case 'physiotherapist':
-      return 'Agenda por teléfono';
+      return lang === 'en' ? 'Book on WhatsApp' : 'Agenda por WhatsApp';
+    case 'retail':
+    case 'furniture':
+      return lang === 'en' ? 'Shop on WhatsApp' : 'Compra por WhatsApp';
     case 'plumber':
     case 'electrician':
     case 'contractor':
     case 'auto-repair':
-      return 'Llamar ahora';
-    case 'gym':
-      return 'Agenda tu visita';
+      return lang === 'en' ? 'Get a Quote on WhatsApp' : 'Cotiza por WhatsApp';
     case 'lawyer':
     case 'accountant':
     case 'insurance':
     case 'real-estate':
-      return 'Consulta por teléfono';
+      return lang === 'en' ? 'Message us on WhatsApp' : 'Escríbenos por WhatsApp';
     default:
-      return 'Contáctanos';
+      return lang === 'en' ? 'Message us on WhatsApp' : 'Escríbenos por WhatsApp';
   }
+}
+
+export function buildWhatsAppHref(business, options = {}) {
+  const businessType = options.businessType || normalizeBusinessType(business?.category, business?.subcategory);
+  const language = normalizeLanguage(options.language || business?.language);
+  const raw = String(business?.whatsapp || business?.phone || '').replace(/[^\d]/g, '');
+
+  if (raw.length < 10) return '';
+
+  const name = business?.name || (language === 'en' ? 'your business' : 'su negocio');
+  const offer = getOfferCopy(businessType, language);
+
+  let message = '';
+  if (language === 'en') {
+    if (offer.mode === 'menu') message = `Hi! I'd like to see the menu for ${name}.`;
+    else if (offer.mode === 'products') message = `Hi! I'd like to learn more about the products at ${name}.`;
+    else message = `Hi! I'd like more information about the services at ${name}.`;
+  } else {
+    if (offer.mode === 'menu') message = `Hola! Quiero ver el menú de ${name}.`;
+    else if (offer.mode === 'products') message = `Hola! Quiero más información sobre los productos de ${name}.`;
+    else message = `Hola! Quiero más información sobre los servicios de ${name}.`;
+  }
+
+  return `https://wa.me/${raw}?text=${encodeURIComponent(message)}`;
 }
 
 export function getBusinessSchemaType(businessType) {
@@ -132,8 +306,22 @@ export function getBusinessSchemaType(businessType) {
   }
 }
 
-export function getNavigationItems(businessType, availableSections = new Set()) {
+export function getNavigationItems(businessType, availableSections = new Set(), language = 'es') {
   const has = (key) => availableSections.has(key);
+  const offer = getOfferConfig(businessType, availableSections, language);
+  const offerItem = offer.targetKey ? { href: offer.targetHref, label: offer.navLabel } : null;
+  const aboutLabel = labelForLanguage(language, 'About', 'Nosotros');
+  const ambianceLabel = labelForLanguage(language, 'Ambiance', 'Ambiente');
+  const galleryLabel = labelForLanguage(language, 'Gallery', 'Galería');
+  const hoursLabel = labelForLanguage(language, 'Hours', 'Horario');
+  const contactLabel = labelForLanguage(language, 'Contact', 'Contacto');
+  const treatmentsLabel = labelForLanguage(language, 'Treatments', 'Tratamientos');
+  const designsLabel = labelForLanguage(language, 'Designs', 'Diseños');
+  const reviewsLabel = labelForLanguage(language, 'Reviews', 'Reseñas');
+  const teamLabel = labelForLanguage(language, 'Team', 'Equipo');
+  const insuranceLabel = labelForLanguage(language, 'Insurance', 'Seguros');
+  const emergencyLabel = labelForLanguage(language, 'Emergency', 'Urgencias');
+  const coverageLabel = labelForLanguage(language, 'Coverage', 'Cobertura');
 
   switch (businessType) {
     case 'restaurant':
@@ -141,13 +329,12 @@ export function getNavigationItems(businessType, availableSections = new Set()) 
     case 'bakery':
     case 'bar':
       return [
-        has('about') && { href: '#about', label: 'Nosotros' },
-        has('menu') && { href: '#menu', label: 'Menú' },
-        has('menuHighlights') && { href: '#menu', label: 'Especialidades' },
-        has('ambiance') && { href: '#ambiance', label: 'Ambiente' },
-        has('gallery') && { href: '#gallery', label: 'Fotos' },
-        has('hours') && { href: '#hours', label: 'Horario' },
-        has('contact') && { href: '#contact', label: 'Contacto' },
+        has('about') && { href: '#about', label: aboutLabel },
+        offerItem,
+        has('ambiance') && { href: '#ambiance', label: ambianceLabel },
+        has('gallery') && { href: '#gallery', label: galleryLabel },
+        has('hours') && { href: '#hours', label: hoursLabel },
+        has('contact') && { href: '#contact', label: contactLabel },
       ].filter(Boolean);
 
     case 'salon':
@@ -155,15 +342,13 @@ export function getNavigationItems(businessType, availableSections = new Set()) 
     case 'spa':
     case 'barber':
       return [
-        has('about') && { href: '#about', label: 'Nosotros' },
-        has('nailServices')
-          ? { href: '#nail-services', label: 'Servicios' }
-          : (has('services') && { href: '#services', label: 'Servicios' }),
-        has('treatments') && { href: '#treatments', label: 'Tratamientos' },
-        has('designGallery') && { href: '#design-gallery', label: 'Diseños' },
-        has('gallery') && { href: '#gallery', label: 'Galería' },
-        has('testimonials') && { href: '#testimonials', label: 'Reseñas' },
-        has('contact') && { href: '#contact', label: 'Contacto' },
+        has('about') && { href: '#about', label: aboutLabel },
+        offerItem,
+        has('treatments') && { href: '#treatments', label: treatmentsLabel },
+        has('designGallery') && { href: '#design-gallery', label: designsLabel },
+        has('gallery') && { href: '#gallery', label: galleryLabel },
+        has('testimonials') && { href: '#testimonials', label: reviewsLabel },
+        has('contact') && { href: '#contact', label: contactLabel },
       ].filter(Boolean);
 
     case 'doctor':
@@ -171,12 +356,12 @@ export function getNavigationItems(businessType, availableSections = new Set()) 
     case 'veterinarian':
     case 'physiotherapist':
       return [
-        has('services') && { href: '#services', label: 'Servicios' },
-        has('credentials') && { href: '#credentials', label: 'Equipo' },
-        has('insurance') && { href: '#insurance', label: 'Seguros' },
-        has('testimonials') && { href: '#testimonials', label: 'Reseñas' },
-        has('hours') && { href: '#hours', label: 'Horario' },
-        has('contact') && { href: '#contact', label: 'Contacto' },
+        offerItem,
+        has('credentials') && { href: '#credentials', label: teamLabel },
+        has('insurance') && { href: '#insurance', label: insuranceLabel },
+        has('testimonials') && { href: '#testimonials', label: reviewsLabel },
+        has('hours') && { href: '#hours', label: hoursLabel },
+        has('contact') && { href: '#contact', label: contactLabel },
       ].filter(Boolean);
 
     case 'plumber':
@@ -184,20 +369,20 @@ export function getNavigationItems(businessType, availableSections = new Set()) 
     case 'contractor':
     case 'auto-repair':
       return [
-        has('services') && { href: '#services', label: 'Servicios' },
-        has('emergencyCTA') && { href: '#emergency', label: 'Urgencias' },
-        has('coverageArea') && { href: '#coverage', label: 'Cobertura' },
-        has('testimonials') && { href: '#testimonials', label: 'Reseñas' },
-        has('contact') && { href: '#contact', label: 'Contacto' },
+        offerItem,
+        has('emergencyCTA') && { href: '#emergency', label: emergencyLabel },
+        has('coverageArea') && { href: '#coverage', label: coverageLabel },
+        has('testimonials') && { href: '#testimonials', label: reviewsLabel },
+        has('contact') && { href: '#contact', label: contactLabel },
       ].filter(Boolean);
 
     default:
       return [
-        has('about') && { href: '#about', label: 'Nosotros' },
-        has('services') && { href: '#services', label: 'Servicios' },
-        has('gallery') && { href: '#gallery', label: 'Galería' },
-        has('testimonials') && { href: '#testimonials', label: 'Reseñas' },
-        has('contact') && { href: '#contact', label: 'Contacto' },
+        has('about') && { href: '#about', label: aboutLabel },
+        offerItem,
+        has('gallery') && { href: '#gallery', label: galleryLabel },
+        has('testimonials') && { href: '#testimonials', label: reviewsLabel },
+        has('contact') && { href: '#contact', label: contactLabel },
       ].filter(Boolean);
   }
 }

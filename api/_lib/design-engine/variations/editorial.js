@@ -50,11 +50,11 @@ export function getVariationCSS() {
 export function arrangeSections(sectionMap) {
   const order = [
     'hero',
-    'about',
-    'services',
     // Category-specific primary sections
-    'menu', 'menuHighlights', 'nailServices', 'treatments', 'dentalServices',
-    'autoServices', 'practiceAreas', 'memberships', 'credentials',
+    'menu', 'menuHighlights', 'products', 'nailServices', 'treatments', 'dentalServices',
+    'autoServices', 'practiceAreas', 'memberships', 'services',
+    'about',
+    'credentials',
     // Category-specific secondary sections
     'ambiance', 'designGallery', 'team', 'classSchedule', 'dailySpecials',
     'insurance', 'coverageArea',

@@ -83,7 +83,10 @@ export function getVariationCSS() {
  */
 export function arrangeSections(sectionMap, content, business) {
   // Build a marquee strip from services
-  const serviceNames = (content?.services?.items || []).map(s => s.name).filter(Boolean);
+  const serviceNames = (content?.services?.items || [])
+    .concat(content?.products?.items || [])
+    .map((item) => item.name)
+    .filter(Boolean);
   const marqueeItems = serviceNames.length >= 3
     ? serviceNames
     : [business.category || 'Servicios', 'Calidad', 'Experiencia', 'Profesionalismo'];
@@ -98,21 +101,21 @@ export function arrangeSections(sectionMap, content, business) {
   const order = [
     'hero',
     '_marquee',
-    'about',
-    'services',
     // Category-specific primary sections
-    'menu', 'menuHighlights', 'nailServices', 'treatments', 'dentalServices',
-    'autoServices', 'practiceAreas', 'memberships', 'credentials',
+    'menu', 'menuHighlights', 'products', 'nailServices', 'treatments', 'dentalServices',
+    'autoServices', 'practiceAreas', 'memberships', 'services',
+    'testimonials',
+    'about',
+    'credentials',
     // Category-specific secondary sections
     'ambiance', 'designGallery', 'team', 'classSchedule', 'dailySpecials',
     'insurance', 'coverageArea',
     'whyChooseUs',
-    'testimonials',
     'gallery',
     // Category-specific CTA sections
     'emergencyCTA', 'estimateCTA',
-    'hours',
     'cta',
+    'hours',
     'contact',
     'footer',
   ];

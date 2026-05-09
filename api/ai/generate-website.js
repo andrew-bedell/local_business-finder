@@ -35,6 +35,7 @@ export default async function handler(req, res) {
     menuItems,
     staffMembers,
     services,
+    products,
     founderName,
     founderDescription,
     // Legacy format fields
@@ -88,6 +89,7 @@ export default async function handler(req, res) {
         menuItems: menuItems || [],
         staffMembers: staffMembers || [],
         services: services || [],
+        products: products || [],
         founderName: founderName || '',
         founderDescription: founderDescription || '',
       },

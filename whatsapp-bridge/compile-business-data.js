@@ -17,12 +17,83 @@ function getClient() {
   return supabase;
 }
 
+function lower(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function includesAny(value, needles) {
+  return needles.some((needle) => value.includes(needle));
+}
+
+function isProductLedBusiness(business) {
+  const combined = `${lower(business?.category)} ${lower(business?.subcategory)}`;
+  return includesAny(combined, [
+    'retail',
+    'store',
+    'shop',
+    'boutique',
+    'clothing',
+    'apparel',
+    'fashion',
+    'ropa',
+    'jewelry',
+    'joyer',
+    'shoe',
+    'zapato',
+    'gift',
+    'regalo',
+    'furniture',
+    'muebles',
+  ]);
+}
+
+function filterWebsitePhotos(photos) {
+  return (photos || []).filter((photo) => {
+    if (!photo) return false;
+    if (!(photo.url || photo.storage_path)) return false;
+    if (photo.has_text_overlay === true) return false;
+    return true;
+  });
+}
+
+function buildOptimizedRecordPhotoUrl(photo, preset = 'card') {
+  if (!photo) return '';
+  return getOptimizedPhotoUrl({
+    url: photo.url,
+    storagePath: photo.storage_path,
+    supabaseUrl: process.env.SUPABASE_URL,
+    preset,
+  }) || photo.url || '';
+}
+
+function attachCommercialPhotoUrls(items, photos) {
+  const eligiblePhotos = filterWebsitePhotos(photos);
+  const photoById = new Map(
+    eligiblePhotos
+      .filter((photo) => photo && photo.id)
+      .map((photo) => [photo.id, photo])
+  );
+
+  return (items || []).map((item) => {
+    const sourcePhoto = item && item.photo_id ? photoById.get(item.photo_id) : null;
+    return {
+      ...item,
+      photo_url: sourcePhoto ? buildOptimizedRecordPhotoUrl(sourcePhoto, 'card') : '',
+    };
+  });
+}
+
+function deriveProductRows(business, services) {
+  if (!isProductLedBusiness(business)) return [];
+  return (services || []).map((item) => ({ ...item }));
+}
+
 
 /**
  * Fetch business details (reviews, photos, social profiles) from Supabase.
  *
  * @param {number} businessId
- * @returns {Object} { business, reviews, photos, socialProfiles }
+ * @returns {Object} { business, reviews, photos, socialProfiles, menus, services }
  */
 async function fetchBusinessDetails(businessId) {
   const sb = getClient();
@@ -46,18 +117,23 @@ async function fetchBusinessDetails(businessId) {
     .order('sentiment_score', { ascending: false, nullsFirst: false })
     .limit(20);
 
-  // Fetch photos (up to 30)
-  const { data: photos } = await sb
-    .from('business_photos')
-    .select('*')
-    .eq('business_id', businessId)
-    .limit(30);
+  const [
+    { data: photos },
+    { data: menus },
+    { data: rawServices },
+  ] = await Promise.all([
+    sb.from('business_photos').select('*').eq('business_id', businessId).limit(30),
+    sb.from('business_menus').select('*').eq('business_id', businessId),
+    sb.from('business_services').select('*').eq('business_id', businessId).order('sort_order', { ascending: true }),
+  ]);
 
   return {
     business,
     reviews: reviews || [],
     photos: photos || [],
     socialProfiles: business.business_social_profiles || [],
+    menus: menus || [],
+    services: attachCommercialPhotoUrls(rawServices || [], photos || []),
   };
 }
 
@@ -72,8 +148,10 @@ async function fetchBusinessDetails(businessId) {
  * @param {Array} socialProfiles — From business_social_profiles table
  * @returns {string} Formatted business data text
  */
-function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles) {
+function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus = [], services = [], products = []) {
   const sections = [];
+  const eligiblePhotos = filterWebsitePhotos(photos);
+  const productRows = products.length > 0 ? products : deriveProductRows(business, services);
 
   // Identity
   sections.push('=== BUSINESS IDENTITY ===');
@@ -162,12 +240,54 @@ function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles)
     });
   }
 
+  if (services && services.length > 0 && productRows.length === 0) {
+    sections.push('');
+    sections.push('=== SERVICES ===');
+    services.forEach((service, i) => {
+      let line = `${i + 1}. ${service.name}`;
+      if (service.description) line += ` — ${service.description}`;
+      if (service.price) line += ` (${service.currency || 'MXN'} $${service.price})`;
+      sections.push(line);
+    });
+  }
+
+  if (productRows.length > 0) {
+    sections.push('');
+    sections.push('=== PRODUCTS ===');
+    productRows.forEach((product, i) => {
+      let line = `${i + 1}. ${product.name}`;
+      if (product.description) line += ` — ${product.description}`;
+      if (product.price) line += ` (${product.currency || 'MXN'} $${product.price})`;
+      sections.push(line);
+    });
+  }
+
+  if (menus && menus.length > 0) {
+    sections.push('');
+    sections.push('=== MENU ITEMS ===');
+    const categories = {};
+    menus.forEach((menu) => {
+      const category = menu.menu_category || 'Other';
+      if (!categories[category]) categories[category] = [];
+      categories[category].push(menu);
+    });
+    Object.entries(categories).forEach(([category, items]) => {
+      sections.push(`[${category}]`);
+      items.forEach((menu) => {
+        let line = `  - ${menu.item_name}`;
+        if (menu.item_description) line += `: ${menu.item_description}`;
+        if (menu.price) line += ` (${menu.currency || 'MXN'} $${menu.price})`;
+        sections.push(line);
+      });
+    });
+  }
+
   // Photo inventory
-  if (photos && photos.length > 0) {
+  if (eligiblePhotos.length > 0) {
     sections.push('');
     sections.push('=== PHOTO INVENTORY ===');
-    sections.push(`Total Photos Available: ${photos.length}`);
-    photos.forEach((p, i) => {
+    sections.push(`Total Photos Available: ${eligiblePhotos.length}`);
+    eligiblePhotos.forEach((p, i) => {
       const id = `${p.source || 'unknown'}_photo_${i}`;
       let line = `ID: ${id} | Source: ${p.source || 'unknown'} | Type: ${p.photo_type || 'unclassified'}`;
       if (p.caption) line += ` | Caption: "${p.caption.substring(0, 150)}"`;
@@ -186,7 +306,7 @@ function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles)
  * @returns {Array<{id: string, type: string, url: string}>}
  */
 function buildPhotoInventory(photos) {
-  return (photos || []).map((p, i) => ({
+  return filterWebsitePhotos(photos).map((p, i) => ({
     bucket: resolveStoredPhotoLocation({
       url: p.url,
       storagePath: p.storage_path,
@@ -231,4 +351,5 @@ module.exports = {
   compileBusinessDataForPrompt,
   buildPhotoInventory,
   calculateCompleteness,
+  deriveProductRows,
 };

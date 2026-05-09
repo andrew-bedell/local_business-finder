@@ -1,5 +1,5 @@
 // Design Engine V2 — Footer CSS
-// Footer styles, WhatsApp FAB, "Diseñado por" attribution
+// Footer styles, sticky CTA rail, "Diseñado por" attribution
 
 export function getFooterCSS() {
   return `
@@ -103,34 +103,66 @@ export function getFooterCSS() {
       color: var(--color-accent-light);
     }
 
-    /* WhatsApp FAB */
-    .whatsapp-fab {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      width: 56px;
-      height: 56px;
-      background: #25D366;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
-      z-index: 900;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      text-decoration: none;
+    /* Sticky CTA rail */
+    .sticky-cta-spacer {
+      height: 88px;
     }
 
-    .whatsapp-fab:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5);
+    .sticky-cta-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 980;
+      padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
+      background: linear-gradient(180deg, rgba(247,243,238,0) 0%, rgba(247,243,238,0.92) 24%, rgba(247,243,238,0.98) 100%);
+      backdrop-filter: blur(12px);
+    }
+
+    .sticky-cta-bar__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0.75rem;
+    }
+
+    .sticky-cta-btn {
+      min-height: 54px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.95rem 1.2rem;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.25s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    }
+
+    .sticky-cta-btn:hover {
+      transform: translateY(-2px);
       opacity: 1;
     }
 
-    .whatsapp-fab svg {
-      width: 28px;
-      height: 28px;
-      fill: #fff;
+    .sticky-cta-btn--secondary {
+      background: rgba(255,255,255,0.92);
+      color: var(--color-text);
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .sticky-cta-btn--primary {
+      background: #25D366;
+      color: #fff;
+      border: 1px solid rgba(37,211,102,0.38);
+    }
+
+    .sticky-cta-btn--primary:hover {
+      box-shadow: 0 14px 28px rgba(37, 211, 102, 0.26);
     }
   `;
 }

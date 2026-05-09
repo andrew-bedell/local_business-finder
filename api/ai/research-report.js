@@ -46,6 +46,16 @@ Your report should be practical and actionable — focus on what makes this spec
 
 Write ALL text content in ${langName}.
 
+Conversion priorities:
+- Assume the website's primary job is to explain the offer clearly, surface products/services/menu and pricing early, and drive the visitor to WhatsApp as the main action
+- Suggested sections should prioritize the commercial offer near the top of the page
+- Recommend language that matches the business model:
+  - restaurants/cafes/bakeries/bars -> menu
+  - appointment-based and professional businesses -> services
+  - retail/store/boutique/furniture/jewelry/clothing businesses -> products
+- Beauty, healthcare, gym, and service businesses should make booking or inquiries on WhatsApp feel like the obvious next step
+- Trades and auto businesses should make quotes or estimates on WhatsApp feel like the obvious next step
+
 Respond with ONLY valid JSON (no markdown fences, no extra text) matching this exact schema:
 {
   "businessSummary": "2-3 sentence overview of what this business is and what makes it special",
@@ -121,12 +131,14 @@ Examine the PHOTO INVENTORY section in the business data. For each website secti
 1. If a suitable existing photo exists, set recommendation to "use_existing" and reference it by its ID (e.g., "google_photo_2", "fb_cover", "ig_post_5")
 2. If no suitable photo exists, set recommendation to "generate_ai" and write a detailed prompt for AI image generation — be specific about style, composition, lighting, mood, and subject matter
 3. Use Instagram post captions to infer what's in unclassified photos
+4. Strongly prefer clean photos without visible promotional text, flyers, event dates, or heavy text overlays. If an existing image looks text-heavy or time-sensitive, avoid it and recommend a cleaner existing image or generate AI instead.
 
 BE GENEROUS WITH PHOTOS — every visual slot on the website MUST have a photo. Plan at minimum:
 - Hero/header image (wide, atmospheric shot of the business or its products)
 - About section image
 - 4-6 gallery photos showing the business, products, services, interior, exterior, team
 - Any section-specific images (menu items for restaurants, service photos for service businesses, before/after for contractors, etc.)
+- The first commercial section should usually have a dedicated image slot because the offer area needs to convert, not just decorate
 - If the business has fewer than 6 usable existing photos, generate AI photos to fill the gaps
 - NEVER leave a visual slot without a photo — every slot must have either use_existing or generate_ai
 - It is better to generate too many AI photos than too few — aim for 8-12 total photo slots`;

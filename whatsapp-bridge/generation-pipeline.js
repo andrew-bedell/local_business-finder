@@ -3,10 +3,14 @@
 
 const { createClient } = require('@supabase/supabase-js');
 const { updateFlow } = require('./db');
-const { fetchBusinessDetails, compileBusinessDataForPrompt, buildPhotoInventory, calculateCompleteness } = require('./compile-business-data');
+const { fetchBusinessDetails, compileBusinessDataForPrompt, buildPhotoInventory, calculateCompleteness, deriveProductRows } = require('./compile-business-data');
 const { getOptimizedPhotoUrl, inferPresetFromSection } = require('../api/_lib/photo-urls.js');
 
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
+const INTERNAL_API_HEADERS = {
+  'Content-Type': 'application/json',
+  'x-internal-service-key': process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+};
 
 
 /**
@@ -29,7 +33,7 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
   try {
     // 1. Fetch enriched data
     console.log('[Pipeline] Step 1: Fetching enriched data...');
-    const { business, reviews, photos, socialProfiles } = await fetchBusinessDetails(businessId);
+    const { business, reviews, photos, socialProfiles, menus, services } = await fetchBusinessDetails(businessId);
 
     // Determine language from address country
     const country = business.address_country || '';
@@ -56,7 +60,8 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
 
     // 3. Compile business data for prompts
     console.log('[Pipeline] Step 3: Compiling business data...');
-    const businessData = compileBusinessDataForPrompt(business, reviews, photos, socialProfiles);
+    const products = deriveProductRows(business, services);
+    const businessData = compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus, services, products);
 
     // 4. Generate research report (SSE stream)
     console.log('[Pipeline] Step 4: Generating research report...');
@@ -96,11 +101,21 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
 
     // 9. Write website content (Sonnet)
     console.log('[Pipeline] Step 9: Writing website content...');
-    const websiteContent = await writeWebsiteContent(businessData, researchReport, photoManifest, language);
+    const websiteContent = await writeWebsiteContent(businessData, researchReport, photoManifest, language, business);
 
     // 10. Generate website HTML (Haiku — layout only)
     console.log('[Pipeline] Step 10: Generating website HTML...');
-    let html = await generateWebsiteHtml(websiteContent, researchReport.designPalette, photoManifest, business.name, language);
+    let html = await generateWebsiteHtml({
+      websiteContent,
+      designPalette: researchReport.designPalette,
+      photoManifest,
+      business,
+      socialProfiles,
+      menus,
+      services,
+      products,
+      language,
+    });
 
     // 11. Validate HTML
     console.log('[Pipeline] Step 11: Validating HTML...');
@@ -109,7 +124,17 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
       console.warn(`[Pipeline] HTML validation issues: ${validation.issues.join(', ')} (${validation.sizeKb.toFixed(1)}KB)`);
       // Retry once
       console.log('[Pipeline] Retrying HTML generation...');
-      html = await generateWebsiteHtml(websiteContent, researchReport.designPalette, photoManifest, business.name, language);
+      html = await generateWebsiteHtml({
+        websiteContent,
+        designPalette: researchReport.designPalette,
+        photoManifest,
+        business,
+        socialProfiles,
+        menus,
+        services,
+        products,
+        language,
+      });
       const retryValidation = validateHtml(html, websiteContent, photoManifest, researchReport.designPalette);
       if (!retryValidation.valid) {
         console.warn(`[Pipeline] Retry also failed validation: ${retryValidation.issues.join(', ')}`);
@@ -202,7 +227,7 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
 async function generateResearchReport(businessData, name, language) {
   const resp = await fetch(`${API_BASE}/api/ai/research-report`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: INTERNAL_API_HEADERS,
     body: JSON.stringify({ businessData, name, language }),
   });
 
@@ -443,11 +468,18 @@ function buildPhotoManifest(photoAssetPlan, photoInventory) {
 /**
  * Write website content via the Sonnet content writing API.
  */
-async function writeWebsiteContent(businessData, researchReport, photoManifest, language) {
+async function writeWebsiteContent(businessData, researchReport, photoManifest, language, business = {}) {
   const resp = await fetch(`${API_BASE}/api/ai/write-content`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ researchReport, businessData, photoManifest, language }),
+    headers: INTERNAL_API_HEADERS,
+    body: JSON.stringify({
+      researchReport,
+      businessData,
+      photoManifest,
+      language,
+      category: business.category || '',
+      subcategory: business.subcategory || '',
+    }),
   });
 
   if (!resp.ok) {
@@ -467,16 +499,28 @@ async function writeWebsiteContent(businessData, researchReport, photoManifest, 
 /**
  * Generate the website HTML (Haiku assembles pre-written content into HTML/CSS).
  */
-async function generateWebsiteHtml(websiteContent, designPalette, photoManifest, name, language) {
+async function generateWebsiteHtml({ websiteContent, designPalette, photoManifest, business, socialProfiles, menus, services, products, language }) {
   const resp = await fetch(`${API_BASE}/api/ai/generate-website`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: INTERNAL_API_HEADERS,
     body: JSON.stringify({
       websiteContent,
       designPalette,
       photoManifest: (photoManifest || []).map(p => ({ section: p.section, slot: p.slot, url: p.url })),
-      name,
+      name: business.name,
       language,
+      category: business.category || '',
+      subcategory: business.subcategory || '',
+      phone: business.phone || '',
+      whatsapp: business.whatsapp || '',
+      address: business.address_full || '',
+      mapsUrl: business.maps_url || '',
+      socialProfiles: (socialProfiles || []).map((profile) => ({ platform: profile.platform, url: profile.profile_url || profile.url })),
+      menuItems: (menus || []).map((menu) => ({ category: menu.menu_category, name: menu.item_name, description: menu.item_description, price: menu.price, currency: menu.currency })),
+      services: (services || []).map((service) => ({ name: service.name, description: service.description, price: service.price, currency: service.currency, photo_url: service.photo_url || '' })),
+      products: (products || []).map((product) => ({ name: product.name, description: product.description, price: product.price, currency: product.currency, photo_url: product.photo_url || '' })),
+      founderName: business.owner_name || '',
+      founderDescription: business.founder_description || '',
     }),
   });
 
