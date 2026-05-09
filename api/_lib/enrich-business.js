@@ -1,7 +1,16 @@
 // Server-side enrichment: fetch place details, reviews, photos, and social links
-// from SearchAPI.io and save to Supabase. Called non-blocking after signup.
+// from Google Places first, with SearchAPI fallback for socials/deeper reviews.
 
-const { persistPhotoFromRecord } = require('./photo-persist.js');
+import photoPersistModule from './photo-persist.js';
+const { persistPhotoFromRecord } = photoPersistModule;
+let googlePlacesHelpersPromise = null;
+
+function getGooglePlacesHelpers() {
+  if (!googlePlacesHelpersPromise) {
+    googlePlacesHelpersPromise = import('./google-places.js');
+  }
+  return googlePlacesHelpersPromise;
+}
 
 /**
  * Simple keyword-based sentiment analysis (mirrors employee/app.js logic).
@@ -90,12 +99,22 @@ function truncateErrorDetail(value) {
  * @param {string} opts.supabaseKey
  */
 export async function enrichBusiness({ businessId, placeId, dataId, businessName, businessAddress, supabaseUrl, supabaseKey }) {
-  const searchApiKey = process.env.SEARCHAPI_KEY;
-  if (!searchApiKey || !placeId) {
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
+  if (!placeId) {
     return {
       hasFailures: true,
       steps: {
-        place_detail: { ok: false, reason: !searchApiKey ? 'missing_searchapi_key' : 'missing_place_id' },
+        place_detail: { ok: false, reason: 'missing_place_id' },
+      },
+    };
+  }
+
+  if (!googlePlacesApiKey && !searchApiKey) {
+    return {
+      hasFailures: true,
+      steps: {
+        place_detail: { ok: false, reason: 'missing_google_places_key' },
       },
     };
   }
@@ -109,10 +128,12 @@ export async function enrichBusiness({ businessId, placeId, dataId, businessName
   // Run all enrichment steps in parallel
   const stepNames = ['place_detail', 'reviews', 'photos', 'social_profiles'];
   const results = await Promise.allSettled([
-    enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUrl, headers }),
-    enrichReviews({ businessId, placeId, dataId, searchApiKey, supabaseUrl, headers }),
-    dataId ? enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) : Promise.resolve({ ok: true, skipped: true, reason: 'missing_data_id' }),
-    businessName ? enrichSocialProfiles({ businessId, businessName, businessAddress, searchApiKey, supabaseUrl, headers }) : Promise.resolve({ ok: true, skipped: true, reason: 'missing_business_name' }),
+    enrichPlaceDetail({ businessId, placeId, googlePlacesApiKey, searchApiKey, supabaseUrl, headers }),
+    enrichReviews({ businessId, placeId, dataId, searchApiKey, googlePlacesApiKey, supabaseUrl, headers }),
+    enrichPhotos({ businessId, placeId, dataId, googlePlacesApiKey, searchApiKey, supabaseUrl, headers }),
+    businessName && searchApiKey
+      ? enrichSocialProfiles({ businessId, businessName, businessAddress, searchApiKey, supabaseUrl, headers })
+      : Promise.resolve({ ok: true, skipped: true, reason: businessName ? 'missing_searchapi_key' : 'missing_business_name' }),
   ]);
 
   const steps = {};
@@ -138,7 +159,60 @@ export async function enrichBusiness({ businessId, placeId, dataId, businessName
 /**
  * Step 1: Place detail — description, amenities, highlights, service options, web reviews (social links)
  */
-async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUrl, headers }) {
+async function enrichPlaceDetail({ businessId, placeId, googlePlacesApiKey, searchApiKey, supabaseUrl, headers }) {
+  if (googlePlacesApiKey) {
+    try {
+      const { getGooglePlaceDetails, normalizeGooglePlace } = await getGooglePlacesHelpers();
+      const place = await getGooglePlaceDetails({
+        apiKey: googlePlacesApiKey,
+        placeId,
+        languageCode: 'en',
+      });
+      const normalized = normalizeGooglePlace(place);
+
+      const updates = {};
+      if (normalized.description) updates.description = normalized.description;
+      if (normalized.serviceOptions.length) updates.service_options = normalized.serviceOptions;
+      if (normalized.amenities.length) updates.amenities = normalized.amenities;
+      if (normalized.highlights.length) updates.highlights = normalized.highlights;
+      if (normalized.accessibility.length) updates.accessibility_info = normalized.accessibility.join(', ');
+      if (normalized.priceLevel !== null && normalized.priceLevel !== undefined) updates.price_level = normalized.priceLevel;
+
+      if (Object.keys(updates).length > 0) {
+        const patchRes = await fetch(`${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}`, {
+          method: 'PATCH',
+          headers: { ...headers, 'Prefer': 'return=minimal' },
+          body: JSON.stringify(updates),
+        });
+        if (!patchRes.ok) {
+          const errText = await patchRes.text().catch(() => '');
+          throw new Error(`place_detail_patch_failed:${errText.substring(0, 120)}`);
+        }
+      }
+
+      if (normalized.reviewData.length > 0) {
+        await saveReviews({ businessId, reviews: normalized.reviewData, supabaseUrl, headers });
+      }
+
+      return {
+        ok: true,
+        updatedFields: Object.keys(updates).length,
+        reviewCount: normalized.reviewData.length,
+        webReviewCount: 0,
+        provider: 'google_places',
+      };
+    } catch (googleError) {
+      console.warn('Google Places place detail failed:', googleError.message);
+      if (!searchApiKey) {
+        return { ok: false, reason: googleError.message || 'google_place_detail_failed' };
+      }
+    }
+  }
+
+  if (!searchApiKey) {
+    return { ok: true, skipped: true, reason: 'missing_searchapi_key' };
+  }
+
   const params = new URLSearchParams({
     engine: 'google_maps_place',
     place_id: placeId,
@@ -155,18 +229,16 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
   const data = await res.json();
   const place = data.place_result || {};
 
-  // Parse extensions
   const extensions = place.extensions || [];
   const parsed = { serviceOptions: [], amenities: [], highlights: [] };
   for (const group of extensions) {
     const title = (group.title || '').toLowerCase();
-    const items = (group.items || []).map(item => item.title || item.value || '');
+    const items = (group.items || []).map((item) => item.title || item.value || '');
     if (title.includes('service')) parsed.serviceOptions.push(...items);
     else if (title.includes('highlight')) parsed.highlights.push(...items);
     else parsed.amenities.push(...items);
   }
 
-  // Update business record with enriched fields
   const updates = {};
   if (place.description) updates.description = place.description;
   if (parsed.serviceOptions.length) updates.service_options = parsed.serviceOptions;
@@ -185,13 +257,11 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
     }
   }
 
-  // Extract reviews from place detail response and save
   const reviews = data.review_results || place.reviews || [];
   if (Array.isArray(reviews) && reviews.length > 0) {
     await saveReviews({ businessId, reviews, supabaseUrl, headers });
   }
 
-  // Extract social/external links from web_reviews
   const webReviews = data.web_reviews || [];
   if (webReviews.length > 0) {
     await saveSocialFromWebReviews({ businessId, webReviews, supabaseUrl, headers });
@@ -202,13 +272,21 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
     updatedFields: Object.keys(updates).length,
     reviewCount: Array.isArray(reviews) ? reviews.length : 0,
     webReviewCount: webReviews.length,
+    provider: 'searchapi',
   };
 }
 
 /**
  * Step 2: Reviews — full paginated reviews
  */
-async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supabaseUrl, headers }) {
+async function enrichReviews({ businessId, placeId, dataId, searchApiKey, googlePlacesApiKey, supabaseUrl, headers }) {
+  if (!searchApiKey) {
+    if (googlePlacesApiKey && placeId) {
+      return { ok: true, skipped: true, reason: 'google_reviews_saved_in_place_detail' };
+    }
+    return { ok: true, skipped: true, reason: 'missing_searchapi_key' };
+  }
+
   const params = new URLSearchParams({
     engine: 'google_maps_reviews',
     api_key: searchApiKey,
@@ -236,7 +314,7 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
 /**
  * Step 3: Photos — fetch default photo set (skip if already enriched)
  */
-async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, headers }) {
+async function enrichPhotos({ businessId, placeId, dataId, googlePlacesApiKey, searchApiKey, supabaseUrl, headers }) {
   // Delete existing google-source photos before inserting fresh ones (supports refresh)
   const deleteRes = await fetch(
     `${supabaseUrl}/rest/v1/business_photos?business_id=eq.${businessId}&source=eq.google`,
@@ -245,6 +323,56 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
   if (!deleteRes.ok) {
     const errText = await deleteRes.text().catch(() => '');
     throw new Error(`photo_delete_failed:${errText.substring(0, 120)}`);
+  }
+
+  if (googlePlacesApiKey && placeId) {
+    try {
+      const { getGooglePlaceDetails, getGooglePlacePhotoSet } = await getGooglePlacesHelpers();
+      const place = await getGooglePlaceDetails({
+        apiKey: googlePlacesApiKey,
+        placeId,
+        languageCode: 'en',
+        fieldMask: 'id,photos',
+      });
+      const photos = await getGooglePlacePhotoSet({
+        apiKey: googlePlacesApiKey,
+        photos: place?.photos || [],
+        limit: 10,
+      });
+      if (!photos.length) return { ok: true, photoCount: 0, provider: 'google_places' };
+
+      const photoRows = photos.map((photo, index) => ({
+        business_id: businessId,
+        source: 'google',
+        photo_type: photo.photoType || null,
+        url: photo.url,
+        is_primary: index === 0,
+      })).filter((row) => row.url);
+
+      const insertRes = await fetch(`${supabaseUrl}/rest/v1/business_photos`, {
+        method: 'POST',
+        headers: { ...headers, 'Prefer': 'return=representation' },
+        body: JSON.stringify(photoRows),
+      });
+      if (!insertRes.ok) {
+        const errText = await insertRes.text().catch(() => '');
+        throw new Error(`photo_insert_failed:${errText.substring(0, 120)}`);
+      }
+
+      const insertedRows = await insertRes.json().catch(() => []);
+      await persistInsertedPhotos(insertedRows, supabaseUrl);
+
+      return { ok: true, photoCount: photoRows.length, provider: 'google_places' };
+    } catch (googleError) {
+      console.warn('Google Places photos failed:', googleError.message);
+      if (!searchApiKey || !dataId) {
+        return { ok: false, reason: googleError.message || 'google_photos_failed' };
+      }
+    }
+  }
+
+  if (!searchApiKey || !dataId) {
+    return { ok: true, skipped: true, reason: !searchApiKey ? 'missing_searchapi_key' : 'missing_data_id' };
   }
 
   const params = new URLSearchParams({
@@ -292,21 +420,9 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
   }
 
   const insertedRows = await insertRes.json().catch(() => []);
-  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (supabaseKey && Array.isArray(insertedRows) && insertedRows.length > 0) {
-    const persistResults = await Promise.allSettled(
-      insertedRows.map((record) => persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }))
-    );
+  await persistInsertedPhotos(insertedRows, supabaseUrl);
 
-    const failed = persistResults.filter((result) => (
-      result.status !== 'fulfilled' || (!result.value.success && !result.value.skipped)
-    ));
-    if (failed.length > 0) {
-      console.warn(`Google photo persistence incomplete: ${failed.length}/${insertedRows.length} failed`);
-    }
-  }
-
-  return { ok: true, photoCount: photoRows.length };
+  return { ok: true, photoCount: photoRows.length, provider: 'searchapi' };
 }
 
 /**
@@ -315,7 +431,7 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
 async function saveReviews({ businessId, reviews, supabaseUrl, headers }) {
   const rows = reviews.map(r => {
     const text = r.original_snippet || r.snippet || r.text || '';
-    const authorName = r.user ? r.user.name || '' : '';
+    const authorName = r.authorName || (r.user ? r.user.name || '' : '');
     const rating = r.rating || 0;
     const sentiment = analyzeSentiment({ text, rating });
     const hash = reviewHash('google', authorName, text);
@@ -324,10 +440,10 @@ async function saveReviews({ businessId, reviews, supabaseUrl, headers }) {
       business_id: businessId,
       source: 'google',
       author_name: authorName || null,
-      author_photo_url: r.user ? r.user.thumbnail || null : null,
+      author_photo_url: r.authorPhoto || (r.user ? r.user.thumbnail || null : null),
       rating: Math.max(1, Math.min(5, rating)) || null,
       text: text || null,
-      published_at: r.date || null,
+      published_at: r.date || r.isoDate || null,
       sentiment_score: sentiment.score,
       sentiment_label: sentiment.label,
       review_hash: hash,
@@ -348,6 +464,22 @@ async function saveReviews({ businessId, reviews, supabaseUrl, headers }) {
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
     throw new Error(`review_save_failed:${errText.substring(0, 120)}`);
+  }
+}
+
+async function persistInsertedPhotos(insertedRows, supabaseUrl) {
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseKey || !Array.isArray(insertedRows) || insertedRows.length === 0) return;
+
+  const persistResults = await Promise.allSettled(
+    insertedRows.map((record) => persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }))
+  );
+
+  const failed = persistResults.filter((result) => (
+    result.status !== 'fulfilled' || (!result.value.success && !result.value.skipped)
+  ));
+  if (failed.length > 0) {
+    console.warn(`Google photo persistence incomplete: ${failed.length}/${insertedRows.length} failed`);
   }
 }
 

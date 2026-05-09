@@ -13,10 +13,13 @@ export default async function handler(req, res) {
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const searchApiKey = process.env.SEARCHAPI_KEY;
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
 
   if (!supabaseUrl || !supabaseKey) return res.status(500).json({ error: 'Server config missing' });
-  if (!searchApiKey) return res.status(500).json({ error: 'SEARCHAPI_KEY not configured' });
+  if (!googlePlacesApiKey && !searchApiKey) {
+    return res.status(500).json({ error: 'No enrichment provider configured' });
+  }
 
   const headers = {
     'apikey': supabaseKey,

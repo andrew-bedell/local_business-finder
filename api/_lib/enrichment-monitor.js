@@ -41,7 +41,9 @@ export function isConfigurationBlockerError(...parts) {
   if (!text) return false;
 
   return (
-    text.includes('searchapi_key not configured')
+    text.includes('google_places_api_key not configured')
+    || text.includes('missing_google_places_key')
+    || text.includes('searchapi_key not configured')
     || text.includes('missing_searchapi_key')
   );
 }

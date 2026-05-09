@@ -1,6 +1,12 @@
-// Vercel serverless function: SearchAPI.io Google Maps Place lookup
+// Vercel serverless function: Google Places / SearchAPI place lookup.
 // Fetches a single business by place_id, data_id, or Google Maps URL.
 // Returns a full normalized business object (same shape as maps.js) plus enrichment fields.
+
+import {
+  getGooglePlaceDetails,
+  getGooglePlacePhotoSet,
+  normalizeGooglePlace,
+} from '../_lib/google-places.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,8 +16,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const apiKey = process.env.SEARCHAPI_KEY;
-  if (!apiKey) return res.status(503).json({ error: 'SearchAPI key not configured' });
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const apiKey = process.env.SEARCHAPI_KEY || '';
+  if (!googlePlacesApiKey && !apiKey) {
+    return res.status(503).json({ error: 'No place lookup provider configured' });
+  }
 
   let { place_id, data_id, url, hl } = req.query;
 
@@ -25,7 +34,7 @@ export default async function handler(req, res) {
     // Strategy 0a: Headless browser resolution (most reliable for share.google)
     // Launches Chromium to render the page, execute the JS redirect, and capture
     // the final Google Maps URL containing the exact place identifier.
-    if (!place_id && !data_id && parsed.is_share_url && parsed.original_url) {
+    if (apiKey && !place_id && !data_id && parsed.is_share_url && parsed.original_url) {
       try {
         const host = req.headers.host || process.env.VERCEL_URL;
         const protocol = host && host.includes('localhost') ? 'http' : 'https';
@@ -123,7 +132,7 @@ export default async function handler(req, res) {
     }
 
     // share.google URLs resolve to a kgmid and/or search query
-    if (!place_id && !data_id && (parsed.kgmid || parsed.search_query)) {
+    if (apiKey && !place_id && !data_id && (parsed.kgmid || parsed.search_query)) {
       // Strategy 1: Use kgmid as the search query — Google Maps understands /g/ identifiers
       // This gives an exact match for the specific business location.
       if (parsed.kgmid) {
@@ -169,6 +178,38 @@ export default async function handler(req, res) {
 
   if (!place_id && !data_id) {
     return res.status(400).json({ error: 'Missing required parameter: place_id, data_id, or url' });
+  }
+
+  if (googlePlacesApiKey && place_id) {
+    try {
+      const place = await getGooglePlaceDetails({
+        apiKey: googlePlacesApiKey,
+        placeId: place_id,
+        languageCode: hl || 'en',
+      });
+      const photos = await getGooglePlacePhotoSet({
+        apiKey: googlePlacesApiKey,
+        photos: place?.photos || [],
+        limit: 10,
+      });
+      const normalized = normalizeGooglePlace(place, { photos });
+
+      normalized.webReviews = [];
+      normalized.reviewsHistogram = null;
+      normalized.popularTimes = null;
+
+      res.setHeader('Cache-Control', 'private, max-age=3600');
+      return res.status(200).json(normalized);
+    } catch (googleError) {
+      console.warn('Google Places place lookup failed, falling back to SearchAPI:', googleError.message);
+      if (!apiKey) {
+        return res.status(502).json({ error: googleError.message || 'Google Places request failed' });
+      }
+    }
+  }
+
+  if (!apiKey) {
+    return res.status(503).json({ error: 'SearchAPI place lookup fallback requires SEARCHAPI_KEY' });
   }
 
   try {

@@ -1,5 +1,7 @@
-// Vercel serverless function: SearchAPI.io Google Maps Photos enrichment
-// Fetches categorized, paginated photos for a business using the google_maps_photos engine.
+// Vercel serverless function: place photo enrichment.
+// Uses native Google Places first and falls back to SearchAPI when needed.
+
+import { getGooglePlaceDetails, getGooglePlacePhotoSet } from '../_lib/google-places.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,68 +16,93 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.SEARCHAPI_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: 'SearchAPI key not configured' });
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
+  const { place_id: placeId, data_id: dataId, category_id: categoryId, next_page_token: nextPageToken } = req.query;
+
+  if (!placeId && !dataId) {
+    return res.status(400).json({ error: 'Missing required parameter: place_id or data_id' });
   }
 
-  const { data_id, category_id, next_page_token } = req.query;
+  if (googlePlacesApiKey && placeId) {
+    try {
+      const place = await getGooglePlaceDetails({
+        apiKey: googlePlacesApiKey,
+        placeId,
+        fieldMask: 'id,photos',
+      });
+      const photos = await getGooglePlacePhotoSet({
+        apiKey: googlePlacesApiKey,
+        photos: place?.photos || [],
+        limit: 10,
+      });
 
-  if (!data_id) {
-    return res.status(400).json({ error: 'Missing required parameter: data_id' });
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.status(200).json({
+        photos,
+        categories: [],
+        nextPageToken: null,
+        hasMore: false,
+        provider: 'google_places',
+      });
+    } catch (googleError) {
+      console.warn('Google Places photo enrichment failed, falling back to SearchAPI:', googleError.message);
+      if (!searchApiKey) {
+        return res.status(502).json({ error: googleError.message || 'Google Places request failed' });
+      }
+    }
+  }
+
+  if (!searchApiKey || !dataId) {
+    return res.status(503).json({ error: 'SearchAPI photo fallback requires data_id' });
   }
 
   try {
     const params = new URLSearchParams({
       engine: 'google_maps_photos',
-      data_id: data_id,
-      api_key: apiKey,
+      data_id: dataId,
+      api_key: searchApiKey,
     });
 
-    if (category_id) params.set('category_id', category_id);
-    if (next_page_token) params.set('next_page_token', next_page_token);
+    if (categoryId) params.set('category_id', categoryId);
+    if (nextPageToken) params.set('next_page_token', nextPageToken);
 
-    const response = await fetch(
-      'https://www.searchapi.io/api/v1/search?' + params.toString()
-    );
+    const response = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('SearchAPI.io photos error:', response.status, errorText);
+      const errorText = await response.text().catch(() => '');
+      console.error('SearchAPI photos error:', response.status, errorText);
       return res.status(502).json({ error: 'SearchAPI.io request failed' });
     }
 
     const data = await response.json();
     const rawPhotos = data.photos || [];
 
-    const photos = rawPhotos.map(p => ({
-      url: p.image || '',
-      thumbnail: p.thumbnail || '',
+    const photos = rawPhotos.map((photo) => ({
+      url: photo.image || '',
+      thumbnail: photo.thumbnail || '',
     }));
 
-    // Return available categories so the client can fetch specific photo types
-    const categories = (data.categories || []).map(c => ({
-      id: c.category_id || '',
-      name: c.name || '',
-      photoType: mapCategoryToPhotoType(c.name),
+    const categories = (data.categories || []).map((category) => ({
+      id: category.category_id || '',
+      name: category.name || '',
+      photoType: mapCategoryToPhotoType(category.name),
     }));
-
-    const result = {
-      photos: photos,
-      categories: categories,
-      nextPageToken: data.serpapi_pagination ? data.serpapi_pagination.next_page_token || null : null,
-      hasMore: !!(data.serpapi_pagination && data.serpapi_pagination.next_page_token),
-    };
 
     res.setHeader('Cache-Control', 'private, max-age=86400');
-    return res.status(200).json(result);
+    return res.status(200).json({
+      photos,
+      categories,
+      nextPageToken: data.serpapi_pagination ? data.serpapi_pagination.next_page_token || null : null,
+      hasMore: !!(data.serpapi_pagination && data.serpapi_pagination.next_page_token),
+      provider: 'searchapi',
+    });
   } catch (err) {
-    console.error('SearchAPI.io photos error:', err);
+    console.error('Photo enrichment error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
-// Map SearchAPI photo category names to the business_photos.photo_type enum
 function mapCategoryToPhotoType(categoryName) {
   const name = (categoryName || '').toLowerCase();
   if (name.includes('menu')) return 'menu';
