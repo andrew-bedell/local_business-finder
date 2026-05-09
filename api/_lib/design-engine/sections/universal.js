@@ -6,6 +6,7 @@ import {
   getPrimaryActionLabel,
   normalizeBusinessType,
 } from '../taxonomy.js';
+import { buildResponsiveImageTag, getOptimizedBackgroundUrl } from '../image-helpers.js';
 import { formatBusinessName } from '../../format-business-name.js';
 
 function esc(str) {
@@ -94,14 +95,15 @@ function compactNavCTALabel(label) {
 // ── Hero Section ──
 export function heroSection(content, photos, business, ctaLabel) {
   const heroPhoto = getPhotoForSection(photos, 'hero') || (photos && photos[0] ? photos[0].url : '');
+  const optimizedHeroPhoto = getOptimizedBackgroundUrl(heroPhoto, 'hero');
   const headline = esc(content?.hero?.headline || business.name);
   const subheadline = esc(content?.hero?.subheadline || '');
   const businessType = normalizeBusinessType(business?.category, business?.subcategory);
   const cta = ctaLabel || content?.cta?.buttonText || getPrimaryActionLabel(businessType);
   const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
 
-  const bgStyle = heroPhoto
-    ? `background: linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7)), url('${esc(heroPhoto)}') center/cover no-repeat;`
+  const bgStyle = optimizedHeroPhoto
+    ? `background: linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7)), url('${esc(optimizedHeroPhoto)}') center/cover no-repeat;`
     : `background: linear-gradient(135deg, var(--color-dark) 0%, rgba(26,23,20,0.9) 100%);`;
 
   return {
@@ -183,14 +185,14 @@ export function aboutSection(content, photos, business) {
         </div>
         ${aboutPhoto ? `
         <div class="reveal-right img-rounded aspect-4-3">
-          <img src="${esc(aboutPhoto)}" alt="${heading}" class="img-cover">
+          ${buildResponsiveImageTag({ url: aboutPhoto, alt: heading, preset: 'section', sizes: '(max-width: 900px) 100vw, 48vw', className: 'img-cover' })}
         </div>` : ''}
       </div>
       ${hasFounder ? `
       <div class="container founder-block reveal" style="margin-top:3rem;">
         ${founderPhoto ? `
         <div class="founder-block__photo">
-          <img src="${esc(founderPhoto)}" alt="${esc(founderName)}" class="img-cover">
+          ${buildResponsiveImageTag({ url: founderPhoto, alt: founderName, preset: 'avatar', sizes: '120px', className: 'img-cover' })}
         </div>` : ''}
         <div class="founder-block__text">
           ${founderName ? `<h3>${esc(founderName)}</h3>` : ''}
@@ -265,7 +267,7 @@ export function servicesSection(content, photos, business) {
         <div class="service-grid reveal">
           ${mergedItems.map(item => `
           <div class="service-grid__item">
-            ${item.photoUrl ? `<div class="service-grid__photo"><img src="${esc(item.photoUrl)}" alt="${esc(item.name)}" loading="lazy" class="img-cover"></div>` : ''}
+            ${item.photoUrl ? `<div class="service-grid__photo">${buildResponsiveImageTag({ url: item.photoUrl, alt: item.name, preset: 'card', sizes: '(max-width: 768px) 100vw, 33vw', className: 'img-cover' })}</div>` : ''}
             <h3>${esc(item.name)}</h3>
             <p>${esc(item.description)}</p>
             ${item.price ? `<p style="margin-top:0.75rem;color:var(--color-accent);font-family:var(--font-heading);font-size:1.05rem">${esc(item.price)}</p>` : ''}
@@ -364,7 +366,7 @@ export function gallerySection(content, photos) {
       <div class="h-scroll reveal" style="padding-left:3rem;">
         ${allPhotos.map((url, i) => `
         <div class="h-scroll__item">
-          <img src="${esc(url)}" alt="Foto ${i + 1}" loading="lazy">
+          ${buildResponsiveImageTag({ url, alt: `Foto ${i + 1}`, preset: 'gallery', sizes: '(max-width: 768px) 82vw, 36vw' })}
         </div>`).join('')}
       </div>
     </section>`,
@@ -442,7 +444,7 @@ export function contactSection(content, business, photos) {
         </div>
         ${contactPhoto ? `
         <div class="reveal-right img-rounded aspect-4-3">
-          <img src="${esc(contactPhoto)}" alt="Ubicación" class="img-cover">
+          ${buildResponsiveImageTag({ url: contactPhoto, alt: 'Ubicación', preset: 'section', sizes: '(max-width: 900px) 100vw, 48vw', className: 'img-cover' })}
         </div>` : ''}
       </div>
     </section>`,

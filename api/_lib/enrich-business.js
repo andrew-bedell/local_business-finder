@@ -1,6 +1,8 @@
 // Server-side enrichment: fetch place details, reviews, photos, and social links
 // from SearchAPI.io and save to Supabase. Called non-blocking after signup.
 
+const { persistPhotoFromRecord } = require('./photo-persist.js');
+
 /**
  * Simple keyword-based sentiment analysis (mirrors employee/app.js logic).
  */
@@ -281,12 +283,27 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
 
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/business_photos`, {
     method: 'POST',
-    headers: { ...headers, 'Prefer': 'return=minimal' },
+    headers: { ...headers, 'Prefer': 'return=representation' },
     body: JSON.stringify(photoRows),
   });
   if (!insertRes.ok) {
     const errText = await insertRes.text().catch(() => '');
     throw new Error(`photo_insert_failed:${errText.substring(0, 120)}`);
+  }
+
+  const insertedRows = await insertRes.json().catch(() => []);
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseKey && Array.isArray(insertedRows) && insertedRows.length > 0) {
+    const persistResults = await Promise.allSettled(
+      insertedRows.map((record) => persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }))
+    );
+
+    const failed = persistResults.filter((result) => (
+      result.status !== 'fulfilled' || (!result.value.success && !result.value.skipped)
+    ));
+    if (failed.length > 0) {
+      console.warn(`Google photo persistence incomplete: ${failed.length}/${insertedRows.length} failed`);
+    }
   }
 
   return { ok: true, photoCount: photoRows.length };

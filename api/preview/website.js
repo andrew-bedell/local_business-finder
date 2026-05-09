@@ -2,6 +2,7 @@
 // GET ?id=<uuid> — returns website HTML + business info
 
 import { getWebsiteHtml } from '../_lib/website-config.js';
+import { rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -77,6 +78,8 @@ export default async function handler(req, res) {
         console.warn('Preview fallback fetch failed for website:', website.id);
       }
     }
+
+    html = html ? rewriteSupabasePhotoUrlsInHtml(html, supabaseUrl, 'existing_html') : html;
 
     return res.status(200).json({
       html,

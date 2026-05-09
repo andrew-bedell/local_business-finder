@@ -1,6 +1,9 @@
 // Vercel serverless function: scan photos for text overlays using Claude vision
 // Marks business_photos.has_text_overlay so text-heavy images are excluded from websites
 
+import { getPublicPhotoUrl, resolveStoredPhotoLocation } from '../_lib/photo-urls.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export const config = { maxDuration: 120 };
 
 const BATCH_SIZE = 5;
@@ -8,7 +11,7 @@ const BATCH_SIZE = 5;
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -28,6 +31,9 @@ export default async function handler(req, res) {
   if (!businessId) {
     return res.status(400).json({ error: 'businessId required' });
   }
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // Fetch photos that haven't been scanned yet and have accessible URLs
@@ -53,12 +59,19 @@ export default async function handler(req, res) {
     }
 
     // Build accessible URLs for each photo
-    const photosWithUrls = photos.map(p => ({
-      id: p.id,
-      url: p.storage_path
-        ? `${supabaseUrl}/storage/v1/object/public/photos/${p.storage_path}`
-        : p.url,
-    })).filter(p => p.url);
+    const photosWithUrls = photos.map((p) => {
+      const location = resolveStoredPhotoLocation({
+        url: p.url,
+        storagePath: p.storage_path,
+        supabaseUrl,
+      });
+      return {
+        id: p.id,
+        url: p.storage_path
+          ? getPublicPhotoUrl(supabaseUrl, p.storage_path, location?.bucket)
+          : p.url,
+      };
+    }).filter(p => p.url);
 
     let scanned = 0;
     let flagged = 0;
