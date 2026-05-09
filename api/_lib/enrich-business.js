@@ -53,6 +53,27 @@ function reviewHash(source, authorName, text) {
   return Math.abs(hash).toString(36);
 }
 
+function buildApiFailure(stepName, status, errorText) {
+  const detail = truncateErrorDetail(errorText);
+  const reason = detail
+    ? `${stepName}_http_${status}:${detail}`
+    : `${stepName}_http_${status}`;
+
+  return {
+    ok: false,
+    status,
+    reason,
+    detail: detail || null,
+  };
+}
+
+function truncateErrorDetail(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200);
+}
+
 /**
  * Enrich a business with place details, reviews, photos, and social profiles.
  * All steps are independent and fail silently — partial enrichment is fine.
@@ -124,8 +145,9 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI place detail failed:', res.status);
-    return { ok: false, reason: `place_detail_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI place detail failed:', res.status, errorText);
+    return buildApiFailure('place_detail', res.status, errorText);
   }
 
   const data = await res.json();
@@ -195,8 +217,9 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI reviews failed:', res.status);
-    return { ok: false, reason: `reviews_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI reviews failed:', res.status, errorText);
+    return buildApiFailure('reviews', res.status, errorText);
   }
 
   const data = await res.json();
@@ -230,8 +253,9 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI photos failed:', res.status);
-    return { ok: false, reason: `photos_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI photos failed:', res.status, errorText);
+    return buildApiFailure('photos', res.status, errorText);
   }
 
   const data = await res.json();
@@ -327,8 +351,9 @@ async function enrichSocialProfiles({ businessId, businessName, businessAddress,
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI social discovery failed:', res.status);
-    return { ok: false, reason: `social_discovery_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI social discovery failed:', res.status, errorText);
+    return buildApiFailure('social_discovery', res.status, errorText);
   }
 
   const data = await res.json();

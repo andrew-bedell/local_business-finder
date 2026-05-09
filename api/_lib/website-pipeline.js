@@ -580,6 +580,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
         template_name: 'ai_generated',
         status: 'draft',
         version: 1,
+        generated_at: new Date().toISOString(),
         config: buildWebsiteConfig({
           researchReport,
           websiteContent,
