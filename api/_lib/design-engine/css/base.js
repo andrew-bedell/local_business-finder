@@ -81,10 +81,11 @@ export function getBaseCSS() {
     .section--dark p { color: rgba(247, 243, 238, 0.8); }
     .section--accent {
       background-color: var(--color-accent);
-      color: #fff;
+      color: var(--color-on-accent);
     }
-    .section--accent h2 { color: #fff; }
-    .section--accent p { color: rgba(255,255,255,0.9); }
+    .section--accent h2,
+    .section--accent h3 { color: var(--color-on-accent); }
+    .section--accent p { color: rgba(var(--color-on-accent-rgb), 0.88); }
 
     .section-header {
       margin-bottom: 3.5rem;
@@ -173,7 +174,7 @@ export function getBaseCSS() {
 
     .btn--primary {
       background: var(--color-accent);
-      color: #fff;
+      color: var(--color-on-accent);
     }
 
     .btn--primary:hover {
@@ -188,7 +189,7 @@ export function getBaseCSS() {
 
     .btn--outline:hover {
       background: var(--color-accent);
-      color: #fff;
+      color: var(--color-on-accent);
     }
 
     .btn--white {
@@ -370,7 +371,7 @@ export function getBaseCSS() {
       top: -12px; left: 50%;
       transform: translateX(-50%);
       background: var(--color-accent);
-      color: #fff;
+      color: var(--color-on-accent);
       font-size: 0.7rem;
       font-weight: 500;
       letter-spacing: 0.1em;

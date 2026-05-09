@@ -2,6 +2,7 @@
 // GET ?website_id=<uuid> — returns draft_html from website config
 
 import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+import { rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -41,8 +42,12 @@ export default async function handler(req, res) {
     }
 
     const website = data[0];
-    const draftHtml = website.config?.draft_html;
-    const currentHtml = website.config?.html;
+    const draftHtml = website.config?.draft_html
+      ? rewriteSupabasePhotoUrlsInHtml(website.config.draft_html, supabaseUrl, 'existing_html')
+      : null;
+    const currentHtml = website.config?.html
+      ? rewriteSupabasePhotoUrlsInHtml(website.config.html, supabaseUrl, 'existing_html')
+      : null;
     const business = website.businesses || {};
 
     return res.status(200).json({

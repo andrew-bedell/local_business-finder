@@ -52,7 +52,17 @@ export default async function handler(req, res) {
       businessAddress: biz.address_full,
       supabaseUrl,
       supabaseKey,
+      triggerSource: 'manual',
     });
+
+    if (result.status === 'paused') {
+      return res.status(503).json({
+        success: false,
+        status: result.status,
+        paused: true,
+        error: result.error || 'Enrichment is paused',
+      });
+    }
 
     return res.status(200).json({
       success: !!result.success,
@@ -60,6 +70,7 @@ export default async function handler(req, res) {
       dataId: result.dataId || null,
       error: result.error || null,
       nextRetryAt: result.nextRetryAt || null,
+      globalPause: !!result.globalPause,
     });
   } catch (err) {
     console.error('Enrichment failed:', err);

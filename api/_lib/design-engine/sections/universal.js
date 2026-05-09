@@ -6,6 +6,8 @@ import {
   getPrimaryActionLabel,
   normalizeBusinessType,
 } from '../taxonomy.js';
+import { buildResponsiveImageTag, getOptimizedBackgroundUrl } from '../image-helpers.js';
+import { formatBusinessName } from '../../format-business-name.js';
 
 function esc(str) {
   if (!str) return '';
@@ -49,13 +51,13 @@ function splitTitleParts(value) {
 }
 
 function deriveNavBrandName(business, content) {
-  const explicitBrand = collapseWhitespace(content?.brand?.shortName || content?.brandName);
+  const explicitBrand = formatBusinessName(collapseWhitespace(content?.brand?.shortName || content?.brandName));
   if (explicitBrand) return explicitBrand;
 
-  const name = collapseWhitespace(business?.name);
+  const name = formatBusinessName(collapseWhitespace(business?.name));
   const metaParts = splitTitleParts(content?.meta?.title);
   if (metaParts.length > 0) {
-    const candidate = metaParts[0];
+    const candidate = formatBusinessName(metaParts[0]);
     if (candidate.length >= 3 && candidate.length <= 32) {
       return candidate;
     }
@@ -63,7 +65,7 @@ function deriveNavBrandName(business, content) {
 
   const nameParts = splitTitleParts(name);
   if (nameParts.length > 0) {
-    const candidate = nameParts[0];
+    const candidate = formatBusinessName(nameParts[0]);
     if (candidate.length >= 3 && candidate.length <= 32) {
       return candidate;
     }
@@ -93,14 +95,15 @@ function compactNavCTALabel(label) {
 // ── Hero Section ──
 export function heroSection(content, photos, business, ctaLabel) {
   const heroPhoto = getPhotoForSection(photos, 'hero') || (photos && photos[0] ? photos[0].url : '');
+  const optimizedHeroPhoto = getOptimizedBackgroundUrl(heroPhoto, 'hero');
   const headline = esc(content?.hero?.headline || business.name);
   const subheadline = esc(content?.hero?.subheadline || '');
   const businessType = normalizeBusinessType(business?.category, business?.subcategory);
   const cta = ctaLabel || content?.cta?.buttonText || getPrimaryActionLabel(businessType);
   const phoneHref = business.phone ? `tel:${business.phone.replace(/\s/g, '')}` : '#contact';
 
-  const bgStyle = heroPhoto
-    ? `background: linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7)), url('${esc(heroPhoto)}') center/cover no-repeat;`
+  const bgStyle = optimizedHeroPhoto
+    ? `background: linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7)), url('${esc(optimizedHeroPhoto)}') center/cover no-repeat;`
     : `background: linear-gradient(135deg, var(--color-dark) 0%, rgba(26,23,20,0.9) 100%);`;
 
   return {
@@ -182,14 +185,14 @@ export function aboutSection(content, photos, business) {
         </div>
         ${aboutPhoto ? `
         <div class="reveal-right img-rounded aspect-4-3">
-          <img src="${esc(aboutPhoto)}" alt="${heading}" class="img-cover">
+          ${buildResponsiveImageTag({ url: aboutPhoto, alt: heading, preset: 'section', sizes: '(max-width: 900px) 100vw, 48vw', className: 'img-cover' })}
         </div>` : ''}
       </div>
       ${hasFounder ? `
       <div class="container founder-block reveal" style="margin-top:3rem;">
         ${founderPhoto ? `
         <div class="founder-block__photo">
-          <img src="${esc(founderPhoto)}" alt="${esc(founderName)}" class="img-cover">
+          ${buildResponsiveImageTag({ url: founderPhoto, alt: founderName, preset: 'avatar', sizes: '120px', className: 'img-cover' })}
         </div>` : ''}
         <div class="founder-block__text">
           ${founderName ? `<h3>${esc(founderName)}</h3>` : ''}
@@ -264,7 +267,7 @@ export function servicesSection(content, photos, business) {
         <div class="service-grid reveal">
           ${mergedItems.map(item => `
           <div class="service-grid__item">
-            ${item.photoUrl ? `<div class="service-grid__photo"><img src="${esc(item.photoUrl)}" alt="${esc(item.name)}" loading="lazy" class="img-cover"></div>` : ''}
+            ${item.photoUrl ? `<div class="service-grid__photo">${buildResponsiveImageTag({ url: item.photoUrl, alt: item.name, preset: 'card', sizes: '(max-width: 768px) 100vw, 33vw', className: 'img-cover' })}</div>` : ''}
             <h3>${esc(item.name)}</h3>
             <p>${esc(item.description)}</p>
             ${item.price ? `<p style="margin-top:0.75rem;color:var(--color-accent);font-family:var(--font-heading);font-size:1.05rem">${esc(item.price)}</p>` : ''}
@@ -363,7 +366,7 @@ export function gallerySection(content, photos) {
       <div class="h-scroll reveal" style="padding-left:3rem;">
         ${allPhotos.map((url, i) => `
         <div class="h-scroll__item">
-          <img src="${esc(url)}" alt="Foto ${i + 1}" loading="lazy">
+          ${buildResponsiveImageTag({ url, alt: `Foto ${i + 1}`, preset: 'gallery', sizes: '(max-width: 768px) 82vw, 36vw' })}
         </div>`).join('')}
       </div>
     </section>`,
@@ -384,9 +387,9 @@ export function ctaSection(content, business) {
     <section id="cta-section" class="section section--accent" style="text-align:center;">
       <div class="container reveal">
         <h2>${heading}</h2>
-        <p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(255,255,255,0.9)">${supporting}</p>
+        <p style="max-width:600px;margin:1.5rem auto 2rem;color:rgba(var(--color-on-accent-rgb),0.88)">${supporting}</p>
         <a href="${phoneHref}" class="btn btn--white">${btnText} <span class="btn-arrow">→</span></a>
-        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.1rem;"><a href="${phoneHref}" style="color:#fff;font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
+        ${business.phone ? `<p style="margin-top:1.5rem;font-size:1.1rem;"><a href="${phoneHref}" style="color:var(--color-on-accent);font-family:var(--font-heading);font-weight:400">${esc(business.phone)}</a></p>` : ''}
       </div>
     </section>`,
     css: '',
@@ -441,7 +444,7 @@ export function contactSection(content, business, photos) {
         </div>
         ${contactPhoto ? `
         <div class="reveal-right img-rounded aspect-4-3">
-          <img src="${esc(contactPhoto)}" alt="Ubicación" class="img-cover">
+          ${buildResponsiveImageTag({ url: contactPhoto, alt: 'Ubicación', preset: 'section', sizes: '(max-width: 900px) 100vw, 48vw', className: 'img-cover' })}
         </div>` : ''}
       </div>
     </section>`,
@@ -492,11 +495,13 @@ export function navHTML(business, ctaLabel, options = {}) {
   return `
   <nav class="site-nav">
     <div class="site-nav__inner">
-      <a href="#" class="site-nav__logo" title="${esc(business.name)}">${esc(navBrand || business.name)}</a>
-      <ul class="site-nav__links">
-        ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n        ')}
-        <li><a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(compactCTA || cta)}</a></li>
-      </ul>
+      <div class="site-nav__primary">
+        <a href="#" class="site-nav__logo" title="${esc(business.name)}">${esc(navBrand || business.name)}</a>
+        <ul class="site-nav__links">
+          ${navItems.map((item) => `<li><a href="${item.href}">${esc(item.label)}</a></li>`).join('\n          ')}
+        </ul>
+      </div>
+      <a href="${phoneHref}" class="site-nav__cta site-nav__cta--desktop">${esc(compactCTA || cta)}</a>
       <button class="hamburger" aria-label="Menú">
         <span></span><span></span><span></span>
       </button>

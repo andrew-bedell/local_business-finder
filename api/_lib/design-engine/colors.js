@@ -49,6 +49,34 @@ function hexToRgb(hex) {
   };
 }
 
+function srgbToLinear(channel) {
+  const normalized = channel / 255;
+  return normalized <= 0.04045
+    ? normalized / 12.92
+    : ((normalized + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const red = srgbToLinear(r);
+  const green = srgbToLinear(g);
+  const blue = srgbToLinear(b);
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function contrastRatio(bgHex, fgHex) {
+  const lighter = Math.max(relativeLuminance(bgHex), relativeLuminance(fgHex));
+  const darker = Math.min(relativeLuminance(bgHex), relativeLuminance(fgHex));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function pickOnAccentColor(accent) {
+  const candidates = [WARM_BLACK, CREAM];
+  return candidates
+    .map((candidate) => ({ candidate, contrast: contrastRatio(accent, candidate) }))
+    .sort((a, b) => b.contrast - a.contrast)[0].candidate;
+}
+
 /**
  * Check if a color is too close to pure black or pure white
  */
@@ -90,6 +118,8 @@ export function getColorCSS(designPalette, category, subcategory) {
   const bgAlt = lighten(secondary, 0.4);
 
   const { r, g, b } = hexToRgb(accent);
+  const onAccent = pickOnAccentColor(accent);
+  const { r: onAccentR, g: onAccentG, b: onAccentB } = hexToRgb(onAccent);
 
   return `
     --color-primary: ${primary};
@@ -97,6 +127,8 @@ export function getColorCSS(designPalette, category, subcategory) {
     --color-accent: ${accent};
     --color-accent-light: ${accentLight};
     --color-accent-rgb: ${r}, ${g}, ${b};
+    --color-on-accent: ${onAccent};
+    --color-on-accent-rgb: ${onAccentR}, ${onAccentG}, ${onAccentB};
     --color-bg: ${CREAM};
     --color-bg-alt: ${bgAlt};
     --color-dark: ${WARM_BLACK};

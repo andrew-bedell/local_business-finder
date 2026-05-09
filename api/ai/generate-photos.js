@@ -61,37 +61,43 @@ export default async function handler(req, res) {
     const imageBase64 = prediction.bytesBase64Encoded;
     const mimeType = prediction.mimeType || 'image/png';
 
-    // 2. Try to upload to Supabase Storage for a proper URL
-    if (supabaseUrl && supabaseKey) {
-      const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
-      const timestamp = Date.now();
-      const sanitizedSection = (section || 'photo').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
-      const filePath = `ai-generated/${timestamp}-${sanitizedSection}.${ext}`;
-
-      const imageBuffer = Buffer.from(imageBase64, 'base64');
-
-      const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/photos/${filePath}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-          'apikey': supabaseKey,
-          'Content-Type': mimeType,
-          'x-upsert': 'true',
-        },
-        body: imageBuffer,
-      });
-
-      if (uploadRes.ok) {
-        const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${filePath}`;
-        return res.status(200).json({ url: publicUrl, section, slot, storage: 'supabase' });
-      }
-
-      console.warn('Supabase Storage upload failed, falling back to data URI:', uploadRes.status);
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(503).json({ error: 'Supabase storage not configured for generated images' });
     }
 
-    // 3. Fallback: return data URI if Supabase Storage is not configured or upload fails
-    const dataUri = `data:${mimeType};base64,${imageBase64}`;
-    return res.status(200).json({ url: dataUri, section, slot, storage: 'inline' });
+    // 2. Upload to Supabase Storage and require a durable URL
+    const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
+    const timestamp = Date.now();
+    const sanitizedSection = (section || 'photo').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
+    const filePath = `ai-generated/${timestamp}-${sanitizedSection}.${ext}`;
+
+    const imageBuffer = Buffer.from(imageBase64, 'base64');
+
+    const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/photos/${filePath}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey,
+        'Content-Type': mimeType,
+        'x-upsert': 'true',
+      },
+      body: imageBuffer,
+    });
+
+    if (!uploadRes.ok) {
+      const uploadErr = await uploadRes.text().catch(() => '');
+      console.error('Supabase Storage upload failed for AI image:', uploadRes.status, uploadErr.substring(0, 200));
+      return res.status(502).json({ error: 'Failed to persist generated image' });
+    }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/photos/${filePath}`;
+    return res.status(200).json({
+      url: publicUrl,
+      section,
+      slot,
+      storage: 'supabase',
+      storagePath: filePath,
+    });
   } catch (err) {
     console.error('Photo generation error:', err);
     return res.status(500).json({ error: 'Internal server error' });

@@ -4,6 +4,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { updateFlow } = require('./db');
 const { fetchBusinessDetails, compileBusinessDataForPrompt, buildPhotoInventory, calculateCompleteness } = require('./compile-business-data');
+const { getOptimizedPhotoUrl, inferPresetFromSection } = require('../api/_lib/photo-urls.js');
 
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
 
@@ -80,7 +81,10 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
       const idx = sectionCounts[section] || 0;
       sectionCounts[section] = idx + 1;
       photoInventory.push({
+        bucket: 'photos',
         id: `ai_${section}_${idx}`,
+        originalUrl: photo.url,
+        storagePath: photo.storagePath || null,
         type: 'ai_generated',
         url: photo.url,
       });
@@ -329,6 +333,7 @@ async function generateAIPhotos(researchReport, businessId, sb) {
         business_id: businessId,
         source: 'ai_generated',
         photo_type: 'ai_generated',
+        storage_path: result.storagePath || null,
         url: result.url,
         caption: slot.slot,
       }).catch(err => console.warn('[Pipeline] Failed to save AI photo:', err.message));
@@ -385,32 +390,49 @@ async function generateAIPhotos(researchReport, businessId, sb) {
  * to concrete URLs from the photo inventory.
  */
 function buildPhotoManifest(photoAssetPlan, photoInventory) {
-  const usedUrls = new Set();
+  const usedPhotoKeys = new Set();
   const manifest = [];
 
   for (const item of photoAssetPlan) {
-    let url = null;
+    let selectedPhoto = null;
 
     if (item.recommendation === 'use_existing' && item.existingPhotoId) {
-      const match = photoInventory.find(p => p.id === item.existingPhotoId);
-      url = match?.url || null;
+      selectedPhoto = photoInventory.find(p => p.id === item.existingPhotoId) || null;
     }
 
-    if (!url && item.recommendation === 'generate_ai') {
+    if (!selectedPhoto && item.recommendation === 'generate_ai') {
       const section = (item.section || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const match = photoInventory.find(p => p.id.startsWith(`ai_${section}_`));
-      url = match?.url || null;
+      selectedPhoto = photoInventory.find(p => p.id.startsWith(`ai_${section}_`)) || null;
     }
 
     // Fallback: any unused photo
-    if (!url) {
-      const fallback = photoInventory.find(p => !usedUrls.has(p.url));
-      url = fallback?.url || (photoInventory[0]?.url || null);
+    if (!selectedPhoto) {
+      selectedPhoto = photoInventory.find((p) => {
+        const key = p.id || p.storagePath || p.originalUrl || p.url;
+        return !usedPhotoKeys.has(key);
+      }) || photoInventory[0] || null;
     }
 
+    const url = selectedPhoto
+      ? getOptimizedPhotoUrl({
+          url: selectedPhoto.originalUrl || selectedPhoto.url,
+          storagePath: selectedPhoto.storagePath,
+          bucket: selectedPhoto.bucket,
+          supabaseUrl: process.env.SUPABASE_URL,
+          preset: inferPresetFromSection(item.section, item.slot),
+        }) || selectedPhoto.url
+      : null;
+
     if (url) {
-      usedUrls.add(url);
-      manifest.push({ section: item.section, slot: item.slot, url });
+      const selectedKey = selectedPhoto?.id || selectedPhoto?.storagePath || selectedPhoto?.originalUrl || selectedPhoto?.url;
+      if (selectedKey) usedPhotoKeys.add(selectedKey);
+      manifest.push({
+        bucket: selectedPhoto?.bucket || null,
+        section: item.section,
+        slot: item.slot,
+        storagePath: selectedPhoto?.storagePath || null,
+        url,
+      });
     }
   }
 

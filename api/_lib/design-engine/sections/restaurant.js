@@ -1,6 +1,9 @@
 // Design Engine V2 — Restaurant-specific section renderers
 // Menu highlights and ambiance sections for restaurant websites
 
+import { buildResponsiveImageTag } from '../image-helpers.js';
+import { getMenuCategorySectionCss, renderMenuCategories } from './menu-media.js';
+
 function esc(str) {
   if (!str) return '';
   return String(str)
@@ -17,7 +20,7 @@ function getPhotoForSection(photos, sectionName) {
 }
 
 // ── Menu Section ──
-export function menuSection(content) {
+export function menuSection(content, photos) {
   const heading = esc(content?.menuHighlights?.heading || 'Nuestro Menú');
   const categories = content?.menuHighlights?.categories || [];
 
@@ -32,22 +35,11 @@ export function menuSection(content) {
           <h2>${heading}</h2>
         </div>
         <div class="reveal" style="max-width:700px;margin:0 auto;">
-          ${categories.map(cat => `
-          <div class="menu-category">
-            <h3>${esc(cat.name)}</h3>
-            ${(cat.items || []).map(item => `
-            <div class="menu-item">
-              <div>
-                <div class="menu-item__name">${esc(item.name)}</div>
-                ${item.description ? `<div class="menu-item__desc">${esc(item.description)}</div>` : ''}
-              </div>
-              ${item.price ? `<span class="menu-item__price">${esc(item.price)}</span>` : ''}
-            </div>`).join('')}
-          </div>`).join('')}
+          ${renderMenuCategories(categories, photos)}
         </div>
       </div>
     </section>`,
-    css: '',
+    css: getMenuCategorySectionCss(),
   };
 }
 
@@ -74,7 +66,7 @@ export function ambianceSection(content, photos) {
         </div>
         ${photo ? `
         <div class="reveal-right img-rounded aspect-4-3">
-          <img src="${esc(photo)}" alt="${heading}" class="img-cover">
+          ${buildResponsiveImageTag({ url: photo, alt: heading, preset: 'section', sizes: '(max-width: 900px) 100vw, 48vw', className: 'img-cover' })}
         </div>` : ''}
       </div>
     </section>`,

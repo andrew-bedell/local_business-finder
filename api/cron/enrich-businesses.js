@@ -3,6 +3,7 @@ import {
   runTrackedBusinessEnrichment,
   supportsEnrichmentTrackingSchema,
 } from '../_lib/enrichment-runner.js';
+import { getEnrichmentPauseState } from '../_lib/enrichment-monitor.js';
 
 export const config = { maxDuration: 300 };
 
@@ -62,6 +63,14 @@ export default async function handler(req, res) {
   const now = new Date();
 
   try {
+    const pauseState = await getEnrichmentPauseState({ supabaseUrl, headers });
+    if (pauseState.paused) {
+      return res.status(200).json({
+        paused: true,
+        reason: pauseState.reason || 'Enrichment pipeline is paused',
+      });
+    }
+
     const trackingSupported = await supportsEnrichmentTrackingSchema({ supabaseUrl, headers });
     const dueBusinesses = trackingSupported
       ? await fetchDueBusinesses({
@@ -103,6 +112,7 @@ export default async function handler(req, res) {
           businessAddress: business.address_full || null,
           supabaseUrl,
           supabaseKey,
+          triggerSource: 'cron',
         });
 
         processed++;
@@ -114,7 +124,12 @@ export default async function handler(req, res) {
           success: !!result.success,
           nextRetryAt: result.nextRetryAt || null,
           error: result.error || null,
+          globalPause: !!result.globalPause,
         });
+
+        if (result.globalPause) {
+          break;
+        }
       } catch (err) {
         processed++;
         results.push({
@@ -286,15 +301,7 @@ async function fetchLegacyBusinessStats({ businessId, supabaseUrl, headers }) {
 }
 
 function hasLegacyEnrichmentEvidence(business, stats) {
-  return !!(
-    stats.googlePhotoCount > 0
-    || stats.googleReviewCount > 0
-    || stats.socialProfileCount > 0
-    || !!String(business.description || '').trim()
-    || (Array.isArray(business.service_options) && business.service_options.length > 0)
-    || (Array.isArray(business.amenities) && business.amenities.length > 0)
-    || (Array.isArray(business.highlights) && business.highlights.length > 0)
-  );
+  return stats.googlePhotoCount > 0;
 }
 
 function clampInteger(value, fallback, min, max) {

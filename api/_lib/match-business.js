@@ -2,7 +2,7 @@
 // Used by free-signup.js and stripe/create-subscription.js
 
 import { toE164, normalizePhone, countryFromDialCode } from './phone-utils.js';
-import { buildInitialEnrichmentState } from './enrichment-runner.js';
+import { buildInitialEnrichmentState, insertBusinessWithSchemaFallback } from './enrichment-runner.js';
 export { normalizePhone };
 
 /**
@@ -397,16 +397,11 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
     };
   }
 
-  const bizRes = await fetch(`${supabaseUrl}/rest/v1/businesses`, {
-    method: 'POST',
-    headers: { ...headers, 'Prefer': 'return=representation' },
-    body: JSON.stringify(bizPayload),
+  const bizRes = await insertBusinessWithSchemaFallback({
+    supabaseUrl,
+    headers,
+    payload: bizPayload,
   });
-
-  if (!bizRes.ok) {
-    const errText = await bizRes.text().catch(() => '');
-    throw new Error('Failed to create business: ' + errText);
-  }
 
   const bizRecords = await bizRes.json();
   const business = bizRecords[0];

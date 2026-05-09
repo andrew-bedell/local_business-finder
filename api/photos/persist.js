@@ -1,5 +1,5 @@
 // Vercel serverless function: persist external photos to Supabase Storage
-// Called fire-and-forget from client after saving Instagram/Facebook data
+// Called fire-and-forget after saving external photos such as Google/Instagram/Facebook
 
 import { persistPhotoFromRecord } from '../_lib/photo-persist.js';
 import { ensureEmployeeSession } from '../_lib/employee-session.js';
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     // Fetch matching records that need persisting
     const idsParam = photoIds.join(',');
     const queryRes = await fetch(
-      `${supabaseUrl}/rest/v1/business_photos?id=in.(${idsParam})&storage_path=is.null&source=in.(instagram,facebook)&select=id,business_id,source,photo_type,url,storage_path`,
+      `${supabaseUrl}/rest/v1/business_photos?id=in.(${idsParam})&storage_path=is.null&select=id,business_id,source,photo_type,url,storage_path`,
       {
         headers: {
           'Authorization': `Bearer ${supabaseKey}`,

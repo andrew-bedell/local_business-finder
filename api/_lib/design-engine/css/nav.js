@@ -10,12 +10,11 @@ export function getNavCSS() {
       z-index: 1000;
       padding: 1.5rem 0;
       transition: padding 0.3s ease, background 0.3s ease;
-      mix-blend-mode: difference;
+      mix-blend-mode: normal;
     }
 
     .site-nav.scrolled {
       padding: 0.8rem 0;
-      mix-blend-mode: normal;
       background: rgba(26, 23, 20, 0.95);
       backdrop-filter: blur(12px);
     }
@@ -30,20 +29,35 @@ export function getNavCSS() {
       gap: 1.25rem;
     }
 
+    .site-nav__primary {
+      display: flex;
+      flex: 1 1 auto;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      mix-blend-mode: difference;
+    }
+
+    .site-nav.scrolled .site-nav__primary {
+      mix-blend-mode: normal;
+    }
+
     .site-nav__logo {
       display: block;
       flex: 0 1 28rem;
       min-width: 0;
-      max-width: min(30rem, 36vw);
+      max-width: min(32rem, 42vw);
       font-family: var(--font-heading);
-      font-size: 1.4rem;
+      font-size: clamp(1.05rem, 0.8rem + 0.8vw, 1.4rem);
       font-weight: 400;
       color: #fff;
       text-decoration: none;
       letter-spacing: -0.02em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      text-wrap: balance;
+      line-height: 1.15;
     }
 
     .site-nav__links {
@@ -86,15 +100,23 @@ export function getNavCSS() {
       font-weight: 500;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #fff;
+      color: var(--color-on-accent, #fff);
       background: var(--color-accent);
       padding: 0.7rem 1.6rem;
       border: none;
       text-decoration: none;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       cursor: pointer;
-      mix-blend-mode: normal;
       white-space: nowrap;
+      text-shadow: none;
+      flex: 0 0 auto;
+    }
+
+    .site-nav__cta,
+    .site-nav__cta:visited,
+    .site-nav__cta:hover,
+    .site-nav__cta:focus {
+      color: var(--color-on-accent, #fff);
     }
 
     .site-nav__cta:hover {
@@ -114,6 +136,11 @@ export function getNavCSS() {
       flex-shrink: 0;
       flex-direction: column;
       gap: 5px;
+      mix-blend-mode: difference;
+    }
+
+    .site-nav.scrolled .hamburger {
+      mix-blend-mode: normal;
     }
 
     .hamburger span {
@@ -181,7 +208,7 @@ export function getNavCSS() {
       letter-spacing: 0.15em;
       text-transform: uppercase;
       background: var(--color-accent);
-      color: #fff;
+      color: var(--color-on-accent, #fff);
       padding: 1rem 2.5rem;
       text-decoration: none;
     }

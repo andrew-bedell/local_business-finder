@@ -1,6 +1,7 @@
 // Vercel serverless function: scan photos for text overlays using Claude vision
 // Marks business_photos.has_text_overlay so text-heavy images are excluded from websites
 
+import { getPublicPhotoUrl, resolveStoredPhotoLocation } from '../_lib/photo-urls.js';
 import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export const config = { maxDuration: 120 };
@@ -58,12 +59,19 @@ export default async function handler(req, res) {
     }
 
     // Build accessible URLs for each photo
-    const photosWithUrls = photos.map(p => ({
-      id: p.id,
-      url: p.storage_path
-        ? `${supabaseUrl}/storage/v1/object/public/photos/${p.storage_path}`
-        : p.url,
-    })).filter(p => p.url);
+    const photosWithUrls = photos.map((p) => {
+      const location = resolveStoredPhotoLocation({
+        url: p.url,
+        storagePath: p.storage_path,
+        supabaseUrl,
+      });
+      return {
+        id: p.id,
+        url: p.storage_path
+          ? getPublicPhotoUrl(supabaseUrl, p.storage_path, location?.bucket)
+          : p.url,
+      };
+    }).filter(p => p.url);
 
     let scanned = 0;
     let flagged = 0;
