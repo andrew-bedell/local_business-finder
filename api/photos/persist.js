@@ -2,13 +2,14 @@
 // Called fire-and-forget from client after saving Instagram/Facebook data
 
 import { persistPhotoFromRecord } from '../_lib/photo-persist.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -26,6 +27,9 @@ export default async function handler(req, res) {
   if (photoIds.length > 20) {
     return res.status(400).json({ error: 'Max 20 photos per request' });
   }
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // Fetch matching records that need persisting

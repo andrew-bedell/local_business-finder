@@ -1,10 +1,12 @@
 // Vercel serverless function: Update business pipeline status, contact, and info fields
 // POST — updates pipeline_status and optionally contact/business fields
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -43,6 +45,9 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
     'Prefer': 'return=representation',
   };
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // If marking an outreach step, cancelling, or saving domain selection, we need to fetch current steps first then merge

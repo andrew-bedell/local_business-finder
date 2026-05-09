@@ -1,10 +1,12 @@
 // Vercel serverless function: Preview businesses matching audience filters
 // POST — returns matching businesses and count
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -17,6 +19,9 @@ export default async function handler(req, res) {
   }
 
   const { filters, limit, offset } = req.body || {};
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     const resp = await fetch(`${supabaseUrl}/rest/v1/rpc/get_audience_businesses`, {

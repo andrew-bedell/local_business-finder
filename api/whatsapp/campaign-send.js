@@ -3,6 +3,7 @@
 // Processes up to BATCH_SIZE recipients per call, client polls until done
 
 import { toE164 } from '../_lib/phone-utils.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 const BATCH_SIZE = 50;
 const SEND_DELAY_MS = 100; // delay between sends to respect rate limits
@@ -10,7 +11,7 @@ const SEND_DELAY_MS = 100; // delay between sends to respect rate limits
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -35,6 +36,9 @@ export default async function handler(req, res) {
 
   const { campaign_id } = req.body || {};
   if (!campaign_id) return res.status(400).json({ error: 'campaign_id is required' });
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // Load campaign

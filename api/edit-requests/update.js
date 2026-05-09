@@ -3,6 +3,7 @@
 
 import { sendEmail } from '../_lib/sendgrid.js';
 import { getTemplateForTrigger } from '../_lib/email-templates.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,6 +37,9 @@ export default async function handler(req, res) {
     'Authorization': `Bearer ${supabaseKey}`,
     'Content-Type': 'application/json',
   };
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // Fetch the current edit request with customer and business info
