@@ -2,6 +2,8 @@
 // GET ?days=30&search=&limit=50&offset=0
 // Returns: totals, sessions list, pagination
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -31,6 +33,9 @@ export default async function handler(req, res) {
     'Authorization': `Bearer ${supabaseKey}`,
     'Content-Type': 'application/json',
   };
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // If search term provided, find matching business IDs first

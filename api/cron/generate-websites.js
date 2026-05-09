@@ -3,6 +3,7 @@
 // Protected by CRON_SECRET header
 
 import { generateWebsiteForBusiness } from '../_lib/website-pipeline.js';
+import { hasWebsiteHtml } from '../_lib/website-config.js';
 
 export const config = { maxDuration: 300 };
 
@@ -114,7 +115,7 @@ export default async function handler(req, res) {
           { headers: supabaseHeaders }
         );
         const webData = webRes.ok ? await webRes.json() : [];
-        const hasWebsite = Array.isArray(webData) && webData.some(w => w.config && w.config.html);
+        const hasWebsite = Array.isArray(webData) && webData.some(w => hasWebsiteHtml(w.config));
         if (hasWebsite) continue;
 
         // Skip cancelled businesses

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { buildInitialEnrichmentState } from '../_lib/enrichment-runner.js';
+import { buildInitialEnrichmentState, insertBusinessWithSchemaFallback } from '../_lib/enrichment-runner.js';
 
 function buildInternalUrl(req, path) {
   var host = req.headers.host || process.env.VERCEL_URL || 'localhost:3000';
@@ -93,16 +93,23 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     ...buildInitialEnrichmentState(match.placeId)
   };
 
-  var insertResult = await fetchJson(supabaseUrl + '/rest/v1/businesses', {
-    method: 'POST',
-    headers: {
-      'apikey': serviceKey,
-      'Authorization': 'Bearer ' + serviceKey,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify(insertPayload)
-  });
+  var insertResult;
+  try {
+    var insertResponse = await insertBusinessWithSchemaFallback({
+      supabaseUrl: supabaseUrl,
+      headers: headers,
+      payload: insertPayload
+    });
+    insertResult = {
+      response: insertResponse,
+      payload: await insertResponse.json().catch(function () { return {}; })
+    };
+  } catch (err) {
+    insertResult = {
+      response: { ok: false },
+      payload: { error: err && err.message || String(err || '') }
+    };
+  }
 
   if (!insertResult.response.ok || !Array.isArray(insertResult.payload) || !insertResult.payload.length) {
     throw new Error('Failed to create business from Google match');
@@ -165,16 +172,27 @@ export default async function handler(req, res) {
         ...buildInitialEnrichmentState(builderPlaceId)
       };
 
-      var insertResult = await fetchJson(supabaseUrl + '/rest/v1/businesses', {
-        method: 'POST',
-        headers: {
-          'apikey': serviceKey,
-          'Authorization': 'Bearer ' + serviceKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(insertPayload)
-      });
+      var insertResult;
+      try {
+        var insertResponse = await insertBusinessWithSchemaFallback({
+          supabaseUrl: supabaseUrl,
+          headers: {
+            'apikey': serviceKey,
+            'Authorization': 'Bearer ' + serviceKey,
+            'Content-Type': 'application/json'
+          },
+          payload: insertPayload
+        });
+        insertResult = {
+          response: insertResponse,
+          payload: await insertResponse.json().catch(function () { return {}; })
+        };
+      } catch (err) {
+        insertResult = {
+          response: { ok: false },
+          payload: { error: err && err.message || String(err || '') }
+        };
+      }
 
       if (!insertResult.response.ok || !Array.isArray(insertResult.payload) || !insertResult.payload.length) {
         console.error('Failed to create business:', insertResult.payload);

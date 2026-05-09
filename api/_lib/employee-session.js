@@ -8,7 +8,6 @@ export async function requireEmployeeSession(req, { supabaseUrl, serviceKey, req
       internal: true,
     };
   }
-
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw Object.assign(new Error('Missing authorization header'), { status: 401 });

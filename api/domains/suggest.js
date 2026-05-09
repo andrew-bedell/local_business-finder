@@ -2,10 +2,12 @@
 // POST { business_name, country_code? }
 // Returns { suggestions: [{ domain, price, currency }], recommended: "domain.com" }
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -22,6 +24,12 @@ export default async function handler(req, res) {
   if (!business_name || typeof business_name !== 'string') {
     return res.status(400).json({ error: 'Missing required field: business_name' });
   }
+
+  const session = await ensureEmployeeSession(req, res, {
+    supabaseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+  if (!session) return;
 
   // Generate domain candidates from business name
   const candidates = generateCandidates(business_name.trim(), country_code);

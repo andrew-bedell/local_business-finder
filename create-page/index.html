@@ -3,309 +3,492 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#183153">
-  <title>Crea Tu Página Ahora — AhoraTengoPagina</title>
-  <meta name="description" content="Inicia tu página web hoy mismo. Buscamos tu negocio en Google primero y, si hace falta, te pedimos los datos para crear tu borrador.">
+  <meta name="theme-color" content="#1A56DB">
+  <title>Crea tu página — AhoraTengoPagina</title>
+  <meta name="description" content="Crea la página web de tu negocio en menos de 5 minutos. Te explicamos exactamente cómo funciona el proceso, qué necesitas tener a la mano y cómo editas tu página después.">
+
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/create-page/styles.css">
+
+  <link rel="stylesheet" href="/marketing.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* Page-specific tweaks for the deeper-funnel info page. Reuses marketing.css tokens. */
+    .cp-hero {
+      padding: 110px 24px 40px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--m-blue-light) 0%, var(--m-bg) 100%);
+    }
+    .cp-hero-tag {
+      display: inline-block;
+      padding: 6px 14px;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--m-green-dark);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .cp-hero h1 {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin: 0 auto 16px;
+      max-width: 680px;
+      color: var(--m-dark);
+    }
+    .cp-hero p {
+      font-size: 18px;
+      color: var(--m-text-muted);
+      max-width: 560px;
+      margin: 0 auto 28px;
+      line-height: 1.55;
+    }
+    .cp-hero-cta {
+      display: inline-block;
+      padding: 16px 32px;
+      background: var(--m-green);
+      color: var(--m-white);
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: var(--m-radius);
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.32);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .cp-hero-cta:hover { background: var(--m-green-dark); }
+    .cp-hero-cta:active { transform: scale(0.97); }
+    .cp-hero-meta {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--m-text-light);
+    }
+
+    .cp-section {
+      padding: 64px 24px;
+      max-width: var(--m-max-width);
+      margin: 0 auto;
+    }
+    .cp-section h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--m-dark);
+      margin-bottom: 12px;
+    }
+    .cp-section .cp-lead {
+      font-size: 16px;
+      color: var(--m-text-muted);
+      max-width: 640px;
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+
+    .cp-steps {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .cp-step {
+      display: flex;
+      gap: 18px;
+      padding: 24px;
+      background: var(--m-white);
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius-lg);
+      box-shadow: var(--m-shadow-sm);
+    }
+    .cp-step-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--m-blue);
+      color: var(--m-white);
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cp-step h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--m-dark);
+    }
+    .cp-step p {
+      font-size: 15px;
+      color: var(--m-text-muted);
+      line-height: 1.55;
+    }
+    .cp-step-detail {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: var(--m-bg);
+      border-left: 3px solid var(--m-blue);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--m-text);
+      line-height: 1.55;
+    }
+
+    .cp-checklist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 24px;
+      background: var(--m-white);
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius-lg);
+    }
+    .cp-checklist-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--m-text);
+    }
+    .cp-checklist-item::before {
+      content: "✓";
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--m-green-dark);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .cp-note {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--m-text-light);
+      line-height: 1.5;
+    }
+
+    .cp-edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    .cp-edit-card {
+      padding: 22px;
+      background: var(--m-white);
+      border: 1px solid var(--m-border);
+      border-radius: var(--m-radius-lg);
+      text-align: left;
+    }
+    .cp-edit-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--m-dark);
+      margin-bottom: 8px;
+    }
+    .cp-edit-card p {
+      font-size: 14px;
+      color: var(--m-text-muted);
+      line-height: 1.55;
+    }
+    .cp-edit-icon {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .cp-faq {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .cp-faq-item {
+      border-bottom: 1px solid var(--m-border);
+      padding: 18px 0;
+    }
+    .cp-faq-item h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--m-dark);
+      margin-bottom: 8px;
+    }
+    .cp-faq-item p {
+      font-size: 15px;
+      color: var(--m-text-muted);
+      line-height: 1.6;
+    }
+
+    .cp-cta-final {
+      padding: 64px 24px 120px;
+      text-align: center;
+      background: var(--m-dark);
+      color: var(--m-white);
+    }
+    .cp-cta-final h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .cp-cta-final p {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.75);
+      max-width: 520px;
+      margin: 0 auto 24px;
+    }
+    .cp-cta-final .cp-hero-cta {
+      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.45);
+    }
+
+    /* Sticky CTA bar — always visible while scrolling */
+    .cp-sticky {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 900;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--m-border);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    }
+    .cp-sticky-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+    }
+    .cp-sticky-btn {
+      display: block;
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--m-green);
+      color: var(--m-white);
+      font-size: 16px;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: var(--m-radius);
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .cp-sticky-btn:hover { background: var(--m-green-dark); }
+    .cp-sticky-btn:active { transform: scale(0.98); }
+    .cp-sticky-meta {
+      font-size: 12px;
+      color: var(--m-text-light);
+    }
+
+    /* Pad page bottom so sticky bar never covers final content */
+    body { padding-bottom: 92px; }
+
+    @media (max-width: 768px) {
+      .cp-hero { padding: 90px 20px 36px; }
+      .cp-hero h1 { font-size: 30px; }
+      .cp-hero p { font-size: 16px; }
+      .cp-section { padding: 48px 20px; }
+      .cp-section h2 { font-size: 24px; }
+      .cp-checklist { grid-template-columns: 1fr; }
+      .cp-edit-grid { grid-template-columns: 1fr; }
+      .cp-step { padding: 18px; gap: 14px; }
+      .cp-step-num { width: 32px; height: 32px; font-size: 14px; }
+    }
+  </style>
 </head>
-<body class="cp-body">
-  <main class="cp-shell">
-    <section class="cp-hero">
-      <div class="cp-hero-copy">
-        <p class="cp-kicker">Builder directo</p>
-        <h1>Crea tu página web ahora, sin pasar por WhatsApp.</h1>
-        <p class="cp-lead">
-          Primero intentamos encontrar tu negocio en Google para ahorrarte tiempo. Si no aparece, te guiamos para completar tu información, fotos, reseñas, horarios y todo lo necesario para armar tu borrador.
-        </p>
-        <div class="cp-hero-actions">
-          <button class="cp-btn cp-btn-primary" type="button" data-scroll-builder>Empezar ahora</button>
-          <a class="cp-btn cp-btn-secondary" href="/">Volver al sitio principal</a>
-        </div>
-        <ul class="cp-points">
-          <li>Busca por nombre del negocio y ciudad</li>
-          <li>Confirma o corrige datos encontrados en Google</li>
-          <li>Agrega manualmente horas, fundador, reseñas, fotos y servicios si hace falta</li>
-        </ul>
+<body class="m-body">
+
+  <!-- Lightweight nav: logo + back to home, no full nav menu since this is a focused page -->
+  <nav class="m-nav" id="m-nav">
+    <div class="m-nav-inner">
+      <a href="/" class="m-nav-logo">AhoraTengoPagina</a>
+      <div class="m-nav-links">
+        <a href="/" class="m-nav-link">Volver al inicio</a>
+        <a href="/crear-tu-pagina/chat" class="m-nav-cta">Crear mi página</a>
       </div>
-      <div class="cp-hero-card">
-        <div class="cp-preview">
-          <div class="cp-preview-badge">Flujo nuevo</div>
-          <div class="cp-preview-step">
-            <span>1</span>
-            <div>
-              <strong>Buscar en Google</strong>
-              <p>Nombre del negocio + ciudad</p>
-            </div>
-          </div>
-          <div class="cp-preview-step">
-            <span>2</span>
-            <div>
-              <strong>Completar faltantes</strong>
-              <p>Categoría, horario, fundador, fotos, reseñas</p>
-            </div>
-          </div>
-          <div class="cp-preview-step">
-            <span>3</span>
-            <div>
-              <strong>Guardar el borrador</strong>
-              <p>Lo dejamos listo para el portal y la generación</p>
-            </div>
-          </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="cp-hero">
+    <span class="cp-hero-tag">Listo para crear tu página</span>
+    <h1>Tu página web lista en menos de 5 minutos.</h1>
+    <p>Aquí te explicamos exactamente cómo funciona el proceso, qué información vamos a recopilar y cómo puedes editar tu página después de publicarla.</p>
+    <a href="/crear-tu-pagina/chat" class="cp-hero-cta">Crear mi página ahora</a>
+    <div class="cp-hero-meta">Sin tarjeta de crédito · Te contactamos por WhatsApp para finalizar</div>
+  </section>
+
+  <!-- How the chat works (the chat IS the creation process) -->
+  <section class="cp-section">
+    <h2>Cómo funciona el chat</h2>
+    <p class="cp-lead">Cuando hagas clic en "Crear mi página", entras a un chat tipo WhatsApp con nuestro asistente. Te hace preguntas simples — una a la vez — y arma tu página con tus respuestas.</p>
+
+    <div class="cp-steps">
+      <div class="cp-step">
+        <div class="cp-step-num">1</div>
+        <div>
+          <h3>Te preguntamos por tu negocio</h3>
+          <p>El asistente te pregunta tu nombre, el nombre de tu negocio y la ciudad donde estás. Con eso ya empezamos a buscarte en Google.</p>
         </div>
       </div>
-    </section>
 
-    <section class="cp-builder" id="builder">
-      <div class="cp-builder-header">
-        <p class="cp-kicker">Tu negocio</p>
-        <h2>Lanza el builder</h2>
-        <p>Empieza con la búsqueda en Google. Si no encontramos una ficha, se habilita el formulario completo para capturar los mismos datos manualmente.</p>
+      <div class="cp-step">
+        <div class="cp-step-num">2</div>
+        <div>
+          <h3>Buscamos tu negocio en Google Maps</h3>
+          <p>Si ya tienes ficha en Google, automáticamente jalamos tu dirección, teléfono, horario, fotos y reseñas. No tienes que escribir nada de eso.</p>
+          <div class="cp-step-detail">¿No tienes ficha de Google todavía? No hay problema — el asistente te hace las preguntas necesarias para llenar todo a mano.</div>
+        </div>
       </div>
 
-      <div class="cp-panel">
-        <form id="cp-search-form" class="cp-form cp-stack" novalidate>
-          <div class="cp-grid cp-grid-2">
-            <label class="cp-field">
-              <span>Nombre del negocio</span>
-              <input id="cp-business-name" name="businessName" type="text" placeholder="Ej: Tacos Don Pepe" required>
-            </label>
-            <label class="cp-field">
-              <span>Ciudad o dirección</span>
-              <input id="cp-business-city" name="city" type="text" placeholder="Ej: Mérida o Calle 60 #500" required>
-            </label>
-          </div>
-
-          <label class="cp-checkbox">
-            <input id="cp-google-toggle" type="checkbox" checked>
-            <span>Intentar buscar mi negocio en Google primero</span>
-          </label>
-
-          <div class="cp-inline-actions">
-            <button class="cp-btn cp-btn-primary" id="cp-search-btn" type="submit">Buscar negocio</button>
-            <button class="cp-btn cp-btn-secondary" id="cp-skip-search-btn" type="button">Llenar todo manualmente</button>
-          </div>
-          <p class="cp-status" id="cp-search-status" aria-live="polite"></p>
-        </form>
-
-        <div id="cp-search-results" class="cp-stack" hidden></div>
-
-        <form id="cp-details-form" class="cp-form cp-stack" hidden novalidate>
-          <div class="cp-section-title">
-            <h3>Datos para tu borrador</h3>
-            <p>Completa o corrige la información. Si encontramos algo en Google, ya vendrá precargado.</p>
-          </div>
-
-          <div class="cp-grid cp-grid-2">
-            <label class="cp-field">
-              <span>Tu nombre</span>
-              <input id="cp-contact-name" name="contactName" type="text" placeholder="Ej: María García" required>
-            </label>
-            <label class="cp-field">
-              <span>Tu correo electrónico</span>
-              <input id="cp-contact-email" name="contactEmail" type="email" placeholder="Ej: maria@gmail.com" required>
-            </label>
-            <label class="cp-field">
-              <span>Tu WhatsApp</span>
-              <input id="cp-contact-whatsapp" name="contactWhatsapp" type="tel" placeholder="Ej: +52 999 123 4567">
-            </label>
-            <label class="cp-field">
-              <span>Teléfono del negocio</span>
-              <input id="cp-business-phone" name="businessPhone" type="tel" placeholder="Ej: 999 123 4567">
-            </label>
-          </div>
-
-          <div class="cp-grid cp-grid-2">
-            <label class="cp-field">
-              <span>Nombre de la empresa</span>
-              <input id="cp-company" name="company" type="text" required>
-            </label>
-            <label class="cp-field">
-              <span>Tipo de negocio</span>
-              <select id="cp-business-type" name="businessType" required></select>
-            </label>
-          </div>
-
-          <div class="cp-grid cp-grid-2">
-            <label class="cp-field">
-              <span>Dirección completa</span>
-              <input id="cp-address-full" name="addressFull" type="text" placeholder="Ej: Calle 60 #500, Centro, Mérida">
-            </label>
-            <label class="cp-field">
-              <span>Ciudad</span>
-              <input id="cp-city-confirm" name="cityConfirm" type="text" placeholder="Ej: Mérida">
-            </label>
-          </div>
-
-          <label class="cp-field">
-            <span>Sobre tu negocio</span>
-            <textarea id="cp-about-business" name="aboutBusiness" rows="4" placeholder="Cuéntanos qué haces, qué te diferencia y qué deberían saber tus clientes."></textarea>
-          </label>
-
-          <div class="cp-section-card">
-            <div class="cp-section-card-header">
-              <div>
-                <h4>Horario de atención</h4>
-                <p>Úsalo tal como quieres que aparezca en tu página.</p>
-              </div>
-              <button class="cp-link-btn" id="cp-copy-hours" type="button">Copiar lunes a todos</button>
-            </div>
-            <div class="cp-hours-grid" id="cp-hours-grid">
-              <label class="cp-field"><span>Lunes</span><input data-day="lunes" type="text" placeholder="9:00 AM - 6:00 PM"></label>
-              <label class="cp-field"><span>Martes</span><input data-day="martes" type="text" placeholder="9:00 AM - 6:00 PM"></label>
-              <label class="cp-field"><span>Miércoles</span><input data-day="miercoles" type="text" placeholder="9:00 AM - 6:00 PM"></label>
-              <label class="cp-field"><span>Jueves</span><input data-day="jueves" type="text" placeholder="9:00 AM - 6:00 PM"></label>
-              <label class="cp-field"><span>Viernes</span><input data-day="viernes" type="text" placeholder="9:00 AM - 6:00 PM"></label>
-              <label class="cp-field"><span>Sábado</span><input data-day="sabado" type="text" placeholder="9:00 AM - 2:00 PM"></label>
-              <label class="cp-field"><span>Domingo</span><input data-day="domingo" type="text" placeholder="Cerrado"></label>
-            </div>
-          </div>
-
-          <div class="cp-grid cp-grid-2">
-            <label class="cp-field">
-              <span>Nombre del fundador o dueño</span>
-              <input id="cp-founder-name" name="founderName" type="text" placeholder="Ej: Andrés Pérez">
-            </label>
-            <label class="cp-field">
-              <span>Historia del fundador</span>
-              <textarea id="cp-founder-story" name="founderStory" rows="4" placeholder="Ej: Empezamos este negocio en familia hace 20 años..."></textarea>
-            </label>
-          </div>
-
-          <div class="cp-section-card">
-            <div class="cp-section-card-header">
-              <div>
-                <h4>Reseñas</h4>
-                <p>Agrega algunas reseñas si Google no las encontró.</p>
-              </div>
-              <button class="cp-btn cp-btn-secondary" id="cp-add-review" type="button">Agregar reseña</button>
-            </div>
-            <div id="cp-reviews-list" class="cp-stack"></div>
-          </div>
-
-          <div class="cp-section-card">
-            <div class="cp-section-card-header">
-              <div>
-                <h4>Servicios o productos</h4>
-                <p>Esto ayuda a que el sitio no dependa solo de texto generado.</p>
-              </div>
-              <button class="cp-btn cp-btn-secondary" id="cp-add-service" type="button">Agregar servicio</button>
-            </div>
-            <div id="cp-services-list" class="cp-stack"></div>
-          </div>
-
-          <div class="cp-section-card">
-            <div class="cp-section-card-header">
-              <div>
-                <h4>Fotos</h4>
-                <p>Sube fotos generales, del equipo, productos, local o fundador.</p>
-              </div>
-            </div>
-            <div class="cp-upload-row">
-              <label class="cp-field">
-                <span>Tipo de foto</span>
-                <select id="cp-photo-type">
-                  <option value="exterior">Exterior</option>
-                  <option value="interior">Interior</option>
-                  <option value="product">Producto</option>
-                  <option value="food">Comida</option>
-                  <option value="team">Equipo</option>
-                  <option value="logo">Logo</option>
-                  <option value="founder">Fundador</option>
-                  <option value="service">Servicio</option>
-                </select>
-              </label>
-              <label class="cp-upload-btn" for="cp-photo-input">Seleccionar fotos</label>
-              <input id="cp-photo-input" type="file" accept="image/*" multiple hidden>
-            </div>
-            <p class="cp-status" id="cp-photo-status" aria-live="polite"></p>
-            <div id="cp-photo-list" class="cp-photo-grid"></div>
-          </div>
-
-          <label class="cp-field">
-            <span>Notas adicionales</span>
-            <textarea id="cp-extra-notes" name="extraNotes" rows="3" placeholder="Promociones, zonas de servicio, links, detalles especiales, etc."></textarea>
-          </label>
-
-          <div class="cp-inline-actions">
-            <button class="cp-btn cp-btn-primary" id="cp-submit-btn" type="submit">Guardar y abrir mi portal</button>
-          </div>
-          <p class="cp-status" id="cp-submit-status" aria-live="polite"></p>
-        </form>
-
-        <section id="cp-success" class="cp-success" hidden>
-          <h3>Tu borrador quedó guardado.</h3>
-          <p id="cp-success-message"></p>
-          <div class="cp-inline-actions">
-            <a class="cp-btn cp-btn-primary" href="/mipagina">Ir al portal</a>
-            <button class="cp-btn cp-btn-secondary" id="cp-restart-btn" type="button">Crear otro borrador</button>
-          </div>
-        </section>
+      <div class="cp-step">
+        <div class="cp-step-num">3</div>
+        <div>
+          <h3>Verificas la información campo por campo</h3>
+          <p>Te mostramos cada dato (nombre, dirección, teléfono, horario, descripción) y tú confirmas que está correcto. Si algo no, lo editas ahí mismo en el chat.</p>
+        </div>
       </div>
-    </section>
-  </main>
 
-  <template id="cp-review-template">
-    <div class="cp-repeat-card">
-      <div class="cp-grid cp-grid-3">
-        <label class="cp-field">
-          <span>Nombre del cliente</span>
-          <input data-review="author" type="text" placeholder="Ej: Ana">
-        </label>
-        <label class="cp-field">
-          <span>Calificación</span>
-          <select data-review="rating">
-            <option value="5">5 estrellas</option>
-            <option value="4">4 estrellas</option>
-            <option value="3">3 estrellas</option>
-            <option value="2">2 estrellas</option>
-            <option value="1">1 estrella</option>
-          </select>
-        </label>
-        <button class="cp-remove-btn" data-remove-review type="button">Eliminar</button>
+      <div class="cp-step">
+        <div class="cp-step-num">4</div>
+        <div>
+          <h3>Eliges tus fotos y tu logo</h3>
+          <p>Te mostramos las fotos que encontramos en Google y tú marcas cuáles quieres. Puedes subir fotos adicionales y tu logo, o dejarnos generar un logo simple con las iniciales de tu negocio.</p>
+        </div>
       </div>
-      <label class="cp-field">
-        <span>Texto de la reseña</span>
-        <textarea data-review="text" rows="3" placeholder="Ej: Excelente servicio, muy recomendado."></textarea>
-      </label>
+
+      <div class="cp-step">
+        <div class="cp-step-num">5</div>
+        <div>
+          <h3>Datos de contacto y listo</h3>
+          <p>Nos das tu WhatsApp personal y un correo para coordinar contigo. Eso no aparece en tu página — es solo para que nuestro equipo te contacte cuando esté lista la vista previa.</p>
+        </div>
+      </div>
     </div>
-  </template>
+  </section>
 
-  <template id="cp-service-template">
-    <div class="cp-repeat-card">
-      <div class="cp-grid cp-grid-4">
-        <label class="cp-field">
-          <span>Nombre</span>
-          <input data-service="name" type="text" placeholder="Ej: Corte de cabello">
-        </label>
-        <label class="cp-field">
-          <span>Precio</span>
-          <input data-service="price" type="number" min="0" step="0.01" placeholder="Ej: 250">
-        </label>
-        <label class="cp-field">
-          <span>Moneda</span>
-          <select data-service="currency">
-            <option value="MXN">MXN</option>
-            <option value="USD">USD</option>
-            <option value="COP">COP</option>
-          </select>
-        </label>
-        <button class="cp-remove-btn" data-remove-service type="button">Eliminar</button>
-      </div>
-      <label class="cp-field">
-        <span>Descripción</span>
-        <textarea data-service="description" rows="3" placeholder="Ej: Incluye lavado, corte y peinado."></textarea>
-      </label>
+  <!-- What to have ready -->
+  <section class="cp-section">
+    <h2>Lo que te conviene tener a la mano</h2>
+    <p class="cp-lead">No es obligatorio — el chat te guía aunque no tengas todo. Pero si lo tienes listo, terminas más rápido.</p>
+
+    <div class="cp-checklist">
+      <div class="cp-checklist-item">El nombre exacto de tu negocio (como aparece en Google si ya estás)</div>
+      <div class="cp-checklist-item">La ciudad donde está tu negocio</div>
+      <div class="cp-checklist-item">Tu horario de atención semanal</div>
+      <div class="cp-checklist-item">El número de WhatsApp donde te contactan tus clientes</div>
+      <div class="cp-checklist-item">2 a 5 fotos de tu local, productos o servicios</div>
+      <div class="cp-checklist-item">Tu logo (si tienes — si no, lo creamos por ti)</div>
+      <div class="cp-checklist-item">Una breve descripción de qué hace tu negocio especial</div>
+      <div class="cp-checklist-item">Links a tus redes sociales (Instagram, Facebook, etc.)</div>
     </div>
-  </template>
+    <p class="cp-note">Si no tienes algún dato ahora, sáltalo — siempre puedes agregarlo después por WhatsApp.</p>
+  </section>
 
-  <script src="/create-page/app.js"></script>
+  <!-- After the chat -->
+  <section class="cp-section">
+    <h2>Qué pasa cuando termines el chat</h2>
+    <p class="cp-lead">El chat solo recopila la información. A partir de ahí, nuestro equipo se encarga del resto.</p>
+
+    <div class="cp-steps">
+      <div class="cp-step">
+        <div class="cp-step-num">1</div>
+        <div>
+          <h3>Diseñamos tu vista previa (24–72 horas)</h3>
+          <p>Tomamos toda la información que diste, organizamos las fotos, escogemos las mejores reseñas y armamos una primera versión de tu página. Te la enviamos por WhatsApp para que la veas.</p>
+        </div>
+      </div>
+
+      <div class="cp-step">
+        <div class="cp-step-num">2</div>
+        <div>
+          <h3>Tú la revisas y nos dices si quieres cambios</h3>
+          <p>Por WhatsApp nos dices "cámbiame este texto", "esta foto no me gusta", "ponle más color verde", lo que sea. Hacemos los ajustes y te volvemos a enviar.</p>
+        </div>
+      </div>
+
+      <div class="cp-step">
+        <div class="cp-step-num">3</div>
+        <div>
+          <h3>Publicamos tu página en internet</h3>
+          <p>Cuando tú estés contento, le damos publicar. Tu página queda con su propio link, optimizada para celular y conectada a Google para que tus clientes te encuentren.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How to edit later -->
+  <section class="cp-section">
+    <h2>Cómo editas tu página después de publicarla</h2>
+    <p class="cp-lead">No tienes que aprender nada técnico. Tú nos escribes por WhatsApp y nosotros lo cambiamos.</p>
+
+    <div class="cp-edit-grid">
+      <div class="cp-edit-card">
+        <div class="cp-edit-icon">💬</div>
+        <h4>Mandas un WhatsApp</h4>
+        <p>"Cambia el horario de los sábados a 10–6" o "ponme estas 3 fotos nuevas". Mensajes normales, en tu idioma.</p>
+      </div>
+      <div class="cp-edit-card">
+        <div class="cp-edit-icon">⚡</div>
+        <h4>Lo cambiamos en menos de 24 horas</h4>
+        <p>Hacemos el cambio, te avisamos cuando esté listo y tú revisas. Sin esperas largas, sin papeleos.</p>
+      </div>
+      <div class="cp-edit-card">
+        <div class="cp-edit-icon">∞</div>
+        <h4>Cambios ilimitados</h4>
+        <p>No cobramos por cambio. Cambias precios, fotos, textos, horarios — todo lo que necesites mientras tu plan esté activo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ specific to the creation process -->
+  <section class="cp-section">
+    <h2>Dudas comunes antes de empezar</h2>
+    <div class="cp-faq">
+      <div class="cp-faq-item">
+        <h4>¿Cuánto tarda el chat?</h4>
+        <p>Entre 3 y 5 minutos si ya estás en Google Maps. Un poco más si tenemos que llenar todo a mano.</p>
+      </div>
+      <div class="cp-faq-item">
+        <h4>¿Tengo que pagar algo en este momento?</h4>
+        <p>No. El chat solo recopila tu información. No te pedimos tarjeta. Cuando te enviemos la vista previa decides si te gusta y, si quieres seguir, ahí coordinamos el plan.</p>
+      </div>
+      <div class="cp-faq-item">
+        <h4>¿Y si me equivoco escribiendo algo?</h4>
+        <p>El chat te muestra cada dato para que confirmes o edites antes de enviar. Y aunque algo se vaya con error, lo arreglamos cuando revises la vista previa.</p>
+      </div>
+      <div class="cp-faq-item">
+        <h4>¿Puedo pausar y seguir después?</h4>
+        <p>Mientras no cierres el chat, sí. Si lo cierras pierdes el avance — por eso recomendamos terminarlo de una. Son pocos minutos.</p>
+      </div>
+      <div class="cp-faq-item">
+        <h4>¿Mis datos están seguros?</h4>
+        <p>Sí. Solo nuestro equipo de diseño los ve para armar tu página. No los compartimos con nadie más.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="cp-cta-final">
+    <h2>¿Listo? Vamos a crear tu página.</h2>
+    <p>El chat te toma menos de 5 minutos. Tu página queda lista para revisar en 24–72 horas.</p>
+    <a href="/crear-tu-pagina/chat" class="cp-hero-cta">Crear mi página ahora</a>
+  </section>
+
+  <!-- Sticky CTA — always visible so the user can start the chat from anywhere on the page -->
+  <div class="cp-sticky">
+    <div class="cp-sticky-inner">
+      <a href="/crear-tu-pagina/chat" class="cp-sticky-btn">Crear mi página</a>
+      <span class="cp-sticky-meta">Toma menos de 5 minutos</span>
+    </div>
+  </div>
+
 </body>
 </html>

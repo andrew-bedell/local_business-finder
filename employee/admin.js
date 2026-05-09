@@ -2170,7 +2170,9 @@
     { id: 'placeId', label: 'Place ID', defaultVisible: false, help: 'Google place identifier' },
     { id: 'mapsUrl', label: 'Maps URL', defaultVisible: false, help: 'Stored Google Maps link' },
     { id: 'dataCompleteness', label: 'Completeness', defaultVisible: false, help: 'Data completeness score' },
-    { id: 'createdAt', label: 'Saved At', defaultVisible: false, help: 'When the business was saved' },
+    { id: 'createdAt', label: 'Record Created At', defaultVisible: false, help: 'When the business record was created' },
+    { id: 'enrichedAt', label: 'Enriched At', defaultVisible: false, help: 'When Google-photo enrichment completed' },
+    { id: 'websiteCreatedAt', label: 'Website Created At', defaultVisible: false, help: 'When the first website was generated' },
     { id: 'updatedAt', label: 'Updated At', defaultVisible: false, help: 'Last business record update' },
     { id: 'notes', label: 'Notes', defaultVisible: false, help: 'Operator notes' },
     { id: 'description', label: 'Description', defaultVisible: false, help: 'Saved business description' },
@@ -2214,6 +2216,9 @@
     { id: 'views', labelKey: 'orThVisitCount', help: 'Website visit count' },
     { id: 'stage', labelKey: 'thStage', help: 'Pipeline stage' },
     { id: 'whatsappStatus', labelKey: 'thWhatsappStatus', help: 'WhatsApp validity' },
+    { id: 'createdAt', label: 'Record Created At', help: 'When the business record was created' },
+    { id: 'enrichedAt', label: 'Enriched At', help: 'When Google-photo enrichment completed' },
+    { id: 'websiteCreatedAt', label: 'Website Created At', help: 'When the first website was generated' },
     { id: 'websiteUrl', labelKey: 'thWebsiteUrl', help: 'Preview or live URL' },
     { id: 'action', labelKey: 'orThAction', help: 'Open outreach actions' },
   ];
@@ -2897,7 +2902,7 @@
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), generated_websites(id, template_name, status, site_status, published_url), business_contacts(*)');
+        .select('*, business_social_profiles(*), business_photos(id, source), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -3078,7 +3083,13 @@
   }
 
   function getGeneratedWebsiteRecords(business) {
-    return business && Array.isArray(business.generated_websites) ? business.generated_websites : [];
+    const records = business && Array.isArray(business.generated_websites) ? business.generated_websites.slice() : [];
+    records.sort((a, b) => {
+      const aTime = new Date(a?.generated_at || a?.created_at || a?.published_at || 0).getTime();
+      const bTime = new Date(b?.generated_at || b?.created_at || b?.published_at || 0).getTime();
+      return bTime - aTime;
+    });
+    return records;
   }
 
   function isResearchReportRecord(record) {
@@ -3119,7 +3130,7 @@
 
     const { data, error } = await supabaseClient
       .from('generated_websites')
-      .select('id, business_id, template_name, status, site_status, published_url, config')
+      .select('id, business_id, template_name, status, site_status, published_url, generated_at, created_at, published_at, config')
       .eq('business_id', business.id)
       .order('created_at', { ascending: false });
 
@@ -3138,27 +3149,52 @@
   }
 
   function hasEnrichmentEvidence(business) {
-    return !!(
-      hasResearchReport(business)
-      || hasGeneratedWebsite(business)
-      || ((business.business_social_profiles || []).length > 0)
-      || ((business.service_options || []).length > 0)
-      || ((business.highlights || []).length > 0)
-      || ((business.amenities || []).length > 0)
-    );
+    return getGooglePhotoCount(business) > 0;
   }
 
   function getEffectiveEnrichmentStatus(business) {
     const rawStatus = String(business && business.enrichment_status || '').toLowerCase();
-    if (ENRICHMENT_STATUSES.has(rawStatus)) return rawStatus;
+    if (ENRICHMENT_STATUSES.has(rawStatus)) {
+      if (rawStatus === 'completed' && !hasEnrichmentEvidence(business) && !isSyntheticPlaceId(business && business.place_id)) {
+        return 'pending';
+      }
+      return rawStatus;
+    }
     if (hasEnrichmentEvidence(business)) return 'completed';
     if (isSyntheticPlaceId(business && business.place_id)) return 'skipped';
     return 'pending';
   }
 
+  function getRelatedCount(business, relationName) {
+    const rows = business && Array.isArray(business[relationName]) ? business[relationName] : [];
+    if (!rows.length) return 0;
+    const countValue = rows[0] && rows[0].count;
+    return Number.isFinite(Number(countValue)) ? Number(countValue) : 0;
+  }
+
+  function getGooglePhotoCount(business) {
+    const rows = business && Array.isArray(business.business_photos) ? business.business_photos : [];
+    return rows.filter((row) => row && row.source === 'google').length;
+  }
+
+  function getBusinessCreatedAt(business) {
+    return business && business.created_at ? business.created_at : null;
+  }
+
+  function getBusinessEnrichedAt(business) {
+    if (!business || getEffectiveEnrichmentStatus(business) !== 'completed') return null;
+    return business.enrichment_last_finished_at || null;
+  }
+
+  function getWebsiteCreatedAt(business) {
+    const record = getExistingWebsiteRecord(business);
+    if (!record) return null;
+    return record.generated_at || record.created_at || record.published_at || null;
+  }
+
   function isBusinessEnriched(business) {
     const status = getEffectiveEnrichmentStatus(business);
-    return status === 'completed' || status === 'skipped';
+    return status === 'completed';
   }
 
   function getEnrichmentStatusBadgeHtml(status) {
@@ -3490,7 +3526,7 @@
       case 'mapsUrl':
         return `<td>${business.maps_url ? `<a href="${escapeHtml(business.maps_url)}" target="_blank" rel="noopener">${escapeHtml(business.maps_url)}</a>` : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'enrich':
-        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${business.description ? '\u2713' : t('btnEnrich')}</button></td>`;
+        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${getEffectiveEnrichmentStatus(business) === 'completed' ? '\u2713' : t('btnEnrich')}</button></td>`;
       case 'actions':
         return `<td class="td-center">${business.phone ? `<button class="btn-msg" data-id="${business.id}" data-phone="${escapeHtml(business.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>`;
       case 'delete':
@@ -3502,9 +3538,13 @@
       case 'dataCompleteness':
         return `<td class="td-center">${business.data_completeness_score != null ? escapeHtml(String(business.data_completeness_score)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'createdAt':
-        return `<td>${business.created_at ? escapeHtml(formatDate(business.created_at)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+        return `<td>${getBusinessCreatedAt(business) ? escapeHtml(formatAdminDateTime(getBusinessCreatedAt(business))) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'enrichedAt':
+        return `<td>${getBusinessEnrichedAt(business) ? escapeHtml(formatAdminDateTime(getBusinessEnrichedAt(business))) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+      case 'websiteCreatedAt':
+        return `<td>${getWebsiteCreatedAt(business) ? escapeHtml(formatAdminDateTime(getWebsiteCreatedAt(business))) : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'updatedAt':
-        return `<td>${business.updated_at ? escapeHtml(formatDate(business.updated_at)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
+        return `<td>${business.last_updated_at ? escapeHtml(formatAdminDateTime(business.last_updated_at)) : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'notes':
         return `<td>${business.notes ? escapeHtml(business.notes) : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'description':
@@ -3604,6 +3644,12 @@
         return business
           ? `<td class="td-center"><span class="badge ${business.whatsapp_status === 'valid' ? 'badge-has-site' : business.whatsapp_status === 'invalid' ? 'badge-no-site' : ''}" style="font-size:11px">${business.whatsapp_status === 'valid' ? t('waValid') : business.whatsapp_status === 'invalid' ? t('waInvalid') : t('waUnchecked')}</span></td>`
           : '<td>—</td>';
+      case 'createdAt':
+        return `<td>${business && getBusinessCreatedAt(business) ? escapeHtml(formatAdminDateTime(getBusinessCreatedAt(business))) : '—'}</td>`;
+      case 'enrichedAt':
+        return `<td>${business && getBusinessEnrichedAt(business) ? escapeHtml(formatAdminDateTime(getBusinessEnrichedAt(business))) : '—'}</td>`;
+      case 'websiteCreatedAt':
+        return `<td>${business && getWebsiteCreatedAt(business) ? escapeHtml(formatAdminDateTime(getWebsiteCreatedAt(business))) : '—'}</td>`;
       case 'websiteUrl': {
         const url = business ? getPublishedWebsiteUrl(business) : '';
         return `<td>${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>` : '—'}</td>`;
@@ -7898,12 +7944,13 @@
           business_id: business.id,
           template_name: 'ai_research_report',
           status: 'draft',
+          generated_at: new Date().toISOString(),
           config: {
             researchReport: report,
             generatedAt: new Date().toISOString(),
           },
         })
-        .select('id, status, template_name, config');
+        .select('id, status, template_name, generated_at, created_at, published_at, config');
 
       if (error) {
         console.warn('Report save error:', error);
@@ -7928,13 +7975,14 @@
           business_id: business.id,
           template_name: templateName,
           status: 'draft',
+          generated_at: new Date().toISOString(),
           config: {
             html: html,
             researchReport: report || null,
             generatedAt: new Date().toISOString(),
           },
         })
-        .select('id, status, site_status, published_url, template_name, config');
+        .select('id, status, site_status, published_url, template_name, generated_at, created_at, published_at, config');
 
       if (error) {
         console.warn('Website save error:', error);

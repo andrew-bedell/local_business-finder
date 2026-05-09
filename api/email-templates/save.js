@@ -1,10 +1,12 @@
 // Vercel serverless function: Create or update an email template
 // POST — if body contains id, update (PATCH); otherwise insert (POST)
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -40,6 +42,9 @@ export default async function handler(req, res) {
   if (!name || !subject || !body_html) {
     return res.status(400).json({ error: 'Missing required fields: name, subject, body_html' });
   }
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   const payload = {
     name,

@@ -1,9 +1,10 @@
 import { runTrackedBusinessEnrichment } from '../_lib/enrichment-runner.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -22,6 +23,9 @@ export default async function handler(req, res) {
     'Authorization': `Bearer ${supabaseKey}`,
     'Content-Type': 'application/json',
   };
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   // 1. Look up business to get place_id + context
   const bizRes = await fetch(
@@ -48,7 +52,17 @@ export default async function handler(req, res) {
       businessAddress: biz.address_full,
       supabaseUrl,
       supabaseKey,
+      triggerSource: 'manual',
     });
+
+    if (result.status === 'paused') {
+      return res.status(503).json({
+        success: false,
+        status: result.status,
+        paused: true,
+        error: result.error || 'Enrichment is paused',
+      });
+    }
 
     return res.status(200).json({
       success: !!result.success,
@@ -56,6 +70,7 @@ export default async function handler(req, res) {
       dataId: result.dataId || null,
       error: result.error || null,
       nextRetryAt: result.nextRetryAt || null,
+      globalPause: !!result.globalPause,
     });
   } catch (err) {
     console.error('Enrichment failed:', err);

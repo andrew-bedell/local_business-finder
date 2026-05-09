@@ -1,6 +1,8 @@
 // Design Engine V2 — Beauty Salon section renderers
 // Business-type-specific sections: treatments grid, team/staff profiles
 
+import { buildResponsiveImageTag } from '../image-helpers.js';
+
 function esc(str) {
   if (!str) return '';
   return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -130,7 +132,7 @@ export function teamSection(content, photos) {
           <div class="card card--bordered team-card stagger-${i + 1}">
             ${photo ? `
             <div class="team-card__photo img-rounded aspect-1">
-              <img src="${esc(photo)}" alt="${esc(m.name)}" class="img-cover">
+              ${buildResponsiveImageTag({ url: photo, alt: m.name, preset: 'avatar', sizes: '120px', className: 'img-cover' })}
             </div>` : ''}
             <h3 class="team-card__name">${esc(m.name)}</h3>
             ${m.title ? `<p class="team-card__title">${esc(m.title)}</p>` : ''}

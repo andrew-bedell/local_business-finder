@@ -2,6 +2,7 @@
 // POST — body: { to, subject, html, text (optional) }
 
 import { sendEmail } from '../_lib/sendgrid.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 const SAMPLE_DATA = {
   contactName: 'María García',
@@ -35,7 +36,7 @@ function replaceMergeTags(text) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -44,6 +45,12 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const session = await ensureEmployeeSession(req, res, {
+    supabaseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+  if (!session) return;
 
   const { to, subject, html, text } = req.body || {};
 

@@ -159,7 +159,6 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   sectionMap.services = (shouldUseGenericServicesSection(businessType) || !hasDedicatedOfferSection)
     ? servicesSection(content, photos, normalizedBusiness)
     : { html: '', css: '' };
-
   const availableSections = new Set(
     Object.entries(sectionMap)
       .filter(([, section]) => section && section.html)

@@ -1,7 +1,8 @@
 // Vercel serverless function: batch-persist old external photos + fix existing website HTML
 // Protected by CRON_SECRET header. Can also be run as a Vercel cron job.
 
-import { persistPhotoFromRecord, getPublicPhotoUrl } from '../_lib/photo-persist.js';
+import { persistPhotoFromRecord } from '../_lib/photo-persist.js';
+import { getOptimizedPhotoUrl, rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
 
 export const config = { maxDuration: 300 };
 
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
 
   try {
     // Build query for unpersisted photos
-    let queryUrl = `${supabaseUrl}/rest/v1/business_photos?storage_path=is.null&source=in.(instagram,facebook)&select=id,business_id,source,photo_type,url,storage_path&limit=${Math.min(limit, 100)}`;
+    let queryUrl = `${supabaseUrl}/rest/v1/business_photos?storage_path=is.null&select=id,business_id,source,photo_type,url,storage_path&limit=${Math.min(limit, 100)}`;
     if (source) queryUrl += `&source=eq.${source}`;
     if (businessId) queryUrl += `&business_id=eq.${businessId}`;
 
@@ -73,7 +74,12 @@ export default async function handler(req, res) {
         } else if (r.value.success) {
           persisted++;
           if (r.value.publicUrl && record.url) {
-            persistedMap[record.url] = r.value.publicUrl;
+            persistedMap[record.url] = getOptimizedPhotoUrl({
+              url: r.value.publicUrl,
+              storagePath: r.value.storagePath,
+              supabaseUrl,
+              preset: 'existing_html',
+            }) || r.value.publicUrl;
           }
         } else {
           failed++;
@@ -86,7 +92,7 @@ export default async function handler(req, res) {
 
     // Fix HTML in generated_websites if requested
     let htmlFixed = 0;
-    if (fixHtml && Object.keys(persistedMap).length > 0) {
+    if (fixHtml) {
       htmlFixed = await fixWebsiteHtml(supabaseUrl, supabaseKey, persistedMap);
     }
 
@@ -98,12 +104,12 @@ export default async function handler(req, res) {
 }
 
 /**
- * Replace old CDN URLs with persistent Supabase URLs in generated_websites config.html
+ * Replace old CDN URLs with persistent Supabase URLs in generated_websites config HTML.
  */
 async function fixWebsiteHtml(supabaseUrl, supabaseKey, urlMap) {
   // Fetch all generated websites that have HTML
   const queryRes = await fetch(
-    `${supabaseUrl}/rest/v1/generated_websites?select=id,config&config->>html=not.is.null&limit=200`,
+    `${supabaseUrl}/rest/v1/generated_websites?select=id,config&or=(config->>html.not.is.null,config->>draft_html.not.is.null)&limit=200`,
     {
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
@@ -121,20 +127,37 @@ async function fixWebsiteHtml(supabaseUrl, supabaseKey, urlMap) {
   let fixed = 0;
 
   for (const site of websites) {
-    if (!site.config || !site.config.html) continue;
+    if (!site.config || (!site.config.html && !site.config.draft_html)) continue;
 
-    let html = site.config.html;
+    let html = site.config.html || null;
+    let draftHtml = site.config.draft_html || null;
     let changed = false;
 
     for (const [oldUrl, newUrl] of Object.entries(urlMap)) {
-      if (html.includes(oldUrl)) {
+      if (html && html.includes(oldUrl)) {
         html = html.split(oldUrl).join(newUrl);
+        changed = true;
+      }
+      if (draftHtml && draftHtml.includes(oldUrl)) {
+        draftHtml = draftHtml.split(oldUrl).join(newUrl);
         changed = true;
       }
     }
 
+    const optimizedHtml = html ? rewriteSupabasePhotoUrlsInHtml(html, supabaseUrl, 'existing_html') : html;
+    const optimizedDraftHtml = draftHtml ? rewriteSupabasePhotoUrlsInHtml(draftHtml, supabaseUrl, 'existing_html') : draftHtml;
+    if (optimizedHtml !== html || optimizedDraftHtml !== draftHtml) {
+      html = optimizedHtml;
+      draftHtml = optimizedDraftHtml;
+      changed = true;
+    }
+
     if (changed) {
-      const updatedConfig = { ...site.config, html };
+      const updatedConfig = {
+        ...site.config,
+        ...(html ? { html } : {}),
+        ...(draftHtml ? { draft_html: draftHtml } : {}),
+      };
       const patchRes = await fetch(
         `${supabaseUrl}/rest/v1/generated_websites?id=eq.${site.id}`,
         {

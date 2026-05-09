@@ -1,10 +1,12 @@
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+
 // Vercel serverless function: Add custom domain to a website
 // POST — validates domain, adds to Vercel project, saves to DB
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -41,6 +43,16 @@ export default async function handler(req, res) {
   };
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
+    const websiteRes = await fetch(
+      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&business_id=eq.${encodeURIComponent(resolved.businessId)}&select=id`,
+      { headers: supabaseHeaders }
+    );
+    const websiteRows = websiteRes.ok ? await websiteRes.json() : [];
+    if (!Array.isArray(websiteRows) || websiteRows.length === 0) {
+      return res.status(403).json({ error: 'Website access denied' });
+    }
+
     // 1. Add domain to Vercel project
     const vercelRes = await fetch(
       `https://api.vercel.com/v10/projects/${vercelProjectId}/domains`,
@@ -97,6 +109,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Domain add error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

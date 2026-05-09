@@ -15,14 +15,83 @@
   let businessData = null;
   let websiteData = null;
   let subscriptionData = null;
+  let isDashboardLoading = false;
   let isRecoveryMode = false;
   let isSetupMode = false;
   let pendingReviewEditRequestId = null;
   let reviewDraftHtml = null;
   let reviewCurrentHtml = null;
 
+  const CUSTOMER_AUTH_API_PREFIXES = [
+    '/api/analytics/stats',
+    '/api/domains/add',
+    '/api/domains/verify',
+    '/api/domains/remove',
+    '/api/edit-requests/approve',
+    '/api/edit-requests/create',
+    '/api/edit-requests/customer-reject',
+    '/api/edit-requests/detail',
+    '/api/edit-requests/pending',
+    '/api/preview/draft',
+    '/api/preview/website',
+    '/api/stripe/customer-portal',
+  ];
+  const nativeFetch = window.fetch.bind(window);
+
+  function wait(ms) {
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
   // ── i18n ──
   var currentLang = localStorage.getItem('c_lang') || 'es';
+
+  function getApiPath(resource) {
+    try {
+      if (typeof resource === 'string') {
+        return new URL(resource, window.location.origin).pathname;
+      }
+      if (resource && typeof resource.url === 'string') {
+        return new URL(resource.url, window.location.origin).pathname;
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  async function getCustomerAccessToken() {
+    if (!supabase || !supabase.auth) return null;
+    try {
+      var sessionResult = await supabase.auth.getSession();
+      return sessionResult && sessionResult.data && sessionResult.data.session
+        ? sessionResult.data.session.access_token
+        : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  window.fetch = async function patchedCustomerFetch(resource, options) {
+    var path = getApiPath(resource);
+    var needsAuth = CUSTOMER_AUTH_API_PREFIXES.some(function (prefix) { return path.indexOf(prefix) === 0; });
+    if (!needsAuth) {
+      return nativeFetch(resource, options);
+    }
+
+    var headers = new Headers(resource instanceof Request ? resource.headers : undefined);
+    if (options && options.headers) {
+      new Headers(options.headers).forEach(function (value, key) {
+        headers.set(key, value);
+      });
+    }
+
+    if (!headers.has('Authorization')) {
+      var token = await getCustomerAccessToken();
+      if (token) headers.set('Authorization', 'Bearer ' + token);
+    }
+
+    return nativeFetch(resource, Object.assign({}, options || {}, { headers: headers }));
+  };
 
   var translations = {
     es: {
@@ -756,7 +825,7 @@
         showNewPasswordScreen();
         return;
       }
-      if (event === 'SIGNED_IN' && session && !currentUser) {
+      if (event === 'SIGNED_IN' && session) {
         currentUser = session.user;
         // Check if this is a WhatsApp-created account needing setup
         if (currentUser.email && currentUser.email.indexOf('@temp.ahoratengopagina.com') !== -1) {
@@ -767,14 +836,17 @@
           showSetupScreen();
           return;
         }
-        showLoading();
-        loadDashboard();
+        if (!isDashboardLoading) {
+          showLoading();
+          loadDashboard();
+        }
       } else if (event === 'SIGNED_OUT') {
         currentUser = null;
         customerData = null;
         businessData = null;
         websiteData = null;
         subscriptionData = null;
+        isDashboardLoading = false;
         showLoginScreen();
       }
     });
@@ -800,8 +872,10 @@
           isSetupMode = true;
           showSetupScreen();
         } else {
-          showLoading();
-          loadDashboard();
+          if (!isDashboardLoading) {
+            showLoading();
+            loadDashboard();
+          }
         }
       } else {
         showLoginScreen();
@@ -1141,6 +1215,7 @@
       businessData = null;
       websiteData = null;
       subscriptionData = null;
+      isDashboardLoading = false;
       showLoginScreen();
       showToast('Sesión cerrada.', 'success');
     } catch (err) {
@@ -1371,7 +1446,7 @@
       .from('customer_users')
       .select('*, customers(*)')
       .eq('auth_user_id', currentUser.id)
-      .single();
+      .maybeSingle();
 
     if (result.error) {
       console.error('Failed to load customer data:', result.error);
@@ -1410,7 +1485,7 @@
       .order('status', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (result.error) {
       // Not an error if no website exists yet
@@ -1431,7 +1506,7 @@
       .eq('customer_id', customerId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (result.error) {
       if (result.error.code === 'PGRST116') {
@@ -1460,11 +1535,22 @@
   }
 
   async function loadDashboard() {
+    if (isDashboardLoading) return;
+
+    isDashboardLoading = true;
     showLoading();
 
     try {
       // Step 1: Load customer data (links auth user to customer + business)
-      customerData = await loadCustomerData();
+      var customerLookupAttempt = 0;
+      customerData = null;
+      while (customerLookupAttempt < 3 && (!customerData || !customerData.customers)) {
+        customerData = await loadCustomerData();
+        customerLookupAttempt += 1;
+        if ((!customerData || !customerData.customers) && customerLookupAttempt < 3) {
+          await wait(250 * customerLookupAttempt);
+        }
+      }
 
       if (!customerData || !customerData.customers) {
         hideLoading();
@@ -1530,6 +1616,8 @@
       console.error('Dashboard load failed:', err);
       hideLoading();
       showToast('Error al cargar los datos. Intenta recargar la página.', 'error');
+    } finally {
+      isDashboardLoading = false;
     }
   }
 

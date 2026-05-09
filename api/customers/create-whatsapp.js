@@ -3,12 +3,13 @@
 // Operator provides name + WhatsApp, system creates all records + magic login link
 
 import crypto from 'crypto';
-import { buildInitialEnrichmentState } from '../_lib/enrichment-runner.js';
+import { buildInitialEnrichmentState, insertBusinessWithSchemaFallback } from '../_lib/enrichment-runner.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -37,6 +38,9 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
+
   try {
     // 1. Create business record with synthetic place_id
     const placeId = 'manual-' + crypto.randomUUID();
@@ -54,16 +58,17 @@ export default async function handler(req, res) {
       ...buildInitialEnrichmentState(placeId),
     };
 
-    const bizRes = await fetch(`${supabaseUrl}/rest/v1/businesses`, {
-      method: 'POST',
-      headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-      body: JSON.stringify(businessPayload),
-    });
-
-    if (!bizRes.ok) {
-      const errText = await bizRes.text().catch(() => '');
-      console.error('Business creation error:', errText);
-      return res.status(502).json({ error: 'Failed to create business record', detail: errText });
+    let bizRes;
+    try {
+      bizRes = await insertBusinessWithSchemaFallback({
+        supabaseUrl,
+        headers: supabaseHeaders,
+        payload: businessPayload,
+      });
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err || '');
+      console.error('Business creation error:', detail);
+      return res.status(502).json({ error: 'Failed to create business record', detail });
     }
 
     const bizRecords = await bizRes.json();

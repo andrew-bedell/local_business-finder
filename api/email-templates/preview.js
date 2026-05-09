@@ -1,6 +1,8 @@
 // Vercel serverless function: Preview email template with sample merge tag values
 // POST — body: { html, subject (optional), trigger_key (optional) }
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 const SAMPLE_DATA = {
   contactName: 'María García',
   businessName: 'Tacos Don Pepe',
@@ -33,7 +35,7 @@ function replaceMergeTags(text) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -42,6 +44,12 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const session = await ensureEmployeeSession(req, res, {
+    supabaseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+  if (!session) return;
 
   const { html, subject } = req.body || {};
 

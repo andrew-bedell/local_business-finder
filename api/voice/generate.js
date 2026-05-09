@@ -3,6 +3,8 @@
 
 export const config = { maxDuration: 30 };
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 // Voice IDs per country — custom-generated voices with regional Latin American accents
 // Created via ElevenLabs text-to-voice API with country-specific accent descriptions
 const VOICE_MAP = {
@@ -36,7 +38,7 @@ function buildMessage(businessName) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -56,6 +58,9 @@ export default async function handler(req, res) {
 
   const voiceId = VOICE_MAP[country] || DEFAULT_VOICE;
   const messageText = buildMessage(businessName);
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // 1. Call ElevenLabs TTS API

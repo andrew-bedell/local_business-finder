@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Crea Tu Pagina - AhoraTengoPagina</title>
+<meta name="description" content="Crea la pagina web de tu negocio en minutos. Te guiamos paso a paso como en WhatsApp.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; font-family: 'DM Sans', sans-serif; background: #0E172A; }
+html, body { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+input, textarea { font-size: 16px; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dot {
+  0%,60%,100% { transform:translateY(0); opacity:.35; }
+  30%          { transform:translateY(-5px); opacity:1; }
+}
+@keyframes spin  { to { transform:rotate(360deg); } }
+@keyframes glow  { 0%,100%{opacity:1}50%{opacity:.45} }
+@keyframes pop   { 0%{transform:scale(.8);opacity:0} 60%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* --- TOKENS --- */
+const C = {
+  green:'#21C55E', greenDk:'#16A34A', greenBg:'rgba(33,197,94,.08)',
+  navy:'#0E172A', slate:'#1E293B',
+  blue:'#2563EB', blueLt:'#DBEAFE',
+  waBg:'#0B141A', waHeader:'#1F2C34', waBubIn:'#1F2C34', waBubOut:'#005C4B',
+  waText:'#E9EDEF', waSub:'#8696A0', waTick:'#53BDEB', waTime:'#8696A0',
+  red:'#EF4444',
+};
+
+/* --- UTILS --- */
+const ts = () => new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* --- GOOGLE PLACES API (via server proxy) --- */
+let GKEY = null;
+async function fetchApiKey() {
+  try {
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    GKEY = data.googleApiKey || null;
+  } catch(e) { console.warn('Could not fetch API key:', e); }
+}
+fetchApiKey();
+
+async function lookup(name, city) {
+  if (!GKEY) await fetchApiKey();
+  if (!GKEY) return null;
+  try {
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GKEY,
+        'X-Goog-FieldMask': [
+          'places.id','places.displayName','places.formattedAddress',
+          'places.shortFormattedAddress','places.internationalPhoneNumber',
+          'places.rating','places.userRatingCount','places.regularOpeningHours',
+          'places.primaryTypeDisplayName','places.editorialSummary',
+          'places.addressComponents','places.photos',
+        ].join(',')
+      },
+      body: JSON.stringify({ textQuery: `${name} ${city}`, languageCode: 'es', maxResultCount: 5 })
+    });
+    const data = await res.json();
+    if (!data.places?.length) return null;
+    return data.places.map(p => {
+      let horario = '';
+      if (p.regularOpeningHours?.weekdayDescriptions?.length) {
+        horario = p.regularOpeningHours.weekdayDescriptions.slice(0,3).join('\n');
+      }
+      const cityComp = (p.addressComponents || []).find(c =>
+        c.types?.includes('locality') || c.types?.includes('administrative_area_level_2')
+      );
+      return {
+        nombre: p.displayName?.text || name,
+        tipo: p.primaryTypeDisplayName?.text || 'Negocio local',
+        ciudad: cityComp?.longText || city,
+        direccion: p.formattedAddress || '',
+        shortAddress: p.shortFormattedAddress || p.formattedAddress || '',
+        telefono: p.internationalPhoneNumber || '',
+        horario,
+        calificacion: p.rating ? String(p.rating) : '',
+        resenas: p.userRatingCount || 0,
+        sobre: p.editorialSummary?.text || '',
+        place_id: p.id,
+        photos: (p.photos||[]).slice(0,10).map(ph=>ph.name),
+      };
+    });
+  } catch(e) {
+    console.error('Places API error:', e);
+    return null;
+  }
+}
+
+/* --- LOCATION PICKER --- */
+function LocationPicker({results, onConfirm, onNone}){
+  const [selected, setSelected] = useState(() => new Set());
+  function toggle(i){
+    setSelected(prev => { const next = new Set(prev); if(next.has(i)) next.delete(i); else next.add(i); return next; });
+  }
+  const count = selected.size;
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      <div style={{fontSize:13,color:C.waSub,marginBottom:2,lineHeight:1.4}}>
+        Encontre {results.length} ubicaciones con ese nombre.<br/>
+        <span style={{color:C.waText}}>Toca todas las que sean tuyas</span>
+      </div>
+      {results.map((r,i)=>{
+        const checked = selected.has(i);
+        return (
+          <div key={r.place_id||i} onClick={()=>toggle(i)}
+            style={{background: checked ? 'rgba(33,197,94,.10)' : 'rgba(255,255,255,.05)',
+              border:`1.5px solid ${checked ? C.green : 'rgba(255,255,255,.1)'}`,
+              borderRadius:10,padding:'10px 12px',cursor:'pointer',textAlign:'left',
+              display:'flex',gap:10,alignItems:'flex-start',transition:'all .15s ease'}}>
+            <div style={{width:20,height:20,borderRadius:6,flexShrink:0,marginTop:1,
+              background: checked ? C.green : 'transparent',
+              border:`2px solid ${checked ? C.green : 'rgba(255,255,255,.3)'}`,
+              display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s ease'}}>
+              {checked && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.5L5 9.5L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:14,fontWeight:600,color:C.waText}}>{r.nombre}</div>
+              <div style={{fontSize:12,color:C.waSub,marginTop:3,lineHeight:1.4}}>{r.shortAddress||r.direccion}</div>
+              {r.calificacion && <div style={{display:'flex',alignItems:'center',gap:4,marginTop:5}}>
+                <span style={{color:'#FCD34D',fontSize:12}}>★</span>
+                <span style={{fontSize:12,color:C.waText}}>{r.calificacion}</span>
+                <span style={{fontSize:11,color:C.waSub}}>({r.resenas} resenas)</span>
+              </div>}
+            </div>
+          </div>
+        );
+      })}
+      <button onClick={()=>{ if(count===0)return; const picked=[...selected].sort((a,b)=>a-b).map(i=>results[i]); onConfirm(picked); }}
+        disabled={count===0}
+        style={{padding:'12px',background:count>0?C.green:'rgba(255,255,255,.06)',border:'none',borderRadius:10,
+          color:count>0?'#fff':C.waSub,fontSize:14,fontWeight:600,cursor:count>0?'pointer':'not-allowed',
+          fontFamily:'DM Sans,sans-serif',marginTop:4,transition:'all .15s ease'}}>
+        {count===0?'Selecciona tus ubicaciones':count===1?'Confirmar 1 ubicacion':`Confirmar ${count} ubicaciones`}
+      </button>
+      <button onClick={onNone}
+        style={{background:'transparent',border:'1px dashed rgba(255,255,255,.15)',borderRadius:10,padding:'9px 12px',
+          cursor:'pointer',textAlign:'center',color:C.waSub,fontSize:13,fontFamily:'DM Sans,sans-serif'}}>
+        Ninguna es la mia
+      </button>
+    </div>
+  );
+}
+
+/* --- UPLOAD CARD --- */
+function UploadCard({label, accept, multiple, hint, icon, onDone, skipLabel, maxFiles=20}){
+  const [previews, setPreviews] = useState([]);
+  const inputRef = useRef(null);
+  function readAsDataURL(f){ return new Promise(resolve => { const r = new FileReader(); r.onload = e => resolve(e.target.result); r.readAsDataURL(f); }); }
+  async function handleFiles(fileList){
+    const arr = [...fileList];
+    const room = maxFiles - previews.length;
+    const accepted = arr.slice(0, Math.max(0, room));
+    const newPrevs = await Promise.all(accepted.map(readAsDataURL));
+    setPreviews(p => [...p, ...newPrevs]);
+    if(inputRef.current) inputRef.current.value = '';
+  }
+  function removeAt(i){ setPreviews(p => p.filter((_,idx) => idx !== i)); }
+  const atCap = previews.length >= maxFiles;
+  const remaining = maxFiles - previews.length;
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {previews.length > 0 ? (
+        <>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:6}}>
+            {previews.map((src,i)=>(
+              <div key={i} style={{position:'relative',borderRadius:8,overflow:'hidden',aspectRatio:'1',background:'rgba(255,255,255,.05)'}}>
+                <img src={src} alt="" style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+                {multiple && maxFiles > 1 && <div style={{position:'absolute',top:4,left:4,background:'rgba(0,0,0,.65)',color:'#fff',fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4}}>{i+1}</div>}
+                <button onClick={()=>removeAt(i)} style={{position:'absolute',top:4,right:4,width:20,height:20,borderRadius:'50%',background:'rgba(0,0,0,.65)',border:'none',color:'#fff',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'DM Sans,sans-serif',lineHeight:1,padding:0}}>x</button>
+              </div>
+            ))}
+            {multiple && !atCap && (
+              <div onClick={()=>inputRef.current?.click()} style={{borderRadius:8,aspectRatio:'1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',cursor:'pointer',gap:2,background:'rgba(33,197,94,.06)',border:'1.5px dashed rgba(33,197,94,.4)',transition:'all .15s'}}>
+                <div style={{fontSize:24,color:C.green,lineHeight:1}}>+</div>
+                <div style={{fontSize:10,color:C.green,fontWeight:500}}>Agregar</div>
+              </div>
+            )}
+          </div>
+          {multiple && maxFiles > 1 && <div style={{fontSize:11,color:C.waSub,textAlign:'center'}}>{previews.length} de {maxFiles} {atCap ? '- maximo alcanzado' : `- puedes agregar ${remaining} mas`}</div>}
+        </>
+      ) : (
+        <div onClick={()=>inputRef.current?.click()} style={{background:'rgba(255,255,255,.04)',border:'2px dashed rgba(255,255,255,.15)',borderRadius:12,padding:'20px',textAlign:'center',cursor:'pointer',transition:'all .15s'}}>
+          <div style={{fontSize:28,marginBottom:6}}>{icon}</div>
+          <div style={{fontSize:13,color:C.waText,fontWeight:500}}>{label}</div>
+          <div style={{fontSize:12,color:C.waSub,marginTop:3}}>{hint}</div>
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept={accept} multiple={multiple} onChange={e=>handleFiles(e.target.files)} style={{display:'none'}}/>
+      <div style={{display:'flex',gap:8}}>
+        {previews.length > 0 ? (
+          <>
+            <button onClick={()=>onDone(previews)} style={{flex:1,padding:'10px',background:C.green,border:'none',borderRadius:10,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Listo - {previews.length} foto{previews.length!==1?'s':''}</button>
+            <button onClick={()=>setPreviews([])} style={{padding:'10px 12px',background:'rgba(255,255,255,.06)',border:'none',borderRadius:10,color:C.waSub,fontSize:13,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>x</button>
+          </>
+        ) : (
+          <>
+            <button onClick={()=>inputRef.current?.click()} style={{flex:1,padding:'10px',background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.12)',borderRadius:10,color:C.waText,fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Elegir archivo{multiple?'s':''}</button>
+            {skipLabel && <button onClick={()=>onDone([])} style={{padding:'10px 12px',background:'rgba(255,255,255,.06)',border:'none',borderRadius:10,color:C.waSub,fontSize:12,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>{skipLabel}</button>}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* --- LOGO CHOICE CARD --- */
+function LogoChoiceCard({bizName, bizType, onUpload, onPick, onSkip}){
+  const [mode, setMode] = useState('choose');
+  const [uploadPreview, setUploadPreview] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [generating, setGenerating] = useState(false);
+  const [picked, setPicked] = useState(null);
+  const fileRef = useRef(null);
+  function readAsDataURL(f){ return new Promise(resolve => { const r = new FileReader(); r.onload = e => resolve(e.target.result); r.readAsDataURL(f); }); }
+  async function handleFile(file){ if(!file) return; const url = await readAsDataURL(file); setUploadPreview(url); setMode('uploaded'); }
+  function initials(name){ const parts = (name||'').trim().split(/\s+/).filter(Boolean); if(parts.length===0) return 'M'; if(parts.length===1) return parts[0].slice(0,2).toUpperCase(); return (parts[0][0]+parts[1][0]).toUpperCase(); }
+  function generate(){
+    setGenerating(true);
+    const ini = initials(bizName);
+    const name = (bizName || 'Mi Negocio').trim();
+    const palette = [
+      {bg:'#0F172A', fg:'#21C55E', accent:'#21C55E'},
+      {bg:'#21C55E', fg:'#FFFFFF', accent:'#FFFFFF'},
+      {bg:'#FFFFFF', fg:'#0F172A', accent:'#21C55E'},
+      {bg:'#1E293B', fg:'#FFFFFF', accent:'#F59E0B'},
+    ];
+    const opts = [
+      { label: 'Monograma circular', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="${palette[0].bg}" stroke="${palette[0].accent}" stroke-width="4"/><text x="100" y="118" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="68" fill="${palette[0].fg}">${ini}</text></svg>` },
+      { label: 'Bloque solido', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect x="8" y="8" width="184" height="184" rx="32" fill="${palette[1].bg}"/><text x="100" y="120" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="800" font-size="76" fill="${palette[1].fg}">${ini}</text></svg>` },
+      { label: 'Minimalista', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="${palette[2].bg}"/><text x="100" y="105" text-anchor="middle" font-family="Georgia, serif" font-weight="400" font-size="72" fill="${palette[2].fg}">${ini}</text><line x1="60" y1="130" x2="140" y2="130" stroke="${palette[2].accent}" stroke-width="3"/><text x="100" y="158" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="500" font-size="13" fill="${palette[2].fg}" letter-spacing="3">${name.slice(0,16).toUpperCase()}</text></svg>` },
+      { label: 'Insignia', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" rx="20" fill="${palette[3].bg}"/><circle cx="100" cy="80" r="38" fill="none" stroke="${palette[3].accent}" stroke-width="3"/><text x="100" y="92" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="34" fill="${palette[3].fg}">${ini}</text><text x="100" y="148" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="600" font-size="14" fill="${palette[3].fg}" letter-spacing="2">${name.slice(0,18).toUpperCase()}</text><text x="100" y="170" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="9" fill="${palette[3].accent}" letter-spacing="3">${(bizType||'').slice(0,20).toUpperCase()}</text></svg>` },
+    ];
+    setTimeout(()=>{ setOptions(opts); setGenerating(false); setMode('generated'); }, 800);
+  }
+
+  if(mode === 'choose'){
+    return (
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        <input ref={fileRef} type="file" accept="image/*" onChange={e=>handleFile(e.target.files[0])} style={{display:'none'}}/>
+        <button onClick={()=>fileRef.current?.click()} style={{padding:'12px 14px',background:'rgba(33,197,94,.08)',border:`1.5px solid ${C.green}`,borderRadius:12,color:C.green,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif',textAlign:'left',display:'flex',gap:10,alignItems:'center'}}>
+          <span style={{fontSize:18}}>🖼️</span>
+          <div><div>Subir mi logo</div><div style={{fontSize:11,color:C.waSub,fontWeight:400,marginTop:2}}>Tengo una imagen lista</div></div>
+        </button>
+        <button onClick={generate} disabled={generating} style={{padding:'12px 14px',background:'rgba(14,165,233,.08)',border:`1.5px solid ${C.blue}`,borderRadius:12,color:C.blue,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif',textAlign:'left',display:'flex',gap:10,alignItems:'center'}}>
+          <span style={{fontSize:18}}>{generating ? '...' : '✨'}</span>
+          <div><div>{generating ? 'Creando opciones...' : 'Crear 4 opciones para mi'}</div><div style={{fontSize:11,color:C.waSub,fontWeight:400,marginTop:2}}>Eliges la que mas te guste</div></div>
+        </button>
+        <button onClick={onSkip} style={{padding:'9px',background:'transparent',border:'none',color:C.waSub,fontSize:12,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>No tengo, continuar sin logo</button>
+      </div>
+    );
+  }
+  if(mode === 'uploaded'){
+    return (
+      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+        <div style={{background:'rgba(255,255,255,.04)',borderRadius:12,padding:16,display:'flex',justifyContent:'center'}}>
+          <img src={uploadPreview} alt="logo" style={{maxWidth:140,maxHeight:140,objectFit:'contain'}}/>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>onUpload(uploadPreview)} style={{flex:1,padding:'10px',background:C.green,border:'none',borderRadius:10,color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Usar este logo</button>
+          <button onClick={()=>{setUploadPreview(null);setMode('choose');}} style={{padding:'10px 12px',background:'transparent',border:'1px solid rgba(255,255,255,.15)',borderRadius:10,color:C.waSub,fontSize:12,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Cambiar</button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{fontSize:12,color:C.waSub}}>Toca el que mas te guste:</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+        {options.map((opt,i)=>{
+          const isPicked = picked === i;
+          return (
+            <div key={i} onClick={()=>setPicked(i)} style={{borderRadius:12,padding:8,cursor:'pointer',border:`2px solid ${isPicked?C.green:'rgba(255,255,255,.1)'}`,background:isPicked?'rgba(33,197,94,.06)':'rgba(255,255,255,.03)',transition:'all .15s',aspectRatio:'1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+              <div style={{width:'100%',flex:1,display:'flex',alignItems:'center',justifyContent:'center'}} dangerouslySetInnerHTML={{__html: opt.svg}}/>
+              <div style={{fontSize:10,color:isPicked?C.green:C.waSub,fontWeight:500,textAlign:'center'}}>{opt.label}</div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{display:'flex',gap:8}}>
+        <button onClick={()=>picked!==null && onPick(options[picked])} disabled={picked===null} style={{flex:1,padding:'10px',background:picked===null?'rgba(255,255,255,.06)':C.green,border:'none',borderRadius:10,color:'#fff',fontSize:13,fontWeight:600,cursor:picked===null?'not-allowed':'pointer',fontFamily:'DM Sans,sans-serif',opacity:picked===null?0.5:1}}>Usar este logo</button>
+        <button onClick={()=>{setPicked(null);setMode('choose');}} style={{padding:'10px 12px',background:'transparent',border:'1px solid rgba(255,255,255,.15)',borderRadius:10,color:C.waSub,fontSize:12,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Volver</button>
+      </div>
+    </div>
+  );
+}
+
+/* --- PHOTO APPROVAL --- */
+function PhotoApproval({photoNames, apiKey, onDone}){
+  const [selected, setSelected] = useState(() => new Set(photoNames.map((_,i)=>i)));
+  const [loaded, setLoaded] = useState({});
+  function photoUrl(name){ return `https://places.googleapis.com/v1/${name}/media?maxWidthPx=400&key=${apiKey}`; }
+  function toggle(i){ setSelected(s => { const next = new Set(s); next.has(i)?next.delete(i):next.add(i); return next; }); }
+  const approvedCount = selected.size;
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{fontSize:13,color:C.waSub,marginBottom:2}}>{photoNames.length} fotos encontradas en Google. Desmarca las que no quieres en tu pagina.</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+        {photoNames.map((name,i)=>{
+          const checked = selected.has(i);
+          return (
+            <div key={i} onClick={()=>toggle(i)} style={{position:'relative',borderRadius:10,overflow:'hidden',cursor:'pointer',border:`2px solid ${checked?C.green:'rgba(255,255,255,.1)'}`,transition:'border-color .15s',aspectRatio:'4/3'}}>
+              {!loaded[i] && <div style={{position:'absolute',inset:0,background:'rgba(255,255,255,.04)',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{width:20,height:20,borderRadius:'50%',border:`2px solid ${C.green}`,borderTopColor:'transparent',animation:'spin .8s linear infinite'}}/></div>}
+              <img src={photoUrl(name)} alt={`Foto ${i+1}`} onLoad={()=>setLoaded(l=>({...l,[i]:true}))} onError={()=>setLoaded(l=>({...l,[i]:'error'}))} style={{width:'100%',height:'100%',objectFit:'cover',display:'block',opacity:loaded[i]?(checked?1:0.35):0,transition:'opacity .2s'}}/>
+              <div style={{position:'absolute',top:6,right:6,width:22,height:22,borderRadius:'50%',background:checked?C.green:'rgba(0,0,0,.5)',border:`2px solid ${checked?C.green:'rgba(255,255,255,.3)'}`,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s'}}>
+                {checked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </div>
+              {!checked && <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,.55)',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontSize:24,color:'rgba(255,255,255,.5)'}}>x</span></div>}
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={()=>onDone(photoNames.filter((_,i)=>selected.has(i)))} style={{padding:'11px',background:C.green,border:'none',borderRadius:10,color:'#fff',fontSize:14,fontWeight:600,cursor:'pointer',marginTop:4,boxShadow:'0 3px 12px rgba(33,197,94,.3)'}}>Confirmar {approvedCount} foto{approvedCount!==1?'s':''}</button>
+    </div>
+  );
+}
+
+/* --- VERIFY CARD --- */
+const VFIELDS = [
+  {key:'nombre',label:'Nombre del negocio'},
+  {key:'tipo',label:'Tipo de negocio'},
+  {key:'direccion',label:'Direccion completa'},
+  {key:'telefono',label:'Telefono'},
+  {key:'horario',label:'Horario de atencion'},
+  {key:'sobre',label:'Descripcion del negocio'},
+];
+
+const EMPTY_FIELD_PROMPTS = {
+  nombre: 'Como se llama tu negocio?',
+  tipo: 'Cuentame, a que se dedica tu negocio?\n_Por ejemplo: restaurante, salon de belleza, taller..._',
+  direccion: 'Cual es la direccion donde te visitan tus clientes?',
+  telefono: 'Cual es el numero al que te pueden llamar?',
+  horario: 'Que dias y horas atiendes?\n_Ej: Lunes a sabado, 9am-7pm_',
+  sobre: 'Cuentame sobre tu negocio como si me lo contaras a un amigo\n\nQue es lo que mas le gusta a la gente de venir? Que te hace diferente a los demas?\n\n_No te preocupes por escribir bonito - yo lo organizo despues._',
+};
+
+function VerifyCard({label, value, onOk, onSave}){
+  const [edit,setEdit] = useState(false);
+  const [val,setVal] = useState(value||'');
+  return (
+    <div style={{background:'rgba(255,255,255,.05)',borderRadius:12,overflow:'hidden',border:'1px solid rgba(255,255,255,.08)'}}>
+      <div style={{padding:'10px 14px',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+        <div style={{fontSize:11,color:C.waSub,textTransform:'uppercase',letterSpacing:'.5px',marginBottom:4}}>{label}</div>
+        {edit
+          ? <textarea value={val} onChange={e=>setVal(e.target.value)} rows={3} style={{width:'100%',background:'rgba(255,255,255,.07)',border:'none',borderRadius:8,padding:'8px 10px',color:C.waText,fontSize:14,fontFamily:'DM Sans,sans-serif',resize:'none',outline:'none'}}/>
+          : <div style={{fontSize:14,color:C.waText,lineHeight:1.5}}>{val}</div>
+        }
+      </div>
+      <div style={{display:'flex'}}>
+        {edit
+          ? <button onClick={()=>{setEdit(false);onSave(val);}} style={{flex:1,padding:'10px',background:C.green,border:'none',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Guardar</button>
+          : <>
+              <button onClick={()=>onOk(val)} style={{flex:1,padding:'10px',background:'transparent',border:'none',borderRight:'1px solid rgba(255,255,255,.06)',color:C.green,fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Correcto</button>
+              <button onClick={()=>setEdit(true)} style={{flex:1,padding:'10px',background:'transparent',border:'none',color:C.waSub,fontSize:13,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Editar</button>
+            </>
+        }
+      </div>
+    </div>
+  );
+}
+
+/* --- SMALL COMPONENTS --- */
+function Ticks({read}){
+  const col = read ? C.waTick : C.waSub;
+  return <svg width="16" height="11" viewBox="0 0 16 11" style={{display:'inline-block',marginLeft:3}}><path d="M1 5.5L4.5 9L11 2" stroke={col} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/><path d="M5 5.5L8.5 9L15 2" stroke={col} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>;
+}
+function Avatar({size=34}){
+  return <div style={{width:size,height:size,borderRadius:'50%',flexShrink:0,background:`linear-gradient(135deg,${C.blue},${C.green})`,display:'flex',alignItems:'center',justifyContent:'center'}}><svg width={size*.55} height={size*.55} viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="white" fillOpacity=".18"/><path d="M6 14c0-2.2 1.8-4 4-4s4 1.8 4 4" stroke="white" strokeWidth="1.6" strokeLinecap="round"/><circle cx="10" cy="7" r="2.5" fill="white"/></svg></div>;
+}
+function Dots(){
+  return <div style={{display:'flex',gap:4,padding:'10px 14px',background:C.waBubIn,borderRadius:'0 10px 10px 10px',width:56,alignItems:'center'}}>{[0,1,2].map(i=><span key={i} style={{width:7,height:7,borderRadius:'50%',background:C.waSub,display:'block',animation:`dot 1.2s ease ${i*.2}s infinite`}}/>)}</div>;
+}
+
+/* --- BUBBLE --- */
+function Bubble({msg}){
+  const bot = msg.from==='bot';
+  const bg = bot ? C.waBubIn : C.waBubOut;
+  return (
+    <div style={{display:'flex',flexDirection:bot?'row':'row-reverse',alignItems:'flex-end',gap:6,marginBottom:3,paddingLeft:bot?0:44,paddingRight:bot?44:0,animation:'fadeUp .25s ease'}}>
+      {bot && <Avatar/>}
+      <div style={{maxWidth:'78%',background:bg,borderRadius:bot?'0 10px 10px 10px':'10px 0 10px 10px',padding:'8px 12px 5px',color:C.waText,fontSize:14.5,lineHeight:1.5,boxShadow:'0 1px 3px rgba(0,0,0,.35)'}}>
+        {msg.text && <div style={{whiteSpace:'pre-wrap'}} dangerouslySetInnerHTML={{__html:msg.text.replace(/\*(.*?)\*/g,'<strong>$1</strong>').replace(/_(.*?)_/g,'<em style="color:#a0b4c8">$1</em>')}}/>}
+        {msg.rich && <div>{msg.rich}</div>}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'flex-end',gap:2,marginTop:4}}>
+          <span style={{fontSize:11,color:C.waTime}}>{msg.time}</span>
+          {!bot && <Ticks read={msg.read}/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --- SEARCH CARD --- */
+function SearchCard({done, found, biz, count=1}){
+  if(!done) return (
+    <div style={{background:'rgba(255,255,255,.05)',borderRadius:12,padding:'12px 14px',border:'1px solid rgba(255,255,255,.08)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{width:26,height:26,borderRadius:'50%',border:`3px solid ${C.green}`,borderTopColor:'transparent',animation:'spin .8s linear infinite',flexShrink:0}}/>
+        <div><div style={{fontSize:13,color:C.waText,fontWeight:500}}>Buscando en Google Maps...</div><div style={{fontSize:12,color:C.waSub,marginTop:1}}>Verificando tu negocio</div></div>
+      </div>
+    </div>
+  );
+  if(!found) return (
+    <div style={{background:'rgba(239,68,68,.08)',borderRadius:12,padding:'12px 14px',border:'1px solid rgba(239,68,68,.25)'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{width:26,height:26,borderRadius:'50%',background:'rgba(239,68,68,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>🔍</div>
+        <div><div style={{fontSize:13,color:C.waText,fontWeight:500}}>No encontramos tu negocio</div><div style={{fontSize:12,color:C.waSub,marginTop:1}}>Te guiare paso a paso</div></div>
+      </div>
+    </div>
+  );
+  return (
+    <div style={{background:C.greenBg,borderRadius:12,padding:'12px 14px',border:'1px solid rgba(33,197,94,.25)',animation:'pop .35s ease'}}>
+      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+        <span style={{width:7,height:7,borderRadius:'50%',background:C.green,display:'inline-block',animation:'glow 1.5s infinite'}}/>
+        <span style={{fontSize:11,color:C.green,fontWeight:600,letterSpacing:'.5px',textTransform:'uppercase'}}>{count > 1 ? `${count} ubicaciones encontradas` : 'Negocio encontrado'}</span>
+      </div>
+      <div style={{fontSize:14,color:C.waText,fontWeight:600}}>{biz.nombre}</div>
+      <div style={{fontSize:12,color:C.waSub,marginTop:2}}>{biz.tipo} - {biz.ciudad}</div>
+      {biz.calificacion && <div style={{display:'flex',alignItems:'center',gap:4,marginTop:6}}><span style={{color:'#FCD34D',fontSize:13}}>★</span><span style={{fontSize:13,color:C.waText}}>{biz.calificacion}</span><span style={{fontSize:12,color:C.waSub}}>({biz.resenas} resenas en Google)</span></div>}
+    </div>
+  );
+}
+
+/* --- PROGRESS BAR --- */
+const CHECKLIST = [
+  {key:'nombre',label:'Nombre del negocio'},
+  {key:'tipo',label:'Tipo de negocio'},
+  {key:'direccion',label:'Direccion'},
+  {key:'telefono',label:'Telefono del negocio'},
+  {key:'horario',label:'Horario'},
+  {key:'sobre',label:'Descripcion'},
+  {key:'whatsapp',label:'WhatsApp del negocio'},
+  {key:'contacto_nombre',label:'Tu nombre'},
+  {key:'contacto_whatsapp',label:'Tu WhatsApp'},
+  {key:'email',label:'Tu correo'},
+  {key:'slogan',label:'Slogan'},
+  {key:'redes',label:'Redes sociales'},
+];
+
+function ProgressBar({data}){
+  const done = CHECKLIST.filter(f => data[f.key]);
+  const pct = Math.round(done.length / CHECKLIST.length * 100);
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div style={{background:'rgba(0,0,0,.3)',borderBottom:'1px solid rgba(255,255,255,.05)',flexShrink:0}}>
+      <div onClick={()=>setExpanded(e=>!e)} style={{padding:'7px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10}}>
+        <div style={{flex:1,height:3,background:'rgba(255,255,255,.1)',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:`${pct}%`,background:C.green,transition:'width .5s ease',borderRadius:4}}/></div>
+        <span style={{fontSize:11,color:pct===100?C.green:C.waSub,whiteSpace:'nowrap',fontWeight:pct===100?600:400}}>{pct===100?'Completo':done.length+'/'+CHECKLIST.length}</span>
+        <span style={{fontSize:10,color:C.waSub,display:'inline-block',transition:'transform .2s',transform:expanded?'rotate(180deg)':'rotate(0deg)'}}>▾</span>
+      </div>
+      {expanded && (
+        <div style={{padding:'2px 14px 10px',display:'flex',flexWrap:'wrap',gap:'5px 12px'}}>
+          {CHECKLIST.map(f=>{
+            const checked = !!data[f.key];
+            return (
+              <div key={f.key} style={{display:'flex',alignItems:'center',gap:5,opacity:checked?1:0.38}}>
+                <div style={{width:14,height:14,borderRadius:'50%',flexShrink:0,background:checked?C.green:'transparent',border:checked?'none':`1.5px solid ${C.waSub}`,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s'}}>
+                  {checked && <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                </div>
+                <span style={{fontSize:11,color:checked?C.waText:C.waSub}}>{f.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* --- MAIN APP --- */
+function App(){
+  const [msgs, setMsgs] = useState([{id:1, from:'bot', text:'Hola! 👋 Soy tu asistente de *AhoraTengoPagina*.', time:ts()}]);
+  const [typing, setTyping] = useState(true);
+  const [inputVal, setInputVal] = useState('');
+  const [inputOff, setInputOff] = useState(false);
+  const [collected, setCollected] = useState({});
+  const [searchDone, setSearchDone] = useState(false);
+  const [searchFound, setSearchFound] = useState(false);
+  const [searchBiz, setSearchBiz] = useState(null);
+  const [searchCount, setSearchCount] = useState(0);
+  const [showSearchCard, setShowSearchCard] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const stepRef = useRef('init');
+  const collRef = useRef({});
+  const verifyIdx = useRef(0);
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+
+  function scrollBottom(){
+    if(bottomRef.current){
+      const el = bottomRef.current.parentElement;
+      if(el) el.scrollTop = el.scrollHeight + 9999;
+    }
+  }
+  useEffect(scrollBottom,[msgs,typing,showSearchCard]);
+
+  const [vh, setVh] = useState(() => (typeof window !== 'undefined' && window.visualViewport?.height) || (typeof window !== 'undefined' ? window.innerHeight : 800));
+  const [vw, setVw] = useState(() => (typeof window !== 'undefined' && window.visualViewport?.width) || (typeof window !== 'undefined' ? window.innerWidth : 420));
+  useEffect(()=>{
+    if(typeof window === 'undefined') return;
+    const vv = window.visualViewport;
+    function update(){
+      setVh(vv ? vv.height : window.innerHeight);
+      setVw(vv ? vv.width : window.innerWidth);
+      // iOS Safari can scroll the window on input focus even with body position:fixed,
+      // pushing the chat header/messages above the visible viewport. Pin it back to 0.
+      if(window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0,0);
+      requestAnimationFrame(scrollBottom);
+    }
+    update();
+    if(vv){ vv.addEventListener('resize', update); vv.addEventListener('scroll', update); }
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, {passive:true});
+    return ()=>{ if(vv){ vv.removeEventListener('resize', update); vv.removeEventListener('scroll', update); } window.removeEventListener('resize', update); window.removeEventListener('scroll', update); };
+  },[]);
+
+  const isMobile = vw < 600;
+  const outerStyle = isMobile
+    ? {position:'fixed',top:0,left:0,width:'100%',height:`${vh}px`,background:C.navy}
+    : {width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',background:C.navy,padding:'20px'};
+  const frameStyle = isMobile
+    ? {width:'100%',height:'100%',display:'flex',flexDirection:'column',background:C.navy}
+    : {width:'100%',maxWidth:420,height:`min(800px, ${vh - 40}px)`,borderRadius:24,overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 32px 80px rgba(0,0,0,.65)',border:'1px solid rgba(255,255,255,.06)'};
+
+  function pushMsg(m){ setMsgs(prev=>[...prev,{id:Date.now()+Math.random(),...m}]); }
+  function botSay(text, extra={}){
+    return new Promise(resolve=>{
+      setTyping(true);
+      const delay = Math.min(600 + (text||'').length*16, 2000);
+      setTimeout(()=>{ setTyping(false); pushMsg({from:'bot', text, time:ts(), ...extra}); setTimeout(resolve,80); }, delay);
+    });
+  }
+  function userSay(text){
+    const msg = {id:Date.now()+Math.random(), from:'user', text, time:ts(), read:false};
+    setMsgs(prev=>[...prev,msg]);
+    setTimeout(()=>{ setMsgs(prev=>prev.map(m=>m.id===msg.id?{...m,read:true}:m)); },700);
+  }
+  function collect(obj){
+    const next = {...collRef.current, ...obj};
+    collRef.current = next;
+    setCollected({...next});
+  }
+
+  // --- FLOW ---
+  async function introFlow(){
+    await sleep(1200);
+    setTyping(false);
+    pushMsg({from:'bot', text:'Te ayudare a crear la pagina web de tu negocio en minutos.\n\nComo te llamas?', time:ts()});
+    stepRef.current = 'name';
+  }
+  useEffect(()=>{ introFlow(); },[]);
+
+  async function handleSend(raw){
+    const val = (raw||inputVal).trim();
+    if(!val) return;
+    setInputVal('');
+    userSay(val);
+    const step = stepRef.current;
+
+    if(step==='name'){
+      collect({propietario:val});
+      stepRef.current='biz';
+      await botSay(`Mucho gusto, *${val.split(' ')[0]}*!`);
+      await botSay('Cual es el *nombre de tu negocio*?');
+
+    } else if(step==='verify_fill'){
+      const idx = verifyIdx.current;
+      const f = VFIELDS[idx];
+      collect({[f.key]: val});
+      const biz = {...collRef.current};
+      verifyIdx.current = idx + 1;
+      stepRef.current = 'verify';
+      setInputOff(true);
+      await sleep(300);
+      await botSay('Gracias! 🙌');
+      pushVerifyCard(biz, idx + 1);
+
+    } else if(step==='biz'){
+      collect({nombre:val});
+      stepRef.current='city';
+      await botSay('En que *ciudad* esta tu negocio?');
+
+    } else if(step==='city'){
+      collect({ciudad:val});
+      stepRef.current='searching';
+      setInputOff(true);
+      await botSay(`Perfecto. Voy a buscar *${collRef.current.nombre}* en Google Maps... 🔍`);
+      setSearchDone(false); setSearchFound(false); setSearchBiz(null); setShowSearchCard(true);
+      await sleep(200);
+
+      const bizResult = await lookup(collRef.current.nombre, val);
+      const allResults = Array.isArray(bizResult) ? bizResult : (bizResult ? [bizResult] : []);
+      const biz = allResults.length > 0 ? {...allResults[0], propietario:collRef.current.propietario} : null;
+
+      setSearchDone(true); setSearchFound(allResults.length > 0); setSearchBiz(allResults[0] || null); setSearchCount(allResults.length);
+      await sleep(1800);
+      setShowSearchCard(false);
+      await sleep(300);
+
+      if(biz){
+        if(allResults.length > 1){
+          await botSay(`Encontre *${allResults.length} ubicaciones* para ese nombre.\n\nToca todas las que sean tuyas. 👇`);
+          pushMsg({ from:'bot', time:ts(),
+            rich: <LocationPicker results={allResults}
+              onConfirm={picked => {
+                const primary = {...picked[0], propietario:collRef.current.propietario};
+                collect({...primary, additional_locations: picked.slice(1)});
+                const summary = picked.length === 1 ? primary.nombre+'\n'+(primary.shortAddress||primary.direccion) : `${picked.length} ubicaciones seleccionadas`;
+                setMsgs(m=>[...m,{id:Date.now(),from:'user',text:summary,time:ts(),read:true}]);
+                botSay('Perfecto! Vamos a verificar la informacion 👇').then(()=>{ stepRef.current='verify'; verifyIdx.current=0; pushVerifyCard(primary,0); });
+              }}
+              onNone={()=>{
+                setMsgs(m=>[...m,{id:Date.now(),from:'user',text:'Ninguna es la mia',time:ts(),read:true}]);
+                setInputOff(false);
+                botSay('Sin problema. Te hago unas preguntas rapidas.\n\nCual es el *correo electronico* de contacto?').then(()=>{ stepRef.current='email'; });
+              }}
+            />
+          });
+        } else {
+          collect(biz);
+          await botSay('Encontre tu negocio en Google! 🎉\n\nVamos a verificar que todo este correcto.');
+          await sleep(400);
+          stepRef.current = 'verify'; verifyIdx.current = 0;
+          pushVerifyCard(biz, 0);
+        }
+      } else {
+        setInputOff(false);
+        await botSay('No encontre tu negocio en Google, pero no te preocupes!\n\nSolo necesito unos datos rapidos.');
+        await botSay('Cual es el *correo electronico* de contacto?');
+        stepRef.current = 'email';
+      }
+
+    } else if(step==='email'){
+      collect({email:val}); stepRef.current='wa';
+      await botSay('Tu numero de *WhatsApp*?');
+    } else if(step==='wa'){
+      collect({whatsapp:val}); stepRef.current='tipo';
+      await botSay('Cual es el *tipo de negocio*?\n_(Ej: Restaurante, Peluqueria, Tienda de ropa...)_');
+    } else if(step==='tipo'){
+      collect({tipo:val}); stepRef.current='dir';
+      await botSay('Cual es la *direccion completa*?');
+    } else if(step==='dir'){
+      collect({direccion:val}); stepRef.current='hora';
+      await botSay('Cual es el *horario de atencion*?\n_(Ej: Lun-Vie 9:00-18:00)_');
+    } else if(step==='hora'){
+      collect({horario:val}); stepRef.current='sobre';
+      await botSay('Cuentame un poco sobre tu negocio. _Que lo hace especial?_');
+    } else if(step==='sobre'){
+      collect({sobre:val}); stepRef.current='manual_wa';
+      await botSay('Cual es el numero de *WhatsApp* de tu negocio para que tus clientes te contacten?\n\n_Este numero aparecera en tu pagina web._');
+    } else if(step==='manual_wa'){
+      collect({whatsapp:val});
+      await startContactFlow();
+
+    } else if(step==='post_verify_wa_confirm'){
+      const yes = /^s[ií]/i.test(val) || val.includes('Si');
+      if(yes){ collect({whatsapp: collRef.current.telefono}); await startContactFlow(); }
+      else { stepRef.current='post_verify_wa_manual'; await botSay('Cual es el numero de *WhatsApp* de tu negocio?\n\n_Este numero aparecera en tu pagina web._'); }
+
+    } else if(step==='post_verify_wa_manual'){
+      collect({whatsapp:val});
+      await startContactFlow();
+
+    } else if(step==='contact_name'){
+      collect({contacto_nombre:val}); stepRef.current='contact_wa';
+      await botSay(`Gracias, *${val.split(' ')[0]}*\n\nCual es tu *numero de WhatsApp personal*? Asi nuestro equipo podra contactarte directamente.\n\n_Solo para uso interno, no aparecera en tu pagina._`);
+
+    } else if(step==='contact_wa'){
+      collect({contacto_whatsapp:val, contacto_telefono:val}); stepRef.current='contact_email';
+      await botSay('Y tu *correo electronico* personal?');
+
+    } else if(step==='contact_email'){
+      collect({email:val});
+      await startPhotoUploadFlow();
+
+    } else if(step==='slogan'){
+      collect({slogan:val}); stepRef.current='social';
+      await botSay('Tienes redes sociales? Comparte los links que quieras mostrar en tu pagina.\n_(Instagram, Facebook, TikTok, etc. - escribe "no" si no tienes)_');
+
+    } else if(step==='social'){
+      collect({redes: val.toLowerCase()==='no' ? '' : val});
+      await submitData();
+    }
+  }
+
+  // --- Photo upload flow ---
+  async function startPhotoUploadFlow(){
+    setInputOff(true);
+    await botSay('Excelente! Ya casi terminamos. 🎉');
+    const googlePhotos = collRef.current.photos || [];
+    if(googlePhotos.length > 0 && !collRef.current.fotos_aprobadas){
+      await botSay(`Encontre *${googlePhotos.length} fotos* de tu negocio en Google. Desmarca las que no quieras en tu pagina:`);
+      pushMsg({ from:'bot', time:ts(),
+        rich: <PhotoApproval photoNames={googlePhotos} apiKey={GKEY}
+          onDone={approvedPhotos=>{
+            collect({fotos_aprobadas: approvedPhotos});
+            setMsgs(m=>[...m,{id:Date.now(),from:'user',text:`${approvedPhotos.length} foto${approvedPhotos.length!==1?'s':''} aprobada${approvedPhotos.length!==1?'s':''}`,time:ts(),read:true}]);
+            if(approvedPhotos.length > 0){ showExtraPhotoUpload(); } else { showExtraPhotoUpload(); }
+          }}
+        />
+      });
+      return;
+    }
+    showExtraPhotoUpload();
+  }
+
+  async function showExtraPhotoUpload(){
+    await botSay('Tienes fotos de tu negocio que quieras agregar?\n_(Local, equipo, ambiente, productos...)_');
+    pushMsg({ from:'bot', time:ts(),
+      rich: <UploadCard label="Subir fotos del negocio" accept="image/*" multiple={true} maxFiles={15} hint="Selecciona todas las fotos que quieras" icon="📸"
+        onDone={(files)=>{
+          collect({fotos_extra: files});
+          const count = files.length;
+          setMsgs(m=>[...m,{id:Date.now(),from:'user',text:count>0?`📸 ${count} foto${count!==1?'s':''} subida${count!==1?'s':''}`:'Sin fotos por ahora',time:ts(),read:true}]);
+          askForLogo();
+        }}
+        skipLabel="Saltar"
+      />
+    });
+  }
+
+  // --- Logo step ---
+  async function askForLogo(){
+    setInputOff(true);
+    await botSay('Tienes un *logo* para tu negocio?');
+    pushMsg({from:'bot', time:ts(),
+      rich: <LogoChoiceCard bizName={collRef.current.nombre||''} bizType={collRef.current.tipo||''}
+        onUpload={(dataUrl)=>{ collect({logo:dataUrl,logo_source:'upload'}); setMsgs(m=>[...m,{id:Date.now(),from:'user',text:'Logo subido',time:ts(),read:true}]); startFinalQuestions(); }}
+        onPick={(opt)=>{ collect({logo:opt.svg,logo_source:'generated',logo_concept:opt.label}); setMsgs(m=>[...m,{id:Date.now(),from:'user',text:`Logo elegido: ${opt.label}`,time:ts(),read:true}]); startFinalQuestions(); }}
+        onSkip={()=>{ collect({logo:null,logo_source:'none'}); setMsgs(m=>[...m,{id:Date.now(),from:'user',text:'Sin logo por ahora',time:ts(),read:true}]); startFinalQuestions(); }}
+      />
+    });
+  }
+
+  // --- Final questions ---
+  async function startFinalQuestions(){
+    setInputOff(false);
+    await botSay('Ya casi estamos listos para crear tu pagina. Solo un par de preguntas mas:');
+    await botSay('Tienes un *slogan* o frase que describa tu negocio?\n_(Ej: "El sabor que te hace volver" - escribe "no" si no tienes)_');
+    stepRef.current = 'slogan';
+  }
+
+  // --- Smart contact flow ---
+  async function startContactFlow(){
+    const nombre = collRef.current.propietario || collRef.current.contacto_nombre;
+    if(nombre){
+      collect({contacto_nombre: nombre});
+      const first = nombre.split(' ')[0];
+      await botSay(`Perfecto, *${first}* Necesito un par de datos de contacto para coordinar tu proyecto contigo.`);
+      await botSay('Cual es tu *numero de WhatsApp personal*? Asi nuestro equipo podra contactarte directamente.\n\n_Solo para uso interno, no aparecera en tu pagina._');
+      stepRef.current = 'contact_wa';
+    } else {
+      await botSay('Cual es tu *nombre completo*?');
+      stepRef.current = 'contact_name';
+    }
+  }
+
+  // --- WhatsApp flow after verify ---
+  function startWhatsAppFlow(biz){
+    const hasPhone = !!(biz.telefono || collRef.current.telefono);
+    if(hasPhone){
+      const phone = biz.telefono || collRef.current.telefono;
+      botSay(`Tenemos este numero de tu ficha de Google:\n*${phone}*\n\nEs tambien el numero de *WhatsApp* que tus clientes deben usar para contactarte?\n\n_Este numero aparecera en tu pagina web._`).then(()=>{
+        pushMsg({ from:'bot', time:ts(),
+          rich: <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:2}}>
+            {['Si, es el mismo','No, es diferente'].map(opt=>(
+              <button key={opt} onClick={()=>{
+                setMsgs(m=>[...m,{id:Date.now(),from:'user',text:opt,time:ts(),read:true}]);
+                if(opt.startsWith('Si')){ collect({whatsapp:phone}); startContactFlow(); }
+                else { stepRef.current='post_verify_wa_manual'; botSay('Cual es el numero de *WhatsApp* de tu negocio?\n\n_Este numero aparecera en tu pagina web._'); }
+              }}
+              style={{padding:'8px 14px',background:'transparent',border:`1.5px solid ${C.green}`,borderRadius:20,color:C.green,fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'DM Sans,sans-serif',transition:'all .15s'}}>
+                {opt}
+              </button>
+            ))}
+          </div>
+        });
+      });
+    } else {
+      botSay('Cual es el numero de *WhatsApp* de tu negocio?\n\n_Este numero aparecera en tu pagina web._').then(()=>{ stepRef.current='post_verify_wa_manual'; });
+    }
+  }
+
+  function pushVerifyCard(biz, idx){
+    if(idx >= VFIELDS.length){
+      setInputOff(false);
+      startWhatsAppFlow(biz);
+      return;
+    }
+    const f = VFIELDS[idx];
+    const value = biz[f.key]||'';
+    if(!value || !String(value).trim()){
+      setInputOff(false);
+      stepRef.current = 'verify_fill';
+      verifyIdx.current = idx;
+      botSay(EMPTY_FIELD_PROMPTS[f.key] || `Me puedes compartir ${f.label.toLowerCase()}?`);
+      return;
+    }
+    pushMsg({ from:'bot', time:ts(),
+      rich: <VerifyCard label={f.label} value={value}
+        onOk={v=>{ collect({[f.key]:v}); verifyIdx.current=idx+1; pushVerifyCard(biz,idx+1); }}
+        onSave={v=>{ collect({[f.key]:v}); verifyIdx.current=idx+1; pushVerifyCard(biz,idx+1); }}
+      />
+    });
+  }
+
+  // --- Submit data to API ---
+  async function submitData(){
+    setInputOff(true);
+    setSubmitting(true);
+    await botSay('Perfecto! Con toda esta informacion voy a crear tu pagina web ahora. 🚀');
+    await botSay('Dame un momento mientras guardo tu informacion...');
+
+    const d = collRef.current;
+    const payload = {
+      company: d.nombre || '',
+      contactName: d.contacto_nombre || d.propietario || '',
+      contactEmail: d.email || '',
+      contactWhatsapp: d.contacto_whatsapp || '',
+      businessType: d.tipo || 'generic',
+      businessPhone: d.telefono || '',
+      addressFull: d.direccion || '',
+      city: d.ciudad || '',
+      aboutBusiness: d.sobre || '',
+      founderName: d.propietario || '',
+      hours: d.horario ? {horario: d.horario} : null,
+      extraNotes: [d.slogan ? `Slogan: ${d.slogan}` : '', d.redes ? `Redes: ${d.redes}` : ''].filter(Boolean).join('\n'),
+      selectedGoogleMatch: d.place_id ? {
+        placeId: d.place_id,
+        name: d.nombre,
+        address: d.direccion,
+        addressCity: d.ciudad,
+        phone: d.telefono,
+        rating: d.calificacion ? parseFloat(d.calificacion) : null,
+        reviewCount: d.resenas || null,
+        types: [d.tipo],
+      } : null,
+    };
+
+    try {
+      const res = await fetch('/api/public-builder/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+      if(!res.ok) throw new Error(result.error || 'Error al guardar');
+
+      await botSay('Tu pagina esta en camino! 🎉\n\nNuestro equipo te contactara por WhatsApp para mostrarte el resultado.');
+      await sleep(500);
+      pushMsg({from:'bot', time:ts(), rich:
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          <a href="/mipagina" style={{display:'block',width:'100%',padding:'14px',background:C.green,border:'none',borderRadius:12,color:'white',fontSize:15,fontWeight:700,cursor:'pointer',fontFamily:'DM Sans,sans-serif',boxShadow:'0 4px 20px rgba(33,197,94,.35)',textAlign:'center',textDecoration:'none'}}>Ir a mi portal</a>
+          <a href="/" style={{display:'block',textAlign:'center',color:C.waSub,fontSize:12,textDecoration:'none',fontFamily:'DM Sans,sans-serif'}}>Volver al inicio</a>
+        </div>
+      });
+    } catch(e) {
+      console.error('Submit error:', e);
+      await botSay('Hubo un problema al guardar tu informacion. Por favor intenta de nuevo o contactanos por WhatsApp.');
+      setInputOff(false);
+    }
+    setSubmitting(false);
+    stepRef.current='done';
+  }
+
+  /* --- RENDER --- */
+  return (
+    <div style={outerStyle}>
+      <div style={frameStyle}>
+        {/* Header */}
+        <div style={{background:C.waHeader,padding:'10px 16px',display:'flex',alignItems:'center',gap:10,flexShrink:0,borderBottom:'1px solid rgba(255,255,255,.05)'}}>
+          <Avatar size={38}/>
+          <div style={{flex:1}}>
+            <div style={{fontSize:15,fontWeight:600,color:C.waText}}>Pagina</div>
+            <div style={{fontSize:12,color:C.green,display:'flex',alignItems:'center',gap:5}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:C.green,display:'inline-block'}}/>
+              En linea
+            </div>
+          </div>
+          <div style={{fontSize:11,color:C.waSub,textAlign:'right',lineHeight:1.3}}>
+            <span style={{color:C.blue,fontWeight:700,fontSize:12}}>Ahora</span>
+            <span style={{color:C.waText,fontWeight:700,fontSize:12}}>Tengo</span><br/>
+            <span style={{color:C.blue,fontWeight:700,fontSize:12}}>Pagina</span>
+          </div>
+        </div>
+
+        {/* Progress */}
+        <ProgressBar data={collected}/>
+
+        {/* Chat area */}
+        <div style={{flex:1,minHeight:0,overflowY:'auto',overflowX:'hidden',padding:'14px 12px',display:'flex',flexDirection:'column',gap:2,background:C.waBg}}>
+          <div style={{flex:'1 0 auto',minHeight:0}}/>
+          {msgs.map(m=><Bubble key={m.id} msg={m}/>)}
+          {typing && <div style={{display:'flex',alignItems:'flex-end',gap:6,animation:'fadeUp .2s ease'}}><Avatar/><Dots/></div>}
+          {showSearchCard && (
+            <div style={{paddingLeft:40,animation:'fadeUp .3s ease',marginTop:4}}>
+              <div style={{maxWidth:'82%',background:C.waBubIn,borderRadius:'0 10px 10px 10px',padding:'10px 12px',boxShadow:'0 1px 3px rgba(0,0,0,.3)'}}>
+                <SearchCard done={searchDone} found={searchFound} biz={searchBiz} count={searchCount}/>
+                <div style={{display:'flex',justifyContent:'flex-end',marginTop:5}}><span style={{fontSize:11,color:C.waTime}}>{ts()}</span></div>
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} style={{height:4}}/>
+        </div>
+
+        {/* Input bar */}
+        <div style={{background:C.waHeader,padding:'8px 10px',display:'flex',alignItems:'center',gap:8,flexShrink:0,borderTop:'1px solid rgba(255,255,255,.04)'}}>
+          {inputOff ? (
+            <div style={{flex:1,textAlign:'center',fontSize:12,color:C.waSub,padding:'10px 0'}}>Procesando...</div>
+          ) : (
+            <>
+              <div style={{flex:1,background:'rgba(255,255,255,.08)',borderRadius:24,padding:'10px 14px',display:'flex',alignItems:'center'}}>
+                <input ref={inputRef} value={inputVal}
+                  onChange={e=>setInputVal(e.target.value)}
+                  onFocus={()=>{
+                    // While iOS animates the keyboard in (~250ms), repeatedly:
+                    // 1. Undo any window scroll iOS triggered to bring the input into view
+                    // 2. Re-pin the chat to its bottom message
+                    let start=Date.now();
+                    function tick(){
+                      if(window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0,0);
+                      scrollBottom();
+                      if(Date.now()-start<800) requestAnimationFrame(tick);
+                    }
+                    tick();
+                  }}
+                  onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); handleSend(); }}}
+                  placeholder="Escribe un mensaje..."
+                  style={{flex:1,background:'none',border:'none',outline:'none',color:C.waText,fontSize:16,fontFamily:'DM Sans,sans-serif'}}/>
+              </div>
+              <button onClick={()=>handleSend()} disabled={!inputVal.trim()||typing}
+                style={{width:42,height:42,borderRadius:'50%',border:'none',cursor:'pointer',flexShrink:0,
+                  background:inputVal.trim()&&!typing?C.green:'rgba(255,255,255,.08)',
+                  display:'flex',alignItems:'center',justifyContent:'center',transition:'background .2s'}}>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9L16 2L9 16L7.5 10.5L2 9Z" fill="white"/></svg>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
