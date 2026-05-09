@@ -3,6 +3,7 @@
 
 import { escapeRegExp, formatBusinessName } from '../_lib/format-business-name.js';
 import { getWebsiteHtml } from '../_lib/website-config.js';
+import { rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
 
 const DEFAULT_ACCENT = '#2C3E50';
 const DEFAULT_ON_ACCENT = '#F7F3EE';
@@ -136,7 +137,8 @@ export default async function handler(req, res) {
       html.includes('</body>')
       ? html.replace('</body>', trackingScript + '\n</body>')
       : html + trackingScript,
-      business
+      business,
+      supabaseUrl
     );
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -148,7 +150,7 @@ export default async function handler(req, res) {
   }
 }
 
-function applyPublishedSiteFixups(html, business) {
+function applyPublishedSiteFixups(html, business, supabaseUrl) {
   let output = normalizeLegacyNavStructure(String(html || ''));
   const rawName = String(business?.name || '').trim();
   const formattedName = formatBusinessName(rawName);
@@ -255,7 +257,7 @@ function applyPublishedSiteFixups(html, business) {
     output = navFixupCss + output;
   }
 
-  return output;
+  return rewriteSupabasePhotoUrlsInHtml(output, supabaseUrl, 'existing_html');
 }
 
 function normalizeLegacyNavStructure(html) {

@@ -1,6 +1,7 @@
 // Design Engine V2 — Restaurant-specific section renderers
 // Menu highlights and ambiance sections for restaurant websites
 
+import { buildResponsiveImageTag } from '../image-helpers.js';
 import { getMenuCategorySectionCss, renderMenuCategories } from './menu-media.js';
 
 function esc(str) {
@@ -65,7 +66,7 @@ export function ambianceSection(content, photos) {
         </div>
         ${photo ? `
         <div class="reveal-right img-rounded aspect-4-3">
-          <img src="${esc(photo)}" alt="${heading}" class="img-cover">
+          ${buildResponsiveImageTag({ url: photo, alt: heading, preset: 'section', sizes: '(max-width: 900px) 100vw, 48vw', className: 'img-cover' })}
         </div>` : ''}
       </div>
     </section>`,

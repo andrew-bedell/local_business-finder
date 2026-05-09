@@ -1,14 +1,15 @@
 // Vercel serverless function: persist external photos to Supabase Storage
-// Called fire-and-forget from client after saving Instagram/Facebook data
+// Called fire-and-forget after saving external photos such as Google/Instagram/Facebook
 
 import { persistPhotoFromRecord } from '../_lib/photo-persist.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -27,11 +28,14 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Max 20 photos per request' });
   }
 
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
+
   try {
     // Fetch matching records that need persisting
     const idsParam = photoIds.join(',');
     const queryRes = await fetch(
-      `${supabaseUrl}/rest/v1/business_photos?id=in.(${idsParam})&storage_path=is.null&source=in.(instagram,facebook)&select=id,business_id,source,photo_type,url,storage_path`,
+      `${supabaseUrl}/rest/v1/business_photos?id=in.(${idsParam})&storage_path=is.null&select=id,business_id,source,photo_type,url,storage_path`,
       {
         headers: {
           'Authorization': `Bearer ${supabaseKey}`,

@@ -130,7 +130,10 @@ export default async function handler(req, res) {
       const idx = sectionCounts[section] || 0;
       sectionCounts[section] = idx + 1;
       photoInventory.push({
+        bucket: 'photos',
         id: `ai_${section}_${idx}`,
+        originalUrl: photo.url,
+        storagePath: photo.storagePath || null,
         type: 'ai_generated',
         url: photo.url,
       });
@@ -138,7 +141,7 @@ export default async function handler(req, res) {
 
     // Step 9: Build photo manifest
     console.log('[GenerateWebsite] Step 9: Building photo manifest...');
-    const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory);
+    const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
 
     // Step 10: Call /api/ai/write-content
     console.log('[GenerateWebsite] Step 10: Writing website content...');

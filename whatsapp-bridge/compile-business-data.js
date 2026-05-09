@@ -3,6 +3,10 @@
 // Fetches data from Supabase and formats it for research-report and generate-website APIs
 
 const { createClient } = require('@supabase/supabase-js');
+const {
+  getOptimizedPhotoUrl,
+  resolveStoredPhotoLocation,
+} = require('../api/_lib/photo-urls.js');
 
 let supabase = null;
 
@@ -183,11 +187,21 @@ function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles)
  */
 function buildPhotoInventory(photos) {
   return (photos || []).map((p, i) => ({
+    bucket: resolveStoredPhotoLocation({
+      url: p.url,
+      storagePath: p.storage_path,
+      supabaseUrl: process.env.SUPABASE_URL,
+    })?.bucket || null,
     id: `${p.source || 'unknown'}_photo_${i}`,
+    originalUrl: p.url || '',
+    storagePath: p.storage_path || null,
     type: p.photo_type || 'unclassified',
-    url: p.storage_path
-      ? (process.env.SUPABASE_URL + '/storage/v1/object/public/photos/' + p.storage_path)
-      : p.url,
+    url: getOptimizedPhotoUrl({
+      url: p.url,
+      storagePath: p.storage_path,
+      supabaseUrl: process.env.SUPABASE_URL,
+      preset: 'section',
+    }),
   }));
 }
 
