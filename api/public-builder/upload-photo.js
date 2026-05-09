@@ -41,6 +41,7 @@ export default async function handler(req, res) {
     var ext = 'jpg';
     if (contentType.indexOf('png') !== -1) ext = 'png';
     if (contentType.indexOf('webp') !== -1) ext = 'webp';
+    if (contentType.indexOf('svg+xml') !== -1) ext = 'svg';
 
     var suffix = Math.random().toString(36).slice(2, 10);
     var storagePath = 'public-builder/' + Date.now() + '-' + suffix + '-' + photoType + '.' + ext;
