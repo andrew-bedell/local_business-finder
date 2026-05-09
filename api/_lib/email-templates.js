@@ -84,6 +84,27 @@ export function customerWelcomeEmail({ contactName, businessName, loginUrl }) {
   };
 }
 
+export function customerPortalInviteEmail({ contactName, businessName, inviteUrl, portalUrl }) {
+  const greeting = contactName ? `Hola ${contactName},` : 'Hola,';
+  const activationUrl = inviteUrl || portalUrl || 'https://ahoratengopagina.com/mipagina';
+  const loginUrl = portalUrl || 'https://ahoratengopagina.com/mipagina';
+  const html = baseLayout('Activa tu acceso a Mi Pagina', `
+    <h2>${greeting}</h2>
+    <p>Ya preparamos tu cuenta para <strong>${businessName || 'tu negocio'}</strong> en <strong>AhoraTengoPagina</strong>.</p>
+    <p>Haz clic en el boton para verificar tu correo, crear tu contrasena y entrar a tu portal.</p>
+    <a href="${activationUrl}" class="cta">Activar Mi Cuenta</a>
+    <p>Cuando termines, siempre podras entrar desde <a href="${loginUrl}" style="color:#6C5CE7;">Mi Pagina</a> con tu correo y contrasena.</p>
+    <p style="font-size:13px;color:#888;">Si no esperabas este correo, puedes ignorarlo.</p>
+  `);
+  const text = `${greeting}\n\nYa preparamos tu cuenta para ${businessName || 'tu negocio'} en AhoraTengoPagina.\n\nActiva tu cuenta aqui: ${activationUrl}\n\nDespues podras entrar a Mi Pagina desde: ${loginUrl}\n\nSi no esperabas este correo, puedes ignorarlo.`;
+
+  return {
+    subject: `Activa tu acceso a Mi Pagina — ${businessName || 'AhoraTengoPagina'}`,
+    html,
+    text,
+  };
+}
+
 export function customerTeamInviteEmail({ inviterName, businessName, email, inviteUrl }) {
   const html = baseLayout('Invitación al portal', `
     <h2>Hola,</h2>
@@ -740,6 +761,7 @@ export function renderMergeTags(template, variables) {
 const HARDCODED_FALLBACKS = {
   employee_invite: employeeInviteEmail,
   employee_welcome: employeeWelcomeEmail,
+  customer_portal_invite: customerPortalInviteEmail,
   customer_welcome: customerWelcomeEmail,
   customer_team_invite: customerTeamInviteEmail,
   website_published: websitePublishedEmail,
