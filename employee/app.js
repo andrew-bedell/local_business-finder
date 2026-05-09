@@ -1313,15 +1313,18 @@
       const res = await fetch('/api/config');
       if (res.ok) {
         const data = await res.json();
+        const apiSetupEl = document.getElementById('api-setup');
         // Re-initialize Supabase client with server-provided credentials
         if (data.supabaseUrl && data.supabaseKey) {
           initSupabaseFromConfig(data.supabaseUrl, data.supabaseKey);
         }
         // Load saved IDs after final Supabase client is determined
         loadSavedIds();
-        // Hide API setup — search works via SearchAPI.io without a Google key
-        document.getElementById('api-setup').style.display = 'none';
-        // Optionally load Google Maps for review enrichment
+        // Only hide the manual key input when a dedicated browser key is available.
+        if (apiSetupEl) {
+          apiSetupEl.style.display = data.googleApiKey ? 'none' : '';
+        }
+        // Optionally load Google Maps for review enrichment.
         if (data.googleApiKey) {
           apiKey = data.googleApiKey;
           loadGoogleMaps(apiKey);

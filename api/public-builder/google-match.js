@@ -76,6 +76,117 @@ function formatGoogleResult(result) {
   };
 }
 
+function formatAppResultFromPlaces(place, fallbackName, fallbackCity) {
+  var cityComponent = (place.addressComponents || []).find(function (component) {
+    return component.types && (
+      component.types.includes('locality') ||
+      component.types.includes('administrative_area_level_2')
+    );
+  });
+  var horario = '';
+  if (place.regularOpeningHours && Array.isArray(place.regularOpeningHours.weekdayDescriptions)) {
+    horario = place.regularOpeningHours.weekdayDescriptions.slice(0, 5).join('\n');
+  }
+
+  return {
+    nombre: place.displayName && place.displayName.text || fallbackName,
+    tipo: place.primaryTypeDisplayName && place.primaryTypeDisplayName.text || 'Negocio local',
+    ciudad: cityComponent && cityComponent.longText || fallbackCity,
+    direccion: place.formattedAddress || '',
+    shortAddress: place.shortFormattedAddress || place.formattedAddress || '',
+    telefono: place.internationalPhoneNumber || '',
+    horario: horario,
+    calificacion: place.rating ? String(place.rating) : '',
+    resenas: place.userRatingCount || 0,
+    sobre: place.editorialSummary && place.editorialSummary.text || '',
+    place_id: place.id || null,
+    photos: Array.isArray(place.photos) ? place.photos.slice(0, 10).map(function (photo) {
+      return photo.name;
+    }).filter(Boolean) : []
+  };
+}
+
+function formatAppResultFromSearchApi(result, fallbackName, fallbackCity) {
+  var normalized = formatGoogleResult(result);
+  return {
+    nombre: normalized.name || fallbackName,
+    tipo: normalized.types && normalized.types[0] || 'Negocio local',
+    ciudad: normalized.addressCity || fallbackCity,
+    direccion: normalized.address || '',
+    shortAddress: normalized.address || '',
+    telefono: normalized.phone || '',
+    horario: normalized.hours || '',
+    calificacion: normalized.rating ? String(normalized.rating) : '',
+    resenas: normalized.reviewCount || 0,
+    sobre: '',
+    place_id: normalized.placeId,
+    photos: []
+  };
+}
+
+async function searchGooglePlaces(apiKey, businessName, city) {
+  var response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': [
+        'places.id',
+        'places.displayName',
+        'places.formattedAddress',
+        'places.shortFormattedAddress',
+        'places.internationalPhoneNumber',
+        'places.rating',
+        'places.userRatingCount',
+        'places.regularOpeningHours',
+        'places.primaryTypeDisplayName',
+        'places.editorialSummary',
+        'places.addressComponents',
+        'places.photos'
+      ].join(',')
+    },
+    body: JSON.stringify({
+      textQuery: businessName + ' ' + city,
+      languageCode: 'es',
+      maxResultCount: 5
+    })
+  });
+
+  if (!response.ok) {
+    var errorText = await response.text().catch(function () { return ''; });
+    throw new Error('Google Places request failed (' + response.status + '): ' + errorText.substring(0, 300));
+  }
+
+  var data = await response.json();
+  var places = Array.isArray(data.places) ? data.places : [];
+  return places
+    .filter(function (place) {
+      return namesMatch(place.displayName && place.displayName.text, businessName);
+    })
+    .map(function (place) {
+      return formatAppResultFromPlaces(place, businessName, city);
+    });
+}
+
+async function searchSearchApi(apiKey, businessName, city) {
+  var query = businessName + ', ' + city;
+  var url = 'https://www.searchapi.io/api/v1/search?engine=google_maps&q=' + encodeURIComponent(query) + '&api_key=' + encodeURIComponent(apiKey);
+  var response = await fetch(url);
+
+  if (!response.ok) {
+    var errorText = await response.text().catch(function () { return ''; });
+    console.error('SearchAPI request failed:', response.status, errorText.substring(0, 300));
+    throw new Error('Google search request failed');
+  }
+
+  var data = await response.json();
+  return (data.local_results || []).filter(function (item) {
+    return namesMatch(item.title, businessName);
+  }).map(function (item) {
+    return formatAppResultFromSearchApi(item, businessName, city);
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -84,9 +195,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  var apiKey = process.env.SEARCHAPI_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: 'SearchAPI key not configured' });
+  var googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  var searchApiKey = process.env.SEARCHAPI_KEY || '';
+  if (!googlePlacesApiKey && !searchApiKey) {
+    return res.status(503).json({ error: 'No search provider configured' });
   }
 
   var body = req.body || {};
@@ -97,20 +209,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    var query = businessName + ', ' + city;
-    var url = 'https://www.searchapi.io/api/v1/search?engine=google_maps&q=' + encodeURIComponent(query) + '&api_key=' + encodeURIComponent(apiKey);
-    var response = await fetch(url);
+    var matches = [];
 
-    if (!response.ok) {
-      var errorText = await response.text().catch(function () { return ''; });
-      console.error('SearchAPI request failed:', response.status, errorText.substring(0, 300));
-      return res.status(502).json({ error: 'Google search request failed' });
+    if (googlePlacesApiKey) {
+      try {
+        matches = await searchGooglePlaces(googlePlacesApiKey, businessName, city);
+      } catch (googleError) {
+        console.warn('Google Places lookup failed, falling back to SearchAPI:', googleError.message);
+      }
     }
 
-    var data = await response.json();
-    var matches = (data.local_results || []).filter(function (item) {
-      return namesMatch(item.title, businessName);
-    });
+    if (!matches.length && searchApiKey) {
+      matches = await searchSearchApi(searchApiKey, businessName, city);
+    }
 
     if (matches.length === 0) {
       return res.status(200).json({ outcome: 'not_found' });
@@ -119,13 +230,13 @@ export default async function handler(req, res) {
     if (matches.length === 1) {
       return res.status(200).json({
         outcome: 'matched',
-        match: formatGoogleResult(matches[0])
+        match: matches[0]
       });
     }
 
     return res.status(200).json({
       outcome: 'ambiguous',
-      candidates: matches.slice(0, 5).map(formatGoogleResult)
+      candidates: matches.slice(0, 5)
     });
   } catch (err) {
     console.error('public-builder/google-match error:', err);

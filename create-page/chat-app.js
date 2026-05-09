@@ -96,8 +96,6 @@ const CHECKLIST = [
 const ts = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-let GKEY = null;
-
 function normalizeText(value) {
   return String(value || '')
     .toLowerCase()
@@ -187,78 +185,31 @@ function parseOfferingsText(rawText, asMenu) {
   }).filter(item => (asMenu ? item.item_name : item.name));
 }
 
-async function fetchApiKey() {
-  try {
-    const res = await fetch('/api/config');
-    const data = await res.json();
-    GKEY = data.googleApiKey || null;
-  } catch (error) {
-    console.warn('Could not fetch API key:', error);
-  }
-}
-
 async function lookup(name, city) {
-  if (!GKEY) await fetchApiKey();
-  if (!GKEY) return null;
-
   try {
-    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    const res = await fetch('/api/public-builder/google-match', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': GKEY,
-        'X-Goog-FieldMask': [
-          'places.id',
-          'places.displayName',
-          'places.formattedAddress',
-          'places.shortFormattedAddress',
-          'places.internationalPhoneNumber',
-          'places.rating',
-          'places.userRatingCount',
-          'places.regularOpeningHours',
-          'places.primaryTypeDisplayName',
-          'places.editorialSummary',
-          'places.addressComponents',
-          'places.photos'
-        ].join(',')
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        textQuery: name + ' ' + city,
-        languageCode: 'es',
-        maxResultCount: 5
+        businessName: name,
+        city: city
       })
     });
-
-    const data = await res.json();
-    if (!data.places || !data.places.length) return null;
-
-    return data.places.map(place => {
-      let horario = '';
-      if (place.regularOpeningHours && place.regularOpeningHours.weekdayDescriptions && place.regularOpeningHours.weekdayDescriptions.length) {
-        horario = place.regularOpeningHours.weekdayDescriptions.slice(0, 5).join('\n');
-      }
-
-      const cityComp = (place.addressComponents || []).find(component => (
-        component.types && (component.types.includes('locality') || component.types.includes('administrative_area_level_2'))
-      ));
-
-      return {
-        nombre: (place.displayName && place.displayName.text) || name,
-        tipo: (place.primaryTypeDisplayName && place.primaryTypeDisplayName.text) || 'Negocio local',
-        ciudad: (cityComp && cityComp.longText) || city,
-        direccion: place.formattedAddress || '',
-        shortAddress: place.shortFormattedAddress || place.formattedAddress || '',
-        telefono: place.internationalPhoneNumber || '',
-        horario: horario,
-        calificacion: place.rating ? String(place.rating) : '',
-        resenas: place.userRatingCount || 0,
-        sobre: (place.editorialSummary && place.editorialSummary.text) || '',
-        place_id: place.id,
-        photos: (place.photos || []).slice(0, 10).map(photo => photo.name)
-      };
-    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || 'No se pudo buscar el negocio.');
+    }
+    if (data.outcome === 'matched') {
+      return data.match ? [data.match] : null;
+    }
+    if (data.outcome === 'ambiguous') {
+      return Array.isArray(data.candidates) ? data.candidates : null;
+    }
+    return null;
   } catch (error) {
-    console.error('Places API error:', error);
+    console.error('Business lookup error:', error);
     return null;
   }
 }
