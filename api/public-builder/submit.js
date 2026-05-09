@@ -22,6 +22,46 @@ async function fetchJson(url, options) {
   return { response: response, payload: payload };
 }
 
+function compactString(value) {
+  var text = String(value || '').trim();
+  return text || '';
+}
+
+function buildNotes(body) {
+  var notes = [];
+  var extraNotes = compactString(body.extraNotes);
+  var googleListingStatus = compactString(body.googleListingStatus);
+  var googleListingNote = compactString(body.googleListingNote);
+  var approvedGooglePhotos = Array.isArray(body.approvedGooglePhotos) ? body.approvedGooglePhotos : [];
+  var additionalLocations = Array.isArray(body.additionalLocations) ? body.additionalLocations : [];
+
+  if (extraNotes) notes.push(extraNotes);
+
+  if (googleListingStatus === 'has_google_profile') {
+    notes.push('Google Maps: el cliente indica que ya tiene una ficha, pero no se encontro automaticamente.');
+  } else if (googleListingStatus === 'needs_google_profile') {
+    notes.push('Google Maps: el cliente aun no tiene ficha y desea que la creemos despues de lanzar su sitio.');
+  }
+
+  if (googleListingNote) {
+    notes.push('Google Maps detalle: ' + googleListingNote);
+  }
+
+  if (additionalLocations.length) {
+    notes.push('Ubicaciones adicionales: ' + additionalLocations.map(function (location) {
+      var name = compactString(location && location.name);
+      var address = compactString(location && (location.address || location.shortAddress));
+      return [name, address].filter(Boolean).join(' - ');
+    }).filter(Boolean).join(' | '));
+  }
+
+  if (approvedGooglePhotos.length) {
+    notes.push('Fotos aprobadas desde Google: ' + approvedGooglePhotos.length);
+  }
+
+  return notes.filter(Boolean).join('\n');
+}
+
 async function ensureBusinessContact(supabaseUrl, serviceKey, businessId, body) {
   var hasContact = body.contactName || body.contactEmail || body.contactWhatsapp || body.businessPhone;
   if (!hasContact) return;
@@ -63,6 +103,9 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     return existingResult.payload[0].id;
   }
 
+  var hasExplicitBusinessWhatsapp = Object.prototype.hasOwnProperty.call(body, 'businessWhatsapp');
+  var businessWhatsapp = hasExplicitBusinessWhatsapp ? (body.businessWhatsapp || null) : (body.contactWhatsapp || null);
+  var notes = buildNotes(body);
   var insertPayload = {
     name: match.name || body.company,
     place_id: match.placeId,
@@ -72,7 +115,7 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     address_state: match.addressState || null,
     address_zip: match.addressZip || null,
     phone: body.businessPhone || match.phone || null,
-    whatsapp: body.contactWhatsapp || null,
+    whatsapp: businessWhatsapp || body.contactWhatsapp || null,
     email: body.contactEmail || null,
     description: body.aboutBusiness || null,
     maps_url: match.mapsUrl || null,
@@ -89,7 +132,7 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     contact_name: body.contactName || null,
     contact_email: body.contactEmail || null,
     contact_whatsapp: body.contactWhatsapp || null,
-    notes: body.extraNotes || null,
+    notes: notes || null,
     ...buildInitialEnrichmentState(match.placeId)
   };
 
@@ -137,6 +180,9 @@ export default async function handler(req, res) {
 
   try {
     var selectedGoogleMatch = body.selectedGoogleMatch || null;
+    var hasExplicitBusinessWhatsapp = Object.prototype.hasOwnProperty.call(body, 'businessWhatsapp');
+    var businessWhatsapp = hasExplicitBusinessWhatsapp ? (body.businessWhatsapp || null) : (body.contactWhatsapp || null);
+    var notes = buildNotes(body);
     var businessId = null;
 
     if (selectedGoogleMatch && selectedGoogleMatch.placeId) {
@@ -150,7 +196,7 @@ export default async function handler(req, res) {
         address_full: body.addressFull || null,
         address_city: body.city || null,
         phone: body.businessPhone || null,
-        whatsapp: body.contactWhatsapp || null,
+        whatsapp: businessWhatsapp || body.contactWhatsapp || null,
         email: contactEmail || null,
         description: body.aboutBusiness || null,
         owner_name: body.founderName || null,
@@ -161,7 +207,7 @@ export default async function handler(req, res) {
         contact_name: contactName || null,
         contact_email: contactEmail || null,
         contact_whatsapp: body.contactWhatsapp || null,
-        notes: body.extraNotes || null,
+        notes: notes || null,
         ...buildInitialEnrichmentState(builderPlaceId)
       };
 
@@ -190,7 +236,7 @@ export default async function handler(req, res) {
       address_full: body.addressFull || null,
       address_city: body.city || null,
       phone: body.businessPhone || null,
-      whatsapp: body.contactWhatsapp || null,
+      whatsapp: businessWhatsapp || body.contactWhatsapp || null,
       email: contactEmail || null,
       description: body.aboutBusiness || null,
       owner_name: body.founderName || null,
@@ -201,7 +247,7 @@ export default async function handler(req, res) {
       contact_name: contactName || null,
       contact_email: contactEmail || null,
       contact_whatsapp: body.contactWhatsapp || null,
-      notes: body.extraNotes || null,
+      notes: notes || null,
       pipeline_status_changed_at: new Date().toISOString()
     };
 
@@ -278,6 +324,36 @@ export default async function handler(req, res) {
       }
     }
 
+    var menuItems = Array.isArray(body.menuItems) ? body.menuItems : [];
+    if (menuItems.length) {
+      var menuRows = menuItems.map(function (item) {
+        return {
+          business_id: businessId,
+          source_photo_id: item.source_photo_id || null,
+          menu_category: item.menu_category || 'Menu',
+          item_name: item.item_name || null,
+          item_description: item.item_description || null,
+          price: item.price != null ? item.price : null,
+          currency: item.currency || 'MXN'
+        };
+      }).filter(function (row) {
+        return row.item_name;
+      });
+
+      if (menuRows.length) {
+        await fetch(supabaseUrl + '/rest/v1/business_menus', {
+          method: 'POST',
+          headers: {
+            'apikey': serviceKey,
+            'Authorization': 'Bearer ' + serviceKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(menuRows)
+        });
+      }
+    }
+
     var photos = Array.isArray(body.photos) ? body.photos : [];
     if (photos.length) {
       var photoRows = photos.map(function (photo, index) {
@@ -322,9 +398,14 @@ export default async function handler(req, res) {
     });
 
     var signupPayload = await signupResponse.json().catch(function () { return {}; });
+    var accountStatus = signupPayload && signupPayload.authStatus || null;
     var signupMessage = signupResponse.ok
-      ? 'Guardamos tu borrador y enviamos el acceso a tu portal por correo.'
-      : 'Guardamos tu borrador. Si el acceso al portal ya existía, puedes entrar directamente con tu correo.';
+      ? (accountStatus === 'invite_sent'
+        ? 'Guardamos tu borrador y enviamos un correo para verificar tu email y crear tu acceso a Mi Pagina.'
+        : accountStatus === 'existing_user'
+          ? 'Guardamos tu borrador. Si tu acceso ya existia, puedes entrar a Mi Pagina con tu correo y contrasena.'
+          : 'Guardamos tu borrador. Tuvimos un problema al enviar el acceso automaticamente, pero tu registro ya quedo guardado.')
+      : 'Guardamos tu borrador. Si el acceso al portal ya existia, puedes entrar directamente con tu correo.';
 
     if (!signupResponse.ok && signupResponse.status !== 409) {
       console.warn('free-signup failed after builder submit:', signupPayload);
@@ -334,7 +415,8 @@ export default async function handler(req, res) {
       success: true,
       businessId: businessId,
       portalUrl: '/mipagina',
-      message: signupMessage
+      message: signupMessage,
+      accountStatus: accountStatus
     });
   } catch (err) {
     console.error('public-builder/submit error:', err);
