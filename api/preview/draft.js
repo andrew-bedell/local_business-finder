@@ -1,12 +1,13 @@
 // Vercel serverless function: Fetch draft website HTML for review preview
 // GET ?website_id=<uuid> — returns draft_html from website config
 
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
 import { rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -19,8 +20,9 @@ export default async function handler(req, res) {
   if (!websiteId) return res.status(400).json({ error: 'Missing required parameter: website_id' });
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=id,config,businesses(id,name)`,
+      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&business_id=eq.${encodeURIComponent(resolved.businessId)}&select=id,config,businesses(id,name)`,
       {
         headers: {
           'apikey': supabaseKey,
@@ -56,6 +58,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Draft preview error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

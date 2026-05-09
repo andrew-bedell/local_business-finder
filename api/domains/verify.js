@@ -1,10 +1,12 @@
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+
 // Vercel serverless function: Check domain verification status
 // GET ?websiteId=<uuid> — checks Vercel API and updates DB
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -30,9 +32,10 @@ export default async function handler(req, res) {
   };
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
     // 1. Get website's custom domain
     const webRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=id,custom_domain,domain_status`,
+      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&business_id=eq.${encodeURIComponent(resolved.businessId)}&select=id,custom_domain,domain_status`,
       { headers: supabaseHeaders }
     );
     const webData = await webRes.json();
@@ -85,6 +88,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Domain verify error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

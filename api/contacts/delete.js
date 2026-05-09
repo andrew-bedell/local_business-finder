@@ -1,10 +1,12 @@
 // Vercel serverless function: Delete a contact
 // POST — { contactId, businessId }
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -27,6 +29,9 @@ export default async function handler(req, res) {
     'Authorization': `Bearer ${supabaseKey}`,
     'Content-Type': 'application/json',
   };
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     const delRes = await fetch(

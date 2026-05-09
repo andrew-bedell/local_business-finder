@@ -138,6 +138,9 @@ INSERT INTO system_settings (key, value)
 VALUES ('enrichment_pipeline', jsonb_build_object('paused', false, 'updatedAt', NOW()))
 ON CONFLICT (key) DO NOTHING;
 
+ALTER TABLE generated_websites
+  ADD COLUMN IF NOT EXISTS generated_at TIMESTAMPTZ DEFAULT NOW(),
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 UPDATE generated_websites
 SET generated_at = COALESCE(generated_at, NOW()),
     created_at = COALESCE(created_at, NOW())

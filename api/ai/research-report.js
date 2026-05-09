@@ -3,10 +3,12 @@
 
 export const config = { maxDuration: 300 };
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -26,6 +28,12 @@ export default async function handler(req, res) {
   if (!rawBusinessData || !name) {
     return res.status(400).json({ error: 'Missing required fields: businessData, name' });
   }
+
+  const session = await ensureEmployeeSession(req, res, {
+    supabaseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+  if (!session) return;
 
   // Strip unpaired Unicode surrogates that break JSON serialization
   const businessData = rawBusinessData.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');

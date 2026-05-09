@@ -13,6 +13,37 @@
   var supabase = null;
   var isLoginPage = window.location.pathname.indexOf('/employee/login') !== -1;
   var isRecoveryMode = false;
+  var nativeFetch = window.fetch.bind(window);
+  var EMPLOYEE_AUTH_API_PREFIXES = [
+    '/api/analytics/demo-stats',
+    '/api/businesses/update-pipeline',
+    '/api/contacts/delete',
+    '/api/contacts/list',
+    '/api/contacts/upsert',
+    '/api/customers/create-whatsapp',
+    '/api/domains/suggest',
+    '/api/edit-requests/update',
+    '/api/email/send',
+    '/api/email-templates/',
+    '/api/photos/persist',
+    '/api/photos/scan-text',
+    '/api/enrich/trigger',
+    '/api/products/save',
+    '/api/ai/generate-photos',
+    '/api/ai/generate-website',
+    '/api/ai/research-report',
+    '/api/ai/write-content',
+    '/api/voice/generate',
+    '/api/websites/publish',
+    '/api/whatsapp/check-number',
+    '/api/whatsapp/audience-preview',
+    '/api/whatsapp/audiences',
+    '/api/whatsapp/campaign-send',
+    '/api/whatsapp/campaigns',
+    '/api/whatsapp/send',
+    '/api/whatsapp/templates',
+    '/api/whatsapp/toggle-auto-reply'
+  ];
   var currentLang = localStorage.getItem('app_lang') || 'en';
   var translations = {
     en: {
@@ -104,13 +135,59 @@
       var key = data.supabaseKey || SUPABASE_KEY_FALLBACK;
       if (url && key) {
         supabase = window.supabase.createClient(url, key);
+        installProtectedApiFetch();
       }
     }).catch(function (err) {
       console.warn('Could not fetch config, using fallback:', err.message);
       if (SUPABASE_URL_FALLBACK && SUPABASE_KEY_FALLBACK) {
         supabase = window.supabase.createClient(SUPABASE_URL_FALLBACK, SUPABASE_KEY_FALLBACK);
+        installProtectedApiFetch();
       }
     });
+  }
+
+  function getApiPath(resource) {
+    try {
+      if (typeof resource === 'string') {
+        return new URL(resource, window.location.origin).pathname;
+      }
+      if (resource && typeof resource.url === 'string') {
+        return new URL(resource.url, window.location.origin).pathname;
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  function installProtectedApiFetch() {
+    if (!supabase || window.__employeeProtectedFetchInstalled) return;
+    window.__employeeProtectedFetchInstalled = true;
+
+    window.fetch = async function patchedEmployeeFetch(resource, options) {
+      var path = getApiPath(resource);
+      var needsAuth = EMPLOYEE_AUTH_API_PREFIXES.some(function (prefix) { return path.indexOf(prefix) === 0; });
+      if (!needsAuth) {
+        return nativeFetch(resource, options);
+      }
+
+      var headers = new Headers(resource instanceof Request ? resource.headers : undefined);
+      if (options && options.headers) {
+        new Headers(options.headers).forEach(function (value, key) {
+          headers.set(key, value);
+        });
+      }
+
+      if (!headers.has('Authorization')) {
+        try {
+          var sessionResult = await supabase.auth.getSession();
+          var session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+          if (session && session.access_token) {
+            headers.set('Authorization', 'Bearer ' + session.access_token);
+          }
+        } catch (_) {}
+      }
+
+      return nativeFetch(resource, Object.assign({}, options || {}, { headers: headers }));
+    };
   }
 
   // ── Auth Guard (for protected pages) ──

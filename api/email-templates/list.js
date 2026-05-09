@@ -1,10 +1,12 @@
 // Vercel serverless function: List email templates
 // GET — optional query params: category, active
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -20,6 +22,9 @@ export default async function handler(req, res) {
   if (!supabaseUrl || !supabaseKey) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     const { category, active } = req.query || {};
