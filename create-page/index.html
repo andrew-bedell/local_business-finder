@@ -2,493 +2,314 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1A56DB">
-  <title>Crea tu página — AhoraTengoPagina</title>
-  <meta name="description" content="Crea la página web de tu negocio en menos de 5 minutos. Te explicamos exactamente cómo funciona el proceso, qué necesitas tener a la mano y cómo editas tu página después.">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Empieza el diseño de tu página | AhoraTengoPagina</title>
+  <meta
+    name="description"
+    content="Habla con nuestro chatbot, comparte los datos de tu negocio y preparamos una página de muestra. Si te gusta, la terminamos contigo, la movemos a tu dominio y la dejamos lista para Google y asistentes como ChatGPT."
+  >
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="shortcut icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-
-  <link rel="stylesheet" href="/marketing.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    /* Page-specific tweaks for the deeper-funnel info page. Reuses marketing.css tokens. */
-    .cp-hero {
-      padding: 110px 24px 40px;
-      text-align: center;
-      background: linear-gradient(180deg, var(--m-blue-light) 0%, var(--m-bg) 100%);
-    }
-    .cp-hero-tag {
-      display: inline-block;
-      padding: 6px 14px;
-      background: rgba(34, 197, 94, 0.12);
-      color: var(--m-green-dark);
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 999px;
-      margin-bottom: 16px;
-    }
-    .cp-hero h1 {
-      font-size: 40px;
-      font-weight: 800;
-      line-height: 1.15;
-      margin: 0 auto 16px;
-      max-width: 680px;
-      color: var(--m-dark);
-    }
-    .cp-hero p {
-      font-size: 18px;
-      color: var(--m-text-muted);
-      max-width: 560px;
-      margin: 0 auto 28px;
-      line-height: 1.55;
-    }
-    .cp-hero-cta {
-      display: inline-block;
-      padding: 16px 32px;
-      background: var(--m-green);
-      color: var(--m-white);
-      font-size: 16px;
-      font-weight: 700;
-      border-radius: var(--m-radius);
-      text-decoration: none;
-      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.32);
-      transition: background 0.2s, transform 0.1s;
-    }
-    .cp-hero-cta:hover { background: var(--m-green-dark); }
-    .cp-hero-cta:active { transform: scale(0.97); }
-    .cp-hero-meta {
-      margin-top: 14px;
-      font-size: 13px;
-      color: var(--m-text-light);
-    }
-
-    .cp-section {
-      padding: 64px 24px;
-      max-width: var(--m-max-width);
-      margin: 0 auto;
-    }
-    .cp-section h2 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--m-dark);
-      margin-bottom: 12px;
-    }
-    .cp-section .cp-lead {
-      font-size: 16px;
-      color: var(--m-text-muted);
-      max-width: 640px;
-      margin-bottom: 36px;
-      line-height: 1.6;
-    }
-
-    .cp-steps {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-    .cp-step {
-      display: flex;
-      gap: 18px;
-      padding: 24px;
-      background: var(--m-white);
-      border: 1px solid var(--m-border);
-      border-radius: var(--m-radius-lg);
-      box-shadow: var(--m-shadow-sm);
-    }
-    .cp-step-num {
-      flex-shrink: 0;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: var(--m-blue);
-      color: var(--m-white);
-      font-weight: 700;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .cp-step h3 {
-      font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--m-dark);
-    }
-    .cp-step p {
-      font-size: 15px;
-      color: var(--m-text-muted);
-      line-height: 1.55;
-    }
-    .cp-step-detail {
-      margin-top: 10px;
-      padding: 12px 14px;
-      background: var(--m-bg);
-      border-left: 3px solid var(--m-blue);
-      border-radius: 6px;
-      font-size: 14px;
-      color: var(--m-text);
-      line-height: 1.55;
-    }
-
-    .cp-checklist {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      padding: 24px;
-      background: var(--m-white);
-      border: 1px solid var(--m-border);
-      border-radius: var(--m-radius-lg);
-    }
-    .cp-checklist-item {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      font-size: 14px;
-      color: var(--m-text);
-    }
-    .cp-checklist-item::before {
-      content: "✓";
-      flex-shrink: 0;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: rgba(34, 197, 94, 0.15);
-      color: var(--m-green-dark);
-      font-weight: 700;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-    .cp-note {
-      margin-top: 14px;
-      font-size: 13px;
-      color: var(--m-text-light);
-      line-height: 1.5;
-    }
-
-    .cp-edit-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 16px;
-    }
-    .cp-edit-card {
-      padding: 22px;
-      background: var(--m-white);
-      border: 1px solid var(--m-border);
-      border-radius: var(--m-radius-lg);
-      text-align: left;
-    }
-    .cp-edit-card h4 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--m-dark);
-      margin-bottom: 8px;
-    }
-    .cp-edit-card p {
-      font-size: 14px;
-      color: var(--m-text-muted);
-      line-height: 1.55;
-    }
-    .cp-edit-icon {
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-
-    .cp-faq {
-      max-width: 760px;
-      margin: 0 auto;
-    }
-    .cp-faq-item {
-      border-bottom: 1px solid var(--m-border);
-      padding: 18px 0;
-    }
-    .cp-faq-item h4 {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--m-dark);
-      margin-bottom: 8px;
-    }
-    .cp-faq-item p {
-      font-size: 15px;
-      color: var(--m-text-muted);
-      line-height: 1.6;
-    }
-
-    .cp-cta-final {
-      padding: 64px 24px 120px;
-      text-align: center;
-      background: var(--m-dark);
-      color: var(--m-white);
-    }
-    .cp-cta-final h2 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-    .cp-cta-final p {
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.75);
-      max-width: 520px;
-      margin: 0 auto 24px;
-    }
-    .cp-cta-final .cp-hero-cta {
-      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.45);
-    }
-
-    /* Sticky CTA bar — always visible while scrolling */
-    .cp-sticky {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 900;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid var(--m-border);
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
-    }
-    .cp-sticky-inner {
-      max-width: 480px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      align-items: center;
-    }
-    .cp-sticky-btn {
-      display: block;
-      width: 100%;
-      padding: 14px 24px;
-      background: var(--m-green);
-      color: var(--m-white);
-      font-size: 16px;
-      font-weight: 700;
-      font-family: inherit;
-      border: none;
-      border-radius: var(--m-radius);
-      text-decoration: none;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-    .cp-sticky-btn:hover { background: var(--m-green-dark); }
-    .cp-sticky-btn:active { transform: scale(0.98); }
-    .cp-sticky-meta {
-      font-size: 12px;
-      color: var(--m-text-light);
-    }
-
-    /* Pad page bottom so sticky bar never covers final content */
-    body { padding-bottom: 92px; }
-
-    @media (max-width: 768px) {
-      .cp-hero { padding: 90px 20px 36px; }
-      .cp-hero h1 { font-size: 30px; }
-      .cp-hero p { font-size: 16px; }
-      .cp-section { padding: 48px 20px; }
-      .cp-section h2 { font-size: 24px; }
-      .cp-checklist { grid-template-columns: 1fr; }
-      .cp-edit-grid { grid-template-columns: 1fr; }
-      .cp-step { padding: 18px; gap: 14px; }
-      .cp-step-num { width: 32px; height: 32px; font-size: 14px; }
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="/create-page/styles.css">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 </head>
-<body class="m-body">
+<body class="cp-body">
+  <header class="cp-topbar">
+    <div class="cp-topbar-inner">
+      <a class="cp-brand" href="/">
+        <span class="cp-brand-mark">A</span>
+        <span class="cp-brand-copy">
+          <strong>AhoraTengoPagina</strong>
+          <span>Diseño guiado para negocios locales</span>
+        </span>
+      </a>
 
-  <!-- Lightweight nav: logo + back to home, no full nav menu since this is a focused page -->
-  <nav class="m-nav" id="m-nav">
-    <div class="m-nav-inner">
-      <a href="/" class="m-nav-logo">AhoraTengoPagina</a>
-      <div class="m-nav-links">
-        <a href="/" class="m-nav-link">Volver al inicio</a>
-        <a href="/crear-tu-pagina/chat" class="m-nav-cta">Crear mi página</a>
-      </div>
+      <nav class="cp-nav" aria-label="Navegación de la página">
+        <a class="cp-nav-link" href="#proceso">Cómo funciona</a>
+        <a class="cp-nav-link" href="#plan">Qué pasa después</a>
+        <a class="cp-btn cp-btn--solid cp-btn--small" href="#chat-funnel">Empezar por chat</a>
+      </nav>
     </div>
-  </nav>
+  </header>
 
-  <!-- Hero -->
-  <section class="cp-hero">
-    <span class="cp-hero-tag">Listo para crear tu página</span>
-    <h1>Tu página web lista en menos de 5 minutos.</h1>
-    <p>Aquí te explicamos exactamente cómo funciona el proceso, qué información vamos a recopilar y cómo puedes editar tu página después de publicarla.</p>
-    <a href="/crear-tu-pagina/chat" class="cp-hero-cta">Crear mi página ahora</a>
-    <div class="cp-hero-meta">Sin tarjeta de crédito · Te contactamos por WhatsApp para finalizar</div>
-  </section>
+  <main class="cp-page">
+    <section class="cp-hero" aria-labelledby="hero-title">
+      <div class="cp-hero-shell">
+        <div class="cp-hero-grid">
+          <div class="cp-hero-copy">
+            <div class="cp-chip">Primero la muestra. Luego el plan, el dominio y la edición contigo.</div>
+            <h1 class="cp-title" id="hero-title">Empieza el diseño de tu página aquí</h1>
+            <p class="cp-lead">
+              Habla con nuestro chatbot, comparte lo básico de tu negocio y nosotros preparamos una
+              página de muestra para que la revises. Si te gusta, terminamos el diseño contigo, la
+              movemos a tu dominio y la dejamos lista para que Google y asistentes como ChatGPT
+              entiendan mejor tu negocio.
+            </p>
 
-  <!-- How the chat works (the chat IS the creation process) -->
-  <section class="cp-section">
-    <h2>Cómo funciona el chat</h2>
-    <p class="cp-lead">Cuando hagas clic en "Crear mi página", entras a un chat tipo WhatsApp con nuestro asistente. Te hace preguntas simples — una a la vez — y arma tu página con tus respuestas.</p>
+            <ul class="cp-point-list">
+              <li>Nosotros recopilamos la información, armamos la muestra y te guiamos en cada paso.</li>
+              <li>Si compras un plan, seguimos contigo para pulir el diseño y hacer todos los cambios que necesites.</li>
+              <li>También hacemos actualizaciones estacionales, como Navidad o promociones especiales, para ayudarte a conseguir más clientes.</li>
+            </ul>
 
-    <div class="cp-steps">
-      <div class="cp-step">
-        <div class="cp-step-num">1</div>
-        <div>
-          <h3>Te preguntamos por tu negocio</h3>
-          <p>El asistente te pregunta tu nombre, el nombre de tu negocio y la ciudad donde estás. Con eso ya empezamos a buscarte en Google.</p>
+            <div class="cp-actions">
+              <a class="cp-btn cp-btn--solid" href="#chat-funnel">Empezar por chat</a>
+              <a class="cp-btn cp-btn--ghost" href="#proceso">Ver el proceso completo</a>
+            </div>
+
+            <div class="cp-stat-grid" aria-label="Puntos clave del servicio">
+              <div class="cp-stat">
+                <strong>1 muestra</strong>
+                <span>Primero te enseñamos una versión inicial para que veas el potencial.</span>
+              </div>
+              <div class="cp-stat">
+                <strong>1 dominio propio</strong>
+                <span>Si sigues con el plan, la publicamos en tu propio dominio.</span>
+              </div>
+              <div class="cp-stat">
+                <strong>Cambios continuos</strong>
+                <span>Te acompañamos con ediciones, mejoras y campañas de temporada.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="cp-preview-stack" aria-hidden="true">
+            <div class="cp-preview-card">
+              <div class="cp-phone">
+                <div class="cp-phone-header">
+                  <div class="cp-phone-avatar">ATP</div>
+                  <div>
+                    <div class="cp-phone-title">Diseñador virtual</div>
+                    <div class="cp-phone-subtitle">Te guía como si fuera WhatsApp</div>
+                  </div>
+                </div>
+                <div class="cp-phone-body">
+                  <div class="cp-preview-bubble">
+                    Hola 👋 Cuéntame el nombre de tu negocio y en qué ciudad está.
+                  </div>
+                  <div class="cp-preview-bubble cp-preview-bubble--user">
+                    Casa Maya Bakery, en Mérida.
+                  </div>
+                  <div class="cp-preview-bubble">
+                    Perfecto. Voy a buscar tu ficha de Google, reunir fotos y preparar la base de tu
+                    página de muestra.
+                  </div>
+                  <div class="cp-preview-bubble">
+                    Si decides seguir con el plan, la terminamos contigo, la publicamos en tu dominio
+                    y dejamos todo listo para que clientes y asistentes de IA entiendan mejor tu negocio.
+                  </div>
+                </div>
+              </div>
+
+              <div class="cp-preview-note">
+                <strong>Tú hablas. Nosotros diseñamos.</strong>
+                Comparte tus datos en el chat y nuestro equipo toma ese contexto para construir la
+                primera versión de tu página.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="cp-step">
-        <div class="cp-step-num">2</div>
-        <div>
-          <h3>Buscamos tu negocio en Google Maps</h3>
-          <p>Si ya tienes ficha en Google, automáticamente jalamos tu dirección, teléfono, horario, fotos y reseñas. No tienes que escribir nada de eso.</p>
-          <div class="cp-step-detail">¿No tienes ficha de Google todavía? No hay problema — el asistente te hace las preguntas necesarias para llenar todo a mano.</div>
+    <section class="cp-section" aria-label="Qué obtienes al empezar">
+      <div class="cp-proof-strip">
+        <article class="cp-proof-card">
+          <strong>Chat guiado</strong>
+          <span>Empiezas con un flujo estilo WhatsApp para compartir información sin complicarte.</span>
+        </article>
+        <article class="cp-proof-card">
+          <strong>Página de muestra</strong>
+          <span>Construimos una versión inicial para que veas cómo puede verse tu negocio online.</span>
+        </article>
+        <article class="cp-proof-card">
+          <strong>Dominio propio</strong>
+          <span>Si activas el plan, movemos la versión final a tu propio dominio y la dejamos lista.</span>
+        </article>
+        <article class="cp-proof-card">
+          <strong>Ediciones de temporada</strong>
+          <span>Seguimos trabajando contigo para promociones, campañas navideñas y cambios con el tiempo.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="cp-section" id="proceso" aria-labelledby="process-title">
+      <div class="cp-section-header">
+        <p class="cp-kicker">Cómo funciona</p>
+        <h2 class="cp-section-title" id="process-title">Tu muestra primero. El plan después.</h2>
+        <p class="cp-section-copy">
+          Esta página está pensada para gente que ya quiere empezar. Primero usamos el chatbot para
+          reunir contexto. Después nosotros hacemos el trabajo de diseño contigo.
+        </p>
+      </div>
+
+      <div class="cp-step-grid">
+        <article class="cp-step-card">
+          <div class="cp-step-number">1</div>
+          <h3>Hablas con el chatbot</h3>
+          <p>
+            Te pide nombre, giro, ciudad, fotos, logo y formas de contacto. Si tu negocio ya aparece
+            en Google, intentamos traer parte de la información automáticamente.
+          </p>
+        </article>
+
+        <article class="cp-step-card">
+          <div class="cp-step-number">2</div>
+          <h3>Preparamos tu página de muestra</h3>
+          <p>
+            Con esa información armamos una primera versión con servicios, horarios, reseñas, botones
+            de contacto y una estructura pensada para convertir visitas en clientes.
+          </p>
+        </article>
+
+        <article class="cp-step-card">
+          <div class="cp-step-number">3</div>
+          <h3>Si compras un plan, la pulimos contigo</h3>
+          <p>
+            No te dejamos solo con una muestra. Si decides seguir, trabajamos contigo para ajustar el
+            diseño, el contenido, las fotos y cualquier detalle hasta que quede como la quieres.
+          </p>
+        </article>
+
+        <article class="cp-step-card">
+          <div class="cp-step-number">4</div>
+          <h3>La movemos a tu dominio y la optimizamos</h3>
+          <p>
+            Publicamos la versión final en tu dominio, la alineamos con tu ficha de Google Places y
+            dejamos claros tus servicios, ubicación y datos para que buscadores y asistentes como
+            ChatGPT puedan entender mejor tu negocio.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cp-section" id="plan" aria-labelledby="plan-title">
+      <div class="cp-section-header">
+        <p class="cp-kicker">Qué pasa después</p>
+        <h2 class="cp-section-title" id="plan-title">No es solo una plantilla. Es un servicio de diseño continuo.</h2>
+        <p class="cp-section-copy">
+          Cuando activas un plan, nosotros seguimos a cargo del diseño y de las mejoras. La idea es
+          que tu página evolucione con tu negocio sin que tengas que aprender herramientas nuevas.
+        </p>
+      </div>
+
+      <div class="cp-card-grid">
+        <article class="cp-card">
+          <div class="cp-card-label">Diseño humano</div>
+          <h3>Terminamos la página contigo</h3>
+          <p>
+            Ajustamos estructura, textos, fotos, colores, llamados a la acción y cualquier detalle que
+            haga falta para que la versión final sí represente tu negocio.
+          </p>
+        </article>
+
+        <article class="cp-card">
+          <div class="cp-card-label">Dominio</div>
+          <h3>La pasamos a tu dominio propio</h3>
+          <p>
+            Movemos la página a tu dominio para que tengas una presencia más seria y una base más
+            sólida para Google, mapas, enlaces y campañas futuras.
+          </p>
+        </article>
+
+        <article class="cp-card">
+          <div class="cp-card-label">Visibilidad</div>
+          <h3>La alineamos con Google y con IA</h3>
+          <p>
+            Organizamos servicios, horarios, ubicación, preguntas frecuentes y señales de contacto para
+            que Google y asistentes como ChatGPT tengan contexto claro sobre tu negocio.
+          </p>
+        </article>
+
+        <article class="cp-card">
+          <div class="cp-card-label">Ediciones</div>
+          <h3>Seguimos haciendo cambios por ti</h3>
+          <p>
+            Si más adelante quieres cambiar fotos, texto, promociones, precios o servicios, nos lo
+            mandas y nosotros lo actualizamos contigo.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cp-section cp-support-band" aria-labelledby="support-title">
+      <div class="cp-support-copy">
+        <p class="cp-kicker">Acompañamiento real</p>
+        <h2 class="cp-section-title" id="support-title">Tu página no se queda congelada después de salir al aire</h2>
+        <p class="cp-section-copy">
+          Seguimos trabajando contigo con el tiempo. Eso incluye cambios normales del negocio y también
+          campañas o temporadas donde una página actualizada puede ayudarte a vender más.
+        </p>
+
+        <ul class="cp-support-list">
+          <li>Actualizamos promociones, servicios, horarios y mensajes cuando tu negocio cambie.</li>
+          <li>Podemos preparar versiones estacionales como Navidad, regreso a clases, verano o eventos especiales.</li>
+          <li>Te ayudamos a mantener el contenido claro para que clientes, Google y asistentes de IA entiendan lo que ofreces hoy.</li>
+        </ul>
+      </div>
+
+      <aside class="cp-seasonal-card">
+        <p class="cp-kicker">Ejemplos</p>
+        <h3>Campañas que sí podemos mover contigo</h3>
+        <p>
+          La página puede acompañar tus temporadas fuertes. No se trata solo de "publicarla" y ya.
+          La usamos como herramienta viva para traer más clientes.
+        </p>
+        <ul>
+          <li>Navidad: promos, paquetes de regalo, horarios especiales, cenas o menús de temporada.</li>
+          <li>Temporadas altas: paquetes, reservas, nuevos servicios, agenda o lanzamientos.</li>
+          <li>Actualizaciones continuas: cambios de equipo, testimonios, fotos nuevas y nuevos productos.</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="cp-section cp-chat-section" id="chat-funnel" aria-labelledby="chat-title">
+      <div class="cp-chat-layout">
+        <aside class="cp-chat-aside">
+          <p class="cp-kicker">Empieza ahora</p>
+          <h2 id="chat-title">Cuéntanos de tu negocio y preparamos tu página de muestra</h2>
+          <p>
+            Abajo está el chatbot estilo WhatsApp. Te va guiando paso a paso y nos deja todo listo para
+            que el equipo empiece a construir tu primera versión.
+          </p>
+
+          <ul class="cp-check-list">
+            <li>Toma pocos minutos y no necesitas tener todo perfecto antes de empezar.</li>
+            <li>Si ya apareces en Google, intentaremos usar esa información como punto de partida.</li>
+            <li>Puedes subir fotos y logo para que el diseño salga mejor desde la primera muestra.</li>
+          </ul>
+
+          <div class="cp-aside-note">
+            Al terminar el chat, guardamos tu información y seguimos por WhatsApp con la muestra y los
+            siguientes pasos para activarla.
+          </div>
+        </aside>
+
+        <div class="cp-chat-host">
+          <div id="chat-root" class="cp-chat-root"></div>
         </div>
       </div>
+    </section>
+  </main>
 
-      <div class="cp-step">
-        <div class="cp-step-num">3</div>
-        <div>
-          <h3>Verificas la información campo por campo</h3>
-          <p>Te mostramos cada dato (nombre, dirección, teléfono, horario, descripción) y tú confirmas que está correcto. Si algo no, lo editas ahí mismo en el chat.</p>
-        </div>
-      </div>
+  <footer class="cp-footer">
+    Esta experiencia está pensada para ayudarte a empezar rápido. Si prefieres volver primero a la
+    página principal, puedes hacerlo desde <a href="/">AhoraTengoPagina</a>.
+  </footer>
 
-      <div class="cp-step">
-        <div class="cp-step-num">4</div>
-        <div>
-          <h3>Eliges tus fotos y tu logo</h3>
-          <p>Te mostramos las fotos que encontramos en Google y tú marcas cuáles quieres. Puedes subir fotos adicionales y tu logo, o dejarnos generar un logo simple con las iniciales de tu negocio.</p>
-        </div>
-      </div>
+  <a class="cp-floating-cta" href="#chat-funnel">Empezar por chat</a>
 
-      <div class="cp-step">
-        <div class="cp-step-num">5</div>
-        <div>
-          <h3>Datos de contacto y listo</h3>
-          <p>Nos das tu WhatsApp personal y un correo para coordinar contigo. Eso no aparece en tu página — es solo para que nuestro equipo te contacte cuando esté lista la vista previa.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- What to have ready -->
-  <section class="cp-section">
-    <h2>Lo que te conviene tener a la mano</h2>
-    <p class="cp-lead">No es obligatorio — el chat te guía aunque no tengas todo. Pero si lo tienes listo, terminas más rápido.</p>
-
-    <div class="cp-checklist">
-      <div class="cp-checklist-item">El nombre exacto de tu negocio (como aparece en Google si ya estás)</div>
-      <div class="cp-checklist-item">La ciudad donde está tu negocio</div>
-      <div class="cp-checklist-item">Tu horario de atención semanal</div>
-      <div class="cp-checklist-item">El número de WhatsApp donde te contactan tus clientes</div>
-      <div class="cp-checklist-item">2 a 5 fotos de tu local, productos o servicios</div>
-      <div class="cp-checklist-item">Tu logo (si tienes — si no, lo creamos por ti)</div>
-      <div class="cp-checklist-item">Una breve descripción de qué hace tu negocio especial</div>
-      <div class="cp-checklist-item">Links a tus redes sociales (Instagram, Facebook, etc.)</div>
-    </div>
-    <p class="cp-note">Si no tienes algún dato ahora, sáltalo — siempre puedes agregarlo después por WhatsApp.</p>
-  </section>
-
-  <!-- After the chat -->
-  <section class="cp-section">
-    <h2>Qué pasa cuando termines el chat</h2>
-    <p class="cp-lead">El chat solo recopila la información. A partir de ahí, nuestro equipo se encarga del resto.</p>
-
-    <div class="cp-steps">
-      <div class="cp-step">
-        <div class="cp-step-num">1</div>
-        <div>
-          <h3>Diseñamos tu vista previa (24–72 horas)</h3>
-          <p>Tomamos toda la información que diste, organizamos las fotos, escogemos las mejores reseñas y armamos una primera versión de tu página. Te la enviamos por WhatsApp para que la veas.</p>
-        </div>
-      </div>
-
-      <div class="cp-step">
-        <div class="cp-step-num">2</div>
-        <div>
-          <h3>Tú la revisas y nos dices si quieres cambios</h3>
-          <p>Por WhatsApp nos dices "cámbiame este texto", "esta foto no me gusta", "ponle más color verde", lo que sea. Hacemos los ajustes y te volvemos a enviar.</p>
-        </div>
-      </div>
-
-      <div class="cp-step">
-        <div class="cp-step-num">3</div>
-        <div>
-          <h3>Publicamos tu página en internet</h3>
-          <p>Cuando tú estés contento, le damos publicar. Tu página queda con su propio link, optimizada para celular y conectada a Google para que tus clientes te encuentren.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How to edit later -->
-  <section class="cp-section">
-    <h2>Cómo editas tu página después de publicarla</h2>
-    <p class="cp-lead">No tienes que aprender nada técnico. Tú nos escribes por WhatsApp y nosotros lo cambiamos.</p>
-
-    <div class="cp-edit-grid">
-      <div class="cp-edit-card">
-        <div class="cp-edit-icon">💬</div>
-        <h4>Mandas un WhatsApp</h4>
-        <p>"Cambia el horario de los sábados a 10–6" o "ponme estas 3 fotos nuevas". Mensajes normales, en tu idioma.</p>
-      </div>
-      <div class="cp-edit-card">
-        <div class="cp-edit-icon">⚡</div>
-        <h4>Lo cambiamos en menos de 24 horas</h4>
-        <p>Hacemos el cambio, te avisamos cuando esté listo y tú revisas. Sin esperas largas, sin papeleos.</p>
-      </div>
-      <div class="cp-edit-card">
-        <div class="cp-edit-icon">∞</div>
-        <h4>Cambios ilimitados</h4>
-        <p>No cobramos por cambio. Cambias precios, fotos, textos, horarios — todo lo que necesites mientras tu plan esté activo.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ specific to the creation process -->
-  <section class="cp-section">
-    <h2>Dudas comunes antes de empezar</h2>
-    <div class="cp-faq">
-      <div class="cp-faq-item">
-        <h4>¿Cuánto tarda el chat?</h4>
-        <p>Entre 3 y 5 minutos si ya estás en Google Maps. Un poco más si tenemos que llenar todo a mano.</p>
-      </div>
-      <div class="cp-faq-item">
-        <h4>¿Tengo que pagar algo en este momento?</h4>
-        <p>No. El chat solo recopila tu información. No te pedimos tarjeta. Cuando te enviemos la vista previa decides si te gusta y, si quieres seguir, ahí coordinamos el plan.</p>
-      </div>
-      <div class="cp-faq-item">
-        <h4>¿Y si me equivoco escribiendo algo?</h4>
-        <p>El chat te muestra cada dato para que confirmes o edites antes de enviar. Y aunque algo se vaya con error, lo arreglamos cuando revises la vista previa.</p>
-      </div>
-      <div class="cp-faq-item">
-        <h4>¿Puedo pausar y seguir después?</h4>
-        <p>Mientras no cierres el chat, sí. Si lo cierras pierdes el avance — por eso recomendamos terminarlo de una. Son pocos minutos.</p>
-      </div>
-      <div class="cp-faq-item">
-        <h4>¿Mis datos están seguros?</h4>
-        <p>Sí. Solo nuestro equipo de diseño los ve para armar tu página. No los compartimos con nadie más.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Final CTA -->
-  <section class="cp-cta-final">
-    <h2>¿Listo? Vamos a crear tu página.</h2>
-    <p>El chat te toma menos de 5 minutos. Tu página queda lista para revisar en 24–72 horas.</p>
-    <a href="/crear-tu-pagina/chat" class="cp-hero-cta">Crear mi página ahora</a>
-  </section>
-
-  <!-- Sticky CTA — always visible so the user can start the chat from anywhere on the page -->
-  <div class="cp-sticky">
-    <div class="cp-sticky-inner">
-      <a href="/crear-tu-pagina/chat" class="cp-sticky-btn">Crear mi página</a>
-      <span class="cp-sticky-meta">Toma menos de 5 minutos</span>
-    </div>
-  </div>
-
+  <script type="text/babel" data-presets="react" src="/create-page/app.js"></script>
 </body>
 </html>
