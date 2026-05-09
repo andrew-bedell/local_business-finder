@@ -1,5 +1,7 @@
 // Shared logic: download external photo → upload to Supabase Storage → update business_photos record
 
+const { getPublicPhotoUrl } = require('./photo-urls.js');
+
 /**
  * Persist a single photo from its external URL to Supabase Storage.
  * Never throws — returns a result object.
@@ -41,7 +43,7 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }) {
     }
 
     const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.length > 5 * 1024 * 1024) {
+    if (buffer.length > 20 * 1024 * 1024) {
       return { success: false, error: `Image too large: ${(buffer.length / 1024 / 1024).toFixed(1)}MB` };
     }
 
@@ -97,13 +99,6 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }) {
   } catch (err) {
     return { success: false, error: err.message || String(err) };
   }
-}
-
-/**
- * Build the public URL for a photo stored in Supabase Storage.
- */
-function getPublicPhotoUrl(supabaseUrl, storagePath) {
-  return `${supabaseUrl}/storage/v1/object/public/photos/${storagePath}`;
 }
 
 module.exports = { persistPhotoFromRecord, getPublicPhotoUrl };

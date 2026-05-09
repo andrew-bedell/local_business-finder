@@ -1,10 +1,12 @@
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+
 // Vercel serverless function: Customer rejects draft HTML
 // POST { editRequestId, reason } — deletes draft_html, sets status to customer_rejected
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -23,9 +25,10 @@ export default async function handler(req, res) {
   };
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
     // 1. Fetch the edit request
     const erRes = await fetch(
-      `${supabaseUrl}/rest/v1/edit_requests?id=eq.${encodeURIComponent(editRequestId)}&select=*`,
+      `${supabaseUrl}/rest/v1/edit_requests?id=eq.${encodeURIComponent(editRequestId)}&customer_id=eq.${encodeURIComponent(resolved.customerId)}&select=*`,
       { headers: supabaseHeaders }
     );
     const erData = await erRes.json();
@@ -43,7 +46,7 @@ export default async function handler(req, res) {
     // 2. Remove draft_html from website config
     if (websiteId) {
       const webRes = await fetch(
-        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=id,config`,
+        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&business_id=eq.${encodeURIComponent(resolved.businessId)}&select=id,config`,
         { headers: supabaseHeaders }
       );
       const webData = await webRes.json();
@@ -77,6 +80,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error('Customer reject edit error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

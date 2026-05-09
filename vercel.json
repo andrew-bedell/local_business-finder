@@ -26,6 +26,7 @@
     }
   },
   "rewrites": [
+    { "source": "/crear-tu-pagina/chat", "destination": "/create-page/chat.html" },
     { "source": "/crear-tu-pagina", "destination": "/create-page/index.html" },
     { "source": "/crear-tu-pagina/chat", "destination": "/create-page/chat.html" },
     { "source": "/employee/explainer", "destination": "/employee/explainer.html" },

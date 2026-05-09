@@ -1,6 +1,14 @@
 // Shared website generation pipeline functions
 // Used by both api/customers/generate-website.js and api/cron/generate-websites.js
 
+import { buildWebsiteConfig, hasWebsiteHtml } from './website-config.js';
+import {
+  getPublicPhotoUrl,
+  getOptimizedPhotoUrl,
+  inferPresetFromSection,
+  resolveStoredPhotoLocation,
+} from './photo-urls.js';
+
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
 
 /**
@@ -160,11 +168,21 @@ export function compileBusinessDataForPrompt(business, reviews, photos, socialPr
  */
 export function buildPhotoInventory(photos, supabaseUrl) {
   return (photos || []).map((p, i) => ({
+    bucket: resolveStoredPhotoLocation({
+      url: p.url,
+      storagePath: p.storage_path,
+      supabaseUrl,
+    })?.bucket || null,
     id: `${p.source || 'unknown'}_photo_${i}`,
+    originalUrl: p.url || '',
+    storagePath: p.storage_path || null,
     type: p.photo_type || 'unclassified',
-    url: p.storage_path
-      ? `${supabaseUrl}/storage/v1/object/public/photos/${p.storage_path}`
-      : p.url,
+    url: getOptimizedPhotoUrl({
+      url: p.url,
+      storagePath: p.storage_path,
+      supabaseUrl,
+      preset: 'section',
+    }),
   }));
 }
 
@@ -289,6 +307,7 @@ export async function generateAIPhotos(researchReport, businessId, supabaseUrl, 
             business_id: businessId,
             source: 'ai_generated',
             photo_type: 'ai_generated',
+            storage_path: result.storagePath || null,
             url: result.url,
             caption: slot.slot,
           }),
@@ -342,33 +361,69 @@ export async function generateAIPhotos(researchReport, businessId, supabaseUrl, 
  * Build a photo manifest that resolves the research report's photo asset plan
  * to concrete URLs from the photo inventory.
  */
-export function buildPhotoManifest(photoAssetPlan, photoInventory) {
-  const usedUrls = new Set();
+export function buildPhotoManifest(photoAssetPlan, photoInventory, supabaseUrl) {
+  const usedPhotoKeys = new Set();
   const manifest = [];
 
+  if ((!photoAssetPlan || photoAssetPlan.length === 0) && photoInventory && photoInventory.length > 0) {
+    const fallback = photoInventory[0];
+    return [
+      {
+        bucket: fallback.bucket || null,
+        section: 'hero',
+        slot: 'fallback',
+        storagePath: fallback.storagePath || null,
+        url: getOptimizedPhotoUrl({
+          url: fallback.originalUrl || fallback.url,
+          storagePath: fallback.storagePath,
+          bucket: fallback.bucket,
+          supabaseUrl,
+          preset: 'hero',
+        }) || fallback.url,
+      },
+    ];
+  }
+
   for (const item of photoAssetPlan) {
-    let url = null;
+    let selectedPhoto = null;
 
     if (item.recommendation === 'use_existing' && item.existingPhotoId) {
-      const match = photoInventory.find(p => p.id === item.existingPhotoId);
-      url = match?.url || null;
+      selectedPhoto = photoInventory.find(p => p.id === item.existingPhotoId) || null;
     }
 
-    if (!url && item.recommendation === 'generate_ai') {
+    if (!selectedPhoto && item.recommendation === 'generate_ai') {
       const section = (item.section || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const match = photoInventory.find(p => p.id.startsWith(`ai_${section}_`));
-      url = match?.url || null;
+      selectedPhoto = photoInventory.find(p => p.id.startsWith(`ai_${section}_`)) || null;
     }
 
     // Fallback: any unused photo
-    if (!url) {
-      const fallback = photoInventory.find(p => !usedUrls.has(p.url));
-      url = fallback?.url || (photoInventory[0]?.url || null);
+    if (!selectedPhoto) {
+      selectedPhoto = photoInventory.find((p) => {
+        const key = p.id || p.storagePath || p.originalUrl || p.url;
+        return !usedPhotoKeys.has(key);
+      }) || photoInventory[0] || null;
     }
 
+    const url = selectedPhoto
+      ? getOptimizedPhotoUrl({
+          url: selectedPhoto.originalUrl || selectedPhoto.url,
+          storagePath: selectedPhoto.storagePath,
+          bucket: selectedPhoto.bucket,
+          supabaseUrl,
+          preset: inferPresetFromSection(item.section, item.slot),
+        }) || selectedPhoto.url
+      : null;
+
     if (url) {
-      usedUrls.add(url);
-      manifest.push({ section: item.section, slot: item.slot, url });
+      const selectedKey = selectedPhoto?.id || selectedPhoto?.storagePath || selectedPhoto?.originalUrl || selectedPhoto?.url;
+      if (selectedKey) usedPhotoKeys.add(selectedKey);
+      manifest.push({
+        bucket: selectedPhoto?.bucket || null,
+        section: item.section,
+        slot: item.slot,
+        storagePath: selectedPhoto?.storagePath || null,
+        url,
+      });
     }
   }
 
@@ -432,8 +487,13 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
 
     if (menuPhotos.length > 0) {
       const latestMenu = menuPhotos[0];
-      const photoUrl = latestMenu.storage_path
-        ? `${supabaseUrl}/storage/v1/object/public/photos/${latestMenu.storage_path}`
+      const photoLocation = resolveStoredPhotoLocation({
+        url: latestMenu.url,
+        storagePath: latestMenu.storage_path,
+        supabaseUrl,
+      });
+      const photoUrl = photoLocation
+        ? getPublicPhotoUrl(supabaseUrl, photoLocation.storagePath, photoLocation.bucket)
         : latestMenu.url;
 
       try {
@@ -488,32 +548,6 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   console.log(`[WebsitePipeline] Generating research report for ${business.name}...`);
   const researchReport = await generateResearchReport(businessData, business.name, language);
 
-  // Create generated_websites row
-  console.log(`[WebsitePipeline] Creating website record...`);
-  const configObj = { researchReport };
-  if (autoGenerated) configObj.auto_generated = true;
-
-  const insertWebRes = await fetch(
-    `${supabaseUrl}/rest/v1/generated_websites`,
-    {
-      method: 'POST',
-      headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-      body: JSON.stringify({
-        business_id: businessId,
-        template_name: 'ai_generated',
-        status: 'draft',
-        version: 1,
-        config: configObj,
-      }),
-    }
-  );
-  const insertWebData = await insertWebRes.json();
-  if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
-    console.error('[WebsitePipeline] Failed to create website record:', insertWebData);
-    throw new Error('Failed to create website record');
-  }
-  const websiteId = insertWebData[0].id;
-
   // Generate AI photos
   console.log(`[WebsitePipeline] Generating AI photos...`);
   const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders);
@@ -525,14 +559,17 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
     const idx = sectionCounts[section] || 0;
     sectionCounts[section] = idx + 1;
     photoInventory.push({
+      bucket: 'photos',
       id: `ai_${section}_${idx}`,
+      originalUrl: photo.url,
+      storagePath: photo.storagePath || null,
       type: 'ai_generated',
       url: photo.url,
     });
   });
 
   // Build photo manifest
-  const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory);
+  const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
 
   // Write content
   console.log(`[WebsitePipeline] Writing website content...`);
@@ -591,27 +628,36 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
     throw new Error('Website generation returned no HTML');
   }
 
-  // Save HTML to website record
-  console.log(`[WebsitePipeline] Saving HTML...`);
-  const saveConfig = { researchReport, websiteContent, draft_html: generateResult.html, html: generateResult.html };
-  if (autoGenerated) saveConfig.auto_generated = true;
-
-  const updateWebRes = await fetch(
-    `${supabaseUrl}/rest/v1/generated_websites?id=eq.${websiteId}`,
+  // Create generated_websites row only after we have valid HTML.
+  // This prevents orphan preview records that point to empty config blobs.
+  console.log(`[WebsitePipeline] Creating website record with completed HTML...`);
+  const insertWebRes = await fetch(
+    `${supabaseUrl}/rest/v1/generated_websites`,
     {
-      method: 'PATCH',
-      headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+      method: 'POST',
+      headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
       body: JSON.stringify({
+        business_id: businessId,
+        template_name: 'ai_generated',
         status: 'draft',
-        config: saveConfig,
+        version: 1,
+        generated_at: new Date().toISOString(),
+        config: buildWebsiteConfig({
+          researchReport,
+          websiteContent,
+          photoManifest,
+          html: generateResult.html,
+          autoGenerated,
+        }),
       }),
     }
   );
-  if (!updateWebRes.ok) {
-    const errText = await updateWebRes.text().catch(() => '');
-    console.error('[WebsitePipeline] Failed to save HTML:', errText);
-    throw new Error('Failed to save generated HTML');
+  const insertWebData = await insertWebRes.json();
+  if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
+    console.error('[WebsitePipeline] Failed to create website record:', insertWebData);
+    throw new Error('Failed to create website record');
   }
+  const websiteId = insertWebData[0].id;
 
   // Publish website
   console.log(`[WebsitePipeline] Publishing website...`);
@@ -630,6 +676,45 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
     console.warn(`[WebsitePipeline] Publish failed for ${business.name}:`, errText.substring(0, 200));
   }
 
+  await cleanupIncompleteWebsiteDrafts({
+    businessId,
+    excludeWebsiteId: websiteId,
+    supabaseUrl,
+    supabaseHeaders,
+  });
+
   console.log(`[WebsitePipeline] Complete for ${business.name}! Published URL: ${publishedUrl}`);
   return { websiteId, publishedUrl };
+}
+
+async function cleanupIncompleteWebsiteDrafts({ businessId, excludeWebsiteId, supabaseUrl, supabaseHeaders }) {
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&status=eq.draft&select=id,config&order=created_at.asc&limit=50`,
+      { headers: supabaseHeaders }
+    );
+
+    if (!response.ok) return;
+
+    const rows = await response.json();
+    const staleIds = (Array.isArray(rows) ? rows : [])
+      .filter((row) => row.id !== excludeWebsiteId && !hasWebsiteHtml(row.config))
+      .map((row) => row.id);
+
+    if (staleIds.length === 0) return;
+
+    const deleteResponse = await fetch(
+      `${supabaseUrl}/rest/v1/generated_websites?id=in.(${staleIds.map(encodeURIComponent).join(',')})`,
+      {
+        method: 'DELETE',
+        headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
+      }
+    );
+
+    if (!deleteResponse.ok) {
+      console.warn(`[WebsitePipeline] Failed to clean ${staleIds.length} incomplete draft website(s) for business ${businessId}`);
+    }
+  } catch (err) {
+    console.warn(`[WebsitePipeline] Incomplete draft cleanup failed for business ${businessId}:`, err.message);
+  }
 }

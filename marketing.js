@@ -12,8 +12,8 @@
       nav_cta: 'Empieza gratis',
 
       hero_title: 'Tus clientes ya te buscan.<br><span>Dales lo que necesitan.</span>',
-      hero_sub: 'Tu negocio aparece en Google, pero sin página web tus clientes no encuentran precios, horarios ni cómo contactarte. Nosotros lo resolvemos en 72 horas.',
-      hero_cta: 'Empieza gratis — página lista en 72 horas',
+      hero_sub: 'Tu negocio aparece en Google, pero sin página web tus clientes no encuentran precios, horarios ni cómo contactarte. Nosotros lo resolvemos en 20 minutos.',
+      hero_cta: 'Empieza gratis — página lista en 20 minutos',
       hero_how: 'Ver Cómo Funciona',
 
       proof_businesses: 'Negocios atendidos',
@@ -81,7 +81,7 @@
       faq_q1: 'Necesito saber de tecnología para tener mi página?',
       faq_a1: 'No, para nada. Nosotros nos encargamos de todo: diseño, contenido, publicación y mantenimiento. Tú solo nos dices qué quieres y nosotros lo hacemos realidad.',
       faq_q2: 'Cuánto tiempo toma tener mi página lista?',
-      faq_a2: 'Tu página estará lista en 72 horas o menos. Recopilamos la información de tu negocio, creamos tu página y te la enviamos para que la revises antes de publicarla.',
+      faq_a2: 'Tu página estará lista en 20 minutos o menos. Recopilamos la información de tu negocio, creamos tu página y te la enviamos para que la revises antes de publicarla.',
       faq_q3: 'Puedo cancelar en cualquier momento?',
       faq_a3: 'Sí, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu página se desactiva al final del período pagado.',
       faq_q4: 'Qué pasa si quiero hacer cambios en mi página?',
@@ -90,9 +90,9 @@
       faq_a5: 'Absolutamente. Los negocios pequeños son los que más se benefician. Tus clientes ya te buscan en Google — una página web les da la información que necesitan para elegirte a ti en vez de a la competencia.',
 
       cta_title: 'Tus clientes ya te están buscando. Dales una razón para quedarse.',
-      cta_desc: 'Cada día sin página web es dinero que pierdes. Empieza hoy y tenla lista en 72 horas.',
-      cta_btn: 'Empieza gratis — página lista en 72 horas',
-      sticky_cta: 'Empieza gratis — página lista en 72 horas',
+      cta_desc: 'Cada día sin página web es dinero que pierdes. Empieza hoy y tenla lista en 20 minutos.',
+      cta_btn: 'Empieza gratis — página lista en 20 minutos',
+      sticky_cta: 'Empieza gratis — página lista en 20 minutos',
 
       footer_desc: 'Creamos páginas web profesionales para negocios locales en Latinoamérica. Simple, rápido y sin complicaciones.',
       footer_links: 'Enlaces',
@@ -111,7 +111,7 @@
       modal_email_ph: 'Ej: maria@gmail.com',
       modal_address_label: 'Dirección de tu negocio',
       modal_address_ph: 'Ej: Calle 60 #500, Centro, Mérida',
-      modal_disclaimer: 'Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 72 horas.',
+      modal_disclaimer: 'Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 20 minutos.',
       modal_submit: 'Hablar con mi diseñador \u2192',
       modal_sending: 'Enviando...',
       modal_error: 'Hubo un error. Por favor intenta de nuevo.',
@@ -126,8 +126,8 @@
       nav_cta: 'Start free',
 
       hero_title: 'Your customers are already looking.<br><span>Give them what they need.</span>',
-      hero_sub: 'Your business shows up on Google, but without a website your customers can\'t find prices, hours, or how to reach you. We fix that in 72 hours.',
-      hero_cta: 'Start free — website ready in 72 hours',
+      hero_sub: 'Your business shows up on Google, but without a website your customers can\'t find prices, hours, or how to reach you. We fix that in 20 minutes.',
+      hero_cta: 'Start free — website ready in 20 minutes',
       hero_how: 'See How It Works',
 
       proof_businesses: 'Businesses served',
@@ -195,7 +195,7 @@
       faq_q1: 'Do I need to know about technology to have my website?',
       faq_a1: 'Not at all. We handle everything: design, content, publishing, and maintenance. You just tell us what you want and we make it happen.',
       faq_q2: 'How long does it take to get my website ready?',
-      faq_a2: 'Your website will be ready in 72 hours or less. We gather your business information, create your website, and send it for your review before publishing.',
+      faq_a2: 'Your website will be ready in 20 minutes or less. We gather your business information, create your website, and send it for your review before publishing.',
       faq_q3: 'Can I cancel at any time?',
       faq_a3: 'Yes, you can cancel whenever you want. No long-term contracts or penalties. If you cancel, your website is deactivated at the end of the paid period.',
       faq_q4: 'What if I want to make changes to my website?',
@@ -204,9 +204,9 @@
       faq_a5: 'Absolutely. Small businesses benefit the most. Your customers are already searching for you on Google — a website gives them the information they need to choose you over the competition.',
 
       cta_title: 'Your customers are already searching for you. Give them a reason to stay.',
-      cta_desc: 'Every day without a website is money you\'re losing. Start today and have it ready in 72 hours.',
-      cta_btn: 'Start free — website ready in 72 hours',
-      sticky_cta: 'Start free — website ready in 72 hours',
+      cta_desc: 'Every day without a website is money you\'re losing. Start today and have it ready in 20 minutes.',
+      cta_btn: 'Start free — website ready in 20 minutes',
+      sticky_cta: 'Start free — website ready in 20 minutes',
 
       footer_desc: 'We create professional websites for local businesses in Latin America. Simple, fast, and hassle-free.',
       footer_links: 'Links',
@@ -225,7 +225,7 @@
       modal_email_ph: 'E.g.: maria@gmail.com',
       modal_address_label: 'Your business address',
       modal_address_ph: 'E.g.: 123 Main St, Merida',
-      modal_disclaimer: 'When you click, we\'ll contact you via WhatsApp. Tell us a bit about your business and your personal designer will have a page ready for you to review in 72 hours.',
+      modal_disclaimer: 'When you click, we\'ll contact you via WhatsApp. Tell us a bit about your business and your personal designer will have a page ready for you to review in 20 minutes.',
       modal_submit: 'Talk to my designer \u2192',
       modal_sending: 'Sending...',
       modal_error: 'There was an error. Please try again.',
@@ -447,12 +447,17 @@
     });
   });
 
-  // ── Lead Capture Modal ──
+  // ── Create-Page CTAs ──
+  // Every "Empieza gratis" / "Crear mi página" button on marketing pages now leads into
+  // the in-app WhatsApp-style chat flow at /crear-tu-pagina/chat. The legacy lead modal
+  // is kept in the DOM for now but no longer opened from these CTAs.
+  var CHAT_URL = '/crear-tu-pagina/chat';
+  function goToChat(e) {
+    if (e) e.preventDefault();
+    window.location.href = CHAT_URL;
+  }
   document.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      openModal();
-    });
+    btn.addEventListener('click', goToChat);
   });
 
   function openModal() {
@@ -620,10 +625,7 @@
   if (stickyCta) {
     var stickyBtn = stickyCta.querySelector('[data-open-modal]');
     if (stickyBtn) {
-      stickyBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        openModal();
-      });
+      stickyBtn.addEventListener('click', goToChat);
     }
     // Show sticky CTA after scrolling past hero
     var heroEl = document.querySelector('.m-hero');
@@ -671,12 +673,9 @@
           return renderPricingCard(p, isFeatured);
         }).join('');
 
-        // Attach CTA click handlers
+        // Attach CTA click handlers — free-tier pricing cards lead into the chat flow
         pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            openModal();
-          });
+          btn.addEventListener('click', goToChat);
         });
 
         // Add reveal animation
@@ -739,10 +738,7 @@
       '</div>';
 
     pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        openModal();
-      });
+      btn.addEventListener('click', goToChat);
     });
   }
 

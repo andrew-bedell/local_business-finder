@@ -27,24 +27,9 @@ SET enrichment_status = CASE
     SELECT 1
     FROM business_photos bp
     WHERE bp.business_id = b.id
-      AND bp.source IN ('google', 'facebook', 'instagram')
+      AND bp.source = 'google'
     LIMIT 1
   )
-    OR EXISTS (
-      SELECT 1
-      FROM business_reviews br
-      WHERE br.business_id = b.id
-      LIMIT 1
-    )
-    OR EXISTS (
-      SELECT 1
-      FROM business_social_profiles sp
-      WHERE sp.business_id = b.id
-      LIMIT 1
-    )
-    OR COALESCE(array_length(b.service_options, 1), 0) > 0
-    OR COALESCE(array_length(b.amenities, 1), 0) > 0
-    OR COALESCE(array_length(b.highlights, 1), 0) > 0
     THEN 'completed'
   ELSE 'pending'
 END
@@ -58,6 +43,17 @@ UPDATE businesses
 SET enrichment_last_finished_at = NOW()
 WHERE enrichment_last_finished_at IS NULL
   AND enrichment_status IN ('completed', 'skipped');
+
+UPDATE businesses AS b
+SET enrichment_last_finished_at = NULL
+WHERE enrichment_status <> 'skipped'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM business_photos bp
+    WHERE bp.business_id = b.id
+      AND bp.source = 'google'
+    LIMIT 1
+  );
 
 UPDATE businesses
 SET enrichment_next_retry_at = NULL

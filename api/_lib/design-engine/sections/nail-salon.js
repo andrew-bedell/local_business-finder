@@ -1,6 +1,8 @@
 // Design Engine V2 — Nail salon section renderers
 // Business-type-specific: nail services with pricing, design gallery portfolio
 
+import { buildResponsiveImageTag } from '../image-helpers.js';
+
 function esc(str) {
   if (!str) return '';
   return String(str)
@@ -169,7 +171,7 @@ export function designGallerySection(content, photos) {
       <div class="h-scroll reveal" style="padding-left:3rem;">
         ${galleryPhotos.map((url, i) => `
         <div class="h-scroll__item">
-          <img src="${esc(url)}" alt="Diseño ${i + 1}" loading="lazy">
+          ${buildResponsiveImageTag({ url, alt: `Diseño ${i + 1}`, preset: 'gallery', sizes: '(max-width: 768px) 82vw, 36vw' })}
         </div>`).join('')}
       </div>
     </section>`,

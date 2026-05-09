@@ -3,6 +3,7 @@
 
 import { sendEmail } from '../_lib/sendgrid.js';
 import { getTemplateForTrigger } from '../_lib/email-templates.js';
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -24,10 +25,10 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { business_id, customer_id, website_id, request_type, description, priority, element_type, element_selector, element_screenshot_url, current_value, ai_conversation } = req.body || {};
+  const { website_id, request_type, description, priority, element_type, element_selector, element_screenshot_url, current_value, ai_conversation } = req.body || {};
 
-  if (!business_id || !customer_id || !request_type || !description) {
-    return res.status(400).json({ error: 'Missing required fields: business_id, customer_id, request_type, description' });
+  if (!request_type || !description) {
+    return res.status(400).json({ error: 'Missing required fields: request_type, description' });
   }
 
   const supabaseHeaders = {
@@ -37,6 +38,19 @@ export default async function handler(req, res) {
   };
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
+
+    if (website_id) {
+      const websiteRes = await fetch(
+        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(website_id)}&business_id=eq.${encodeURIComponent(resolved.businessId)}&select=id`,
+        { headers: supabaseHeaders }
+      );
+      const websiteRows = websiteRes.ok ? await websiteRes.json() : [];
+      if (!Array.isArray(websiteRows) || websiteRows.length === 0) {
+        return res.status(403).json({ error: 'Website access denied' });
+      }
+    }
+
     // Insert edit request
     const insertRes = await fetch(
       `${supabaseUrl}/rest/v1/edit_requests`,
@@ -44,8 +58,8 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
         body: JSON.stringify({
-          business_id,
-          customer_id,
+          business_id: resolved.businessId,
+          customer_id: resolved.customerId,
           website_id: website_id || null,
           request_type,
           description,
@@ -73,13 +87,13 @@ export default async function handler(req, res) {
     try {
       // Look up customer email and business name
       const custRes = await fetch(
-        `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(customer_id)}&select=email,contact_name`,
+        `${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(resolved.customerId)}&select=email,contact_name`,
         { headers: supabaseHeaders }
       );
       const custs = await custRes.json();
 
       const bizRes = await fetch(
-        `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(business_id)}&select=name`,
+        `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(resolved.businessId)}&select=name`,
         { headers: supabaseHeaders }
       );
       const bizData = await bizRes.json();
@@ -119,6 +133,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, editRequest });
   } catch (err) {
     console.error('Create edit request error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

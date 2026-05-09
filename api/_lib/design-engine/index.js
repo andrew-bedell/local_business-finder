@@ -14,6 +14,7 @@ import {
   normalizeBusinessType,
   getBusinessSchemaType,
 } from './taxonomy.js';
+import { formatBusinessName } from '../format-business-name.js';
 
 import {
   heroSection, aboutSection, servicesSection, whyChooseUsSection,
@@ -94,28 +95,32 @@ function esc(str) {
  * @returns {string} Complete HTML document
  */
 export function assembleWebsite({ content, researchReport, photoManifest, business }) {
+  const normalizedBusiness = {
+    ...business,
+    name: formatBusinessName(business?.name),
+  };
   const lang = business.language === 'en' ? 'en' : 'es';
   const report = researchReport || {};
   const photos = photoManifest || [];
-  const businessType = normalizeBusinessType(business.category, business.subcategory);
+  const businessType = normalizeBusinessType(normalizedBusiness.category, normalizedBusiness.subcategory);
 
   // 1. Select variation and mood
   const variationName = selectVariation({
-    businessName: business.name,
-    category: business.category,
-    subcategory: business.subcategory,
+    businessName: normalizedBusiness.name,
+    category: normalizedBusiness.category,
+    subcategory: normalizedBusiness.subcategory,
     content,
     photoManifest: photos,
   });
   const mood = selectMood(
-    business.category,
-    business.subcategory,
+    normalizedBusiness.category,
+    normalizedBusiness.subcategory,
     report.toneRecommendations || report.designPalette?.mood
   );
 
   // 2. Generate font and color CSS
   const { importRule, css: fontVars } = getFontCSS(mood);
-  const colorVars = getColorCSS(report.designPalette, business.category, business.subcategory);
+  const colorVars = getColorCSS(report.designPalette, normalizedBusiness.category, normalizedBusiness.subcategory);
 
   // 3. Get variation module
   const variation = VARIATIONS[variationName] || VARIATIONS.editorial;
@@ -123,21 +128,21 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   // 4. Render all universal sections
   const sectionMap = {};
 
-  sectionMap.hero = heroSection(content, photos, business, content?.cta?.buttonText);
-  sectionMap.about = aboutSection(content, photos, business);
-  sectionMap.services = servicesSection(content, photos, business);
+  sectionMap.hero = heroSection(content, photos, normalizedBusiness, content?.cta?.buttonText);
+  sectionMap.about = aboutSection(content, photos, normalizedBusiness);
+  sectionMap.services = servicesSection(content, photos, normalizedBusiness);
   sectionMap.whyChooseUs = whyChooseUsSection(content);
   sectionMap.testimonials = testimonialsSection(content);
   sectionMap.gallery = gallerySection(content, photos);
-  sectionMap.cta = ctaSection(content, business);
+  sectionMap.cta = ctaSection(content, normalizedBusiness);
   sectionMap.hours = hoursSection(content);
-  sectionMap.contact = contactSection(content, business, photos);
-  sectionMap.footer = footerSection(content, business);
+  sectionMap.contact = contactSection(content, normalizedBusiness, photos);
+  sectionMap.footer = footerSection(content, normalizedBusiness);
 
   // 4b. Render business-type-specific sections
-  const { sections: categorySections } = getCategorySections(business.category, business.subcategory);
+  const { sections: categorySections } = getCategorySections(normalizedBusiness.category, normalizedBusiness.subcategory);
   for (const [key, renderFn] of Object.entries(categorySections)) {
-    const result = renderFn(content, photos, business);
+    const result = renderFn(content, photos, normalizedBusiness);
     if (result && result.html) {
       sectionMap[key] = result;
     }
@@ -150,7 +155,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
     .join('\n');
 
   // 6. Arrange sections using the variation layout
-  const bodyHTML = variation.arrangeSections(sectionMap, content, business);
+  const bodyHTML = variation.arrangeSections(sectionMap, content, normalizedBusiness);
   const availableSections = new Set(
     Object.entries(sectionMap)
       .filter(([, section]) => section && section.html)
@@ -158,18 +163,18 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   );
 
   // 7. Generate nav and WhatsApp FAB
-  const nav = navHTML(business, content?.cta?.buttonText, {
+  const nav = navHTML(normalizedBusiness, content?.cta?.buttonText, {
     businessType,
     availableSections,
     content,
   });
-  const fab = whatsappFAB(business);
+  const fab = whatsappFAB(normalizedBusiness);
 
   // 8. Compose meta tags
-  const metaTitle = esc(content?.meta?.title || `${business.name} — ${business.category || ''}`);
+  const metaTitle = esc(content?.meta?.title || `${normalizedBusiness.name} — ${normalizedBusiness.category || ''}`);
   const metaDesc = esc(content?.meta?.description || '');
   const metaKeywords = esc(content?.meta?.keywords || '');
-  const schema = buildLocalBusinessSchema({ business, content, businessType });
+  const schema = buildLocalBusinessSchema({ business: normalizedBusiness, content, businessType });
 
   // 9. Assemble final HTML
   return `<!DOCTYPE html>
@@ -183,7 +188,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   <meta property="og:title" content="${metaTitle}">
   <meta property="og:description" content="${metaDesc}">
   <meta property="og:type" content="website">
-  ${business.name ? `<meta property="og:site_name" content="${esc(business.name)}">` : ''}
+  ${normalizedBusiness.name ? `<meta property="og:site_name" content="${esc(normalizedBusiness.name)}">` : ''}
   ${schema ? `<script type="application/ld+json">${schema}</script>` : ''}
   <style>
     ${importRule}

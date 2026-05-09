@@ -1,3 +1,5 @@
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+
 // Vercel serverless function: Get analytics stats for a business
 // GET ?businessId=123&days=30
 // Returns: summary stats, daily breakdown, top referrers, device breakdown
@@ -18,9 +20,6 @@ export default async function handler(req, res) {
   }
 
   const { businessId, days = '30' } = req.query;
-  if (!businessId) {
-    return res.status(400).json({ error: 'Missing required query param: businessId' });
-  }
 
   const numDays = Math.min(parseInt(days, 10) || 30, 90);
   const startDate = new Date();
@@ -34,9 +33,15 @@ export default async function handler(req, res) {
   };
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
+    const targetBusinessId = String(businessId || resolved.businessId);
+    if (String(resolved.businessId) !== targetBusinessId) {
+      return res.status(403).json({ error: 'Business access denied' });
+    }
+
     // Fetch raw events for the period
     const eventsRes = await fetch(
-      `${supabaseUrl}/rest/v1/analytics_events?business_id=eq.${encodeURIComponent(businessId)}&created_at=gte.${encodeURIComponent(startIso)}&select=event_type,referrer,device_type,visitor_id,created_at&order=created_at.asc`,
+      `${supabaseUrl}/rest/v1/analytics_events?business_id=eq.${encodeURIComponent(targetBusinessId)}&created_at=gte.${encodeURIComponent(startIso)}&select=event_type,referrer,device_type,visitor_id,created_at&order=created_at.asc`,
       { headers }
     );
 
@@ -50,7 +55,7 @@ export default async function handler(req, res) {
     // Also try to get pre-computed summaries
     const startDateStr = startDate.toISOString().split('T')[0];
     const summariesRes = await fetch(
-      `${supabaseUrl}/rest/v1/analytics_summaries?business_id=eq.${encodeURIComponent(businessId)}&date=gte.${startDateStr}&order=date.asc`,
+      `${supabaseUrl}/rest/v1/analytics_summaries?business_id=eq.${encodeURIComponent(targetBusinessId)}&date=gte.${startDateStr}&order=date.asc`,
       { headers }
     );
     const summaries = summariesRes.ok ? await summariesRes.json() : [];
@@ -182,6 +187,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('Analytics stats error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

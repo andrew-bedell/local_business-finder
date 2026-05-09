@@ -1,10 +1,12 @@
+import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+
 // Vercel serverless function: Get single edit request with full details
 // GET ?id=<uuid> — returns edit request with all fields
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -17,8 +19,9 @@ export default async function handler(req, res) {
   if (!editRequestId) return res.status(400).json({ error: 'Missing required parameter: id' });
 
   try {
+    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/edit_requests?id=eq.${encodeURIComponent(editRequestId)}&select=*`,
+      `${supabaseUrl}/rest/v1/edit_requests?id=eq.${encodeURIComponent(editRequestId)}&customer_id=eq.${encodeURIComponent(resolved.customerId)}&select=*`,
       {
         headers: {
           'apikey': supabaseKey,
@@ -40,6 +43,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ editRequest: data[0] });
   } catch (err) {
     console.error('Edit request detail error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
   }
 }

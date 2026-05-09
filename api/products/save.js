@@ -1,10 +1,12 @@
 // Vercel serverless function: Create or update a product
 // POST — upsert product record, auto-creates Stripe Product + Price if not provided
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -30,6 +32,9 @@ export default async function handler(req, res) {
 
   let finalStripeProductId = stripe_product_id || null;
   let finalStripePriceId = stripe_price_id || null;
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // When updating an existing product, check if price/currency changed

@@ -1,6 +1,8 @@
 // Server-side enrichment: fetch place details, reviews, photos, and social links
 // from SearchAPI.io and save to Supabase. Called non-blocking after signup.
 
+const { persistPhotoFromRecord } = require('./photo-persist.js');
+
 /**
  * Simple keyword-based sentiment analysis (mirrors employee/app.js logic).
  */
@@ -51,6 +53,27 @@ function reviewHash(source, authorName, text) {
     hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
   }
   return Math.abs(hash).toString(36);
+}
+
+function buildApiFailure(stepName, status, errorText) {
+  const detail = truncateErrorDetail(errorText);
+  const reason = detail
+    ? `${stepName}_http_${status}:${detail}`
+    : `${stepName}_http_${status}`;
+
+  return {
+    ok: false,
+    status,
+    reason,
+    detail: detail || null,
+  };
+}
+
+function truncateErrorDetail(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200);
 }
 
 /**
@@ -124,8 +147,9 @@ async function enrichPlaceDetail({ businessId, placeId, searchApiKey, supabaseUr
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI place detail failed:', res.status);
-    return { ok: false, reason: `place_detail_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI place detail failed:', res.status, errorText);
+    return buildApiFailure('place_detail', res.status, errorText);
   }
 
   const data = await res.json();
@@ -195,8 +219,9 @@ async function enrichReviews({ businessId, placeId, dataId, searchApiKey, supaba
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI reviews failed:', res.status);
-    return { ok: false, reason: `reviews_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI reviews failed:', res.status, errorText);
+    return buildApiFailure('reviews', res.status, errorText);
   }
 
   const data = await res.json();
@@ -230,8 +255,9 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI photos failed:', res.status);
-    return { ok: false, reason: `photos_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI photos failed:', res.status, errorText);
+    return buildApiFailure('photos', res.status, errorText);
   }
 
   const data = await res.json();
@@ -257,12 +283,27 @@ async function enrichPhotos({ businessId, dataId, searchApiKey, supabaseUrl, hea
 
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/business_photos`, {
     method: 'POST',
-    headers: { ...headers, 'Prefer': 'return=minimal' },
+    headers: { ...headers, 'Prefer': 'return=representation' },
     body: JSON.stringify(photoRows),
   });
   if (!insertRes.ok) {
     const errText = await insertRes.text().catch(() => '');
     throw new Error(`photo_insert_failed:${errText.substring(0, 120)}`);
+  }
+
+  const insertedRows = await insertRes.json().catch(() => []);
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseKey && Array.isArray(insertedRows) && insertedRows.length > 0) {
+    const persistResults = await Promise.allSettled(
+      insertedRows.map((record) => persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }))
+    );
+
+    const failed = persistResults.filter((result) => (
+      result.status !== 'fulfilled' || (!result.value.success && !result.value.skipped)
+    ));
+    if (failed.length > 0) {
+      console.warn(`Google photo persistence incomplete: ${failed.length}/${insertedRows.length} failed`);
+    }
   }
 
   return { ok: true, photoCount: photoRows.length };
@@ -327,8 +368,9 @@ async function enrichSocialProfiles({ businessId, businessName, businessAddress,
 
   const res = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
   if (!res.ok) {
-    console.warn('SearchAPI social discovery failed:', res.status);
-    return { ok: false, reason: `social_discovery_http_${res.status}` };
+    const errorText = await res.text().catch(() => '');
+    console.warn('SearchAPI social discovery failed:', res.status, errorText);
+    return buildApiFailure('social_discovery', res.status, errorText);
   }
 
   const data = await res.json();

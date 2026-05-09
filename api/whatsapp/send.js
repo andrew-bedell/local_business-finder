@@ -2,11 +2,12 @@
 // POST — sends a free-form text or template message to a business owner
 
 import { toE164 } from '../_lib/phone-utils.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -39,6 +40,9 @@ export default async function handler(req, res) {
 
   // Normalize phone to E.164
   const normalizedPhone = toE164(phone) || phone.replace(/[\s\-()]/g, '').replace(/^(?!\+)/, '+');
+
+  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+  if (!session) return;
 
   try {
     // If sending free-form text, check the 24-hour window

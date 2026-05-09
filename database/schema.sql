@@ -383,6 +383,49 @@ CREATE INDEX IF NOT EXISTS idx_services_business ON business_services (business_
 
 
 -- ============================================================================
+-- 5c. SYSTEM_SETTINGS — Runtime controls and global flags
+-- ============================================================================
+-- Small key/value store for operational controls such as globally pausing
+-- enrichment when an upstream API runs out of credits.
+
+CREATE TABLE IF NOT EXISTS system_settings (
+  key                     TEXT PRIMARY KEY,
+  value                   JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- ============================================================================
+-- 5d. ENRICHMENT_RUNS — Audit log of enrichment attempts
+-- ============================================================================
+-- One row per enrichment attempt, regardless of whether the businesses table
+-- has tracking columns available yet.
+
+CREATE TABLE IF NOT EXISTS enrichment_runs (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id             BIGINT REFERENCES businesses(id) ON DELETE CASCADE,
+  place_id                TEXT,
+  trigger_source          TEXT NOT NULL DEFAULT 'manual'
+                            CHECK (trigger_source IN ('manual', 'cron', 'unknown')),
+  status                  TEXT NOT NULL DEFAULT 'started'
+                            CHECK (status IN ('started', 'completed', 'retry', 'failed', 'skipped', 'blocked')),
+  attempt                 INTEGER NOT NULL DEFAULT 0
+                            CHECK (attempt >= 0),
+  data_id                 TEXT,
+  error_message           TEXT,
+  warnings                TEXT[],
+  step_results            JSONB NOT NULL DEFAULT '{}'::jsonb,
+  evidence                JSONB NOT NULL DEFAULT '{}'::jsonb,
+  started_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  finished_at             TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_enrichment_runs_business ON enrichment_runs (business_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_enrichment_runs_status ON enrichment_runs (status, created_at DESC);
+
+
+-- ============================================================================
 -- 6. GENERATED_WEBSITES — Website generation tracking
 -- ============================================================================
 -- One row per generation attempt. Tracks template, status, and selected content.
@@ -433,6 +476,9 @@ ALTER TABLE business_social_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE business_menus ENABLE ROW LEVEL SECURITY;
+ALTER TABLE business_services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE enrichment_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE generated_websites ENABLE ROW LEVEL SECURITY;
 
 -- Open read/write policies for anon key (matches current app setup)
@@ -443,6 +489,9 @@ CREATE POLICY "Allow all access" ON business_social_profiles FOR ALL USING (true
 CREATE POLICY "Allow all access" ON business_photos FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON business_reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON business_menus FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON business_services FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON system_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON enrichment_runs FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON generated_websites FOR ALL USING (true) WITH CHECK (true);
 
 
