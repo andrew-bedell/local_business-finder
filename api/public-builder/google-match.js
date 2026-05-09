@@ -1,16 +1,19 @@
-function namesMatch(a, b) {
-  if (!a || !b) return false;
-  var normalize = function (value) {
-    return String(value || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9 ]/g, '')
-      .trim();
-  };
-  var na = normalize(a);
-  var nb = normalize(b);
-  return na === nb || na.indexOf(nb) !== -1 || nb.indexOf(na) !== -1;
+import { nameMatchScore } from '../_lib/google-places.js';
+
+function rankMatches(items, getName, businessName, minScore) {
+  return (items || [])
+    .map(function (item) {
+      return {
+        item: item,
+        score: nameMatchScore(getName(item), businessName),
+      };
+    })
+    .filter(function (entry) {
+      return entry.score >= minScore;
+    })
+    .sort(function (left, right) {
+      return right.score - left.score;
+    });
 }
 
 function parseAddressComponents(addressStr) {
@@ -159,13 +162,15 @@ async function searchGooglePlaces(apiKey, businessName, city) {
 
   var data = await response.json();
   var places = Array.isArray(data.places) ? data.places : [];
-  return places
-    .filter(function (place) {
-      return namesMatch(place.displayName && place.displayName.text, businessName);
-    })
-    .map(function (place) {
-      return formatAppResultFromPlaces(place, businessName, city);
-    });
+  var getName = function (place) { return place.displayName && place.displayName.text; };
+  var ranked = rankMatches(places, getName, businessName, 0.72);
+  if (!ranked.length && places.length === 1 && nameMatchScore(getName(places[0]), businessName) >= 0.58) {
+    ranked = [{ item: places[0], score: nameMatchScore(getName(places[0]), businessName) }];
+  }
+
+  return ranked.map(function (entry) {
+    return formatAppResultFromPlaces(entry.item, businessName, city);
+  });
 }
 
 async function searchSearchApi(apiKey, businessName, city) {
@@ -180,10 +185,15 @@ async function searchSearchApi(apiKey, businessName, city) {
   }
 
   var data = await response.json();
-  return (data.local_results || []).filter(function (item) {
-    return namesMatch(item.title, businessName);
-  }).map(function (item) {
-    return formatAppResultFromSearchApi(item, businessName, city);
+  var results = Array.isArray(data.local_results) ? data.local_results : [];
+  var getName = function (item) { return item.title; };
+  var ranked = rankMatches(results, getName, businessName, 0.72);
+  if (!ranked.length && results.length === 1 && nameMatchScore(results[0].title, businessName) >= 0.58) {
+    ranked = [{ item: results[0], score: nameMatchScore(results[0].title, businessName) }];
+  }
+
+  return ranked.map(function (entry) {
+    return formatAppResultFromSearchApi(entry.item, businessName, city);
   });
 }
 
