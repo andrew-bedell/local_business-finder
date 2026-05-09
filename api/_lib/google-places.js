@@ -65,22 +65,141 @@ const PLACE_DETAILS_FIELD_MASK = [
   'accessibilityOptions',
 ].join(',');
 
-export function namesMatch(a, b) {
-  if (!a || !b) return false;
+const PLACE_NAME_SUFFIX_MARKERS = [
+  ' sede ',
+  ' sucursal ',
+  ' branch ',
+  ' location ',
+  ' local ',
+  ' mall ',
+  ' centro comercial ',
+  ' cc ',
+];
 
-  const normalize = (value) => String(value || '')
+function normalizePlaceName(value) {
+  return String(value || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9 ]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
 
-  const left = normalize(a);
-  const right = normalize(b);
-  if (!left || !right) return false;
+function trimPlaceNameSuffix(value) {
+  const normalized = ` ${normalizePlaceName(value)} `;
+  let cutIndex = normalized.length;
 
-  return left === right || left.includes(right) || right.includes(left);
+  for (const marker of PLACE_NAME_SUFFIX_MARKERS) {
+    const index = normalized.indexOf(marker);
+    if (index > 0 && index < cutIndex) {
+      cutIndex = index;
+    }
+  }
+
+  return normalized.slice(0, cutIndex).trim();
+}
+
+function compactPlaceName(value) {
+  return normalizePlaceName(value).replace(/\s+/g, '');
+}
+
+function levenshteinDistance(left, right) {
+  if (left === right) return 0;
+  if (!left) return right.length;
+  if (!right) return left.length;
+
+  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  const current = new Array(right.length + 1);
+
+  for (let i = 1; i <= left.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        current[j - 1] + 1,
+        previous[j] + 1,
+        previous[j - 1] + cost
+      );
+    }
+    for (let j = 0; j <= right.length; j += 1) {
+      previous[j] = current[j];
+    }
+  }
+
+  return previous[right.length];
+}
+
+function similarityRatio(left, right) {
+  if (!left || !right) return 0;
+  if (left === right) return 1;
+  const maxLength = Math.max(left.length, right.length);
+  if (!maxLength) return 1;
+  return 1 - (levenshteinDistance(left, right) / maxLength);
+}
+
+function tokenSimilarity(left, right) {
+  const leftTokens = normalizePlaceName(left).split(' ').filter(Boolean);
+  const rightTokens = normalizePlaceName(right).split(' ').filter(Boolean);
+  if (!leftTokens.length || !rightTokens.length) return 0;
+
+  const [shorter, longer] = leftTokens.length <= rightTokens.length
+    ? [leftTokens, rightTokens]
+    : [rightTokens, leftTokens];
+
+  let score = 0;
+  for (const token of shorter) {
+    let best = 0;
+    for (const candidate of longer) {
+      if (candidate === token) {
+        best = 1;
+        break;
+      }
+      best = Math.max(best, similarityRatio(token, candidate));
+    }
+    score += best;
+  }
+
+  return score / shorter.length;
+}
+
+export function nameMatchScore(a, b) {
+  if (!a || !b) return 0;
+
+  const variantsLeft = [
+    normalizePlaceName(a),
+    trimPlaceNameSuffix(a),
+    compactPlaceName(a),
+    trimPlaceNameSuffix(a).replace(/\s+/g, ''),
+  ].filter(Boolean);
+
+  const variantsRight = [
+    normalizePlaceName(b),
+    trimPlaceNameSuffix(b),
+    compactPlaceName(b),
+    trimPlaceNameSuffix(b).replace(/\s+/g, ''),
+  ].filter(Boolean);
+
+  let best = 0;
+
+  for (const left of variantsLeft) {
+    for (const right of variantsRight) {
+      if (left === right) return 1;
+      if (left.includes(right) || right.includes(left)) {
+        best = Math.max(best, Math.min(left.length, right.length) / Math.max(left.length, right.length));
+      }
+      best = Math.max(best, similarityRatio(left, right));
+      if (left.includes(' ') || right.includes(' ')) {
+        best = Math.max(best, tokenSimilarity(left, right));
+      }
+    }
+  }
+
+  return best;
+}
+
+export function namesMatch(a, b, { threshold = 0.72 } = {}) {
+  return nameMatchScore(a, b) >= threshold;
 }
 
 export function humanizePlaceType(value) {
