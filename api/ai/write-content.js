@@ -3,10 +3,12 @@
 
 export const config = { maxDuration: 300 };
 
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -26,6 +28,12 @@ export default async function handler(req, res) {
   if (!researchReport || !rawBusinessData) {
     return res.status(400).json({ error: 'Missing required fields: researchReport, businessData' });
   }
+
+  const session = await ensureEmployeeSession(req, res, {
+    supabaseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+  if (!session) return;
 
   // Strip unpaired Unicode surrogates that break JSON serialization
   const businessData = rawBusinessData.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
@@ -147,6 +155,13 @@ export default async function handler(req, res) {
     "description": "Brief description of service coverage"
   }`;
     categoryInstructions = `\n- CONTRACTOR/TRADES: Include emergency availability info if applicable. List service areas/neighborhoods covered.`;
+  } else if (['retail', 'store', 'shop', 'boutique', 'clothing', 'apparel', 'fashion', 'ropa', 'jewelry', 'joyer', 'shoe', 'zapato', 'gift', 'regalo', 'furniture', 'muebles'].some(k => cat.includes(k))) {
+    categorySchema = `,
+  "products": {
+    "heading": "Products section heading",
+    "items": [{ "name": "Product name", "description": "Brief description", "price": "Price or price range", "badge": "Optional short badge like bestseller or new" }]
+  }`;
+    categoryInstructions = `\n- RETAIL/STORE: Create a real products section with 4-8 featured products or product categories. Include prices or price ranges whenever possible. Use product language instead of service language throughout the copy.`;
   }
 
   const systemPrompt = `You are an expert copywriter specializing in local business websites. Given a research report and business data, write ALL the text content for a business website.
@@ -158,9 +173,21 @@ CRITICAL RULES:
 - Write persuasive, specific copy grounded in actual business data — no generic filler
 - Follow the suggestedSections list from the report for structure
 - Every piece of copy should reference something specific about THIS business (a review quote, a service, a detail from the data)
+- The website's main job is to explain the offer quickly, show products/services/menu and pricing early, and then move the visitor to WhatsApp
+- Prioritize commercial clarity over cleverness: visitors should understand what the business sells, how to buy or book, and the likely price level within seconds
 - Keep headlines punchy (under 10 words), subheadlines under 20 words
 - Paragraphs should be 2-3 sentences max
 - For the testimonials section, use REAL review quotes from the data — do not fabricate reviews
+- CTA copy should be WhatsApp-first. Buttons should sound natural for the business category:
+  - Restaurants/cafes/bakeries/bars: ordering or asking for the menu on WhatsApp
+  - Salons, spas, nail salons, gyms, healthcare: booking on WhatsApp
+  - Retail/stores/boutiques/furniture: shopping or asking about products on WhatsApp
+  - Trades and auto repair: requesting a quote on WhatsApp
+- Match the offer wording to the business model:
+  - Menu language for restaurants, cafes, bakeries, bars
+  - Services language for appointment-based and professional businesses
+  - Products language for retail, boutiques, furniture, jewelry, clothing, and stores
+- If pricing is available anywhere in the data, surface it in the offer section instead of hiding it deep in the page
 
 Respond with ONLY valid JSON (no markdown fences, no extra text) matching this schema:
 {
@@ -218,7 +245,8 @@ IMPORTANT:
 - If there are no reviews, use the quotableReviews from the research report
 - Include 3-5 services based on the business category and data
 - Include 3-4 whyChooseUs points based on the keySellingPoints
-- Include 2-3 testimonials with real review quotes${categoryInstructions}`;
+- Include 2-3 testimonials with real review quotes
+- The hero, offer section, and CTA must all reinforce the same next step: understand the offer, then message on WhatsApp${categoryInstructions}`;
 
   const userMessage = `=== RESEARCH REPORT ===
 ${JSON.stringify(researchReport)}

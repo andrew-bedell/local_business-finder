@@ -6,6 +6,7 @@ import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
 import {
   compileBusinessDataForPrompt,
   buildPhotoInventory,
+  deriveProductRows,
   generateResearchReport,
   generateAIPhotos,
   buildPhotoManifest,
@@ -15,6 +16,10 @@ import {
 export const config = { maxDuration: 300 };
 
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
+const INTERNAL_API_HEADERS = {
+  'Content-Type': 'application/json',
+  'x-internal-service-key': process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -64,7 +69,7 @@ export default async function handler(req, res) {
     const business = bizData[0];
 
     // Step 3: Fetch enriched data
-    const { reviews, photos, socialProfiles, menus, services } = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+    const { reviews, photos, websitePhotos, socialProfiles, menus, services } = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
 
     // Step 4: Rate limit check
     // Updates: 1 per hour. New generation: 1 per 24 hours.
@@ -103,7 +108,8 @@ export default async function handler(req, res) {
     }
 
     // Step 5: Compile business data into a text prompt
-    const businessData = compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus, services);
+    const products = deriveProductRows(business, services);
+    const businessData = compileBusinessDataForPrompt(business, reviews, websitePhotos, socialProfiles, menus, services, products);
 
     // Determine language from address country
     const country = business.address_country || '';
@@ -111,7 +117,7 @@ export default async function handler(req, res) {
     const language = spanishCountries.includes(country) ? 'es' : 'es'; // Default to Spanish
 
     // Step 6: Build photo inventory from photos rows
-    const photoInventory = buildPhotoInventory(photos, supabaseUrl);
+    const photoInventory = buildPhotoInventory(websitePhotos, supabaseUrl);
 
     // Step 7: Call /api/ai/research-report (SSE response)
     console.log('[GenerateWebsite] Step 7: Generating research report...');
@@ -155,6 +161,7 @@ export default async function handler(req, res) {
             template_name: 'ai_generated',
             status: 'draft',
             version: 1,
+            generated_at: new Date().toISOString(),
             config: { researchReport },
           }),
         }
@@ -178,7 +185,10 @@ export default async function handler(req, res) {
       const idx = sectionCounts[section] || 0;
       sectionCounts[section] = idx + 1;
       photoInventory.push({
+        bucket: 'photos',
         id: `ai_${section}_${idx}`,
+        originalUrl: photo.url,
+        storagePath: photo.storagePath || null,
         type: 'ai_generated',
         url: photo.url,
       });
@@ -186,13 +196,13 @@ export default async function handler(req, res) {
 
     // Step 10: Build photo manifest
     console.log('[GenerateWebsite] Step 10: Building photo manifest...');
-    const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory);
+    const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
 
     // Step 11: Call /api/ai/write-content
     console.log('[GenerateWebsite] Step 11: Writing website content...');
     const writeContentRes = await fetch(`${API_BASE}/api/ai/write-content`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: INTERNAL_API_HEADERS,
       body: JSON.stringify({
         researchReport,
         businessData,
@@ -215,7 +225,7 @@ export default async function handler(req, res) {
     console.log('[GenerateWebsite] Step 12: Generating website HTML...');
     const generateHtmlRes = await fetch(`${API_BASE}/api/ai/generate-website`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: INTERNAL_API_HEADERS,
       body: JSON.stringify({
         websiteContent,
         designPalette: researchReport.designPalette || {},
@@ -230,7 +240,8 @@ export default async function handler(req, res) {
         mapsUrl: business.maps_url || '',
         socialProfiles: socialProfiles.map(sp => ({ platform: sp.platform, url: sp.profile_url })),
         menuItems: menus.map(m => ({ category: m.menu_category, name: m.item_name, description: m.item_description, price: m.price, currency: m.currency })),
-        services: services.map(s => ({ name: s.name, description: s.description, price: s.price, currency: s.currency })),
+        services: services.map(s => ({ name: s.name, description: s.description, price: s.price, currency: s.currency, photo_url: s.photo_url || '' })),
+        products: products.map(p => ({ name: p.name, description: p.description, price: p.price, currency: p.currency, photo_url: p.photo_url || '' })),
         founderName: business.owner_name || '',
         founderDescription: business.founder_description || '',
         researchReport,

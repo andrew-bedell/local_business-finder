@@ -1,13 +1,77 @@
 // Shared website generation pipeline functions
 // Used by both api/customers/generate-website.js and api/cron/generate-websites.js
 
+import { ensureBusinessDomainSuggestions } from './domain-suggestions.js';
+import { normalizeBusinessType } from './design-engine/taxonomy.js';
+import {
+  getPublicPhotoUrl,
+  getOptimizedPhotoUrl,
+  inferPresetFromSection,
+  resolveStoredPhotoLocation,
+} from './photo-urls.js';
+
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
+const INTERNAL_SERVICE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+function getInternalApiHeaders() {
+  return INTERNAL_SERVICE_KEY
+    ? { 'Content-Type': 'application/json', 'x-internal-service-key': INTERNAL_SERVICE_KEY }
+    : { 'Content-Type': 'application/json' };
+}
+
+function isProductLedBusiness(business) {
+  const businessType = normalizeBusinessType(business?.category, business?.subcategory);
+  return businessType === 'retail' || businessType === 'furniture';
+}
+
+export function filterWebsitePhotos(photos) {
+  return (photos || []).filter((photo) => {
+    if (!photo) return false;
+    if (!(photo.url || photo.storage_path)) return false;
+    if (photo.has_text_overlay === true) return false;
+    return true;
+  });
+}
+
+function buildOptimizedRecordPhotoUrl(photo, supabaseUrl, preset = 'card') {
+  if (!photo) return '';
+  return getOptimizedPhotoUrl({
+    url: photo.url,
+    storagePath: photo.storage_path,
+    supabaseUrl,
+    preset,
+  }) || photo.url || '';
+}
+
+function attachCommercialPhotoUrls(items, photos, supabaseUrl) {
+  const eligiblePhotos = filterWebsitePhotos(photos);
+  const photoById = new Map(
+    eligiblePhotos
+      .filter((photo) => photo?.id)
+      .map((photo) => [photo.id, photo])
+  );
+
+  return (items || []).map((item) => {
+    const sourcePhoto = item?.photo_id ? photoById.get(item.photo_id) : null;
+    return {
+      ...item,
+      photo_url: sourcePhoto ? buildOptimizedRecordPhotoUrl(sourcePhoto, supabaseUrl, 'card') : '',
+    };
+  });
+}
+
+export function deriveProductRows(business, services) {
+  if (!isProductLedBusiness(business)) return [];
+  return (services || []).map((item) => ({ ...item }));
+}
 
 /**
  * Compile business data into a formatted text string for AI prompts.
  */
-export function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus, services) {
+export function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus, services, products = []) {
   const sections = [];
+  const eligiblePhotos = filterWebsitePhotos(photos);
+  const productRows = products.length > 0 ? products : deriveProductRows(business, services);
 
   // Identity
   sections.push('=== BUSINESS IDENTITY ===');
@@ -105,13 +169,24 @@ export function compileBusinessDataForPrompt(business, reviews, photos, socialPr
   }
 
   // Services
-  if (services && services.length > 0) {
+  if (services && services.length > 0 && productRows.length === 0) {
     sections.push('');
     sections.push('=== SERVICES ===');
     services.forEach((s, i) => {
       let line = `${i + 1}. ${s.name}`;
       if (s.description) line += ` — ${s.description}`;
       if (s.price) line += ` (${s.currency || 'MXN'} $${s.price})`;
+      sections.push(line);
+    });
+  }
+
+  if (productRows.length > 0) {
+    sections.push('');
+    sections.push('=== PRODUCTS ===');
+    productRows.forEach((product, i) => {
+      let line = `${i + 1}. ${product.name}`;
+      if (product.description) line += ` — ${product.description}`;
+      if (product.price) line += ` (${product.currency || 'MXN'} $${product.price})`;
       sections.push(line);
     });
   }
@@ -138,11 +213,11 @@ export function compileBusinessDataForPrompt(business, reviews, photos, socialPr
   }
 
   // Photo inventory
-  if (photos && photos.length > 0) {
+  if (eligiblePhotos.length > 0) {
     sections.push('');
     sections.push('=== PHOTO INVENTORY ===');
-    sections.push(`Total Photos Available: ${photos.length}`);
-    photos.forEach((p, i) => {
+    sections.push(`Total Photos Available: ${eligiblePhotos.length}`);
+    eligiblePhotos.forEach((p, i) => {
       const id = `${p.source || 'unknown'}_photo_${i}`;
       let line = `ID: ${id} | Source: ${p.source || 'unknown'} | Type: ${p.photo_type || 'unclassified'}`;
       if (p.caption) line += ` | Caption: "${p.caption.substring(0, 150)}"`;
@@ -159,12 +234,22 @@ export function compileBusinessDataForPrompt(business, reviews, photos, socialPr
  * Maps storage_path to public URL when available.
  */
 export function buildPhotoInventory(photos, supabaseUrl) {
-  return (photos || []).map((p, i) => ({
+  return filterWebsitePhotos(photos).map((p, i) => ({
+    bucket: resolveStoredPhotoLocation({
+      url: p.url,
+      storagePath: p.storage_path,
+      supabaseUrl,
+    })?.bucket || null,
     id: `${p.source || 'unknown'}_photo_${i}`,
+    originalUrl: p.url || '',
+    storagePath: p.storage_path || null,
     type: p.photo_type || 'unclassified',
-    url: p.storage_path
-      ? `${supabaseUrl}/storage/v1/object/public/photos/${p.storage_path}`
-      : p.url,
+    url: getOptimizedPhotoUrl({
+      url: p.url,
+      storagePath: p.storage_path,
+      supabaseUrl,
+      preset: 'section',
+    }),
   }));
 }
 
@@ -175,7 +260,7 @@ export function buildPhotoInventory(photos, supabaseUrl) {
 export async function generateResearchReport(businessData, name, language) {
   const resp = await fetch(`${API_BASE}/api/ai/research-report`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getInternalApiHeaders(),
     body: JSON.stringify({ businessData, name, language }),
   });
 
@@ -289,6 +374,7 @@ export async function generateAIPhotos(researchReport, businessId, supabaseUrl, 
             business_id: businessId,
             source: 'ai_generated',
             photo_type: 'ai_generated',
+            storage_path: result.storagePath || null,
             url: result.url,
             caption: slot.slot,
           }),
@@ -342,33 +428,69 @@ export async function generateAIPhotos(researchReport, businessId, supabaseUrl, 
  * Build a photo manifest that resolves the research report's photo asset plan
  * to concrete URLs from the photo inventory.
  */
-export function buildPhotoManifest(photoAssetPlan, photoInventory) {
-  const usedUrls = new Set();
+export function buildPhotoManifest(photoAssetPlan, photoInventory, supabaseUrl) {
+  const usedPhotoKeys = new Set();
   const manifest = [];
 
+  if ((!photoAssetPlan || photoAssetPlan.length === 0) && photoInventory && photoInventory.length > 0) {
+    const fallback = photoInventory[0];
+    return [
+      {
+        bucket: fallback.bucket || null,
+        section: 'hero',
+        slot: 'fallback',
+        storagePath: fallback.storagePath || null,
+        url: getOptimizedPhotoUrl({
+          url: fallback.originalUrl || fallback.url,
+          storagePath: fallback.storagePath,
+          bucket: fallback.bucket,
+          supabaseUrl,
+          preset: 'hero',
+        }) || fallback.url,
+      },
+    ];
+  }
+
   for (const item of photoAssetPlan) {
-    let url = null;
+    let selectedPhoto = null;
 
     if (item.recommendation === 'use_existing' && item.existingPhotoId) {
-      const match = photoInventory.find(p => p.id === item.existingPhotoId);
-      url = match?.url || null;
+      selectedPhoto = photoInventory.find(p => p.id === item.existingPhotoId) || null;
     }
 
-    if (!url && item.recommendation === 'generate_ai') {
+    if (!selectedPhoto && item.recommendation === 'generate_ai') {
       const section = (item.section || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const match = photoInventory.find(p => p.id.startsWith(`ai_${section}_`));
-      url = match?.url || null;
+      selectedPhoto = photoInventory.find(p => p.id.startsWith(`ai_${section}_`)) || null;
     }
 
     // Fallback: any unused photo
-    if (!url) {
-      const fallback = photoInventory.find(p => !usedUrls.has(p.url));
-      url = fallback?.url || (photoInventory[0]?.url || null);
+    if (!selectedPhoto) {
+      selectedPhoto = photoInventory.find((p) => {
+        const key = p.id || p.storagePath || p.originalUrl || p.url;
+        return !usedPhotoKeys.has(key);
+      }) || photoInventory[0] || null;
     }
 
+    const url = selectedPhoto
+      ? getOptimizedPhotoUrl({
+          url: selectedPhoto.originalUrl || selectedPhoto.url,
+          storagePath: selectedPhoto.storagePath,
+          bucket: selectedPhoto.bucket,
+          supabaseUrl,
+          preset: inferPresetFromSection(item.section, item.slot),
+        }) || selectedPhoto.url
+      : null;
+
     if (url) {
-      usedUrls.add(url);
-      manifest.push({ section: item.section, slot: item.slot, url });
+      const selectedKey = selectedPhoto?.id || selectedPhoto?.storagePath || selectedPhoto?.originalUrl || selectedPhoto?.url;
+      if (selectedKey) usedPhotoKeys.add(selectedKey);
+      manifest.push({
+        bucket: selectedPhoto?.bucket || null,
+        section: item.section,
+        slot: item.slot,
+        storagePath: selectedPhoto?.storagePath || null,
+        url,
+      });
     }
   }
 
@@ -403,12 +525,19 @@ export async function fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders
     ),
   ]);
 
+  const reviews = (await reviewsRes.json()) || [];
+  const photos = (await photosRes.json()) || [];
+  const socialProfiles = (await socialsRes.json()) || [];
+  const menus = (await menusRes.json()) || [];
+  const rawServices = (await servicesRes.json()) || [];
+
   return {
-    reviews: (await reviewsRes.json()) || [],
-    photos: (await photosRes.json()) || [],
-    socialProfiles: (await socialsRes.json()) || [],
-    menus: (await menusRes.json()) || [],
-    services: (await servicesRes.json()) || [],
+    reviews,
+    photos,
+    websitePhotos: filterWebsitePhotos(photos),
+    socialProfiles,
+    menus,
+    services: attachCommercialPhotoUrls(rawServices, photos, supabaseUrl),
   };
 }
 
@@ -422,7 +551,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   const businessId = business.id;
 
   // Fetch enriched data
-  const { reviews, photos, socialProfiles, menus, services } = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+  const { reviews, photos, websitePhotos, socialProfiles, menus, services } = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
 
   // Auto-parse menu photos if we have menu photos but no menu items yet
   if (menus.length === 0) {
@@ -432,8 +561,13 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
 
     if (menuPhotos.length > 0) {
       const latestMenu = menuPhotos[0];
-      const photoUrl = latestMenu.storage_path
-        ? `${supabaseUrl}/storage/v1/object/public/photos/${latestMenu.storage_path}`
+      const photoLocation = resolveStoredPhotoLocation({
+        url: latestMenu.url,
+        storagePath: latestMenu.storage_path,
+        supabaseUrl,
+      });
+      const photoUrl = photoLocation
+        ? getPublicPhotoUrl(supabaseUrl, photoLocation.storagePath, photoLocation.bucket)
         : latestMenu.url;
 
       try {
@@ -474,7 +608,8 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   }
 
   // Compile business data for prompt
-  const businessData = compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus, services);
+  const products = deriveProductRows(business, services);
+  const businessData = compileBusinessDataForPrompt(business, reviews, websitePhotos, socialProfiles, menus, services, products);
 
   // Determine language
   const country = business.address_country || '';
@@ -482,7 +617,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   const language = spanishCountries.includes(country) ? 'es' : 'es'; // Default to Spanish
 
   // Build photo inventory
-  const photoInventory = buildPhotoInventory(photos, supabaseUrl);
+  const photoInventory = buildPhotoInventory(websitePhotos, supabaseUrl);
 
   // Generate research report
   console.log(`[WebsitePipeline] Generating research report for ${business.name}...`);
@@ -503,6 +638,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
         template_name: 'ai_generated',
         status: 'draft',
         version: 1,
+        generated_at: new Date().toISOString(),
         config: configObj,
       }),
     }
@@ -532,13 +668,13 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   });
 
   // Build photo manifest
-  const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory);
+  const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
 
   // Write content
   console.log(`[WebsitePipeline] Writing website content...`);
   const writeContentRes = await fetch(`${API_BASE}/api/ai/write-content`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getInternalApiHeaders(),
     body: JSON.stringify({
       researchReport,
       businessData,
@@ -561,7 +697,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   console.log(`[WebsitePipeline] Generating website HTML...`);
   const generateHtmlRes = await fetch(`${API_BASE}/api/ai/generate-website`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getInternalApiHeaders(),
     body: JSON.stringify({
       websiteContent,
       designPalette: researchReport.designPalette || {},
@@ -576,7 +712,8 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
       mapsUrl: business.maps_url || '',
       socialProfiles: socialProfiles.map(sp => ({ platform: sp.platform, url: sp.profile_url })),
       menuItems: menus.map(m => ({ category: m.menu_category, name: m.item_name, description: m.item_description, price: m.price, currency: m.currency })),
-      services: services.map(s => ({ name: s.name, description: s.description, price: s.price, currency: s.currency })),
+      services: services.map(s => ({ name: s.name, description: s.description, price: s.price, currency: s.currency, photo_url: s.photo_url || '' })),
+      products: products.map(p => ({ name: p.name, description: p.description, price: p.price, currency: p.currency, photo_url: p.photo_url || '' })),
       founderName: business.owner_name || '',
       founderDescription: business.founder_description || '',
       researchReport,
@@ -628,6 +765,19 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   } else {
     const errText = await publishRes.text().catch(() => '');
     console.warn(`[WebsitePipeline] Publish failed for ${business.name}:`, errText.substring(0, 200));
+  }
+
+  try {
+    await ensureBusinessDomainSuggestions({
+      business,
+      supabaseUrl,
+      supabaseHeaders,
+      maxChecks: 5,
+      delayMs: 10000,
+    });
+    console.log(`[WebsitePipeline] Domain suggestions ready for ${business.name}`);
+  } catch (err) {
+    console.warn(`[WebsitePipeline] Domain suggestion generation failed for ${business.name}:`, err.message);
   }
 
   console.log(`[WebsitePipeline] Complete for ${business.name}! Published URL: ${publishedUrl}`);

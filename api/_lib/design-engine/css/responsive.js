@@ -72,12 +72,23 @@ export function getResponsiveCSS() {
         padding: 0.9rem 2rem;
       }
 
-      /* WhatsApp FAB */
-      .whatsapp-fab {
-        bottom: 1.5rem;
-        right: 1.5rem;
-        width: 52px;
-        height: 52px;
+      /* Sticky CTA rail */
+      .sticky-cta-spacer {
+        height: 96px;
+      }
+
+      .sticky-cta-bar {
+        padding: 0.75rem 0.9rem calc(0.9rem + env(safe-area-inset-bottom));
+      }
+
+      .sticky-cta-bar__inner {
+        gap: 0.6rem;
+      }
+
+      .sticky-cta-btn {
+        min-height: 50px;
+        padding: 0.9rem 0.85rem;
+        font-size: 0.7rem;
       }
 
       /* Menu items */

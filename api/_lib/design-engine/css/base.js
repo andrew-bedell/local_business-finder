@@ -152,6 +152,7 @@ export function getBaseCSS() {
     .btn {
       display: inline-flex;
       align-items: center;
+      flex-wrap: nowrap;
       gap: 0.5rem;
       font-family: var(--font-body);
       font-size: 0.8rem;
@@ -164,6 +165,7 @@ export function getBaseCSS() {
       transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
       text-decoration: none;
       line-height: 1;
+      white-space: nowrap;
     }
 
     .btn:hover {
@@ -196,8 +198,21 @@ export function getBaseCSS() {
       color: var(--color-accent);
     }
 
+    .btn--ghost-light {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn--ghost-light:hover {
+      background: rgba(255,255,255,0.22);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
     .btn-arrow {
       display: inline-block;
+      flex-shrink: 0;
       transition: transform 0.3s ease;
     }
 

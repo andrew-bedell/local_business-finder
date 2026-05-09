@@ -11,14 +11,20 @@ import { getFooterCSS } from './css/footer.js';
 import { getResponsiveCSS } from './css/responsive.js';
 import { getRuntimeJS } from './js-runtime.js';
 import {
+  buildWhatsAppHref,
+  getOfferConfig,
+  getOfferSectionCandidates,
+  getPrimaryActionLabel,
   normalizeBusinessType,
+  shouldUseGenericServicesSection,
   getBusinessSchemaType,
 } from './taxonomy.js';
+import { formatBusinessName } from '../format-business-name.js';
 
 import {
   heroSection, aboutSection, servicesSection, whyChooseUsSection,
   testimonialsSection, gallerySection, ctaSection, hoursSection,
-  contactSection, footerSection, navHTML, whatsappFAB,
+  contactSection, footerSection, navHTML, stickyBottomActions,
 } from './sections/universal.js';
 
 // Business-type section modules
@@ -32,6 +38,7 @@ import { membershipTiersSection, classScheduleSection } from './sections/gym.js'
 import { menuHighlightsSection as cafeMenuSection, dailySpecialsSection } from './sections/cafe.js';
 import { autoServicesSection, estimateCTASection } from './sections/auto-repair.js';
 import { emergencyCTASection, coverageAreaSection } from './sections/plumber.js';
+import { productsSection } from './sections/retail.js';
 
 import * as editorial from './variations/editorial.js';
 import * as dynamic from './variations/dynamic.js';
@@ -73,6 +80,9 @@ function getCategorySections(category, subcategory) {
     case 'electrician':
     case 'contractor':
       return { type: 'plumber', sections: { emergencyCTA: emergencyCTASection, coverageArea: coverageAreaSection } };
+    case 'retail':
+    case 'furniture':
+      return { type: 'retail', sections: { products: productsSection } };
   }
 
   return { type: 'generic', sections: {} };
@@ -90,86 +100,114 @@ function esc(str) {
  * @param {object} params.content - Output from write-content.js
  * @param {object} params.researchReport - Output from research-report.js (needs designPalette)
  * @param {Array} params.photoManifest - Array of { section, slot, url }
- * @param {object} params.business - { name, category, subcategory, phone, whatsapp, address, mapsUrl, socialProfiles, language, menuItems, staffMembers }
+ * @param {object} params.business - { name, category, subcategory, phone, whatsapp, address, mapsUrl, socialProfiles, language, menuItems, staffMembers, services, products }
  * @returns {string} Complete HTML document
  */
 export function assembleWebsite({ content, researchReport, photoManifest, business }) {
-  const lang = business.language === 'en' ? 'en' : 'es';
+  const normalizedBusiness = {
+    ...business,
+    name: formatBusinessName(business?.name),
+  };
+  const lang = normalizedBusiness.language === 'en' ? 'en' : 'es';
   const report = researchReport || {};
   const photos = photoManifest || [];
-  const businessType = normalizeBusinessType(business.category, business.subcategory);
+  const businessType = normalizeBusinessType(normalizedBusiness.category, normalizedBusiness.subcategory);
 
   // 1. Select variation and mood
   const variationName = selectVariation({
-    businessName: business.name,
-    category: business.category,
-    subcategory: business.subcategory,
+    businessName: normalizedBusiness.name,
+    category: normalizedBusiness.category,
+    subcategory: normalizedBusiness.subcategory,
     content,
     photoManifest: photos,
   });
   const mood = selectMood(
-    business.category,
-    business.subcategory,
+    normalizedBusiness.category,
+    normalizedBusiness.subcategory,
     report.toneRecommendations || report.designPalette?.mood
   );
 
   // 2. Generate font and color CSS
   const { importRule, css: fontVars } = getFontCSS(mood);
-  const colorVars = getColorCSS(report.designPalette, business.category, business.subcategory);
+  const colorVars = getColorCSS(report.designPalette, normalizedBusiness.category, normalizedBusiness.subcategory);
 
   // 3. Get variation module
   const variation = VARIATIONS[variationName] || VARIATIONS.editorial;
 
-  // 4. Render all universal sections
+  // 4. Render all universal sections except hero/contact/cta, which depend on resolved offer targets
   const sectionMap = {};
 
-  sectionMap.hero = heroSection(content, photos, business, content?.cta?.buttonText);
-  sectionMap.about = aboutSection(content, photos, business);
-  sectionMap.services = servicesSection(content, photos, business);
+  sectionMap.about = aboutSection(content, photos, normalizedBusiness);
   sectionMap.whyChooseUs = whyChooseUsSection(content);
   sectionMap.testimonials = testimonialsSection(content);
   sectionMap.gallery = gallerySection(content, photos);
-  sectionMap.cta = ctaSection(content, business);
   sectionMap.hours = hoursSection(content);
-  sectionMap.contact = contactSection(content, business, photos);
-  sectionMap.footer = footerSection(content, business);
+  sectionMap.footer = footerSection(content, normalizedBusiness);
 
   // 4b. Render business-type-specific sections
-  const { sections: categorySections } = getCategorySections(business.category, business.subcategory);
+  const { sections: categorySections } = getCategorySections(normalizedBusiness.category, normalizedBusiness.subcategory);
   for (const [key, renderFn] of Object.entries(categorySections)) {
-    const result = renderFn(content, photos, business);
+    const result = renderFn(content, photos, normalizedBusiness);
     if (result && result.html) {
       sectionMap[key] = result;
     }
   }
 
-  // 5. Collect section-specific CSS
-  const sectionCSS = Object.values(sectionMap)
-    .map(s => s.css || '')
-    .filter(Boolean)
-    .join('\n');
+  const dedicatedOfferKeys = getOfferSectionCandidates(businessType).filter((key) => key !== 'services');
+  const hasDedicatedOfferSection = dedicatedOfferKeys.some((key) => sectionMap[key]?.html);
 
-  // 6. Arrange sections using the variation layout
-  const bodyHTML = variation.arrangeSections(sectionMap, content, business);
+  sectionMap.services = (shouldUseGenericServicesSection(businessType) || !hasDedicatedOfferSection)
+    ? servicesSection(content, photos, normalizedBusiness)
+    : { html: '', css: '' };
+
   const availableSections = new Set(
     Object.entries(sectionMap)
       .filter(([, section]) => section && section.html)
       .map(([key]) => key)
   );
 
-  // 7. Generate nav and WhatsApp FAB
-  const nav = navHTML(business, content?.cta?.buttonText, {
+  const pageContext = {
+    language: lang,
     businessType,
-    availableSections,
+    offer: getOfferConfig(businessType, availableSections, lang),
+    primaryActionLabel: getPrimaryActionLabel(businessType, lang),
+    whatsappHref: buildWhatsAppHref(normalizedBusiness, { businessType, language: lang }),
+  };
+
+  sectionMap.hero = heroSection(content, photos, normalizedBusiness, pageContext);
+  sectionMap.cta = ctaSection(content, normalizedBusiness, pageContext);
+  sectionMap.contact = contactSection(content, normalizedBusiness, photos, pageContext);
+
+  const finalAvailableSections = new Set(
+    Object.entries(sectionMap)
+      .filter(([, section]) => section && section.html)
+      .map(([key]) => key)
+  );
+
+  // 5. Collect section-specific CSS
+  const sectionCSS = Object.values(sectionMap)
+    .map((section) => section.css || '')
+    .filter(Boolean)
+    .join('\n');
+
+  // 6. Arrange sections using the variation layout
+  const bodyHTML = variation.arrangeSections(sectionMap, content, normalizedBusiness);
+
+  // 7. Generate nav and sticky quick actions
+  const nav = navHTML(normalizedBusiness, pageContext.primaryActionLabel, {
+    businessType,
+    availableSections: finalAvailableSections,
     content,
+    language: lang,
+    whatsappHref: pageContext.whatsappHref,
   });
-  const fab = whatsappFAB(business);
+  const stickyActions = stickyBottomActions(normalizedBusiness, pageContext);
 
   // 8. Compose meta tags
-  const metaTitle = esc(content?.meta?.title || `${business.name} — ${business.category || ''}`);
+  const metaTitle = esc(content?.meta?.title || `${normalizedBusiness.name} — ${normalizedBusiness.category || ''}`);
   const metaDesc = esc(content?.meta?.description || '');
   const metaKeywords = esc(content?.meta?.keywords || '');
-  const schema = buildLocalBusinessSchema({ business, content, businessType });
+  const schema = buildLocalBusinessSchema({ business: normalizedBusiness, content, businessType });
 
   // 9. Assemble final HTML
   return `<!DOCTYPE html>
@@ -183,7 +221,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   <meta property="og:title" content="${metaTitle}">
   <meta property="og:description" content="${metaDesc}">
   <meta property="og:type" content="website">
-  ${business.name ? `<meta property="og:site_name" content="${esc(business.name)}">` : ''}
+  ${normalizedBusiness.name ? `<meta property="og:site_name" content="${esc(normalizedBusiness.name)}">` : ''}
   ${schema ? `<script type="application/ld+json">${schema}</script>` : ''}
   <style>
     ${importRule}
@@ -205,7 +243,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
   <main>
     ${bodyHTML}
   </main>
-  ${fab}
+  ${stickyActions}
   <script>${getRuntimeJS()}</script>
 </body>
 </html>`;

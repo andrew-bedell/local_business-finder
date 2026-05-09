@@ -3,13 +3,14 @@
 // V1 fallback: Claude Haiku streaming (legacy, behind useV1 flag)
 
 import { assembleWebsite } from '../_lib/design-engine/index.js';
+import { ensureEmployeeSession } from '../_lib/employee-session.js';
 
 export const config = { maxDuration: 300 }; // Keep 300 for V1 fallback; V2 completes in <5s
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -34,6 +35,7 @@ export default async function handler(req, res) {
     menuItems,
     staffMembers,
     services,
+    products,
     founderName,
     founderDescription,
     // Legacy format fields
@@ -63,6 +65,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields: websiteContent, name' });
   }
 
+  const session = await ensureEmployeeSession(req, res, {
+    supabaseUrl: process.env.SUPABASE_URL,
+    serviceKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+  });
+  if (!session) return;
+
   try {
     const html = assembleWebsite({
       content: websiteContent,
@@ -81,6 +89,7 @@ export default async function handler(req, res) {
         menuItems: menuItems || [],
         staffMembers: staffMembers || [],
         services: services || [],
+        products: products || [],
         founderName: founderName || '',
         founderDescription: founderDescription || '',
       },
