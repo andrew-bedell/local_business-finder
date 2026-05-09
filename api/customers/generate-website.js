@@ -239,6 +239,7 @@ export default async function handler(req, res) {
             template_name: 'ai_generated',
             status: 'draft',
             version: 1,
+            generated_at: new Date().toISOString(),
             config: savedConfig,
           }),
         }
