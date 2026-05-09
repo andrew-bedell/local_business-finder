@@ -1,5 +1,7 @@
-// Vercel serverless function: SearchAPI.io Google Maps Reviews enrichment
-// Fetches paginated reviews for a business using the google_maps_reviews engine.
+// Vercel serverless function: review enrichment.
+// Uses SearchAPI for deeper review pagination, with Google Places fallback when only place_id is available.
+
+import { getGooglePlaceDetails, normalizeGoogleReviews } from '../_lib/google-places.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,65 +16,90 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.SEARCHAPI_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: 'SearchAPI key not configured' });
-  }
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
+  const { data_id: dataId, place_id: placeId, next_page_token: nextPageToken, sort_by: sortBy, hl } = req.query;
 
-  const { data_id, place_id, next_page_token, sort_by, hl } = req.query;
-
-  if (!data_id && !place_id) {
+  if (!dataId && !placeId) {
     return res.status(400).json({ error: 'Missing required parameter: data_id or place_id' });
   }
 
-  try {
-    const params = new URLSearchParams({
-      engine: 'google_maps_reviews',
-      api_key: apiKey,
-    });
+  if (searchApiKey && (dataId || placeId)) {
+    try {
+      const params = new URLSearchParams({
+        engine: 'google_maps_reviews',
+        api_key: searchApiKey,
+      });
 
-    if (data_id) params.set('data_id', data_id);
-    if (place_id) params.set('place_id', place_id);
-    if (next_page_token) params.set('next_page_token', next_page_token);
-    if (sort_by) params.set('sort_by', sort_by);
-    if (hl) params.set('hl', hl);
+      if (dataId) params.set('data_id', dataId);
+      if (placeId) params.set('place_id', placeId);
+      if (nextPageToken) params.set('next_page_token', nextPageToken);
+      if (sortBy) params.set('sort_by', sortBy);
+      if (hl) params.set('hl', hl);
 
-    const response = await fetch(
-      'https://www.searchapi.io/api/v1/search?' + params.toString()
-    );
+      const response = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('SearchAPI.io reviews error:', response.status, errorText);
-      return res.status(502).json({ error: 'SearchAPI.io request failed' });
+      if (response.ok) {
+        const data = await response.json();
+        const rawReviews = data.reviews || [];
+        const reviews = rawReviews.map((review) => ({
+          authorName: review.user ? review.user.name || '' : '',
+          authorPhoto: review.user ? review.user.thumbnail || '' : '',
+          rating: review.rating || 0,
+          text: review.original_snippet || review.snippet || review.text || '',
+          date: review.date || '',
+          isoDate: review.iso_date || review.extracted_date || '',
+          images: (review.images || []).map((image) => image.image || image),
+          isLocalGuide: review.user ? review.user.is_local_guide || false : false,
+          likes: review.likes || 0,
+        }));
+
+        res.setHeader('Cache-Control', 'private, max-age=86400');
+        return res.status(200).json({
+          reviews,
+          totalReviews: data.place_info ? data.place_info.reviews || 0 : 0,
+          nextPageToken: data.serpapi_pagination ? data.serpapi_pagination.next_page_token || null : null,
+          hasMore: !!(data.serpapi_pagination && data.serpapi_pagination.next_page_token),
+          provider: 'searchapi',
+        });
+      }
+
+      const errorText = await response.text().catch(() => '');
+      console.error('SearchAPI reviews error:', response.status, errorText);
+      if (!googlePlacesApiKey || !placeId) {
+        return res.status(502).json({ error: 'SearchAPI.io request failed' });
+      }
+    } catch (searchError) {
+      console.warn('SearchAPI review enrichment failed, falling back to Google Places:', searchError.message);
+      if (!googlePlacesApiKey || !placeId) {
+        return res.status(500).json({ error: 'Internal server error' });
+      }
     }
+  }
 
-    const data = await response.json();
-    const rawReviews = data.reviews || [];
+  if (!googlePlacesApiKey || !placeId) {
+    return res.status(503).json({ error: 'No review provider configured' });
+  }
 
-    const reviews = rawReviews.map(r => ({
-      authorName: r.user ? r.user.name || '' : '',
-      authorPhoto: r.user ? r.user.thumbnail || '' : '',
-      rating: r.rating || 0,
-      text: r.original_snippet || r.snippet || r.text || '',
-      date: r.date || '',
-      isoDate: r.iso_date || r.extracted_date || '',
-      images: (r.images || []).map(img => img.image || img),
-      isLocalGuide: r.user ? r.user.is_local_guide || false : false,
-      likes: r.likes || 0,
-    }));
-
-    const result = {
-      reviews: reviews,
-      totalReviews: data.place_info ? data.place_info.reviews || 0 : 0,
-      nextPageToken: data.serpapi_pagination ? data.serpapi_pagination.next_page_token || null : null,
-      hasMore: !!(data.serpapi_pagination && data.serpapi_pagination.next_page_token),
-    };
+  try {
+    const place = await getGooglePlaceDetails({
+      apiKey: googlePlacesApiKey,
+      placeId,
+      languageCode: hl || 'en',
+      fieldMask: 'id,reviews,userRatingCount',
+    });
+    const reviews = normalizeGoogleReviews(place?.reviews || []);
 
     res.setHeader('Cache-Control', 'private, max-age=86400');
-    return res.status(200).json(result);
+    return res.status(200).json({
+      reviews,
+      totalReviews: place?.userRatingCount || reviews.length,
+      nextPageToken: null,
+      hasMore: false,
+      provider: 'google_places',
+    });
   } catch (err) {
-    console.error('SearchAPI.io reviews error:', err);
+    console.error('Review enrichment error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

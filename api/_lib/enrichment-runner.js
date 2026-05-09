@@ -252,13 +252,14 @@ export async function runTrackedBusinessEnrichment({
     attempt: attempts,
   });
 
-  const searchApiKey = process.env.SEARCHAPI_KEY;
-  if (!searchApiKey) {
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
+  if (!googlePlacesApiKey && !searchApiKey) {
     const result = await handleBlockingEnrichmentFailure({
       businessId,
       placeId,
       attempts,
-      errorMessage: 'SEARCHAPI_KEY not configured',
+      errorMessage: 'GOOGLE_PLACES_API_KEY not configured',
       supabaseUrl,
       headers,
       trackingSupported,
@@ -274,10 +275,12 @@ export async function runTrackedBusinessEnrichment({
 
   let dataId = null;
   let dataIdLookupError = null;
-  try {
-    dataId = await resolveGoogleDataId({ placeId, businessName, businessAddress, searchApiKey });
-  } catch (err) {
-    dataIdLookupError = err;
+  if (searchApiKey) {
+    try {
+      dataId = await resolveGoogleDataId({ placeId, businessName, businessAddress, searchApiKey });
+    } catch (err) {
+      dataIdLookupError = err;
+    }
   }
 
   try {
@@ -497,9 +500,18 @@ async function fetchBusinessEnrichmentSnapshot({ businessId, supabaseUrl, header
 }
 
 function hasEnrichmentEvidence(snapshot) {
+  const business = snapshot?.business || {};
   const stats = snapshot?.stats || {};
 
-  return stats.googlePhotoCount > 0;
+  return (
+    stats.googlePhotoCount > 0
+    || stats.googleReviewCount > 0
+    || stats.socialProfileCount > 0
+    || !!business.description
+    || (Array.isArray(business.service_options) && business.service_options.length > 0)
+    || (Array.isArray(business.amenities) && business.amenities.length > 0)
+    || (Array.isArray(business.highlights) && business.highlights.length > 0)
+  );
 }
 
 async function fetchBusinessEnrichmentState({ businessId, supabaseUrl, headers }) {
@@ -621,10 +633,14 @@ function collectEnrichmentFailureReasons({ dataIdLookupError, summary, snapshot 
 function findBlockingEnrichmentReason(reasons) {
   const text = Array.isArray(reasons) ? reasons.join(' ') : String(reasons || '');
   if (isConfigurationBlockerError(text)) {
-    return 'SearchAPI configuration missing';
+    return text.toLowerCase().includes('google_places')
+      ? 'Google Places configuration missing'
+      : 'SearchAPI configuration missing';
   }
   if (isQuotaOrBillingError(text)) {
-    return 'SearchAPI quota or billing limit reached';
+    return text.toLowerCase().includes('google')
+      ? 'Google Places quota or billing limit reached'
+      : 'SearchAPI quota or billing limit reached';
   }
   return null;
 }

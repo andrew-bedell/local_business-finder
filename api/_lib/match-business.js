@@ -1,96 +1,43 @@
 // Shared helper: match incoming signup data to an existing business, or create a new one.
 // Used by free-signup.js and stripe/create-subscription.js
 
-import { toE164, normalizePhone, countryFromDialCode } from './phone-utils.js';
+import { normalizePhone, countryFromDialCode } from './phone-utils.js';
 import { buildInitialEnrichmentState, insertBusinessWithSchemaFallback } from './enrichment-runner.js';
+import {
+  namesMatch,
+  normalizeGooglePlaceForBusinessMatch,
+  parseAddressComponents,
+  searchGooglePlacesText,
+} from './google-places.js';
 export { normalizePhone };
 
 /**
- * Basic name similarity check — case-insensitive, ignoring accents and punctuation.
- */
-function namesMatch(a, b) {
-  if (!a || !b) return false;
-  const normalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').trim();
-  const na = normalize(a);
-  const nb = normalize(b);
-  // Exact match or one contains the other
-  return na === nb || na.includes(nb) || nb.includes(na);
-}
-
-/**
- * Parse address components from a SearchAPI address string.
- * Addresses are inconsistent, so we extract what we can from comma-separated parts.
- * Examples:
- *   "Solares Residencial, 45019" → zip=45019
- *   "Calle 60 #500, Centro, Mérida, Yucatán" → city=Mérida, state=Yucatán
- *   "123 Main St, Austin, TX 78701" → city=Austin, state=TX, zip=78701
- */
-function parseAddressComponents(addressStr) {
-  if (!addressStr) return {};
-  const parts = addressStr.split(',').map(s => s.trim()).filter(Boolean);
-  if (parts.length === 0) return {};
-
-  const result = {};
-
-  // Check the last few parts for zip/state/city patterns
-  for (let i = parts.length - 1; i >= 0 && i >= parts.length - 3; i--) {
-    const part = parts[i];
-
-    // Pure zip code (4-6 digits)
-    if (!result.address_zip && /^\d{4,6}$/.test(part)) {
-      result.address_zip = part;
-      continue;
-    }
-
-    // US-style "TX 78701" or "Yucatán 97000"
-    const stateZipMatch = part.match(/^([A-Za-zÀ-ÿ.]+)\s+(\d{4,6})$/);
-    if (stateZipMatch && !result.address_state) {
-      result.address_state = stateZipMatch[1];
-      if (!result.address_zip) result.address_zip = stateZipMatch[2];
-      continue;
-    }
-
-    // Short state abbreviation or state name (no digits, not too long)
-    if (!result.address_state && !result.address_city && /^[A-Za-zÀ-ÿ\s.]{2,30}$/.test(part) && !/^\d/.test(part)) {
-      // If we haven't assigned state yet, this could be state (last non-zip part) or city
-      if (i === parts.length - 1 || (i === parts.length - 2 && result.address_zip)) {
-        result.address_state = part;
-      }
-      continue;
-    }
-  }
-
-  // City: the part just before state (if state was found)
-  if (result.address_state) {
-    const stateIdx = parts.findIndex(p => p.trim() === result.address_state);
-    if (stateIdx > 0) {
-      const candidate = parts[stateIdx - 1];
-      // Don't use street-like parts as city (containing #, numbers with letters)
-      if (/^[A-Za-zÀ-ÿ\s.'-]{2,40}$/.test(candidate)) {
-        result.address_city = candidate;
-      }
-    }
-  }
-
-  // If no state found but we have 3+ parts, try the last non-zip part as city
-  if (!result.address_city && !result.address_state && parts.length >= 2) {
-    const lastPart = result.address_zip ? parts[parts.length - 2] : parts[parts.length - 1];
-    if (lastPart && /^[A-Za-zÀ-ÿ\s.'-]{2,40}$/.test(lastPart)) {
-      result.address_city = lastPart;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Search for a business on Google Maps via SearchAPI.io.
+ * Search for a business on Google Places first, then SearchAPI fallback.
  * Returns the top result with place_id, address, phone, rating, etc.
  */
-async function searchGoogleMaps({ businessName, address, searchApiKey }) {
+async function searchGoogleMaps({ businessName, address, googlePlacesApiKey, searchApiKey }) {
   const query = `${businessName}, ${address}`;
-  const url = `https://www.searchapi.io/api/v1/search?engine=google_maps&q=${encodeURIComponent(query)}&api_key=${encodeURIComponent(searchApiKey)}`;
 
+  if (googlePlacesApiKey) {
+    try {
+      const response = await searchGooglePlacesText({
+        apiKey: googlePlacesApiKey,
+        textQuery: query,
+        languageCode: 'en',
+        maxResultCount: 5,
+      });
+      const topGoogleResult = response.places.find((place) => namesMatch(place?.displayName?.text, businessName));
+      if (topGoogleResult) {
+        return normalizeGooglePlaceForBusinessMatch(topGoogleResult);
+      }
+    } catch (err) {
+      console.warn('Google Places business match failed, falling back to SearchAPI:', err.message);
+    }
+  }
+
+  if (!searchApiKey) return null;
+
+  const url = `https://www.searchapi.io/api/v1/search?engine=google_maps&q=${encodeURIComponent(query)}&api_key=${encodeURIComponent(searchApiKey)}`;
   const res = await fetch(url);
   if (!res.ok) {
     console.warn('SearchAPI request failed:', res.status);
@@ -102,14 +49,11 @@ async function searchGoogleMaps({ businessName, address, searchApiKey }) {
   if (results.length === 0) return null;
 
   const top = results[0];
-
-  // Basic sanity check: name should roughly match
   if (!namesMatch(top.title, businessName)) {
     console.warn('SearchAPI top result name mismatch:', top.title, 'vs', businessName);
     return null;
   }
 
-  // Parse address components from the address string
   const addrComponents = parseAddressComponents(top.address);
 
   return {
@@ -205,11 +149,12 @@ export async function matchOrCreateBusiness({ businessName, email, phone, contac
 
   // ── Step 1: Google Places matching (highest priority) ──
   let googleData = null;
-  const searchApiKey = process.env.SEARCHAPI_KEY;
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
 
-  if (address && searchApiKey) {
+  if (address && (googlePlacesApiKey || searchApiKey)) {
     try {
-      googleData = await searchGoogleMaps({ businessName, address, searchApiKey });
+      googleData = await searchGoogleMaps({ businessName, address, googlePlacesApiKey, searchApiKey });
     } catch (err) {
       console.warn('Google Places search error (non-blocking):', err.message);
     }

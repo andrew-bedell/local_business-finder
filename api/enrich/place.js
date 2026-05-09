@@ -1,5 +1,11 @@
-// Vercel serverless function: SearchAPI.io Google Maps Place detail enrichment
-// Fetches extended place details not available from Google Places JS API.
+// Vercel serverless function: place detail enrichment.
+// Uses native Google Places first and falls back to SearchAPI when needed.
+
+import {
+  getGooglePlaceDetails,
+  normalizeGooglePlace,
+  normalizeGoogleReviews,
+} from '../_lib/google-places.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,64 +20,85 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.SEARCHAPI_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: 'SearchAPI key not configured' });
+  const googlePlacesApiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+  const searchApiKey = process.env.SEARCHAPI_KEY || '';
+  const { place_id: placeId, data_id: dataId, hl } = req.query;
+
+  if (!placeId && !dataId) {
+    return res.status(400).json({ error: 'Missing required parameter: place_id or data_id' });
   }
 
-  const { place_id, data_id, hl } = req.query;
+  if (googlePlacesApiKey && placeId) {
+    try {
+      const place = await getGooglePlaceDetails({
+        apiKey: googlePlacesApiKey,
+        placeId,
+        languageCode: hl || 'en',
+      });
+      const normalized = normalizeGooglePlace(place);
+      const reviews = normalizeGoogleReviews(place?.reviews || []);
 
-  if (!place_id && !data_id) {
-    return res.status(400).json({ error: 'Missing required parameter: place_id or data_id' });
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.status(200).json({
+        description: normalized.description || '',
+        hours: normalized.hours || [],
+        serviceOptions: normalized.serviceOptions || [],
+        amenities: normalized.amenities || [],
+        highlights: normalized.highlights || [],
+        accessibility: normalized.accessibility || [],
+        reviewsHistogram: null,
+        popularTimes: null,
+        questionsAndAnswers: null,
+        reviews,
+        webReviews: [],
+        priceLevel: normalized.priceLevel,
+        priceDescription: normalized.priceDescription || '',
+        provider: 'google_places',
+      });
+    } catch (googleError) {
+      console.warn('Google Places place enrichment failed, falling back to SearchAPI:', googleError.message);
+      if (!searchApiKey) {
+        return res.status(502).json({ error: googleError.message || 'Google Places request failed' });
+      }
+    }
+  }
+
+  if (!searchApiKey) {
+    return res.status(503).json({ error: 'No enrichment provider configured' });
   }
 
   try {
     const params = new URLSearchParams({
       engine: 'google_maps_place',
-      api_key: apiKey,
+      api_key: searchApiKey,
     });
 
-    if (place_id) params.set('place_id', place_id);
-    if (data_id) params.set('data_id', data_id);
+    if (placeId) params.set('place_id', placeId);
+    if (dataId) params.set('data_id', dataId);
     if (hl) params.set('hl', hl);
 
-    const response = await fetch(
-      'https://www.searchapi.io/api/v1/search?' + params.toString()
-    );
+    const response = await fetch('https://www.searchapi.io/api/v1/search?' + params.toString());
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('SearchAPI.io place error:', response.status, errorText);
+      const errorText = await response.text().catch(() => '');
+      console.error('SearchAPI place error:', response.status, errorText);
       return res.status(502).json({ error: 'SearchAPI.io request failed' });
     }
 
     const data = await response.json();
     const place = data.place_result || {};
-
-    // Parse extensions into categorized arrays
     const extensions = parseExtensions(place.extensions || []);
-
-    // Parse reviews histogram
     const reviewsHistogram = place.reviews_histogram || null;
-
-    // Parse popular times
     const popularTimes = parsePopularTimes(place.popular_times || {});
-
-    // Parse Q&A
     const questionsAndAnswers = place.questions_and_answers || null;
-
-    // Extract reviews from the response (these were previously discarded)
-    const reviews = normalizeReviews(data.review_results || place.reviews || []);
-
-    // Extract web reviews (external sources like TripAdvisor aggregated by Google)
-    const webReviews = (data.web_reviews || []).map(wr => ({
+    const reviews = normalizeSearchApiReviews(data.review_results || place.reviews || []);
+    const webReviews = (data.web_reviews || []).map((wr) => ({
       source: (wr.source || '').toLowerCase(),
       rating: wr.rating || null,
       reviewCount: wr.reviews || 0,
       url: wr.link || '',
     }));
 
-    // Parse open_hours into weekday descriptions array
     const hours = [];
     if (place.open_hours) {
       const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -83,27 +110,25 @@ export default async function handler(req, res) {
       }
     }
 
-    const result = {
+    res.setHeader('Cache-Control', 'private, max-age=86400');
+    return res.status(200).json({
       description: place.description || '',
-      hours: hours,
+      hours,
       serviceOptions: extensions.serviceOptions,
       amenities: extensions.amenities,
       highlights: extensions.highlights,
       accessibility: extensions.accessibility,
-      reviewsHistogram: reviewsHistogram,
-      popularTimes: popularTimes,
-      questionsAndAnswers: questionsAndAnswers,
-      reviews: reviews,
-      webReviews: webReviews,
-      // Additional fields not available from Google Places JS API
+      reviewsHistogram,
+      popularTimes,
+      questionsAndAnswers,
+      reviews,
+      webReviews,
       priceLevel: place.price || '',
       priceDescription: place.price_description || '',
-    };
-
-    res.setHeader('Cache-Control', 'private, max-age=86400');
-    return res.status(200).json(result);
+      provider: 'searchapi',
+    });
   } catch (err) {
-    console.error('SearchAPI.io place error:', err);
+    console.error('Place enrichment error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -118,7 +143,7 @@ function parseExtensions(extensions) {
 
   for (const group of extensions) {
     const title = (group.title || '').toLowerCase();
-    const items = (group.items || []).map(item => item.title || item.value || '');
+    const items = (group.items || []).map((item) => item.title || item.value || '');
 
     if (title.includes('service')) {
       result.serviceOptions.push(...items);
@@ -144,9 +169,8 @@ function parsePopularTimes(popularTimes) {
   }
 
   for (const [day, hours] of Object.entries(popularTimes.chart)) {
-    // Find peak busyness for each day
-    const peak = hours.reduce((max, h) => h.busyness_score > max.score
-      ? { score: h.busyness_score, time: h.time, info: h.info || '' }
+    const peak = hours.reduce((max, hour) => hour.busyness_score > max.score
+      ? { score: hour.busyness_score, time: hour.time, info: hour.info || '' }
       : max, { score: 0, time: '', info: '' });
     result.days[day] = peak;
   }
@@ -154,16 +178,16 @@ function parsePopularTimes(popularTimes) {
   return result;
 }
 
-function normalizeReviews(reviews) {
+function normalizeSearchApiReviews(reviews) {
   if (!Array.isArray(reviews)) return [];
-  return reviews.map(r => ({
-    authorName: r.user ? r.user.name || '' : '',
-    authorPhoto: r.user ? r.user.thumbnail || '' : '',
-    rating: r.rating || 0,
-    text: r.original_snippet || r.snippet || r.text || '',
-    date: r.date || '',
-    isoDate: r.iso_date || r.extracted_date || '',
-    isLocalGuide: r.user ? r.user.is_local_guide || false : false,
+  return reviews.map((review) => ({
+    authorName: review.user ? review.user.name || '' : '',
+    authorPhoto: review.user ? review.user.thumbnail || '' : '',
+    rating: review.rating || 0,
+    text: review.original_snippet || review.snippet || review.text || '',
+    date: review.date || '',
+    isoDate: review.iso_date || review.extracted_date || '',
+    isLocalGuide: review.user ? review.user.is_local_guide || false : false,
     source: 'google',
   }));
 }

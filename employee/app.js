@@ -239,8 +239,8 @@
       platformUbereats: 'Uber Eats',
       platformGrubhub: 'Grubhub',
       // SearchAPI.io integration
-      searchingViaSearchApi: 'Searching via SearchAPI.io...',
-      searchApiFallback: 'SearchAPI.io unavailable, using Google Places...',
+      searchingViaSearchApi: 'Searching nearby businesses...',
+      searchApiFallback: 'Google Places unavailable, using backup provider...',
       autoSaving: 'Auto-saving businesses...',
       autoSaveComplete: 'Auto-saved {0} businesses to database',
       enriching: 'Enriching business data...',
@@ -626,8 +626,8 @@
       platformUbereats: 'Uber Eats',
       platformGrubhub: 'Grubhub',
       // SearchAPI.io integration
-      searchingViaSearchApi: 'Buscando via SearchAPI.io...',
-      searchApiFallback: 'SearchAPI.io no disponible, usando Google Places...',
+      searchingViaSearchApi: 'Buscando negocios cercanos...',
+      searchApiFallback: 'Google Places no disponible, usando respaldo...',
       autoSaving: 'Guardando negocios automáticamente...',
       autoSaveComplete: '{0} negocios guardados automáticamente en la base de datos',
       enriching: 'Enriqueciendo datos del negocio...',
@@ -1450,7 +1450,7 @@
 
       updateProgress(10, t('locationFound', coords.formattedAddress));
 
-      // Step 2: Search via SearchAPI.io
+      // Step 2: Search via our server-side business search proxy
       const lat = coords.latLng.lat;
       const lng = coords.latLng.lng;
 
@@ -2081,7 +2081,7 @@
 
   async function ensurePlacePhotos(place, minimumCount) {
     const minCount = minimumCount || 6;
-    if (!place || !place.dataId) return;
+    if (!place || (!place.placeId && !place.dataId)) return;
     if (countUsablePhotoUrls(place) >= minCount) return;
 
     await enrichWithSearchAPIPhotos([place]);
@@ -2191,11 +2191,11 @@
     btnLookup.querySelector('.btn-loading').style.display = 'none';
   }
 
-  // ── SearchAPI.io Search ──
-  // Search via SearchAPI.io Google Maps endpoint (server-side proxy)
+  // ── Server-side Places Search ──
   async function searchViaSearchApi(type, lat, lng, radius, maxCount) {
     const allResults = [];
     const pagesNeeded = Math.ceil((maxCount || 20) / 20);
+    let nextPageToken = null;
 
     for (let page = 1; page <= pagesNeeded; page++) {
       const params = new URLSearchParams({
@@ -2206,24 +2206,26 @@
         hl: getSearchLanguage(),
       });
       if (page > 1) params.set('page', page);
+      if (nextPageToken) params.set('page_token', nextPageToken);
 
       const res = await withTimeout(
         fetch('/api/search/maps?' + params.toString()),
         20000,
-        'SearchAPI.io search'
+        'Business search'
       );
 
       if (res.status === 503) {
-        throw new Error('SearchAPI key not configured');
+        throw new Error('Business search provider not configured');
       }
 
       if (!res.ok) {
-        throw new Error('SearchAPI.io search failed: ' + res.status);
+        throw new Error('Business search failed: ' + res.status);
       }
 
       const data = await res.json();
       const results = data.results || [];
       allResults.push(...results);
+      nextPageToken = data.nextPageToken || null;
 
       if (page > 1) {
         updateProgress(15 + Math.round((page / pagesNeeded) * 10), t('searchingPage', page, pagesNeeded));
@@ -2873,10 +2875,12 @@
     }
   }
 
-  // Fetch additional reviews via SearchAPI.io dedicated reviews engine
-  // Only called for businesses that still lack reviews after Google Places JS + place details
+  // Fetch additional reviews via the server enrichment endpoint.
+  // This uses SearchAPI when available and Google Places fallback otherwise.
   async function enrichWithSearchAPIReviews(results) {
-    const needsReviews = results.filter(p => p.dataId && (!p.reviewData || p.reviewData.length === 0));
+    const needsReviews = results.filter((place) => (
+      (place.placeId || place.dataId) && (!place.reviewData || place.reviewData.length === 0)
+    ));
     if (needsReviews.length === 0) return;
 
     updateProgress(96, t('fetchingAdditionalReviews'));
@@ -2887,7 +2891,8 @@
       const batch = needsReviews.slice(i, i + batchSize);
       await Promise.all(batch.map(async (place) => {
         try {
-          const params = new URLSearchParams({ data_id: place.dataId });
+          const params = new URLSearchParams();
+          if (place.dataId) params.set('data_id', place.dataId);
           if (place.placeId) params.set('place_id', place.placeId);
           params.set('hl', getSearchLanguage());
           const res = await withTimeout(
@@ -2912,16 +2917,18 @@
           fetched++;
           updateProgress(96 + Math.round((fetched / needsReviews.length) * 1), t('fetchingAdditionalReviewsProgress', fetched, needsReviews.length));
         } catch (err) {
-          console.warn('SearchAPI review enrichment failed for', place.name, err);
+          console.warn('Review enrichment failed for', place.name, err);
         }
       }));
     }
   }
 
-  // Fetch additional photos via SearchAPI.io dedicated photos engine
-  // Only called for businesses that have few or no photos
+  // Fetch additional photos via the server enrichment endpoint.
+  // This uses Google Places first and SearchAPI fallback when needed.
   async function enrichWithSearchAPIPhotos(results) {
-    const needsPhotos = results.filter(p => p.dataId && countUsablePhotoUrls(p) < 6);
+    const needsPhotos = results.filter((place) => (
+      (place.placeId || place.dataId) && countUsablePhotoUrls(place) < 6
+    ));
     if (needsPhotos.length === 0) return;
 
     updateProgress(97, t('fetchingPhotos'));
@@ -2932,8 +2939,11 @@
       const batch = needsPhotos.slice(i, i + batchSize);
       await Promise.all(batch.map(async (place) => {
         try {
+          const params = new URLSearchParams();
+          if (place.placeId) params.set('place_id', place.placeId);
+          if (place.dataId) params.set('data_id', place.dataId);
           const res = await withTimeout(
-            fetch('/api/enrich/photos?data_id=' + encodeURIComponent(place.dataId)),
+            fetch('/api/enrich/photos?' + params.toString()),
             15000,
             'Photo enrichment'
           );
@@ -2952,7 +2962,7 @@
           fetched++;
           updateProgress(97 + Math.round((fetched / needsPhotos.length) * 1), t('fetchingPhotosProgress', fetched, needsPhotos.length));
         } catch (err) {
-          console.warn('SearchAPI photo enrichment failed for', place.name, err);
+          console.warn('Photo enrichment failed for', place.name, err);
         }
       }));
     }
