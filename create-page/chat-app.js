@@ -95,6 +95,9 @@ const CHECKLIST = [
 
 const ts = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const TARGET_UPLOAD_BYTES = Math.floor(MAX_UPLOAD_BYTES * 0.92);
+const MAX_PHOTO_DIMENSION = 1600;
 
 function normalizeText(value) {
   return String(value || '')
@@ -222,17 +225,113 @@ async function lookup(name, city) {
   }
 }
 
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('No se pudo leer la imagen.'));
+    };
+    image.src = objectUrl;
+  });
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) {
+        resolve(blob);
+        return;
+      }
+      reject(new Error('No se pudo preparar la imagen.'));
+    }, type, quality);
+  });
+}
+
+async function normalizePhotoUpload(file) {
+  if (!file || !file.size) return file;
+
+  if (file.type === 'image/gif') {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new Error('El GIF es demasiado pesado. Usa un archivo menor de 4MB.');
+    }
+    return file;
+  }
+
+  if (file.type.indexOf('image/') !== 0) {
+    return file;
+  }
+
+  const isSupported = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
+  if (isSupported && file.size <= TARGET_UPLOAD_BYTES) {
+    return file;
+  }
+
+  const image = await loadImageFromFile(file);
+  const sourceWidth = image.naturalWidth || image.width || 1;
+  const sourceHeight = image.naturalHeight || image.height || 1;
+  const baseScale = Math.min(1, MAX_PHOTO_DIMENSION / Math.max(sourceWidth, sourceHeight));
+  const scaleSteps = [1, 0.9, 0.8, 0.7, 0.6];
+  const qualitySteps = [0.88, 0.8, 0.72, 0.64, 0.56];
+  let bestBlob = file;
+
+  for (let i = 0; i < scaleSteps.length; i += 1) {
+    const scale = Math.min(1, baseScale * scaleSteps[i]);
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      throw new Error('No se pudo preparar la imagen.');
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+
+    for (let j = 0; j < qualitySteps.length; j += 1) {
+      const candidate = await canvasToBlob(canvas, 'image/jpeg', qualitySteps[j]);
+      if (candidate.size < bestBlob.size) {
+        bestBlob = candidate;
+      }
+      if (candidate.size <= TARGET_UPLOAD_BYTES) {
+        return candidate;
+      }
+    }
+  }
+
+  if (bestBlob.size <= MAX_UPLOAD_BYTES) {
+    return bestBlob;
+  }
+
+  throw new Error('La imagen es demasiado pesada incluso despues de optimizarla. Usa una menor de 4MB.');
+}
+
 async function uploadPhotoFile(file, photoType) {
-  const buffer = await file.arrayBuffer();
+  const optimizedFile = await normalizePhotoUpload(file);
+  const buffer = await optimizedFile.arrayBuffer();
   const res = await fetch('/api/public-builder/upload-photo?photo_type=' + encodeURIComponent(photoType), {
     method: 'POST',
     headers: {
-      'Content-Type': file.type
+      'Content-Type': optimizedFile.type || file.type || 'image/jpeg'
     },
     body: buffer
   });
   const payload = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(payload.error || 'No se pudo subir la foto.');
+  if (!res.ok) {
+    if (res.status === 413) {
+      throw new Error('La imagen es demasiado pesada. Usa una foto menor de 4MB.');
+    }
+    throw new Error(payload.error || 'No se pudo subir la foto.');
+  }
   return payload;
 }
 
@@ -1320,7 +1419,7 @@ function App() {
       await askOfferingsUpload();
     } catch (error) {
       console.error('Photo upload error:', error);
-      await botSay('No pude subir esas fotos. Puedes intentar de nuevo o seguir sin ellas por ahora.');
+      await botSay((error && error.message ? error.message + '\n\n' : '') + 'Puedes intentar de nuevo o seguir sin ellas por ahora.');
       setInputOff(false);
     }
   }
