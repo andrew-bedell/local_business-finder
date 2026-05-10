@@ -177,8 +177,6 @@ async function sendLifecycleEmail(action, business, website, supabaseUrl, supaba
 
   const customer = custs[0];
   const portalUrl = 'https://ahoratengopagina.com/mipagina';
-  const emailFrom = 'AhoraTengoPagina <andres@ahoratengopagina.com>';
-  const emailReplyTo = 'andres@ahoratengopagina.com';
 
   let emailContent;
 
@@ -205,7 +203,7 @@ async function sendLifecycleEmail(action, business, website, supabaseUrl, supaba
   }
 
   if (emailContent) {
-    const result = await sendEmail({ to: customer.email, ...emailContent, from: emailFrom, replyTo: emailReplyTo });
+    const result = await sendEmail({ to: customer.email, ...emailContent });
     if (!result.success) {
       console.warn(`${action} email failed:`, result.error);
     }

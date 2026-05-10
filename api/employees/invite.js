@@ -140,8 +140,6 @@ export default async function handler(req, res) {
       const emailResult = await sendEmail({
         to: email,
         ...emailContent,
-        from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-        replyTo: 'andres@ahoratengopagina.com',
       });
       if (!emailResult.success) {
         console.warn('Employee invite email failed (non-blocking):', emailResult.error);

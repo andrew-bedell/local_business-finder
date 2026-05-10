@@ -1,5 +1,20 @@
 // Shared Resend email utility
 // Uses RESEND_API_KEY env var — direct fetch to REST API (no SDK)
+//
+// From / Reply-To defaults come from EMAIL_FROM and EMAIL_REPLY_TO env vars so
+// the sender can be changed without touching code. Call sites should NOT pass
+// `from` / `replyTo` unless they need to override per-message.
+
+const DEFAULT_FROM = 'AhoraTengoPagina <andres@ahoratengopagina.com>';
+const DEFAULT_REPLY_TO = 'andres@ahoratengopagina.com';
+
+export function getDefaultFrom() {
+  return process.env.EMAIL_FROM || DEFAULT_FROM;
+}
+
+export function getDefaultReplyTo() {
+  return process.env.EMAIL_REPLY_TO || DEFAULT_REPLY_TO;
+}
 
 export async function sendEmail({ to, subject, html, text, from, replyTo }) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -16,12 +31,12 @@ export async function sendEmail({ to, subject, html, text, from, replyTo }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: from || 'AhoraTengoPagina <noreply@ahoratengopagina.com>',
+        from: from || getDefaultFrom(),
         to: [to],
         subject,
         html,
         ...(text ? { text } : {}),
-        ...(replyTo ? { reply_to: replyTo } : {}),
+        reply_to: replyTo || getDefaultReplyTo(),
       }),
     });
 

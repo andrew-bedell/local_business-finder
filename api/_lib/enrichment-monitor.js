@@ -309,8 +309,6 @@ async function sendEnrichmentAlertEmail({
     subject,
     html,
     text,
-    from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-    replyTo: 'andres@ahoratengopagina.com',
   });
 }
 

@@ -128,8 +128,6 @@ export default async function handler(req, res) {
         await sendEmail({
           to: customer.email,
           ...emailContent,
-          from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-          replyTo: 'andres@ahoratengopagina.com',
         });
       }
     } catch (emailErr) {
