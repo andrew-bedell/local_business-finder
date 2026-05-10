@@ -271,7 +271,7 @@
       <!-- ── Section: Dashboard Overview ── -->
       <div id="section-dashboard" class="c-section active" data-section="dashboard">
         <div class="c-topbar">
-          <div class="c-page-title" data-i18n-html="dash_title">Tu <span>Dashboard</span></div>
+          <div class="c-page-title" id="dashboard-title" data-i18n-html="dash_title">Tu <span>Dashboard</span></div>
           <div class="c-topbar-actions">
             <div class="c-badge-status">
               <span class="c-status-dot"></span>
@@ -293,7 +293,7 @@
         </div>
 
         <!-- Hero Card -->
-        <div class="c-hero-card">
+        <div class="c-hero-card" id="dashboard-hero-card">
           <div class="c-hero-eyebrow" data-i18n="hero_eyebrow">Tu Página Web</div>
           <div class="c-hero-title" id="website-url">Tu sitio web está en construcción</div>
           <div class="c-hero-sub" id="website-sub">Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.</div>
@@ -302,7 +302,7 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 19H5V5h7V3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
               <span data-i18n="hero_visit">Visitar mi sitio</span>
             </a>
-            <a href="#" class="c-btn c-btn-ghost" data-section="editor">
+            <a href="#" class="c-btn c-btn-ghost" data-section="editor" id="website-secondary-btn">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               <span data-i18n="hero_customize">Personalizar</span>
             </a>
@@ -369,7 +369,7 @@
         </div>
 
         <!-- Stats Grid -->
-        <div class="c-stats-grid">
+        <div class="c-stats-grid" id="dashboard-stats">
           <div class="c-stat-card c-stat-visits">
             <div class="c-stat-icon">👁️</div>
             <div class="c-stat-label" data-i18n="stat_visits">Visitas este mes</div>
@@ -396,8 +396,59 @@
           </div>
         </div>
 
+        <div class="c-panel c-free-plan-panel" id="free-plan-overview" style="display:none;">
+          <div class="c-panel-header">
+            <div>
+              <div class="c-panel-title">Tu cuenta gratuita ya está lista</div>
+              <p class="c-free-plan-kicker" id="free-plan-kicker">Ahora conviértela en una página lista para vender por WhatsApp.</p>
+            </div>
+            <span class="c-badge c-badge--incomplete">Gratis</span>
+          </div>
+          <div class="c-free-plan-grid">
+            <div class="c-free-plan-copy">
+              <h3 class="c-free-plan-headline" id="free-plan-headline">Completa tu demo y activa tu plan para empezar a recibir más clientes.</h3>
+              <p class="c-free-plan-copy-text" id="free-plan-copy">Cuando tu página esté lista, la conectamos con Google, WhatsApp y el contenido que usan ChatGPT y otros asistentes para recomendar negocios como el tuyo.</p>
+              <div class="c-hero-actions c-free-plan-actions">
+                <a href="#" class="c-btn c-btn-primary" data-section="wizard" id="free-plan-primary-btn">Completar mis datos</a>
+                <a href="#" class="c-btn c-btn-white" id="free-plan-plan-btn">Activar plan ahora</a>
+              </div>
+              <p class="c-free-plan-note" id="free-plan-note">Primero completas tu demo. Después eliges el plan y publicamos tu sitio.</p>
+            </div>
+            <div class="c-free-plan-steps">
+              <div class="c-free-plan-step" id="free-step-account">
+                <span class="c-free-plan-step-num">1</span>
+                <div>
+                  <strong>Tu cuenta gratis ya quedó creada</strong>
+                  <span>Ya puedes entrar a Mi Página y seguir con el siguiente paso.</span>
+                </div>
+              </div>
+              <div class="c-free-plan-step" id="free-step-wizard">
+                <span class="c-free-plan-step-num">2</span>
+                <div>
+                  <strong>Completa tu información</strong>
+                  <span>Sube fotos, productos, menú, horarios y WhatsApp para armar tu demo.</span>
+                </div>
+              </div>
+              <div class="c-free-plan-step" id="free-step-demo">
+                <span class="c-free-plan-step-num">3</span>
+                <div>
+                  <strong>Genera tu demo</strong>
+                  <span>Te mostramos cómo se verá tu página antes de cobrarte.</span>
+                </div>
+              </div>
+              <div class="c-free-plan-step" id="free-step-plan">
+                <span class="c-free-plan-step-num">4</span>
+                <div>
+                  <strong>Activa tu plan</strong>
+                  <span>Publicamos tu sitio y te ayudamos a conectar Google, dominio y WhatsApp.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Bottom Grid -->
-        <div class="c-bottom-grid">
+        <div class="c-bottom-grid" id="dashboard-bottom-grid">
           <!-- Recent Requests -->
           <div class="c-panel">
             <div class="c-panel-header">
@@ -604,11 +655,37 @@
       <!-- ── Section: Facturacion ── -->
       <div id="section-billing" class="c-section" data-section="billing">
         <div class="c-topbar">
-          <div class="c-page-title">Facturación</div>
+          <div class="c-page-title" id="billing-title">Facturación</div>
         </div>
-        <p class="c-section-desc">Administra tu suscripción y método de pago.</p>
+        <p class="c-section-desc" id="billing-desc">Administra tu suscripción y método de pago.</p>
 
-        <div class="c-panel">
+        <div class="c-panel c-free-plan-panel" id="free-plan-billing-panel" style="display:none;">
+          <div class="c-panel-title" style="margin-bottom:12px">Activa tu plan cuando estés listo</div>
+          <p class="c-free-plan-copy-text" id="free-plan-billing-copy">Tu cuenta gratuita ya guardó tu negocio. El siguiente paso es terminar tu demo y activar un plan para publicar tu página y empezar a mover más conversaciones por WhatsApp.</p>
+          <div class="c-free-plan-steps c-free-plan-steps--compact">
+            <div class="c-free-plan-step">
+              <span class="c-free-plan-step-num">1</span>
+              <div>
+                <strong>Completa o mejora tu demo</strong>
+                <span>Entre más datos subas, mejor quedará tu página.</span>
+              </div>
+            </div>
+            <div class="c-free-plan-step">
+              <span class="c-free-plan-step-num">2</span>
+              <div>
+                <strong>Elige tu plan</strong>
+                <span>Publicamos tu sitio, lo conectamos a Google y dejamos tu CTA lista para WhatsApp.</span>
+              </div>
+            </div>
+          </div>
+          <div class="c-hero-actions c-free-plan-actions">
+            <a href="#" class="c-btn c-btn-primary" id="btn-free-plan-checkout">Elegir mi plan ahora</a>
+            <button type="button" class="c-btn c-btn-ghost" data-section="wizard" id="btn-free-plan-wizard">Completar mi demo</button>
+          </div>
+          <p class="c-free-plan-note" id="free-plan-billing-note">Cuando actives tu plan, también te ayudamos a usar ese sitio para conseguir más llamadas, números y mensajes por WhatsApp.</p>
+        </div>
+
+        <div class="c-panel" id="billing-current-plan-panel">
           <div class="c-panel-title" style="margin-bottom:20px">Plan Actual</div>
           <div class="c-plan-summary">
             <div class="c-plan-info">
@@ -629,7 +706,7 @@
           </div>
         </div>
 
-        <div class="c-panel">
+        <div class="c-panel" id="billing-manage-panel">
           <div class="c-panel-title" style="margin-bottom:12px">Administrar Pago</div>
           <p class="c-text-muted" style="margin-bottom:16px">Actualiza tu método de pago o descarga facturas desde el portal de facturación.</p>
           <button type="button" class="c-btn c-btn-primary" id="btn-stripe-portal">Administrar Facturación</button>

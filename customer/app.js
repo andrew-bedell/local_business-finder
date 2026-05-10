@@ -15,6 +15,8 @@
   let businessData = null;
   let websiteData = null;
   let subscriptionData = null;
+  let isFreePlanPortal = false;
+  let requestedPortalSection = null;
   let isDashboardLoading = false;
   let isRecoveryMode = false;
   let isSetupMode = false;
@@ -41,6 +43,25 @@
   function wait(ms) {
     return new Promise(function (resolve) {
       window.setTimeout(resolve, ms);
+    });
+  }
+
+  function isFreePlanCustomer(customer, subscription) {
+    if (!customer) return false;
+    var monthlyPrice = Number(customer.monthly_price || 0);
+    var hasStripeSubscription = !!(subscription && subscription.stripe_subscription_id);
+    return monthlyPrice <= 0 && !hasStripeSubscription;
+  }
+
+  function getPlanSelectionUrl(website) {
+    if (!website || !website.id) return '';
+    return '/planes/' + encodeURIComponent(website.id);
+  }
+
+  function setSectionNavVisibility(sectionId, isVisible) {
+    var items = document.querySelectorAll('[data-section="' + sectionId + '"]:not(.c-section)');
+    items.forEach(function (item) {
+      item.style.display = isVisible ? '' : 'none';
     });
   }
 
@@ -798,6 +819,9 @@
     if (pathParts.length >= 2 && pathParts[0] === 'mipagina') {
       businessSlug = decodeURIComponent(pathParts[1]);
     }
+
+    var initialParams = new URLSearchParams(window.location.search);
+    requestedPortalSection = initialParams.get('section') || null;
 
     // Detect recovery mode from URL hash (before Supabase processes the token)
     var hash = window.location.hash;
@@ -1577,11 +1601,13 @@
       subscriptionData = results[2];
       var editRequests = results[3];
       var team = results[4];
+      isFreePlanPortal = isFreePlanCustomer(customer, subscriptionData);
 
       // Step 3: Render everything
       renderDashboard(businessData, websiteData, subscriptionData, editRequests);
       renderBusinessInfo(businessData);
       renderBilling(subscriptionData, customer);
+      renderPortalMode(customer, websiteData, subscriptionData);
       renderEditRequests(editRequests);
       renderInvoiceHistory();
       setupTeamSection();
@@ -1602,13 +1628,17 @@
       // Check for ?review= URL parameter
       var urlParams = new URLSearchParams(window.location.search);
       var reviewId = urlParams.get('review');
+      var requestedSection = requestedPortalSection ? requestedPortalSection.replace(/^section-/, '') : '';
+      requestedPortalSection = null;
       if (reviewId) {
         loadReviewSection(reviewId);
+      } else if (isFreePlanPortal) {
+        showSection(requestedSection || 'dashboard');
       } else if (!websiteData) {
         // No website yet — force wizard as the first thing the user sees
         showSection('wizard');
       } else {
-        showSection('dashboard');
+        showSection(requestedSection || 'dashboard');
         // Check for pending approvals (show banner)
         checkPendingApprovals();
       }
@@ -1623,10 +1653,15 @@
 
   // ── Rendering ──
   function renderDashboard(business, website, subscription, editRequests) {
+    var freePortal = isFreePlanPortal;
+    var customer = customerData && customerData.customers ? customerData.customers : null;
+
     // Website URL — show actual published_url or custom domain
     var websiteUrlEl = $('#website-url');
     var websiteSubEl = $('#website-sub');
     var visitBtn = $('#website-visit-btn');
+    var dashboardTitleEl = $('#dashboard-title');
+    var secondaryBtn = $('#website-secondary-btn');
     var displayUrl = null;
 
     var previewUrl = website ? '/ver/' + website.id : null;
@@ -1641,19 +1676,25 @@
       if (displayUrl) {
         websiteUrlEl.innerHTML = '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escapeHtml(displayUrl) + '</a>';
       } else if (previewUrl) {
-        websiteUrlEl.innerHTML = 'Tu sitio web está en vista previa — <a href="' + escapeHtml(previewUrl) + '" target="_blank" rel="noopener" style="color:var(--c-primary);text-decoration:underline;">Ver demo</a>';
+        websiteUrlEl.innerHTML = (freePortal ? 'Tu demo gratuita está lista — ' : 'Tu sitio web está en vista previa — ') + '<a href="' + escapeHtml(previewUrl) + '" target="_blank" rel="noopener" style="color:var(--c-primary);text-decoration:underline;">Ver demo</a>';
       } else {
-        websiteUrlEl.textContent = 'Tu sitio web está en construcción';
+        websiteUrlEl.textContent = freePortal ? 'Tu demo gratuita está en preparación' : 'Tu sitio web está en construcción';
       }
     }
 
     if (websiteSubEl) {
       if (displayUrl) {
-        websiteSubEl.textContent = 'Tu página web está activa y lista para recibir clientes.';
+        websiteSubEl.textContent = freePortal
+          ? 'Tu página ya está lista. El siguiente paso es activar tu plan para mover más clientes desde Google, WhatsApp y asistentes como ChatGPT.'
+          : 'Tu página web está activa y lista para recibir clientes.';
       } else if (previewUrl) {
-        websiteSubEl.textContent = 'Tu página web está lista para revisar. Pronto será publicada.';
+        websiteSubEl.textContent = freePortal
+          ? 'Revisa tu demo, ajusta lo que haga falta y luego activa tu plan para publicarla y conectar tu negocio a Google.'
+          : 'Tu página web está lista para revisar. Pronto será publicada.';
       } else {
-        websiteSubEl.textContent = 'Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.';
+        websiteSubEl.textContent = freePortal
+          ? 'Completa tu información para generar tu demo gratis y preparar una página que convierta más visitas en mensajes por WhatsApp.'
+          : 'Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.';
       }
     }
 
@@ -1666,6 +1707,19 @@
         visitBtn.style.display = '';
       } else {
         visitBtn.style.display = 'none';
+      }
+    }
+
+    if (dashboardTitleEl) {
+      dashboardTitleEl.innerHTML = freePortal ? 'Tu siguiente <span>paso</span>' : 'Tu <span>Dashboard</span>';
+    }
+
+    if (secondaryBtn) {
+      secondaryBtn.setAttribute('data-section', freePortal ? 'wizard' : 'editor');
+      secondaryBtn.href = '#';
+      var secondaryLabel = secondaryBtn.querySelector('span');
+      if (secondaryLabel) {
+        secondaryLabel.textContent = freePortal ? 'Completar mi demo' : 'Personalizar';
       }
     }
 
@@ -1690,18 +1744,22 @@
           incomplete: 'c-badge--incomplete',
           trialing: 'c-badge--trialing'
         };
-        var label = statusLabels[subscription.status] || subscription.status;
+        var label = freePortal ? 'Cuenta gratuita' : (statusLabels[subscription.status] || subscription.status);
         var cls = statusClasses[subscription.status] || '';
         statusEl.innerHTML = '<span class="c-badge ' + cls + '">' + escapeHtml(label) + '</span>';
       } else {
-        statusEl.innerHTML = '<span class="c-badge c-badge--incomplete">Sin suscripción</span>';
+        statusEl.innerHTML = freePortal
+          ? '<span class="c-badge c-badge--incomplete">Cuenta gratuita</span>'
+          : '<span class="c-badge c-badge--incomplete">Sin suscripción</span>';
       }
     }
 
     // Next billing date
     var billingEl = $('#next-billing');
     if (billingEl) {
-      if (subscription && subscription.current_period_end) {
+      if (freePortal) {
+        billingEl.textContent = website ? 'Listo para activar' : 'Completa tu demo';
+      } else if (subscription && subscription.current_period_end) {
         billingEl.textContent = formatDate(subscription.current_period_end);
       } else {
         billingEl.textContent = '—';
@@ -1720,9 +1778,16 @@
       var openCount = editRequests.filter(function (r) {
         return r.status !== 'completed' && r.status !== 'rejected' && r.status !== 'customer_rejected';
       }).length;
-      statRequests.textContent = String(openCount);
+      statRequests.textContent = freePortal ? (website ? '1' : '0') : String(openCount);
     } else if (statRequests) {
       statRequests.textContent = '0';
+    }
+
+    if (freePortal && customer) {
+      var planNameEl = $('#plan-name');
+      var planPriceEl = $('#plan-price');
+      if (planNameEl) planNameEl.textContent = 'Cuenta gratuita';
+      if (planPriceEl) planPriceEl.textContent = 'Gratis';
     }
   }
 
@@ -1772,9 +1837,10 @@
   }
 
   function renderBilling(subscription, customer) {
-    var planLabel = 'Plan Mensual — AhoraTengoPagina';
-    var priceLabel = '—';
-    if (customer) {
+    var freePortal = isFreePlanPortal;
+    var planLabel = freePortal ? 'Cuenta gratuita' : 'Plan Mensual — AhoraTengoPagina';
+    var priceLabel = freePortal ? 'Gratis' : '—';
+    if (customer && !freePortal) {
       priceLabel = formatCurrency(customer.monthly_price, customer.currency);
     }
 
@@ -1792,7 +1858,10 @@
 
     // Billing status badge
     var billingBadge = $('#billing-status-badge');
-    if (billingBadge && subscription) {
+    if (billingBadge && freePortal) {
+      billingBadge.textContent = 'Gratis';
+      billingBadge.className = 'c-badge c-badge--incomplete';
+    } else if (billingBadge && subscription) {
       var statusLabels = {
         active: 'Activa',
         past_due: 'Pago pendiente',
@@ -1817,7 +1886,9 @@
     // Billing date
     var billingDateEl = $('#billing-date');
     if (billingDateEl) {
-      if (subscription && subscription.current_period_end) {
+      if (freePortal) {
+        billingDateEl.textContent = 'Cuando elijas un plan';
+      } else if (subscription && subscription.current_period_end) {
         billingDateEl.textContent = formatDate(subscription.current_period_end);
       } else {
         billingDateEl.textContent = '—';
@@ -1827,12 +1898,14 @@
     // Payment method
     var paymentMethodEl = $('#payment-method');
     if (paymentMethodEl) {
-      paymentMethodEl.textContent = 'Administrado por Stripe';
+      paymentMethodEl.textContent = freePortal ? 'Se configurará al activar tu plan' : 'Administrado por Stripe';
     }
 
     // Update cancel button state
     var btnCancel = $('#btn-cancel-subscription');
-    if (btnCancel && subscription) {
+    if (btnCancel && freePortal) {
+      btnCancel.style.display = 'none';
+    } else if (btnCancel && subscription) {
       if (subscription.status === 'cancelled') {
         btnCancel.disabled = true;
         btnCancel.textContent = 'Suscripción cancelada';
@@ -1840,6 +1913,138 @@
         btnCancel.disabled = true;
         btnCancel.textContent = 'Cancelación programada';
       }
+    }
+  }
+
+  function renderPortalMode(customer, website, subscription) {
+    isFreePlanPortal = isFreePlanCustomer(customer, subscription);
+
+    var freeSectionsOnly = ['dashboard', 'wizard', 'billing', 'account'];
+    var gatedSections = ['analytics', 'business', 'referrals', 'requests', 'editor', 'team', 'scheduling', 'operations'];
+
+    for (var i = 0; i < gatedSections.length; i += 1) {
+      setSectionNavVisibility(gatedSections[i], !isFreePlanPortal);
+    }
+
+    setSectionNavVisibility('dashboard', true);
+    setSectionNavVisibility('wizard', true);
+    setSectionNavVisibility('billing', true);
+    setSectionNavVisibility('account', true);
+
+    var domainCard = $('#domain-card');
+    var dashboardStats = $('#dashboard-stats');
+    var dashboardBottomGrid = $('#dashboard-bottom-grid');
+    var freePlanOverview = $('#free-plan-overview');
+    var approvalBanner = $('#c-approval-banner');
+    var freePlanBillingPanel = $('#free-plan-billing-panel');
+    var billingCurrentPlanPanel = $('#billing-current-plan-panel');
+    var billingManagePanel = $('#billing-manage-panel');
+    var billingTitle = $('#billing-title');
+    var billingDesc = $('#billing-desc');
+    var navBilling = document.querySelector('.c-nav-item[data-section="billing"] span');
+    var freePlanPrimaryBtn = $('#free-plan-primary-btn');
+    var freePlanPlanBtn = $('#free-plan-plan-btn');
+    var freePlanCheckoutBtn = $('#btn-free-plan-checkout');
+    var freePlanWizardBtn = $('#btn-free-plan-wizard');
+    var freePlanHeadline = $('#free-plan-headline');
+    var freePlanCopy = $('#free-plan-copy');
+    var freePlanNote = $('#free-plan-note');
+    var freePlanKicker = $('#free-plan-kicker');
+    var freePlanBillingCopy = $('#free-plan-billing-copy');
+    var freePlanBillingNote = $('#free-plan-billing-note');
+    var planUrl = getPlanSelectionUrl(website);
+
+    if (domainCard) domainCard.style.display = isFreePlanPortal ? 'none' : domainCard.style.display;
+    if (dashboardStats) dashboardStats.style.display = isFreePlanPortal ? 'none' : '';
+    if (dashboardBottomGrid) dashboardBottomGrid.style.display = isFreePlanPortal ? 'none' : '';
+    if (approvalBanner) approvalBanner.style.display = isFreePlanPortal ? 'none' : approvalBanner.style.display;
+    if (freePlanOverview) freePlanOverview.style.display = isFreePlanPortal ? '' : 'none';
+    if (freePlanBillingPanel) freePlanBillingPanel.style.display = isFreePlanPortal ? '' : 'none';
+    if (billingCurrentPlanPanel) billingCurrentPlanPanel.style.display = isFreePlanPortal ? 'none' : '';
+    if (billingManagePanel) billingManagePanel.style.display = isFreePlanPortal ? 'none' : '';
+    if (billingTitle) billingTitle.textContent = isFreePlanPortal ? 'Activar plan' : 'Facturación';
+    if (billingDesc) {
+      billingDesc.textContent = isFreePlanPortal
+        ? 'Estos son los pasos para pasar de tu cuenta gratuita a una página publicada y lista para vender.'
+        : 'Administra tu suscripción y método de pago.';
+    }
+    if (navBilling) navBilling.textContent = isFreePlanPortal ? 'Activar plan' : 'Facturación';
+
+    if (freePlanHeadline) {
+      freePlanHeadline.textContent = website
+        ? 'Tu demo ya está lista. Ahora activa tu plan para publicarla y conseguir más clientes.'
+        : 'Completa tu demo y activa tu plan para empezar a recibir más clientes.';
+    }
+    if (freePlanCopy) {
+      freePlanCopy.textContent = website
+        ? 'Ya tienes una vista previa lista. El siguiente paso es elegir tu plan para publicar tu página, conectar Google Places y dejar tu CTA de WhatsApp lista para convertir.'
+        : 'Sube tus datos, fotos y servicios para generar una demo gratis. Después eliges tu plan y publicamos una página pensada para traer más llamadas y mensajes por WhatsApp.';
+    }
+    if (freePlanNote) {
+      freePlanNote.textContent = website
+        ? 'Tu demo gratuita ya existe. Al activar tu plan la publicamos, conectamos tu dominio y te ayudamos con Google y asistentes como ChatGPT.'
+        : 'Primero completas tu demo. Después eliges el plan y publicamos tu sitio.';
+    }
+    if (freePlanKicker) {
+      freePlanKicker.textContent = website
+        ? 'Tu siguiente paso es publicar tu página.'
+        : 'Ahora conviértela en una página lista para vender por WhatsApp.';
+    }
+
+    if (freePlanBillingCopy) {
+      freePlanBillingCopy.textContent = website
+        ? 'Tu demo ya está armada. Elige tu plan para publicarla, conectar Google Places y transformar esa información en más conversaciones por WhatsApp.'
+        : 'Tu cuenta gratuita ya guardó tu negocio. El siguiente paso es terminar tu demo y luego activar un plan para publicar tu página y empezar a mover más conversaciones por WhatsApp.';
+    }
+    if (freePlanBillingNote) {
+      freePlanBillingNote.textContent = website
+        ? 'Cuando actives tu plan, también te ayudamos con dominio, Google y la parte comercial para que tu página empiece a generar leads.'
+        : 'Mientras completas tu demo, puedes volver aquí para activar tu plan en cuanto quieras publicar.';
+    }
+
+    if (freePlanPrimaryBtn) {
+      freePlanPrimaryBtn.textContent = website ? 'Mejorar mi demo' : 'Completar mis datos';
+      freePlanPrimaryBtn.setAttribute('data-section', 'wizard');
+      freePlanPrimaryBtn.href = '#';
+    }
+
+    if (freePlanPlanBtn) {
+      if (planUrl) {
+        freePlanPlanBtn.textContent = 'Activar plan ahora';
+        freePlanPlanBtn.href = planUrl;
+      } else {
+        freePlanPlanBtn.textContent = 'Generar mi demo primero';
+        freePlanPlanBtn.href = window.location.pathname + '?section=wizard';
+      }
+    }
+
+    if (freePlanCheckoutBtn) {
+      if (planUrl) {
+        freePlanCheckoutBtn.textContent = 'Elegir mi plan ahora';
+        freePlanCheckoutBtn.href = planUrl;
+      } else {
+        freePlanCheckoutBtn.textContent = 'Completar mi demo primero';
+        freePlanCheckoutBtn.href = window.location.pathname + '?section=wizard';
+      }
+    }
+
+    if (freePlanWizardBtn) {
+      freePlanWizardBtn.textContent = website ? 'Seguir mejorando mi demo' : 'Completar mi demo';
+    }
+
+    var stepAccount = $('#free-step-account');
+    var stepWizard = $('#free-step-wizard');
+    var stepDemo = $('#free-step-demo');
+    var stepPlan = $('#free-step-plan');
+    if (stepAccount) stepAccount.className = 'c-free-plan-step is-done';
+    if (stepWizard) stepWizard.className = 'c-free-plan-step ' + (website ? 'is-done' : 'is-active');
+    if (stepDemo) stepDemo.className = 'c-free-plan-step ' + (website ? 'is-done' : '');
+    if (stepPlan) stepPlan.className = 'c-free-plan-step ' + (website ? 'is-active' : '');
+
+    if (!isFreePlanPortal) {
+      freeSectionsOnly.forEach(function (sectionId) {
+        setSectionNavVisibility(sectionId, true);
+      });
     }
   }
 
@@ -2340,9 +2545,14 @@
   function showSection(sectionId) {
     // Normalize — support both "dashboard" and "section-dashboard"
     var normalizedId = sectionId.replace(/^section-/, '');
+    var freeAllowedSections = ['dashboard', 'wizard', 'billing', 'account', 'review'];
+
+    if (isFreePlanPortal && freeAllowedSections.indexOf(normalizedId) === -1) {
+      normalizedId = 'dashboard';
+    }
 
     // Force wizard if no website exists (except account section for logout/settings)
-    if (!websiteData && normalizedId !== 'wizard' && normalizedId !== 'account' && normalizedId !== 'operations') {
+    if (!isFreePlanPortal && !websiteData && normalizedId !== 'wizard' && normalizedId !== 'account' && normalizedId !== 'operations') {
       normalizedId = 'wizard';
     }
 
@@ -7645,6 +7855,8 @@
       // Reload website data and navigate to dashboard
       websiteData = await loadWebsiteInfo(businessData.id);
       renderDashboard(businessData, websiteData, subscriptionData, []);
+      renderBilling(subscriptionData, customerData ? customerData.customers : null);
+      renderPortalMode(customerData ? customerData.customers : null, websiteData, subscriptionData);
       showSection('dashboard');
     } catch (err) {
       console.error('Website generation error:', err);

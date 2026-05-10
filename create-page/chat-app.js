@@ -118,6 +118,14 @@ function normalizeMaybeBlank(value) {
   return isNegative(value) ? '' : String(value || '').trim();
 }
 
+function buildServiceAreaAddress(values) {
+  const neighborhood = normalizeMaybeBlank(values && values.barrio);
+  const city = normalizeMaybeBlank(values && values.ciudad);
+  const state = normalizeMaybeBlank(values && values.estado);
+  const country = normalizeMaybeBlank(values && values.pais);
+  return [neighborhood, city, state, country].filter(Boolean).join(', ');
+}
+
 function mapBusinessType(rawValue) {
   const normalized = normalizeText(rawValue);
   for (let i = 0; i < CATEGORY_KEYWORDS.length; i += 1) {
@@ -831,6 +839,7 @@ function App() {
   const collRef = useRef({});
   const foundFieldIdxRef = useRef(0);
   const contactContextRef = useRef('found');
+  const lookupModeRef = useRef('lookup');
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -929,10 +938,10 @@ function App() {
     introFlow();
   }, []);
 
-  async function askGoogleListingStatus() {
+  async function askListingIntent() {
     setInputOff(true);
-    await botSay('No encontre una ficha clara en Google Maps.');
-    await botSay('Ya tienes una ficha de *Google Maps / Google Places* para este negocio?');
+    await botSay('Antes de buscar tu negocio, cuentame algo rapido.');
+    await botSay('Tu negocio ya aparece en *Google Maps*?');
     pushMsg({
       from: 'bot',
       time: ts(),
@@ -940,20 +949,117 @@ function App() {
         <ChoiceButtons
           options={[
             {
-              label: 'Si, ya la tengo',
-              onClick: addChoiceReply('Si, ya la tengo', async () => {
-                collect({ listing_status: 'has_google_profile' });
+              label: 'Si',
+              tone: 'solid',
+              onClick: addChoiceReply('Si', async () => {
+                collect({ listing_preference: 'yes' });
+                await askBusinessIdentity('lookup');
+              })
+            },
+            {
+              label: 'No',
+              onClick: addChoiceReply('No', async () => {
+                collect({ listing_preference: 'no' });
+                await askNoListingPlan();
+              })
+            },
+            {
+              label: 'No se',
+              onClick: addChoiceReply('No se', async () => {
+                collect({ listing_preference: 'unknown' });
+                await botSay('No pasa nada. Vamos a intentar encontrarlo igualmente.');
+                await askBusinessIdentity('lookup');
+              })
+            }
+          ]}
+        />
+      )
+    });
+  }
+
+  async function askNoListingPlan() {
+    setInputOff(true);
+    await botSay('Perfecto. Entonces vamos a crear tu pagina primero.');
+    await botSay('Tu negocio atiende desde un *punto fisico* que la gente puede visitar, o prefieres vender solo *online / por WhatsApp*?');
+    pushMsg({
+      from: 'bot',
+      time: ts(),
+      rich: (
+        <ChoiceButtons
+          options={[
+            {
+              label: 'Tengo un punto fisico',
+              tone: 'solid',
+              onClick: addChoiceReply('Tengo un punto fisico', async () => {
+                collect({
+                  listing_status: 'needs_google_profile',
+                  business_location_mode: 'physical'
+                });
+                await botSay('Buenisimo. Con esa pagina te ayudaremos a conectar tu negocio a *Google Places* para conseguir mas llamadas, mas numeros y mas mensajes por *WhatsApp*.\n\nAdemas, ChatGPT y otros asistentes podran usar esa informacion para recomendar tu negocio con mas frecuencia.');
+                await askBusinessIdentity('manual');
+              })
+            },
+            {
+              label: 'Solo vendo online',
+              onClick: addChoiceReply('Solo vendo online', async () => {
+                collect({
+                  listing_status: 'online_only_no_storefront',
+                  business_location_mode: 'online_only'
+                });
+                await botSay('Perfecto. Entonces armaremos una pagina enfocada en vender online por *WhatsApp*, sin depender de un local abierto al publico.');
+                await botSay('Usaremos tu *barrio, ciudad, estado y pais* como referencia de cobertura para que la gente sepa en que zona vendes.');
+                await askBusinessIdentity('manual');
+              })
+            }
+          ]}
+        />
+      )
+    });
+  }
+
+  async function askBusinessIdentity(mode) {
+    lookupModeRef.current = mode;
+    setInputOff(false);
+    stepRef.current = 'business_name';
+    await botSay(mode === 'manual'
+      ? 'Como se llama tu *negocio*?'
+      : 'Como se llama tu *negocio*?');
+  }
+
+  async function handleLookupMiss() {
+    setInputOff(true);
+    await botSay('No encontre una ficha clara en Google Maps.');
+    await botSay('Si tienes el *link de Google Maps* o el *nombre exacto* como aparece ahi, compártelo. Si no, seguimos con tu pagina y despues te ayudamos a conectarla a Google y a conseguir mas mensajes por *WhatsApp*.');
+    pushMsg({
+      from: 'bot',
+      time: ts(),
+      rich: (
+        <ChoiceButtons
+          options={[
+            {
+              label: 'Tengo el link exacto',
+              onClick: addChoiceReply('Tengo el link exacto', async () => {
                 setInputOff(false);
                 stepRef.current = 'listing_details';
                 await botSay('Perfecto. Comparte el *link de Google Maps* o el *nombre exacto* como aparece ahi para que lo revisemos despues.');
               })
             },
             {
-              label: 'No, todavia no',
+              label: 'Sigamos sin ficha',
               tone: 'solid',
-              onClick: addChoiceReply('No, todavia no', async () => {
-                collect({ listing_status: 'needs_google_profile' });
-                await botSay('No pasa nada. Eso esta bien.\n\nTe ayudaremos a crear tu ficha de Google Maps como parte del servicio despues de hacer tu pagina web.');
+              onClick: addChoiceReply('Sigamos sin ficha', async () => {
+                const preference = collRef.current.listing_preference;
+                const listingStatus = preference === 'yes'
+                  ? 'has_google_profile'
+                  : preference === 'no'
+                    ? 'needs_google_profile'
+                    : 'not_sure_google_profile';
+                collect({ listing_status: listingStatus });
+                if (preference === 'yes') {
+                  await botSay('Perfecto. Seguimos con tu pagina y luego revisamos esa ficha contigo para conectarla bien a Google, WhatsApp y asistentes como ChatGPT.');
+                } else {
+                  await botSay('No pasa nada. Con tu pagina te ayudaremos a conectar Google Places para traer mas llamadas, mas numeros y mas mensajes por *WhatsApp*.\n\nTambien haces que ChatGPT y otros asistentes tengan mejor informacion para recomendar tu negocio con mas frecuencia.');
+                }
                 await beginContactCapture('manual');
               })
             }
@@ -991,7 +1097,7 @@ function App() {
     await sleep(250);
 
     if (!allResults.length) {
-      await askGoogleListingStatus();
+      await handleLookupMiss();
       return;
     }
 
@@ -1020,7 +1126,7 @@ function App() {
               askFoundField(0);
             }}
             onNone={addChoiceReply('Ninguna es la mia', async () => {
-              await askGoogleListingStatus();
+              await handleLookupMiss();
             })}
           />
         )
@@ -1328,10 +1434,11 @@ function App() {
   }
 
   async function startFinalQuestions() {
-    setInputOff(false);
+    setInputOff(true);
     await botSay('Ya casi terminamos. Solo un par de preguntas mas.');
     stepRef.current = 'slogan';
     await botSay('Tienes un *slogan* o frase corta para tu negocio?\n\n_Escribe "no" si no tienes._');
+    setInputOff(false);
   }
 
   async function submitData() {
@@ -1340,6 +1447,10 @@ function App() {
 
     const data = collRef.current;
     const normalizedBusinessType = mapBusinessType(data.tipo || '');
+    const serviceAreaAddress = buildServiceAreaAddress(data);
+    const effectiveAddress = data.business_location_mode === 'online_only'
+      ? serviceAreaAddress
+      : (data.direccion || '');
     const notes = [];
     if (data.slogan && !isNegative(data.slogan)) notes.push('Slogan: ' + data.slogan);
     if (data.redes && !isNegative(data.redes)) notes.push('Redes: ' + data.redes);
@@ -1353,8 +1464,12 @@ function App() {
       businessType: normalizedBusinessType,
       businessPhone: data.telefono || '',
       businessWhatsapp: data.whatsapp || '',
-      addressFull: data.direccion || '',
+      addressFull: effectiveAddress,
       city: data.ciudad || '',
+      state: data.estado || '',
+      country: data.pais || '',
+      neighborhood: data.barrio || '',
+      locationMode: data.business_location_mode || 'physical',
       aboutBusiness: data.sobre || '',
       founderName: data.propietario || '',
       hours: data.horario ? { general: data.horario } : null,
@@ -1394,6 +1509,7 @@ function App() {
       } else {
         await botSay('Tu registro quedo guardado, pero hubo un problema al enviar el acceso automaticamente. Nuestro equipo te ayudara a activarlo.');
       }
+      await botSay('Dentro de *Mi Pagina* veras el camino completo: terminar tu demo, revisarla y activar tu plan cuando quieras publicar tu sitio.');
 
       pushMsg({
         from: 'bot',
@@ -1401,6 +1517,7 @@ function App() {
         rich: (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <a href="/mipagina" style={{ display: 'block', width: '100%', padding: '14px', background: C.green, borderRadius: 12, color: '#fff', fontSize: 15, fontWeight: 700, textAlign: 'center', textDecoration: 'none', boxShadow: '0 4px 20px rgba(33,197,94,.35)' }}>Ir a mi portal</a>
+            <a href="/mipagina?section=billing" style={{ display: 'block', width: '100%', padding: '14px', background: 'rgba(255,255,255,.08)', borderRadius: 12, color: C.waText, fontSize: 14, fontWeight: 600, textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(255,255,255,.08)' }}>Ver como activar mi plan</a>
             <a href="/" style={{ display: 'block', textAlign: 'center', color: C.waSub, fontSize: 12, textDecoration: 'none', fontFamily: 'DM Sans, sans-serif' }}>Volver al inicio</a>
           </div>
         )
@@ -1423,20 +1540,23 @@ function App() {
     switch (stepRef.current) {
       case 'owner_name':
         collect({ propietario: value, contacto_nombre: value });
-        stepRef.current = 'business_name';
         await botSay('Mucho gusto, *' + value.split(' ')[0] + '*.');
-        await botSay('Como se llama tu *negocio*?');
+        await askListingIntent();
         break;
 
       case 'business_name':
         collect({ nombre: value });
         stepRef.current = 'business_city';
-        await botSay('En que *ciudad* esta tu negocio?');
+        await botSay(lookupModeRef.current === 'lookup' ? 'En que *ciudad* esta tu negocio?' : 'En que *ciudad* esta tu negocio?');
         break;
 
       case 'business_city':
         collect({ ciudad: value });
-        await beginGoogleLookup();
+        if (lookupModeRef.current === 'manual') {
+          await beginContactCapture('manual');
+        } else {
+          await beginGoogleLookup();
+        }
         break;
 
       case 'editing_found_field': {
@@ -1447,7 +1567,14 @@ function App() {
       }
 
       case 'listing_details':
-        collect({ listing_note: value });
+        collect({
+          listing_note: value,
+          listing_status: collRef.current.listing_preference === 'yes'
+            ? 'has_google_profile'
+            : collRef.current.listing_preference === 'no'
+              ? 'needs_google_profile'
+              : 'not_sure_google_profile'
+        });
         await botSay('Gracias. Aunque hoy no la encontramos automaticamente, avanzamos con tu pagina y revisaremos esa ficha despues.');
         await beginContactCapture('manual');
         break;
@@ -1465,8 +1592,13 @@ function App() {
 
       case 'manual_type':
         collect({ tipo: value });
-        stepRef.current = 'manual_address';
-        await botSay('Cual es la *direccion completa* donde te visitan tus clientes?');
+        if (collRef.current.business_location_mode === 'online_only') {
+          stepRef.current = 'manual_neighborhood';
+          await botSay('Como se llama el *barrio o zona* donde sueles entregar, reunirte o atender a tus clientes?');
+        } else {
+          stepRef.current = 'manual_address';
+          await botSay('Cual es la *direccion completa* donde te visitan tus clientes?');
+        }
         break;
 
       case 'manual_address':
@@ -1474,6 +1606,39 @@ function App() {
         stepRef.current = 'manual_business_phone';
         await botSay('Cual es el *telefono del negocio*?\n\n_Escribe "no" si todavia no tienes uno publico._');
         break;
+
+      case 'manual_neighborhood': {
+        const barrio = normalizeMaybeBlank(value);
+        collect({
+          barrio: barrio,
+          direccion: buildServiceAreaAddress({ ...collRef.current, barrio: barrio })
+        });
+        stepRef.current = 'manual_state';
+        await botSay('Y en que *departamento o estado* operas principalmente?');
+        break;
+      }
+
+      case 'manual_state': {
+        const estado = normalizeMaybeBlank(value);
+        collect({
+          estado: estado,
+          direccion: buildServiceAreaAddress({ ...collRef.current, estado: estado })
+        });
+        stepRef.current = 'manual_country';
+        await botSay('Y en que *pais* operas principalmente?');
+        break;
+      }
+
+      case 'manual_country': {
+        const pais = normalizeMaybeBlank(value);
+        collect({
+          pais: pais,
+          direccion: buildServiceAreaAddress({ ...collRef.current, pais: pais })
+        });
+        stepRef.current = 'manual_business_phone';
+        await botSay('Cual es el *telefono del negocio*?\n\n_Escribe "no" si todavia no tienes uno publico._');
+        break;
+      }
 
       case 'manual_business_phone':
         collect({ telefono: normalizeMaybeBlank(value) });

@@ -3,7 +3,10 @@ import { buildInitialEnrichmentState, insertBusinessWithSchemaFallback } from '.
 
 function buildInternalUrl(req, path) {
   var host = req.headers.host || process.env.VERCEL_URL || 'localhost:3000';
-  var protocol = host.indexOf('localhost') !== -1 ? 'http' : 'https';
+  var isLocalHost = host.indexOf('localhost') !== -1
+    || host.indexOf('127.0.0.1') !== -1
+    || host.indexOf('::1') !== -1;
+  var protocol = isLocalHost ? 'http' : 'https';
   return protocol + '://' + host + path;
 }
 
@@ -32,6 +35,11 @@ function buildNotes(body) {
   var extraNotes = compactString(body.extraNotes);
   var googleListingStatus = compactString(body.googleListingStatus);
   var googleListingNote = compactString(body.googleListingNote);
+  var locationMode = compactString(body.locationMode);
+  var neighborhood = compactString(body.neighborhood);
+  var city = compactString(body.city);
+  var state = compactString(body.state);
+  var country = compactString(body.country);
   var approvedGooglePhotos = Array.isArray(body.approvedGooglePhotos) ? body.approvedGooglePhotos : [];
   var additionalLocations = Array.isArray(body.additionalLocations) ? body.additionalLocations : [];
 
@@ -41,6 +49,18 @@ function buildNotes(body) {
     notes.push('Google Maps: el cliente indica que ya tiene una ficha, pero no se encontro automaticamente.');
   } else if (googleListingStatus === 'needs_google_profile') {
     notes.push('Google Maps: el cliente aun no tiene ficha y desea que la creemos despues de lanzar su sitio.');
+  } else if (googleListingStatus === 'not_sure_google_profile') {
+    notes.push('Google Maps: el cliente no esta seguro de si ya existe una ficha y desea revisarlo despues del lanzamiento.');
+  } else if (googleListingStatus === 'online_only_no_storefront') {
+    notes.push('Google Maps: el cliente no tiene una tienda abierta al publico y solo quiere vender online o por WhatsApp por ahora.');
+  }
+
+  if (locationMode === 'online_only') {
+    notes.push('Ubicacion comercial: negocio sin local abierto al publico; vende online o coordina por WhatsApp.');
+    var serviceArea = [neighborhood, city, state, country].filter(Boolean).join(', ');
+    if (serviceArea) {
+      notes.push('Zona de cobertura: ' + serviceArea);
+    }
   }
 
   if (googleListingNote) {
@@ -112,8 +132,9 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     category: body.businessType || null,
     address_full: body.addressFull || match.address || null,
     address_city: body.city || match.addressCity || null,
-    address_state: match.addressState || null,
+    address_state: body.state || match.addressState || null,
     address_zip: match.addressZip || null,
+    address_country: body.country || null,
     phone: body.businessPhone || match.phone || null,
     whatsapp: businessWhatsapp || body.contactWhatsapp || null,
     email: body.contactEmail || null,
@@ -202,6 +223,8 @@ export default async function handler(req, res) {
         category: businessType,
         address_full: body.addressFull || null,
         address_city: body.city || null,
+        address_state: body.state || null,
+        address_country: body.country || null,
         phone: body.businessPhone || null,
         whatsapp: businessWhatsapp || body.contactWhatsapp || null,
         email: contactEmail || null,
@@ -253,6 +276,8 @@ export default async function handler(req, res) {
       category: businessType,
       address_full: body.addressFull || null,
       address_city: body.city || null,
+      address_state: body.state || null,
+      address_country: body.country || null,
       phone: body.businessPhone || null,
       whatsapp: businessWhatsapp || body.contactWhatsapp || null,
       email: contactEmail || null,
