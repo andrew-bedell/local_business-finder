@@ -566,16 +566,8 @@ a {
     font-size: 0.98rem;
   }
 
-  .tc-header-actions .tc-btn--ghost {
-    display: none;
-  }
-
   .tc-header-actions {
-    width: 100%;
-  }
-
-  .tc-header-actions .tc-btn {
-    width: 100%;
+    display: none;
   }
 
   .tc-hero {
@@ -620,6 +612,10 @@ a {
     align-items: stretch;
   }
 
+  .tc-hero-actions .tc-btn--solid {
+    display: none;
+  }
+
   .tc-hero-actions .tc-btn,
   .tc-cta-actions .tc-btn {
     width: 100%;
@@ -657,10 +653,26 @@ a {
   }
 
   .tc-mobile-cta {
-    display: none;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 32;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    border-radius: 999px;
+    color: #fff;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--tc-green), var(--tc-green-dark));
+    box-shadow: 0 18px 36px rgba(15, 122, 89, 0.28);
   }
 
   body.tc-body {
-    padding-bottom: 0;
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
   }
 }
