@@ -24,10 +24,13 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body.tc-body {
   margin: 0;
+  min-width: 320px;
+  overflow-x: hidden;
   font-family: "DM Sans", sans-serif;
   color: var(--tc-ink);
   background:
@@ -149,6 +152,7 @@ a {
 .tc-plan,
 .tc-growth-card,
 .tc-cta {
+  min-width: 0;
   border-radius: var(--tc-radius-xl);
   box-shadow: var(--tc-shadow);
 }
@@ -265,6 +269,7 @@ a {
 }
 
 .tc-panel-card {
+  min-width: 0;
   padding: 22px;
   border-radius: var(--tc-radius-lg);
   background: rgba(255, 255, 255, 0.84);
@@ -311,6 +316,7 @@ a {
   display: block;
   font-size: 1.3rem;
   line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .tc-panel-card p,
@@ -549,25 +555,74 @@ a {
   }
 
   .tc-header-row {
-    padding: 14px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 0 14px;
+  }
+
+  .tc-brand {
+    font-size: 0.98rem;
   }
 
   .tc-header-actions .tc-btn--ghost {
     display: none;
   }
 
+  .tc-header-actions {
+    width: 100%;
+  }
+
+  .tc-header-actions .tc-btn {
+    width: 100%;
+  }
+
   .tc-hero {
-    padding-top: 28px;
+    padding: 16px 0 18px;
+  }
+
+  .tc-hero-copy {
+    padding: 24px 20px;
   }
 
   .tc-hero-copy h1 {
-    max-width: 12ch;
+    font-size: clamp(2.55rem, 13vw, 3.8rem);
+    max-width: 8ch;
+  }
+
+  .tc-eyebrow {
+    margin-bottom: 14px;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    line-height: 1.45;
+  }
+
+  .tc-lead {
+    margin-top: 18px;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .tc-hero-points {
+    margin-top: 20px;
   }
 
   .tc-hero-points,
   .tc-path-grid,
   .tc-step-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tc-hero-actions,
+  .tc-cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tc-hero-actions .tc-btn,
+  .tc-cta-actions .tc-btn {
+    width: 100%;
   }
 
   .tc-card,
@@ -580,25 +635,32 @@ a {
     border-radius: 24px;
   }
 
+  .tc-panel-card,
+  .tc-card,
+  .tc-step,
+  .tc-plan,
+  .tc-growth-card,
+  .tc-cta {
+    padding: 22px 20px;
+  }
+
+  .tc-step {
+    padding-top: 72px;
+  }
+
+  .tc-growth {
+    padding: 24px 0;
+  }
+
+  .tc-section {
+    padding: 24px 0;
+  }
+
   .tc-mobile-cta {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    z-index: 24;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 15px 18px;
-    border-radius: 999px;
-    color: #fff;
-    font-family: "Space Grotesk", sans-serif;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--tc-green), var(--tc-green-dark));
-    box-shadow: 0 16px 30px rgba(15, 122, 89, 0.24);
+    display: none;
   }
 
   body.tc-body {
-    padding-bottom: 84px;
+    padding-bottom: 0;
   }
 }
