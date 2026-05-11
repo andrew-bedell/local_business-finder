@@ -12,57 +12,57 @@ const MAX_IMAGE_DIMENSION = 1600;
 const currencies = ["COP", "MXN", "USD"];
 
 const locationOptions = [
-  ["storefront", "Local comercial", "Storefront"],
-  ["office", "Oficina o consultorio", "Office or clinic"],
-  ["home", "Desde casa", "From home"],
-  ["delivery", "A domicilio", "At the customer's location"],
-  ["online", "En linea", "Online"],
-  ["street", "Calle, ferias o eventos", "Street, fairs, or events"],
-  ["other", "Otro", "Other"],
+  ["storefront", "Local comercial"],
+  ["office", "Oficina o consultorio"],
+  ["home", "Desde casa"],
+  ["delivery", "A domicilio"],
+  ["online", "En linea"],
+  ["street", "Calle, ferias o eventos"],
+  ["other", "Otro"],
 ];
 
 const visitOptions = [
-  ["appointment", "Si, con cita previa", "Yes, by appointment"],
-  ["business_hours", "Si, en horario de atencion", "Yes, during business hours"],
-  ["customer_location", "No, yo voy donde el cliente", "No, I go to the customer"],
-  ["online_only", "No, vendo principalmente en linea", "No, I mainly sell online"],
-  ["not_sure", "No estoy seguro", "Not sure"],
+  ["appointment", "Si, con cita previa"],
+  ["business_hours", "Si, en horario de atencion"],
+  ["customer_location", "No, yo voy donde el cliente"],
+  ["online_only", "No, vendo principalmente en linea"],
+  ["not_sure", "No estoy seguro"],
 ];
 
 const businessModelOptions = [
-  ["products", "Productos", "Products"],
-  ["services", "Servicios", "Services"],
-  ["both", "Productos y servicios", "Products and services"],
+  ["products", "Productos"],
+  ["services", "Servicios"],
+  ["both", "Productos y servicios"],
 ];
 
 const marketReachOptions = [
-  ["local", "Solo mi ciudad o zona", "Only my city or area"],
-  ["national", "Clientes de otras ciudades del pais", "Customers from other cities in my country"],
-  ["travel_international", "Extranjeros que pueden viajar a mi negocio", "Foreign customers who can travel to me"],
-  ["online_international", "Clientes internacionales en linea", "International online customers"],
-  ["not_sure", "No estoy seguro", "Not sure"],
+  ["local", "Solo mi ciudad o zona"],
+  ["national", "Clientes de otras ciudades del pais"],
+  ["travel_international", "Extranjeros que pueden viajar a mi negocio"],
+  ["online_international", "Clientes internacionales en linea"],
+  ["not_sure", "No estoy seguro"],
 ];
 
 const goalOptions = [
-  ["whatsapp", "Recibir mas mensajes por WhatsApp", "Get more WhatsApp messages"],
-  ["appointments", "Conseguir mas citas o reservas", "Get more appointments or bookings"],
-  ["direct_sales", "Vender productos directamente", "Sell products directly"],
-  ["course", "Vender un curso o producto digital", "Sell a course or digital product"],
-  ["travel", "Convencer clientes extranjeros de viajar a mi negocio", "Persuade foreign customers to travel"],
-  ["complex_services", "Explicar servicios complejos", "Explain complex services"],
-  ["multiple_offers", "Promocionar varias ofertas", "Promote multiple offers"],
-  ["other", "Otro", "Other"],
+  ["whatsapp", "Recibir mas mensajes por WhatsApp"],
+  ["appointments", "Conseguir mas citas o reservas"],
+  ["direct_sales", "Vender productos directamente"],
+  ["course", "Vender un curso o producto digital"],
+  ["travel", "Convencer clientes extranjeros de viajar a mi negocio"],
+  ["complex_services", "Explicar servicios complejos"],
+  ["multiple_offers", "Promocionar varias ofertas"],
+  ["other", "Otro"],
 ];
 
 const actionOptions = [
-  ["whatsapp", "Escribir por WhatsApp", "Message on WhatsApp"],
-  ["call", "Llamar", "Call"],
-  ["book", "Reservar una cita", "Book an appointment"],
-  ["buy", "Comprar en linea", "Buy online"],
-  ["form", "Llenar un formulario", "Fill out a form"],
-  ["pricing", "Ver precios", "View pricing"],
-  ["download", "Descargar informacion", "Download information"],
-  ["other", "Otro", "Other"],
+  ["whatsapp", "Escribir por WhatsApp"],
+  ["call", "Llamar"],
+  ["book", "Reservar una cita"],
+  ["buy", "Comprar en linea"],
+  ["form", "Llenar un formulario"],
+  ["pricing", "Ver precios"],
+  ["download", "Descargar informacion"],
+  ["other", "Otro"],
 ];
 
 const intakeSteps = [
@@ -409,7 +409,6 @@ function ChoiceGroup({ form, setForm, path, label, english, options, required })
             onClick={() => setForm((current) => setByPath(current, path, option[0]))}
           >
             <strong>{option[1]}</strong>
-            <span>{option[2]}</span>
           </button>
         ))}
       </div>
@@ -584,7 +583,7 @@ function AiHelper({ form, setForm }) {
   return (
     <>
       <button className="ci-helper-button" type="button" onClick={() => setOpen((value) => !value)}>
-        IA ayuda
+        IA Ayuda
       </button>
       {open ? (
         <aside className="ci-helper-panel" aria-label="Ayuda con inteligencia artificial">
