@@ -448,16 +448,16 @@
   });
 
   // ── Create-Page CTAs ──
-  // Every trial/start button on marketing pages now leads into
-  // the in-app WhatsApp-style chat flow at /crear-tu-pagina/chat. The legacy lead modal
-  // is kept in the DOM for now but no longer opened from these CTAs.
-  var CHAT_URL = '/crear-tu-pagina/chat';
-  function goToChat(e) {
+  // Every trial/start button on marketing pages now leads into the guided
+  // create-page experience. The legacy lead modal is kept in the DOM for now
+  // but no longer opened from these CTAs.
+  var TRIAL_START_URL = '/crear-tu-pagina';
+  function startTrial(e) {
     if (e) e.preventDefault();
-    window.location.href = CHAT_URL;
+    window.location.href = TRIAL_START_URL;
   }
   document.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-    btn.addEventListener('click', goToChat);
+    btn.addEventListener('click', startTrial);
   });
 
   function openModal() {
@@ -625,7 +625,7 @@
   if (stickyCta) {
     var stickyBtn = stickyCta.querySelector('[data-open-modal]');
     if (stickyBtn) {
-      stickyBtn.addEventListener('click', goToChat);
+      stickyBtn.addEventListener('click', startTrial);
     }
     // Show sticky CTA after scrolling past hero
     var heroEl = document.querySelector('.m-hero');
@@ -675,9 +675,9 @@
           return renderPricingCard(p, isFeatured);
         }).join('');
 
-        // Attach CTA click handlers — trial pricing cards lead into the chat flow
+        // Attach CTA click handlers — trial pricing cards lead into the create-page flow
         pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-          btn.addEventListener('click', goToChat);
+          btn.addEventListener('click', startTrial);
         });
 
         // Add reveal animation
@@ -700,8 +700,10 @@
     var featuredClass = isFeatured ? ' m-pricing-featured' : '';
     var badgeHtml = isFeatured ? '<span class="m-pricing-badge">' + (currentLang === 'en' ? '1 month free' : '1 mes gratis') + '</span>' : '';
     var noteKey = currentLang === 'en'
-      ? 'No card to start. Then ' + formattedPrice + ' ' + intervalText + '.'
-      : 'Sin tarjeta para empezar. Luego ' + formattedPrice + ' ' + intervalText + '.';
+      ? 'No card to start. You add payment only when you activate.'
+      : 'Sin tarjeta para empezar. Pagas solo cuando activas.';
+    var afterTrialLabel = currentLang === 'en' ? 'After the free month' : 'Después del mes gratis';
+    var futurePriceLabel = formattedPrice + ' ' + intervalText;
 
     var featuresHtml = features.map(function(f) {
       return '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + escapeHtml(f) + '</span></div>';
@@ -715,6 +717,7 @@
     return '<div class="m-pricing-card' + featuredClass + '" data-reveal>' +
       badgeHtml +
       '<div class="m-pricing-price">' + trialHeadline + ' <span>' + trialSubline + '</span></div>' +
+      '<div class="m-pricing-after"><span>' + afterTrialLabel + '</span><strong>' + futurePriceLabel + '</strong></div>' +
       '<p class="m-pricing-note">' + noteKey + '</p>' +
       (product.name ? '<p style="font-size:16px;font-weight:700;margin-bottom:16px;color:#0c1b33">' + escapeHtml(product.name) + '</p>' : '') +
       descHtml +
@@ -726,10 +729,13 @@
   function renderFallbackPricing() {
     // Static fallback if API fails — show country-appropriate pricing
     var fb = FALLBACK_PRICING[currentCountry] || FALLBACK_PRICING.MX;
+    var afterTrialLabel = currentLang === 'en' ? 'After the free month' : 'Después del mes gratis';
+    var futurePriceLabel = fb.price + ' ' + fb.currency + ' / mes';
     pricingGrid.setAttribute('data-cols', '1');
     pricingGrid.innerHTML =
       '<div class="m-pricing-card m-visible" data-reveal>' +
         '<div class="m-pricing-price">' + (currentLang === 'en' ? '1 month free' : '1 mes gratis') + ' <span>' + (currentLang === 'en' ? 'PáginaPro trial' : 'Prueba PáginaPro') + '</span></div>' +
+        '<div class="m-pricing-after"><span>' + afterTrialLabel + '</span><strong>' + futurePriceLabel + '</strong></div>' +
         '<p class="m-pricing-note">' + t('pricing_note') + '</p>' +
         '<div class="m-pricing-features">' +
           '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f1') + '</span></div>' +
@@ -744,7 +750,7 @@
       '</div>';
 
     pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
-      btn.addEventListener('click', goToChat);
+      btn.addEventListener('click', startTrial);
     });
   }
 
