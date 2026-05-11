@@ -296,6 +296,13 @@ ul, ol { list-style: none; }
 .m-proof-item {
   text-align: center;
 }
+.m-proof-item-inline {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .m-proof-value {
   font-size: 24px;
   font-weight: 800;
@@ -305,6 +312,9 @@ ul, ol { list-style: none; }
   font-size: 13px;
   color: var(--m-text-muted);
   margin-top: 2px;
+}
+.m-proof-item-inline .m-proof-label {
+  margin-top: 0;
 }
 
 /* ============================================================================
