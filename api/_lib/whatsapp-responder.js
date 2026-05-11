@@ -257,27 +257,27 @@ function generateReply(context, inboundMessage) {
     case 'demo':
       if (context.websiteUrl) {
         return `¡Hola${name}! 👋\n\n` +
-          `Creamos una página web de demostración para *${bizName}*. Puedes verla aquí:\n\n` +
+          `Activamos una prueba gratis de PáginaPro para *${bizName}*. Puedes verla en su dirección temporal aquí:\n\n` +
           `🔗 ${context.websiteUrl}\n\n` +
-          '¿Qué te parece? ¿Te gustaría activarla para que tus clientes la puedan ver?';
+          'La prueba no requiere tarjeta e incluye una reunión de diseño. ¿Te gustaría activarla con el plan mensual para mantenerla publicada?';
       }
-      return `¡Hola${name}! Tenemos una demostración lista para *${bizName}*.\n\n` +
-        '¿Te gustaría verla? Te la puedo enviar por aquí.';
+      return `¡Hola${name}! Tenemos una prueba PáginaPro lista para *${bizName}*.\n\n` +
+        'Incluye 1 mes gratis, una dirección temporal asignada y una reunión de diseño. ¿Te gustaría verla?';
 
     case 'lead':
       return `¡Hola${name}! Gracias por tu interés en AhoraTengoPagina. 🙌\n\n` +
-        `Estamos listos para crear una página web profesional para *${bizName}*.\n\n` +
-        '¿Te gustaría que te mostremos cómo quedaría? Es sin compromiso.';
+        `Estamos listos para activar 1 mes gratis de PáginaPro para *${bizName}*.\n\n` +
+        'No necesitas tarjeta. Te ayudamos a ganar más visibilidad en Google Maps, aumentar las probabilidades de recomendaciones por IA como ChatGPT y convertir más visitas en WhatsApp.';
 
     case 'marketing_lead':
       return `¡Hola${name}! Gracias por registrarte en AhoraTengoPagina. 🎉\n\n` +
         `Vimos que estás interesado en una página web para *${bizName}*.\n\n` +
-        '¿Te gustaría que te mostremos cómo quedaría tu página? Creamos una demostración gratis.';
+        'Podemos activar tu prueba PáginaPro por 1 mes gratis, sin tarjeta, con una reunión de diseño incluida.';
 
     case 'saved_business':
       return `¡Hola${name}! Somos AhoraTengoPagina. 👋\n\n` +
-        `Tenemos información sobre *${bizName}* y nos encantaría ayudarte a tener presencia en internet.\n\n` +
-        '¿Te interesaría ver cómo quedaría una página web para tu negocio? Es completamente gratis la demostración.';
+        `Tenemos información sobre *${bizName}* y nos encantaría ayudarte a tener más presencia en internet.\n\n` +
+        '¿Te interesaría probar PáginaPro gratis por 1 mes? No pedimos tarjeta y trabajamos contigo para que tu página ayude a traer más clientes por WhatsApp.';
 
     default:
       return `¡Hola${name}! Gracias por escribirnos a AhoraTengoPagina.\n\n` +

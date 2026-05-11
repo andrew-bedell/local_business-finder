@@ -137,7 +137,7 @@ function onboardingPage({ businessName, selectedDomain, previewUrl, goLiveUrl, p
     </div>
     <div class="bd">
       <h2>Personaliza Tu Página Web</h2>
-      <p class="subtitle">Antes de publicarla, puedes hacer los cambios que quieras. Elige la opción que prefieras:</p>
+      <p class="subtitle">Tu prueba incluye una reunión de diseño. Antes de aprobarla, puedes preparar los cambios que quieras:</p>
       ${domainBadge}
       ${previewLink}
 
@@ -162,8 +162,8 @@ function onboardingPage({ businessName, selectedDomain, previewUrl, goLiveUrl, p
       <div class="option">
         <div class="option-icon">📅</div>
         <div class="option-content">
-          <h3>Agendar una llamada con nuestro diseñador</h3>
-          <p>¿Prefieres hablar con alguien? Agenda una videollamada y haremos los cambios juntos en tiempo real.</p>
+          <h3>Agendar llamada con Customer Success</h3>
+          <p>Agenda la reunión de diseño incluida en tu prueba y haremos los cambios juntos en tiempo real.</p>
           <a href="https://wa.me/${esc(whatsappPhone)}?text=${encodeURIComponent('Hola, me gustaría agendar una llamada para personalizar mi página web de ' + (businessName || 'mi negocio'))}" target="_blank" class="option-btn btn-meeting">Agendar Llamada</a>
         </div>
       </div>

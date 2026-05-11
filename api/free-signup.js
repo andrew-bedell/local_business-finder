@@ -1,11 +1,16 @@
-// Vercel serverless function: Handle free Pagina Basica signup (no Stripe)
-// POST — creates customer + subscription records with price=0, invites to auth
+// Vercel serverless function: Handle PaginaPro free trial signup (no card upfront)
+// POST — creates customer + trialing subscription records, invites to auth
 // Supports both businessId (employee flow) and businessName (marketing flow with matching)
 
 import { sendEmail } from './_lib/sendgrid.js';
 import { getTemplateForTrigger } from './_lib/email-templates.js';
 import { matchOrCreateBusiness } from './_lib/match-business.js';
 import { runTrackedBusinessEnrichment } from './_lib/enrichment-runner.js';
+import {
+  buildTrialCustomerFields,
+  buildTrialSubscriptionPayload,
+  resolvePaginaProTrialProduct,
+} from './_lib/trial-plan.js';
 
 function getRequestOrigin(req) {
   const forwardedProto = req.headers['x-forwarded-proto'];
@@ -82,27 +87,21 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: 'Customer already exists for this business', alreadyExists: true });
     }
 
-    // Determine currency from product if provided, else default MXN
-    let currency = 'MXN';
-    if (productId) {
-      const productRes = await fetch(
-        `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(productId)}&select=currency`,
-        { headers: supabaseHeaders }
-      );
-      const products = await productRes.json();
-      if (products && products.length > 0 && products[0].currency) {
-        currency = products[0].currency;
-      }
-    }
+    const trialProduct = await resolvePaginaProTrialProduct({
+      productId,
+      countryCode,
+      supabaseUrl,
+      supabaseHeaders,
+    });
+    const trialCustomerFields = buildTrialCustomerFields(trialProduct, 'MXN');
 
-    // 1. Create customer record with price=0
+    // 1. Create customer record with the post-trial monthly price
     const customerPayload = {
       business_id: parseInt(businessId, 10),
       stripe_customer_id: null,
       email: customerEmail,
       contact_name: customerName,
-      monthly_price: 0,
-      currency,
+      ...trialCustomerFields,
     };
 
     const custRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
@@ -120,15 +119,8 @@ export default async function handler(req, res) {
     const custRecords = await custRes.json();
     const customer = custRecords[0];
 
-    // 2. Create subscription record with status=active, no Stripe IDs
-    const subscriptionPayload = {
-      customer_id: customer.id,
-      stripe_subscription_id: null,
-      stripe_price_id: null,
-      status: 'active',
-      current_period_start: new Date().toISOString(),
-      current_period_end: null,
-    };
+    // 2. Create subscription record with status=trialing, no card or Stripe subscription yet
+    const subscriptionPayload = buildTrialSubscriptionPayload(customer.id, trialProduct);
 
     const subRes = await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
       method: 'POST',
@@ -205,7 +197,7 @@ export default async function handler(req, res) {
       authStatus = 'invite_error';
     }
 
-    // 4. Update business pipeline_status to 'lead' (free signup, demo comes after we send preview)
+    // 4. Update business pipeline_status to 'lead' (trial signup; paid activation comes later)
     await fetch(
       `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(businessId)}`,
       {

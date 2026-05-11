@@ -355,23 +355,23 @@ function suspendedPage(businessName) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${businessName ? businessName + ' — ' : ''}Sitio temporalmente no disponible</title>
+  <title>${businessName ? businessName + ' — ' : ''}Prueba gratis terminada</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0a0f; color: #f0f0f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
     .wrap { max-width: 420px; padding: 40px 24px; }
     .icon { font-size: 48px; margin-bottom: 20px; }
     h2 { font-size: 22px; margin: 0 0 12px; font-weight: 700; }
     p { color: #6b6b8a; font-size: 15px; line-height: 1.6; margin: 0 0 32px; }
-    a { color: #6C5CE7; text-decoration: none; font-weight: 600; }
-    a:hover { text-decoration: underline; }
+    a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #6C5CE7; color: #fff; text-decoration: none; font-weight: 700; }
+    a:hover { background: #5847d9; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="icon">🔒</div>
-    <h2>Sitio temporalmente no disponible</h2>
-    <p>Esta página web está temporalmente suspendida. Si eres el dueño del negocio, contacta a tu proveedor de servicio.</p>
-    <a href="https://ahoratengopagina.com">AhoraTengoPagina</a>
+    <h2>La prueba gratis terminó</h2>
+    <p>Esta página está bloqueada hasta que el dueño del negocio entre a Mi Página y active su plan mensual de PáginaPro.</p>
+    <a href="https://ahoratengopagina.com/mipagina">Entrar a Mi Página</a>
   </div>
 </body>
 </html>`;

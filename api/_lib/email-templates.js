@@ -63,19 +63,19 @@ export function customerWelcomeEmail({ contactName, businessName, loginUrl }) {
   const greeting = contactName ? `Hola ${contactName},` : 'Hola,';
   const html = baseLayout('Bienvenido a AhoraTengoPagina', `
     <h2>${greeting}</h2>
-    <p>¡Bienvenido a <strong>AhoraTengoPagina</strong>! Tu suscripción para <strong>${businessName || 'tu negocio'}</strong> está activa.</p>
+    <p>¡Bienvenido a <strong>AhoraTengoPagina</strong>! Tu prueba gratis de <strong>PáginaPro</strong> para <strong>${businessName || 'tu negocio'}</strong> está activa.</p>
     <p>Desde tu portal puedes:</p>
     <ul style="color:#4a4a66;font-size:15px;line-height:1.8;padding-left:20px;">
-      <li>Ver y administrar tu página web</li>
-      <li>Solicitar cambios y actualizaciones</li>
-      <li>Administrar tu facturación</li>
-      <li>Invitar a tu equipo</li>
+      <li>Ver tu página de prueba en una dirección temporal asignada</li>
+      <li>Preparar tu reunión de diseño con tu agente de Customer Success</li>
+      <li>Activar tu plan mensual cuando quieras continuar</li>
+      <li>Mejorar tu visibilidad en Google Maps y recomendaciones de IA</li>
     </ul>
-    <p>Revisa tu correo para el enlace de configuración de contraseña, luego inicia sesión en tu portal:</p>
+    <p>No necesitas tarjeta para empezar. Entra a tu portal para revisar la prueba y preparar los siguientes pasos:</p>
     <a href="${loginUrl}" class="cta">Ir a Mi Portal</a>
     <p style="font-size:13px;color:#888;">¿Preguntas? Responde a este correo o escríbenos a soporte@ahoratengopagina.com</p>
   `);
-  const text = `${greeting}\n\n¡Bienvenido a AhoraTengoPagina! Tu suscripción para ${businessName || 'tu negocio'} está activa.\n\nAccede a tu portal: ${loginUrl}\n\n¿Preguntas? Escríbenos a soporte@ahoratengopagina.com`;
+  const text = `${greeting}\n\n¡Bienvenido a AhoraTengoPagina! Tu prueba gratis de PáginaPro para ${businessName || 'tu negocio'} está activa. No necesitas tarjeta para empezar.\n\nAccede a tu portal: ${loginUrl}\n\n¿Preguntas? Escríbenos a soporte@ahoratengopagina.com`;
 
   return {
     subject: `¡Bienvenido a AhoraTengoPagina, ${contactName || 'nuevo cliente'}!`,
@@ -680,8 +680,8 @@ export function siteEditsOnboardingEmail({ contactName, businessName, onboarding
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
               <td style="vertical-align:top;padding-right:14px;font-size:24px;">📅</td>
               <td>
-                <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Agendar llamada con nuestro diseñador</p>
-                <p style="margin:0 0 8px;font-size:13px;color:#4a4a66;">Agenda una videollamada y hacemos los cambios juntos.</p>
+                <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#1a1a2e;">Agendar llamada con Customer Success</p>
+                <p style="margin:0 0 8px;font-size:13px;color:#4a4a66;">Agenda la reunión de diseño incluida en tu prueba y hacemos los cambios juntos.</p>
                 <a href="https://wa.me/${escHtml(whatsappPhone || '')}?text=${encodeURIComponent('Hola, me gustaría agendar una llamada para personalizar mi página web')}" style="display:inline-block;background:#ffffff;color:#6C5CE7 !important;padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;border:2px solid #6C5CE7;">Agendar Llamada</a>
               </td>
             </tr></table>
@@ -695,7 +695,7 @@ export function siteEditsOnboardingEmail({ contactName, businessName, onboarding
     <p style="font-size:13px;color:#888;">¿Preguntas? Responde a este correo y te ayudaremos.</p>
   `);
 
-  const text = `${greeting}\n\n¡Tu dominio está listo! Ahora puedes personalizar tu página web para ${businessName || 'tu negocio'}.\n\n3 opciones para hacer cambios:\n1. WhatsApp: https://wa.me/${whatsappPhone || ''}\n2. Editor visual: ${portalUrl || ''}\n3. Agendar llamada con diseñador\n\nCuando estés listo: ${onboardingUrl || ''}\n\n¿Preguntas? Responde a este correo.`;
+  const text = `${greeting}\n\n¡Tu dominio está listo! Ahora puedes personalizar tu página web para ${businessName || 'tu negocio'}.\n\n3 opciones para hacer cambios:\n1. WhatsApp: https://wa.me/${whatsappPhone || ''}\n2. Editor visual: ${portalUrl || ''}\n3. Agendar llamada con Customer Success\n\nCuando estés listo: ${onboardingUrl || ''}\n\n¿Preguntas? Responde a este correo.`;
 
   return {
     subject: `Personaliza tu página web — ${businessName || 'AhoraTengoPagina'}`,
