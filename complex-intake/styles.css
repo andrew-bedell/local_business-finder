@@ -499,14 +499,6 @@ a {
   font-size: 14px;
 }
 
-.ci-choice span {
-  display: block;
-  margin-top: 4px;
-  color: var(--ci-muted);
-  font-size: 12px;
-  line-height: 1.35;
-}
-
 .ci-repeater {
   display: grid;
   gap: 14px;
