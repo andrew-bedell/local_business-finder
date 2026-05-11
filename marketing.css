@@ -288,13 +288,13 @@ ul, ol { list-style: none; }
   max-width: var(--m-max-width);
   margin: 0 auto;
   padding: 0 24px;
-  display: flex;
-  justify-content: center;
-  gap: 48px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(96px, 1fr));
+  gap: 20px;
 }
 .m-proof-item {
   text-align: center;
+  min-width: 0;
 }
 .m-proof-value {
   font-size: 24px;
@@ -1241,7 +1241,10 @@ ul, ol { list-style: none; }
 
   .m-footer-inner { grid-template-columns: 1fr; gap: 32px; }
 
-  .m-proof-inner { gap: 24px; }
+  .m-proof-inner {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 16px;
+  }
 
   .m-cta-final h2 { font-size: 28px; }
 }
@@ -1251,7 +1254,10 @@ ul, ol { list-style: none; }
   .m-hero-ctas { flex-direction: column; align-items: center; }
   .m-btn-cta { width: 100%; justify-content: center; }
 
-  .m-proof-inner { flex-direction: column; gap: 16px; }
+  .m-proof-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 14px;
+  }
 
   .m-problem h2, .m-solution h2, .m-features h2, .m-faq h2, .m-pricing h2 { font-size: 28px; }
 
