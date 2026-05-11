@@ -336,10 +336,6 @@ function Topbar({ mode }) {
             <span>{mode === "catalog" ? "Catalogo antes de crear tu pagina" : "Intake personalizado"}</span>
           </span>
         </a>
-        <div className="ci-top-actions">
-          <a className="ci-btn ci-btn--ghost ci-btn--small" href="/crear-tu-pagina/chat">Formulario simple</a>
-          <a className="ci-btn ci-btn--primary ci-btn--small" href={`https://wa.me/${SUPPORT_WHATSAPP}`} target="_blank" rel="noopener">Ayuda por WhatsApp</a>
-        </div>
       </div>
     </header>
   );
@@ -349,7 +345,6 @@ function Field({ label, english, required, children, full }) {
   return (
     <label className={`ci-field${full ? " ci-field--full" : ""}`}>
       <span className="ci-label">{label} {required ? <span>*</span> : null}</span>
-      {english ? <span className="ci-english">{english}</span> : null}
       {children}
     </label>
   );
@@ -405,7 +400,6 @@ function ChoiceGroup({ form, setForm, path, label, english, options, required })
   return (
     <div className="ci-field ci-field--full">
       <div className="ci-label">{label} {required ? <span>*</span> : null}</div>
-      {english ? <div className="ci-english">{english}</div> : null}
       <div className="ci-segment-grid">
         {options.map((option) => (
           <button
@@ -428,7 +422,6 @@ function Section({ id, title, english, children }) {
     <section className="ci-section" id={id}>
       <div className="ci-section-head">
         <h2>{title}</h2>
-        {english ? <p>{english}</p> : null}
       </div>
       <div className="ci-section-body">{children}</div>
     </section>
@@ -591,7 +584,7 @@ function AiHelper({ form, setForm }) {
   return (
     <>
       <button className="ci-helper-button" type="button" onClick={() => setOpen((value) => !value)}>
-        AI ayuda
+        IA ayuda
       </button>
       {open ? (
         <aside className="ci-helper-panel" aria-label="Ayuda con inteligencia artificial">
@@ -605,7 +598,6 @@ function AiHelper({ form, setForm }) {
           <div className="ci-helper-body">
             <div className="ci-alert">
               Campo activo: <strong>{activeField ? activeField.label : "Haz clic en un campo del formulario"}</strong>
-              <div className="ci-english">Active field: {activeField ? activeField.label : "Click a form field first"}</div>
             </div>
             <textarea
               className="ci-textarea"
@@ -712,14 +704,10 @@ function IntakePage() {
           <p className="ci-lead">
             Este formulario es para negocios con varias ofertas, clientes en diferentes mercados o metas de marketing mas especificas. Con tus respuestas creamos una primera version y despues la ajustamos contigo.
           </p>
-          <p className="ci-english">
-            This form is for businesses with multiple offers, more specific marketing goals, or customers in different cities or countries.
-          </p>
         </div>
         <div className="ci-hero-panel">
           <strong>Quieres algo mas rapido?</strong>
           <p>Si solo necesitas una pagina simple para recibir mas mensajes por WhatsApp, usa el formulario por chat.</p>
-          <p className="ci-english">For the low-friction version, use the chat intake.</p>
           <div style={{ marginTop: 14 }}>
             <a className="ci-btn ci-btn--ghost" href="/crear-tu-pagina/chat">Ir al chat simple</a>
           </div>
@@ -1048,7 +1036,6 @@ function IntakePageWizard() {
         <Section id="contacto" title={currentStepMeta.title} english={currentStepMeta.english}>
           <div className="ci-alert">
             Al terminar este paso guardamos tu avance en la base de datos. Si cierras el formulario mas adelante, podremos recuperar lo que ya compartiste.
-            <div className="ci-english">After this step, your progress is saved in the database so later answers can be recovered.</div>
           </div>
           <div className="ci-grid">
             <TextInput form={form} setForm={setForm} path="personalName" label="Tu nombre" english="Your name" required />
@@ -1179,14 +1166,10 @@ function IntakePageWizard() {
           <p className="ci-lead">
             Este formulario esta dividido en pasos cortos. Despues de tus datos personales, guardamos el avance para que puedas volver sin empezar de cero.
           </p>
-          <p className="ci-english">
-            This form is split into shorter steps. After personal contact info, progress is saved so customers can return later.
-          </p>
         </div>
         <div className="ci-hero-panel">
           <strong>Quieres algo mas rapido?</strong>
           <p>Si solo necesitas una pagina simple para recibir mas mensajes por WhatsApp, usa el formulario por chat.</p>
-          <p className="ci-english">For the low-friction version, use the chat intake.</p>
           <div style={{ marginTop: 14 }}>
             <a className="ci-btn ci-btn--ghost" href="/crear-tu-pagina/chat">Ir al chat simple</a>
           </div>
@@ -1487,14 +1470,10 @@ function CatalogPage() {
           <p className="ci-lead">
             Sube fotos de listas de precios, menus, productos, servicios o PDF. La IA extrae nombre, descripcion y precio para que puedas editar lo que falte.
           </p>
-          <p className="ci-english">
-            Upload photos or PDFs of your real catalog. AI extracts name, description, and price, then you can edit missing details.
-          </p>
         </div>
         <div className="ci-hero-panel">
           <strong>Limites de carga</strong>
           <p>Las fotos se optimizan antes de subir. El limite final es 4MB por imagen. Los PDF pueden pesar hasta 10MB.</p>
-          <p className="ci-english">Images are compressed before upload. Final image limit is 4MB. PDF limit is 10MB.</p>
         </div>
       </header>
 
