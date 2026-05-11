@@ -26,6 +26,8 @@
     }
   },
   "rewrites": [
+    { "source": "/crear-tu-pagina/personalizada", "destination": "/complex-intake/index.html" },
+    { "source": "/crear-tu-pagina/catalogo", "destination": "/complex-intake/index.html" },
     { "source": "/crear-tu-pagina/chat", "destination": "/create-page/chat.html" },
     { "source": "/crear-tu-pagina", "destination": "/create-page/index.html" },
     { "source": "/tiendas-colombia", "destination": "/tiendas-colombia/index.html" },
