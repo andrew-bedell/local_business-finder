@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   try {
     // Fetch the website with business info
     const webRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=*,businesses(id,name,slug)`,
+      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=*,businesses(id,name,slug,category,subcategory,address_city,address_country)`,
       { headers: supabaseHeaders }
     );
     const webData = await webRes.json();
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
         // Generate slug if business doesn't have one
         let slug = business.slug;
         if (!slug) {
-          slug = await generateUniqueSlug(business.name, business.id, supabaseUrl, supabaseHeaders);
+          slug = await generateUniqueSlug(buildTemporarySlugSeed(business), business.id, supabaseUrl, supabaseHeaders);
           businessUpdate = { slug };
         }
 
@@ -163,6 +163,58 @@ export default async function handler(req, res) {
     console.error('Publish action error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+function buildTemporarySlugSeed(business) {
+  const businessType = inferGenericBusinessType(business);
+  const country = normalizeCountryName(business?.address_country);
+  if (businessType && country) return `${businessType} en ${country}`;
+  if (businessType) return businessType;
+  if (country) return `negocio en ${country}`;
+  return 'negocio local';
+}
+
+function inferGenericBusinessType(business) {
+  const source = [
+    business?.category,
+    business?.subcategory,
+    business?.name,
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  if (!source) return 'negocio local';
+
+  const matches = [
+    [/ropa|boutique|moda|fashion|clothing|vestido|zapato|calzado|tienda/, 'ropa'],
+    [/restaurante|restaurant|comida|food|cafe|cafeteria|bar|pizzeria|taco|taqueria/, 'restaurante'],
+    [/salon|salón|peluquer|barber|barberia|barbería|nail|uñas|spa|belleza/, 'salon de belleza'],
+    [/dentista|dental|odontolog/, 'dentista'],
+    [/doctor|medic|médic|clinica|clínica|salud/, 'servicios de salud'],
+    [/gimnasio|gym|fitness|entrenamiento/, 'gimnasio'],
+    [/abogado|legal|lawyer/, 'servicios legales'],
+    [/auto|mecan|mecán|taller|carro|llanta/, 'taller automotriz'],
+    [/plomer|fontaner|electric|reparacion|reparación/, 'servicio local'],
+  ];
+
+  for (const [pattern, label] of matches) {
+    if (pattern.test(source)) return label;
+  }
+
+  return 'negocio local';
+}
+
+function normalizeCountryName(country) {
+  const value = String(country || '').trim().toLowerCase();
+  if (!value) return '';
+  const countries = {
+    co: 'colombia',
+    colombia: 'colombia',
+    mx: 'mexico',
+    mexico: 'mexico',
+    'méxico': 'mexico',
+    ec: 'ecuador',
+    ecuador: 'ecuador',
+  };
+  return countries[value] || value;
 }
 
 // Send lifecycle email to the customer who owns this business

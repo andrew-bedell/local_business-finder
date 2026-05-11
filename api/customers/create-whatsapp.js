@@ -5,6 +5,11 @@
 import crypto from 'crypto';
 import { buildInitialEnrichmentState, insertBusinessWithSchemaFallback } from '../_lib/enrichment-runner.js';
 import { ensureEmployeeSession } from '../_lib/employee-session.js';
+import {
+  buildTrialCustomerFields,
+  buildTrialSubscriptionPayload,
+  resolvePaginaProTrialProduct,
+} from '../_lib/trial-plan.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -78,12 +83,17 @@ export default async function handler(req, res) {
     // 2. Create customer record with synthetic email
     const syntheticEmail = 'wa-' + whatsapp.replace(/[^\d]/g, '') + '@temp.ahoratengopagina.com';
 
+    const trialProduct = await resolvePaginaProTrialProduct({
+      countryCode: 'MX',
+      supabaseUrl,
+      supabaseHeaders,
+    });
+
     const customerPayload = {
       business_id: businessId,
       email: syntheticEmail,
       contact_name: contactName || businessName,
-      monthly_price: 0,
-      currency: 'MXN',
+      ...buildTrialCustomerFields(trialProduct, 'MXN'),
     };
 
     const custRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
@@ -101,15 +111,8 @@ export default async function handler(req, res) {
     const custRecords = await custRes.json();
     const customer = custRecords[0];
 
-    // 3. Create subscription record with status=active, no Stripe IDs
-    const subscriptionPayload = {
-      customer_id: customer.id,
-      stripe_subscription_id: null,
-      stripe_price_id: null,
-      status: 'active',
-      current_period_start: new Date().toISOString(),
-      current_period_end: null,
-    };
+    // 3. Create subscription record with status=trialing, no card or Stripe subscription yet
+    const subscriptionPayload = buildTrialSubscriptionPayload(customer.id, trialProduct);
 
     const subRes = await fetch(`${supabaseUrl}/rest/v1/subscriptions`, {
       method: 'POST',

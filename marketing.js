@@ -9,13 +9,14 @@
       nav_how: 'Cómo Funciona',
       nav_features: 'Funciones',
       nav_pricing: 'Precios',
-      nav_cta: 'Empieza gratis',
+      nav_cta: 'Prueba PáginaPro gratis',
 
       hero_title: 'Tus clientes ya te buscan.<br><span>Dales lo que necesitan.</span>',
       hero_sub: 'Tu negocio aparece en Google, pero sin página web tus clientes no encuentran precios, horarios ni cómo contactarte. Nosotros lo resolvemos en 20 minutos.',
-      hero_cta: 'Empieza gratis — página lista en 20 minutos',
+      hero_cta: 'Prueba PáginaPro gratis por 1 mes',
       hero_how: 'Ver Cómo Funciona',
 
+      proof_businesses: 'negocios atendidos',
       proof_delivery: 'Tiempo de entrega',
       proof_cancel: 'Costo de cancelación',
       proof_support: 'Soporte en español',
@@ -31,13 +32,13 @@
 
       solution_tag: 'Cómo Funciona',
       solution_title: 'Tu página web en 3 pasos simples',
-      solution_sub: 'Nos encargamos de todo. Tú solo revisas y apruebas.',
+      solution_sub: 'Empiezas sin tarjeta. Nosotros te guiamos hasta que tu página quede lista.',
       step1_title: 'Ingresa tu información',
       step1_desc: 'Danos el nombre de tu negocio, tu página de Facebook y tu perfil de Google. Con eso recopilamos fotos, reseñas, horarios y todo lo necesario.',
       step2_title: 'Tú la revisas',
-      step2_desc: 'Te enviamos una vista previa de tu página web. Tú la revisas, nos dices si quieres cambios, y la ajustamos hasta que quede perfecta.',
+      step2_desc: 'Te enviamos una vista previa con una dirección temporal asignada. Durante tu prueba tienes una reunión de diseño con tu agente de Customer Success para dejarla como quieres.',
       step3_title: 'La lanzamos al mundo',
-      step3_desc: 'Publicamos tu página, la conectamos a Google y la optimizamos para que tus clientes te encuentren. Lista para recibir visitas y clientes.',
+      step3_desc: 'Cuando activas tu plan mensual, publicamos tu página con un dominio propio, soporte continuo y optimización para Google Maps y recomendaciones de IA.',
 
       case_tag: 'Caso de Éxito',
       case_title: 'María aumentó sus citas un 40% en el primer mes',
@@ -63,35 +64,35 @@
       feat6_desc: 'Panel de control donde ves cuántas personas visitan tu página, de dónde vienen y qué hacen. Datos reales, sin adivinar.',
 
       pricing_tag: 'Precios',
-      pricing_title: 'Simple y transparente',
-      pricing_sub: 'Sin sorpresas, sin costos ocultos. Cancela cuando quieras.',
-      pricing_note: 'Sin costo de instalación. Sin contratos.',
+      pricing_title: 'Prueba PáginaPro gratis por 1 mes',
+      pricing_sub: 'Sin tarjeta al empezar. Después decides si activas tu plan mensual.',
+      pricing_note: '1 mes gratis. Sin tarjeta. Cancela antes de activar.',
       pricing_f1: 'Página web profesional personalizada',
       pricing_f2: 'Optimizada para celular y Google',
-      pricing_f3: 'Dominio personalizado incluido',
+      pricing_f3: 'Dirección temporal asignada durante la prueba',
       pricing_f4: 'Hosting y SSL incluidos',
-      pricing_f5: 'Cambios y actualizaciones ilimitados',
-      pricing_f6: 'Soporte en español por WhatsApp',
+      pricing_f5: '1 reunión de diseño incluida en la prueba',
+      pricing_f6: 'Soporte 24 horas para cambios pequeños al activar tu plan',
       pricing_f7: 'Panel de analíticas incluido',
-      pricing_cta: 'Comenzar Ahora',
+      pricing_cta: 'Empezar prueba gratis',
 
       faq_tag: 'Preguntas Frecuentes',
       faq_title: 'Resolvemos tus dudas',
       faq_q1: 'Necesito saber de tecnología para tener mi página?',
       faq_a1: 'No, para nada. Nosotros nos encargamos de todo: diseño, contenido, publicación y mantenimiento. Tú solo nos dices qué quieres y nosotros lo hacemos realidad.',
-      faq_q2: 'Cuánto tiempo toma tener mi página lista?',
-      faq_a2: 'Tu página estará lista en 20 minutos o menos. Recopilamos la información de tu negocio, creamos tu página y te la enviamos para que la revises antes de publicarla.',
+      faq_q2: 'Qué incluye la prueba gratis?',
+      faq_a2: 'Incluye 1 mes de PáginaPro, una dirección temporal asignada y una reunión de diseño con tu agente de Customer Success. No necesitas tarjeta para empezar.',
       faq_q3: 'Puedo cancelar en cualquier momento?',
-      faq_a3: 'Sí, puedes cancelar cuando quieras. No hay contratos a largo plazo ni penalizaciones. Si cancelas, tu página se desactiva al final del período pagado.',
+      faq_a3: 'Sí. La prueba no requiere tarjeta. Si no activas el plan mensual al terminar el mes gratis, tu página pasa a estado bloqueado hasta que entres a Mi Página y realices el pago.',
       faq_q4: 'Qué pasa si quiero hacer cambios en mi página?',
-      faq_a4: 'Cambios ilimitados están incluidos en tu plan. Solo envías un mensaje por WhatsApp con lo que quieres cambiar y nosotros lo actualizamos, generalmente en menos de 24 horas.',
+      faq_a4: 'Durante la prueba tienes una reunión de diseño incluida. Después de aprobar el diseño, el soporte continúa cuando activas tu plan mensual: cambios pequeños con soporte 24 horas y temas complejos con respuesta mínima de 6 horas.',
       faq_q5: 'Mi negocio es muy pequeño, vale la pena tener página web?',
-      faq_a5: 'Absolutamente. Los negocios pequeños son los que más se benefician. Tus clientes ya te buscan en Google — una página web les da la información que necesitan para elegirte a ti en vez de a la competencia.',
+      faq_a5: 'Sí. Te ayudamos a ganar más visibilidad en Google Maps, aumentar las probabilidades de que sistemas de IA como ChatGPT recomienden tu negocio, y convertir más visitas en conversaciones por WhatsApp.',
 
       cta_title: 'Tus clientes ya te están buscando. Dales una razón para quedarse.',
-      cta_desc: 'Cada día sin página web es dinero que pierdes. Empieza hoy y tenla lista en 20 minutos.',
-      cta_btn: 'Empieza gratis — página lista en 20 minutos',
-      sticky_cta: 'Empieza gratis — página lista en 20 minutos',
+      cta_desc: 'Prueba PáginaPro gratis por 1 mes y deja que nuestro equipo te guíe para conseguir más clientes por WhatsApp.',
+      cta_btn: 'Empezar prueba gratis de PáginaPro',
+      sticky_cta: 'Prueba PáginaPro gratis por 1 mes',
 
       footer_desc: 'Creamos páginas web profesionales para negocios locales en Latinoamérica. Simple, rápido y sin complicaciones.',
       footer_links: 'Enlaces',
@@ -99,7 +100,7 @@
       footer_contact: 'Contacto',
       footer_copy: '&copy; 2026 AhoraTengoPagina. Todos los derechos reservados.',
 
-      modal_title: 'Crea tu página gratis',
+      modal_title: 'Empieza tu prueba gratis de PáginaPro',
       modal_name_label: 'Tu nombre',
       modal_name_ph: 'Ej: María García',
       modal_business_label: 'Nombre de tu negocio',
@@ -110,8 +111,8 @@
       modal_email_ph: 'Ej: maria@gmail.com',
       modal_address_label: 'Dirección de tu negocio',
       modal_address_ph: 'Ej: Calle 60 #500, Centro, Mérida',
-      modal_disclaimer: 'Al hacer clic te vamos a contactar por WhatsApp. Cuéntanos un poco sobre tu negocio y tu diseñador personal te tendrá una página lista para revisar en 20 minutos.',
-      modal_submit: 'Hablar con mi diseñador \u2192',
+      modal_disclaimer: 'No pedimos tarjeta para empezar. Te contactaremos por WhatsApp, publicaremos tu prueba en una dirección temporal asignada y agendaremos tu reunión de diseño.',
+      modal_submit: 'Hablar con mi agente \u2192',
       modal_sending: 'Enviando...',
       modal_error: 'Hubo un error. Por favor intenta de nuevo.',
 
@@ -122,13 +123,14 @@
       nav_how: 'How It Works',
       nav_features: 'Features',
       nav_pricing: 'Pricing',
-      nav_cta: 'Start free',
+      nav_cta: 'Try PáginaPro free',
 
       hero_title: 'Your customers are already looking.<br><span>Give them what they need.</span>',
       hero_sub: 'Your business shows up on Google, but without a website your customers can\'t find prices, hours, or how to reach you. We fix that in 20 minutes.',
-      hero_cta: 'Start free — website ready in 20 minutes',
+      hero_cta: 'Try PáginaPro free for 1 month',
       hero_how: 'See How It Works',
 
+      proof_businesses: 'businesses served',
       proof_delivery: 'Delivery time',
       proof_cancel: 'Cancellation cost',
       proof_support: 'Spanish support',
@@ -144,13 +146,13 @@
 
       solution_tag: 'How It Works',
       solution_title: 'Your website in 3 simple steps',
-      solution_sub: 'We handle everything. You just review and approve.',
+      solution_sub: 'Start without a card. We guide you until your page is ready.',
       step1_title: 'Enter your information',
       step1_desc: 'Give us your business name, Facebook page, and Google profile. We\'ll gather photos, reviews, hours, and everything we need.',
       step2_title: 'You review it',
-      step2_desc: 'We send you a preview of your website. You review it, tell us if you want changes, and we adjust it until it\'s perfect.',
+      step2_desc: 'We send you a preview on an assigned temporary address. During your trial, you get one design meeting with your Customer Success agent to make it feel right.',
       step3_title: 'We launch it',
-      step3_desc: 'We publish your website, connect it to Google, and optimize it so your customers can find you. Ready to receive visits and clients.',
+      step3_desc: 'When you activate your monthly plan, we publish your page with its own domain, ongoing support, and optimization for Google Maps and AI recommendations.',
 
       case_tag: 'Success Story',
       case_title: 'Maria increased her appointments by 40% in the first month',
@@ -176,35 +178,35 @@
       feat6_desc: 'Dashboard where you see how many people visit your website, where they come from, and what they do. Real data, no guessing.',
 
       pricing_tag: 'Pricing',
-      pricing_title: 'Simple and transparent',
-      pricing_sub: 'No surprises, no hidden costs. Cancel anytime.',
-      pricing_note: 'No setup fee. No contracts.',
+      pricing_title: 'Try PáginaPro free for 1 month',
+      pricing_sub: 'No card to start. After that, choose whether to activate your monthly plan.',
+      pricing_note: '1 month free. No card. No activation required.',
       pricing_f1: 'Custom professional website',
       pricing_f2: 'Optimized for mobile and Google',
-      pricing_f3: 'Custom domain included',
+      pricing_f3: 'Assigned temporary address during the trial',
       pricing_f4: 'Hosting and SSL included',
-      pricing_f5: 'Unlimited changes and updates',
-      pricing_f6: 'Spanish support via WhatsApp',
+      pricing_f5: '1 design meeting included in the trial',
+      pricing_f6: '24-hour support for small changes after activation',
       pricing_f7: 'Analytics dashboard included',
-      pricing_cta: 'Get Started',
+      pricing_cta: 'Start free trial',
 
       faq_tag: 'Frequently Asked Questions',
       faq_title: 'We answer your questions',
       faq_q1: 'Do I need to know about technology to have my website?',
       faq_a1: 'Not at all. We handle everything: design, content, publishing, and maintenance. You just tell us what you want and we make it happen.',
-      faq_q2: 'How long does it take to get my website ready?',
-      faq_a2: 'Your website will be ready in 20 minutes or less. We gather your business information, create your website, and send it for your review before publishing.',
+      faq_q2: 'What is included in the free trial?',
+      faq_a2: 'You get 1 month of PáginaPro, an assigned temporary address, and one design meeting with your Customer Success agent. No card is required to start.',
       faq_q3: 'Can I cancel at any time?',
-      faq_a3: 'Yes, you can cancel whenever you want. No long-term contracts or penalties. If you cancel, your website is deactivated at the end of the paid period.',
+      faq_a3: 'Yes. The trial does not require a card. If you do not activate the monthly plan after the free month, your page moves to a locked state until you sign in to Mi Página and pay.',
       faq_q4: 'What if I want to make changes to my website?',
-      faq_a4: 'Unlimited changes are included in your plan. Just send a WhatsApp message with what you want to change and we\'ll update it, usually in less than 24 hours.',
+      faq_a4: 'During the trial you get one included design meeting. After you approve the design, support continues when you activate your monthly plan: small changes have 24-hour support and complex issues have a minimum 6-hour response window.',
       faq_q5: 'My business is very small, is it worth having a website?',
-      faq_a5: 'Absolutely. Small businesses benefit the most. Your customers are already searching for you on Google — a website gives them the information they need to choose you over the competition.',
+      faq_a5: 'Yes. We help you earn more visibility on Google Maps, improve the odds that AI systems like ChatGPT recommend your business, and turn more visitors into WhatsApp conversations.',
 
       cta_title: 'Your customers are already searching for you. Give them a reason to stay.',
-      cta_desc: 'Every day without a website is money you\'re losing. Start today and have it ready in 20 minutes.',
-      cta_btn: 'Start free — website ready in 20 minutes',
-      sticky_cta: 'Start free — website ready in 20 minutes',
+      cta_desc: 'Try PáginaPro free for 1 month and let our team guide you toward more customers through WhatsApp.',
+      cta_btn: 'Start free PáginaPro trial',
+      sticky_cta: 'Try PáginaPro free for 1 month',
 
       footer_desc: 'We create professional websites for local businesses in Latin America. Simple, fast, and hassle-free.',
       footer_links: 'Links',
@@ -212,7 +214,7 @@
       footer_contact: 'Contact',
       footer_copy: '&copy; 2026 AhoraTengoPagina. All rights reserved.',
 
-      modal_title: 'Create your free page',
+      modal_title: 'Start your free PáginaPro trial',
       modal_name_label: 'Your name',
       modal_name_ph: 'E.g.: Maria Garcia',
       modal_business_label: 'Your business name',
@@ -223,8 +225,8 @@
       modal_email_ph: 'E.g.: maria@gmail.com',
       modal_address_label: 'Your business address',
       modal_address_ph: 'E.g.: 123 Main St, Merida',
-      modal_disclaimer: 'When you click, we\'ll contact you via WhatsApp. Tell us a bit about your business and your personal designer will have a page ready for you to review in 20 minutes.',
-      modal_submit: 'Talk to my designer \u2192',
+      modal_disclaimer: 'No card is required to start. We will contact you on WhatsApp, publish your trial on an assigned temporary address, and schedule your design meeting.',
+      modal_submit: 'Talk to my agent \u2192',
       modal_sending: 'Sending...',
       modal_error: 'There was an error. Please try again.',
 
@@ -446,7 +448,7 @@
   });
 
   // ── Create-Page CTAs ──
-  // Every "Empieza gratis" / "Crear mi página" button on marketing pages now leads into
+  // Every trial/start button on marketing pages now leads into
   // the in-app WhatsApp-style chat flow at /crear-tu-pagina/chat. The legacy lead modal
   // is kept in the DOM for now but no longer opened from these CTAs.
   var CHAT_URL = '/crear-tu-pagina/chat';
@@ -521,7 +523,7 @@
         customerEmail: customerEmail,
         customerPhone: whatsappNumber,
         address: businessAddress,
-        countryCode: countryCode,
+        countryCode: currentCountry || null,
       }),
     }).then(function(res) {
       if (res.ok || res.status === 409) {
@@ -660,18 +662,20 @@
     fetch(url)
       .then(function(res) { return res.json(); })
       .then(function(data) {
-        var products = (data.products || []).slice(0, 3);
+        var products = (data.products || [])
+          .filter(function(p) { return parseFloat(p.price) > 0; })
+          .slice(0, 3);
         if (products.length === 0) {
           renderFallbackPricing();
           return;
         }
         pricingGrid.setAttribute('data-cols', products.length);
         pricingGrid.innerHTML = products.map(function(p, i) {
-          var isFeatured = products.length > 1 && i === 1;
+          var isFeatured = i === 0;
           return renderPricingCard(p, isFeatured);
         }).join('');
 
-        // Attach CTA click handlers — free-tier pricing cards lead into the chat flow
+        // Attach CTA click handlers — trial pricing cards lead into the chat flow
         pricingGrid.querySelectorAll('[data-open-modal]').forEach(function(btn) {
           btn.addEventListener('click', goToChat);
         });
@@ -694,24 +698,28 @@
     var intervalText = (product.currency || 'MXN') + (intervalLabels[product.billing_interval] || '');
     var features = product.features || [];
     var featuredClass = isFeatured ? ' m-pricing-featured' : '';
-    var badgeHtml = isFeatured ? '<span class="m-pricing-badge">Popular</span>' : '';
-    var noteKey = currentLang === 'en' ? 'No setup fee. No contracts.' : 'Sin costo de instalación. Sin contratos.';
+    var badgeHtml = isFeatured ? '<span class="m-pricing-badge">' + (currentLang === 'en' ? '1 month free' : '1 mes gratis') + '</span>' : '';
+    var noteKey = currentLang === 'en'
+      ? 'No card to start. Then ' + formattedPrice + ' ' + intervalText + '.'
+      : 'Sin tarjeta para empezar. Luego ' + formattedPrice + ' ' + intervalText + '.';
 
     var featuresHtml = features.map(function(f) {
       return '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + escapeHtml(f) + '</span></div>';
     }).join('');
 
     var descHtml = product.description ? '<p class="m-pricing-desc">' + escapeHtml(product.description) + '</p>' : '';
-    var ctaText = price === 0 ? (currentLang === 'en' ? 'Free Trial' : 'Prueba Gratis') : t('pricing_cta');
+    var trialHeadline = currentLang === 'en' ? '1 month free' : '1 mes gratis';
+    var trialSubline = currentLang === 'en' ? 'PáginaPro trial' : 'Prueba PáginaPro';
+    var ctaText = t('pricing_cta');
 
     return '<div class="m-pricing-card' + featuredClass + '" data-reveal>' +
       badgeHtml +
-      '<div class="m-pricing-price">' + formattedPrice + ' <span>' + intervalText + '</span></div>' +
+      '<div class="m-pricing-price">' + trialHeadline + ' <span>' + trialSubline + '</span></div>' +
       '<p class="m-pricing-note">' + noteKey + '</p>' +
       (product.name ? '<p style="font-size:16px;font-weight:700;margin-bottom:16px;color:#0c1b33">' + escapeHtml(product.name) + '</p>' : '') +
       descHtml +
       '<div class="m-pricing-features">' + featuresHtml + '</div>' +
-      (price > 0 && product.id ? '<a href="/checkout/' + encodeURIComponent(product.id) + '" class="m-pricing-cta">' + ctaText + '</a>' : '<button class="m-pricing-cta" data-open-modal>' + ctaText + '</button>') +
+      '<button class="m-pricing-cta" data-open-modal>' + ctaText + '</button>' +
     '</div>';
   }
 
@@ -721,7 +729,7 @@
     pricingGrid.setAttribute('data-cols', '1');
     pricingGrid.innerHTML =
       '<div class="m-pricing-card m-visible" data-reveal>' +
-        '<div class="m-pricing-price">' + fb.price + ' <span>' + fb.currency + ' / mes</span></div>' +
+        '<div class="m-pricing-price">' + (currentLang === 'en' ? '1 month free' : '1 mes gratis') + ' <span>' + (currentLang === 'en' ? 'PáginaPro trial' : 'Prueba PáginaPro') + '</span></div>' +
         '<p class="m-pricing-note">' + t('pricing_note') + '</p>' +
         '<div class="m-pricing-features">' +
           '<div class="m-pricing-feature"><span class="m-pricing-check">&#10003;</span><span>' + t('pricing_f1') + '</span></div>' +

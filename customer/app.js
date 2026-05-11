@@ -50,7 +50,8 @@
     if (!customer) return false;
     var monthlyPrice = Number(customer.monthly_price || 0);
     var hasStripeSubscription = !!(subscription && subscription.stripe_subscription_id);
-    return monthlyPrice <= 0 && !hasStripeSubscription;
+    var status = subscription ? subscription.status : '';
+    return !hasStripeSubscription && (monthlyPrice <= 0 || status === 'trialing' || status === 'cancelled');
   }
 
   function getPlanSelectionUrl(website) {
@@ -137,22 +138,22 @@
       stat_requests: 'Solicitudes abiertas',
       stat_requests_sub: 'Sin solicitudes aún',
       stat_billing: 'Próximo cobro',
-      stat_billing_sub: 'Sin plan activo',
+      stat_billing_sub: 'Fin de prueba o próximo cobro',
       stat_plan: 'Tu plan',
-      stat_plan_sub: 'Plan Mensual — AhoraTengoPagina',
+      stat_plan_sub: 'PáginaPro — AhoraTengoPagina',
       dash_recent: 'Solicitudes Recientes',
       dash_view_all: 'Ver todas →',
       dash_no_requests: 'Sin solicitudes todavía',
       dash_no_requests_sub: 'Cuando necesites cambios en tu página, aparecerán aquí.',
       dash_actions: 'Acciones Rápidas',
       action_subscription: 'Administrar suscripción',
-      action_subscription_sub: 'Ver tu plan y facturación',
+      action_subscription_sub: 'Ver prueba, plan y facturación',
       action_business: 'Completar mi negocio',
       action_business_sub: 'Agrega info y servicios',
       action_changes: 'Solicitar cambios',
       action_changes_sub: 'Actualiza tu página web',
       action_support: 'Contactar soporte',
-      action_support_sub: 'Estamos aquí para ayudarte',
+      action_support_sub: 'Soporte 24 horas al activar tu plan',
 
       // Analytics
       nav_analytics: 'Analíticas',
@@ -446,22 +447,22 @@
       stat_requests: 'Open requests',
       stat_requests_sub: 'No requests yet',
       stat_billing: 'Next charge',
-      stat_billing_sub: 'No active plan',
+      stat_billing_sub: 'Trial end or next charge',
       stat_plan: 'Your plan',
-      stat_plan_sub: 'Monthly Plan — AhoraTengoPagina',
+      stat_plan_sub: 'PáginaPro — AhoraTengoPagina',
       dash_recent: 'Recent Requests',
       dash_view_all: 'View all →',
       dash_no_requests: 'No requests yet',
       dash_no_requests_sub: 'When you need changes to your page, they\'ll appear here.',
       dash_actions: 'Quick Actions',
       action_subscription: 'Manage subscription',
-      action_subscription_sub: 'View your plan and billing',
+      action_subscription_sub: 'View trial, plan, and billing',
       action_business: 'Complete my business',
       action_business_sub: 'Add info and services',
       action_changes: 'Request changes',
       action_changes_sub: 'Update your website',
       action_support: 'Contact support',
-      action_support_sub: 'We\'re here to help',
+      action_support_sub: '24-hour support after activation',
 
       // Analytics
       nav_analytics: 'Analytics',
@@ -1676,24 +1677,26 @@
       if (displayUrl) {
         websiteUrlEl.innerHTML = '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">' + escapeHtml(displayUrl) + '</a>';
       } else if (previewUrl) {
-        websiteUrlEl.innerHTML = (freePortal ? 'Tu demo gratuita está lista — ' : 'Tu sitio web está en vista previa — ') + '<a href="' + escapeHtml(previewUrl) + '" target="_blank" rel="noopener" style="color:var(--c-primary);text-decoration:underline;">Ver demo</a>';
+        websiteUrlEl.innerHTML = (freePortal ? 'Tu prueba PáginaPro está lista — ' : 'Tu sitio web está en vista previa — ') + '<a href="' + escapeHtml(previewUrl) + '" target="_blank" rel="noopener" style="color:var(--c-primary);text-decoration:underline;">Ver prueba</a>';
       } else {
-        websiteUrlEl.textContent = freePortal ? 'Tu demo gratuita está en preparación' : 'Tu sitio web está en construcción';
+        websiteUrlEl.textContent = freePortal ? 'Tu prueba PáginaPro está en preparación' : 'Tu sitio web está en construcción';
       }
     }
 
     if (websiteSubEl) {
-      if (displayUrl) {
+      if (displayUrl && website && website.site_status === 'suspended') {
+        websiteSubEl.textContent = 'Tu prueba terminó. Activa tu plan mensual para volver a publicar la página.';
+      } else if (displayUrl) {
         websiteSubEl.textContent = freePortal
-          ? 'Tu página ya está lista. El siguiente paso es activar tu plan para mover más clientes desde Google, WhatsApp y asistentes como ChatGPT.'
+          ? 'Tu página ya está lista en una dirección temporal. Activa tu plan para mover más clientes desde Google, WhatsApp y asistentes como ChatGPT.'
           : 'Tu página web está activa y lista para recibir clientes.';
       } else if (previewUrl) {
         websiteSubEl.textContent = freePortal
-          ? 'Revisa tu demo, ajusta lo que haga falta y luego activa tu plan para publicarla y conectar tu negocio a Google.'
+          ? 'Revisa tu prueba, usa tu reunión de diseño y luego activa tu plan para conectar dominio propio, Google y WhatsApp.'
           : 'Tu página web está lista para revisar. Pronto será publicada.';
       } else {
         websiteSubEl.textContent = freePortal
-          ? 'Completa tu información para generar tu demo gratis y preparar una página que convierta más visitas en mensajes por WhatsApp.'
+          ? 'Completa tu información para preparar una página que convierta más visitas en mensajes por WhatsApp.'
           : 'Estamos construyendo tu presencia en línea. Pronto tus clientes podrán encontrarte.';
       }
     }
@@ -1719,7 +1722,7 @@
       secondaryBtn.href = '#';
       var secondaryLabel = secondaryBtn.querySelector('span');
       if (secondaryLabel) {
-        secondaryLabel.textContent = freePortal ? 'Completar mi demo' : 'Personalizar';
+        secondaryLabel.textContent = freePortal ? 'Completar mi prueba' : 'Personalizar';
       }
     }
 
@@ -1744,12 +1747,14 @@
           incomplete: 'c-badge--incomplete',
           trialing: 'c-badge--trialing'
         };
-        var label = freePortal ? 'Cuenta gratuita' : (statusLabels[subscription.status] || subscription.status);
+        var label = statusLabels[subscription.status] || subscription.status;
+        if (freePortal && subscription.status === 'trialing') label = 'Prueba PáginaPro';
+        if (freePortal && subscription.status === 'cancelled') label = 'Prueba finalizada';
         var cls = statusClasses[subscription.status] || '';
         statusEl.innerHTML = '<span class="c-badge ' + cls + '">' + escapeHtml(label) + '</span>';
       } else {
         statusEl.innerHTML = freePortal
-          ? '<span class="c-badge c-badge--incomplete">Cuenta gratuita</span>'
+          ? '<span class="c-badge c-badge--incomplete">Prueba PáginaPro</span>'
           : '<span class="c-badge c-badge--incomplete">Sin suscripción</span>';
       }
     }
@@ -1757,8 +1762,12 @@
     // Next billing date
     var billingEl = $('#next-billing');
     if (billingEl) {
-      if (freePortal) {
-        billingEl.textContent = website ? 'Listo para activar' : 'Completa tu demo';
+      if (freePortal && subscription && subscription.status === 'cancelled') {
+        billingEl.textContent = 'Activa tu plan';
+      } else if (freePortal && subscription && subscription.current_period_end) {
+        billingEl.textContent = formatDate(subscription.current_period_end);
+      } else if (freePortal) {
+        billingEl.textContent = website ? '1 mes gratis' : 'Completa tu prueba';
       } else if (subscription && subscription.current_period_end) {
         billingEl.textContent = formatDate(subscription.current_period_end);
       } else {
@@ -1786,8 +1795,8 @@
     if (freePortal && customer) {
       var planNameEl = $('#plan-name');
       var planPriceEl = $('#plan-price');
-      if (planNameEl) planNameEl.textContent = 'Cuenta gratuita';
-      if (planPriceEl) planPriceEl.textContent = 'Gratis';
+      if (planNameEl) planNameEl.textContent = 'Prueba PáginaPro';
+      if (planPriceEl) planPriceEl.textContent = subscription && subscription.status === 'cancelled' ? 'Prueba finalizada' : '1 mes gratis';
     }
   }
 
@@ -1838,10 +1847,19 @@
 
   function renderBilling(subscription, customer) {
     var freePortal = isFreePlanPortal;
-    var planLabel = freePortal ? 'Cuenta gratuita' : 'Plan Mensual — AhoraTengoPagina';
-    var priceLabel = freePortal ? 'Gratis' : '—';
-    if (customer && !freePortal) {
-      priceLabel = formatCurrency(customer.monthly_price, customer.currency);
+    var isTrial = subscription && subscription.status === 'trialing';
+    var isExpiredTrial = freePortal && subscription && subscription.status === 'cancelled';
+    var planLabel = freePortal ? 'Prueba PáginaPro — AhoraTengoPagina' : 'PáginaPro Mensual — AhoraTengoPagina';
+    var priceLabel = '—';
+    var monthlyPriceLabel = customer ? formatCurrency(customer.monthly_price, customer.currency) : '—';
+    if (customer) {
+      if (isTrial) {
+        priceLabel = '1 mes gratis';
+      } else if (isExpiredTrial) {
+        priceLabel = 'Prueba finalizada';
+      } else {
+        priceLabel = monthlyPriceLabel;
+      }
     }
 
     // Dashboard stat card
@@ -1854,13 +1872,15 @@
     var billingPlanNameEl = $('#billing-plan-name');
     if (billingPlanNameEl) billingPlanNameEl.textContent = planLabel;
     var billingPlanPriceEl = $('#billing-plan-price');
-    if (billingPlanPriceEl) billingPlanPriceEl.textContent = priceLabel;
+    if (billingPlanPriceEl) {
+      billingPlanPriceEl.textContent = isTrial ? ('Luego ' + monthlyPriceLabel + '/mes') : priceLabel;
+    }
 
     // Billing status badge
     var billingBadge = $('#billing-status-badge');
     if (billingBadge && freePortal) {
-      billingBadge.textContent = 'Gratis';
-      billingBadge.className = 'c-badge c-badge--incomplete';
+      billingBadge.textContent = isExpiredTrial ? 'Prueba finalizada' : 'Periodo de prueba';
+      billingBadge.className = 'c-badge ' + (isExpiredTrial ? 'c-badge--cancelled' : 'c-badge--trialing');
     } else if (billingBadge && subscription) {
       var statusLabels = {
         active: 'Activa',
@@ -1886,8 +1906,10 @@
     // Billing date
     var billingDateEl = $('#billing-date');
     if (billingDateEl) {
-      if (freePortal) {
-        billingDateEl.textContent = 'Cuando elijas un plan';
+      if (freePortal && subscription && subscription.current_period_end) {
+        billingDateEl.textContent = formatDate(subscription.current_period_end);
+      } else if (freePortal) {
+        billingDateEl.textContent = 'Durante la prueba';
       } else if (subscription && subscription.current_period_end) {
         billingDateEl.textContent = formatDate(subscription.current_period_end);
       } else {
@@ -1898,13 +1920,14 @@
     // Payment method
     var paymentMethodEl = $('#payment-method');
     if (paymentMethodEl) {
-      paymentMethodEl.textContent = freePortal ? 'Se configurará al activar tu plan' : 'Administrado por Stripe';
+      paymentMethodEl.textContent = customer && customer.stripe_customer_id ? 'Administrado por Stripe' : 'Pendiente de activar';
     }
 
     // Update cancel button state
     var btnCancel = $('#btn-cancel-subscription');
     if (btnCancel && freePortal) {
-      btnCancel.style.display = 'none';
+      btnCancel.disabled = true;
+      btnCancel.textContent = isExpiredTrial ? 'Activa tu plan para administrar' : 'Prueba gratis activa';
     } else if (btnCancel && subscription) {
       if (subscription.status === 'cancelled') {
         btnCancel.disabled = true;
@@ -1913,6 +1936,11 @@
         btnCancel.disabled = true;
         btnCancel.textContent = 'Cancelación programada';
       }
+    }
+
+    var btnPortal = $('#btn-stripe-portal');
+    if (btnPortal) {
+      btnPortal.textContent = customer && customer.stripe_customer_id ? 'Administrar Facturación' : 'Activar Plan Mensual';
     }
   }
 
@@ -1965,71 +1993,71 @@
     if (billingTitle) billingTitle.textContent = isFreePlanPortal ? 'Activar plan' : 'Facturación';
     if (billingDesc) {
       billingDesc.textContent = isFreePlanPortal
-        ? 'Estos son los pasos para pasar de tu cuenta gratuita a una página publicada y lista para vender.'
+        ? 'Estos son los pasos para pasar de tu prueba gratis a una página publicada y lista para vender.'
         : 'Administra tu suscripción y método de pago.';
     }
     if (navBilling) navBilling.textContent = isFreePlanPortal ? 'Activar plan' : 'Facturación';
 
     if (freePlanHeadline) {
       freePlanHeadline.textContent = website
-        ? 'Tu demo ya está lista. Ahora activa tu plan para publicarla y conseguir más clientes.'
-        : 'Completa tu demo y activa tu plan para empezar a recibir más clientes.';
+        ? 'Tu prueba PáginaPro ya está lista. Activa tu plan para seguir publicada y conseguir más clientes.'
+        : 'Completa tu prueba PáginaPro y activa tu plan para empezar a recibir más clientes.';
     }
     if (freePlanCopy) {
       freePlanCopy.textContent = website
-        ? 'Ya tienes una vista previa lista. El siguiente paso es elegir tu plan para publicar tu página, conectar Google Places y dejar tu CTA de WhatsApp lista para convertir.'
-        : 'Sube tus datos, fotos y servicios para generar una demo gratis. Después eliges tu plan y publicamos una página pensada para traer más llamadas y mensajes por WhatsApp.';
+        ? 'Ya tienes una página de prueba en una dirección temporal asignada. El siguiente paso es activar tu plan mensual para mantenerla disponible, conectar dominio propio y mejorar tu visibilidad en Google Maps e IA.'
+        : 'Sube tus datos, fotos y servicios para preparar tu prueba gratis. Después activas tu plan y publicamos una página pensada para traer más llamadas y mensajes por WhatsApp.';
     }
     if (freePlanNote) {
       freePlanNote.textContent = website
-        ? 'Tu demo gratuita ya existe. Al activar tu plan la publicamos, conectamos tu dominio y te ayudamos con Google y asistentes como ChatGPT.'
-        : 'Primero completas tu demo. Después eliges el plan y publicamos tu sitio.';
+        ? 'La prueba incluye una reunión de diseño. Después de aprobar el diseño, el soporte continúa cuando activas tu plan mensual.'
+        : 'Primero completas tu prueba. Después activas el plan mensual para publicar tu sitio con soporte.';
     }
     if (freePlanKicker) {
       freePlanKicker.textContent = website
-        ? 'Tu siguiente paso es publicar tu página.'
+        ? 'Tu siguiente paso es activar el plan mensual.'
         : 'Ahora conviértela en una página lista para vender por WhatsApp.';
     }
 
     if (freePlanBillingCopy) {
       freePlanBillingCopy.textContent = website
-        ? 'Tu demo ya está armada. Elige tu plan para publicarla, conectar Google Places y transformar esa información en más conversaciones por WhatsApp.'
-        : 'Tu cuenta gratuita ya guardó tu negocio. El siguiente paso es terminar tu demo y luego activar un plan para publicar tu página y empezar a mover más conversaciones por WhatsApp.';
+        ? 'Tu prueba ya está armada. Activa el plan mensual para mantener la página disponible, conectar dominio propio y transformar esa información en más conversaciones por WhatsApp.'
+        : 'Tu prueba gratis ya guardó tu negocio. El siguiente paso es terminarla y luego activar un plan para publicar tu página y empezar a mover más conversaciones por WhatsApp.';
     }
     if (freePlanBillingNote) {
       freePlanBillingNote.textContent = website
-        ? 'Cuando actives tu plan, también te ayudamos con dominio, Google y la parte comercial para que tu página empiece a generar leads.'
-        : 'Mientras completas tu demo, puedes volver aquí para activar tu plan en cuanto quieras publicar.';
+        ? 'Con el plan mensual tienes soporte 24 horas para cambios pequeños y respuesta mínima de 6 horas para temas complejos.'
+        : 'Mientras completas tu prueba, puedes volver aquí para activar tu plan en cuanto quieras publicar.';
     }
 
     if (freePlanPrimaryBtn) {
-      freePlanPrimaryBtn.textContent = website ? 'Mejorar mi demo' : 'Completar mis datos';
+      freePlanPrimaryBtn.textContent = website ? 'Ajustar mi prueba' : 'Completar mis datos';
       freePlanPrimaryBtn.setAttribute('data-section', 'wizard');
       freePlanPrimaryBtn.href = '#';
     }
 
     if (freePlanPlanBtn) {
       if (planUrl) {
-        freePlanPlanBtn.textContent = 'Activar plan ahora';
+        freePlanPlanBtn.textContent = 'Activar plan mensual';
         freePlanPlanBtn.href = planUrl;
       } else {
-        freePlanPlanBtn.textContent = 'Generar mi demo primero';
+        freePlanPlanBtn.textContent = 'Preparar mi prueba primero';
         freePlanPlanBtn.href = window.location.pathname + '?section=wizard';
       }
     }
 
     if (freePlanCheckoutBtn) {
       if (planUrl) {
-        freePlanCheckoutBtn.textContent = 'Elegir mi plan ahora';
+        freePlanCheckoutBtn.textContent = 'Activar plan mensual';
         freePlanCheckoutBtn.href = planUrl;
       } else {
-        freePlanCheckoutBtn.textContent = 'Completar mi demo primero';
+        freePlanCheckoutBtn.textContent = 'Completar mi prueba primero';
         freePlanCheckoutBtn.href = window.location.pathname + '?section=wizard';
       }
     }
 
     if (freePlanWizardBtn) {
-      freePlanWizardBtn.textContent = website ? 'Seguir mejorando mi demo' : 'Completar mi demo';
+      freePlanWizardBtn.textContent = website ? 'Seguir ajustando mi prueba' : 'Completar mi prueba';
     }
 
     var stepAccount = $('#free-step-account');
@@ -2445,7 +2473,7 @@
 
   async function openStripePortal() {
     if (!customerData || !customerData.customers || !customerData.customers.stripe_customer_id) {
-      showToast('No se encontró tu información de facturación.', 'error');
+      await redirectToCheckoutForUpgrade();
       return;
     }
 
@@ -2483,6 +2511,39 @@
       if (btnPortal) {
         btnPortal.disabled = false;
         btnPortal.textContent = 'Administrar Facturación';
+      }
+    }
+  }
+
+  async function redirectToCheckoutForUpgrade() {
+    var btnPortal = $('#btn-stripe-portal');
+    if (btnPortal) {
+      btnPortal.disabled = true;
+      btnPortal.textContent = 'Preparando pago...';
+    }
+
+    try {
+      var country = businessData && businessData.address_country ? String(businessData.address_country).toUpperCase() : '';
+      var url = '/api/products/list';
+      if (/^[A-Z]{2}$/.test(country)) url += '?country=' + encodeURIComponent(country);
+
+      var response = await fetch(url);
+      if (!response.ok) throw new Error('No se pudieron cargar los planes.');
+      var data = await response.json();
+      var products = (data.products || []).filter(function (p) { return parseFloat(p.price) > 0 && p.stripe_price_id; });
+      if (!products.length) throw new Error('No hay planes disponibles para activar.');
+
+      var trialPriceId = subscriptionData && subscriptionData.stripe_price_id;
+      var product = products.find(function (p) { return trialPriceId && p.stripe_price_id === trialPriceId; }) || products[0];
+      var checkoutUrl = '/checkout/' + encodeURIComponent(product.id);
+      if (websiteData && websiteData.id) checkoutUrl += '?website=' + encodeURIComponent(websiteData.id);
+      window.location.href = checkoutUrl;
+    } catch (err) {
+      console.error('Upgrade checkout redirect failed:', err);
+      showToast(err.message || 'Error al preparar el pago. Intenta de nuevo.', 'error');
+      if (btnPortal) {
+        btnPortal.disabled = false;
+        btnPortal.textContent = 'Activar Plan Mensual';
       }
     }
   }

@@ -176,7 +176,7 @@ async function runGenerationPipeline({ flowId, businessId, phone, chatId, client
       },
     });
 
-    // 11. Create customer account (free signup)
+    // 11. Create customer account (PaginaPro trial signup)
     console.log('[Pipeline] Step 10: Creating customer account...');
     await createCustomerAccount(businessId, collected);
 
@@ -591,7 +591,7 @@ async function publishWebsite(websiteId) {
 
 
 /**
- * Create a free customer account via the existing endpoint.
+ * Create a PaginaPro trial customer account via the existing endpoint.
  */
 async function createCustomerAccount(businessId, collected) {
   try {
@@ -626,11 +626,12 @@ async function createCustomerAccount(businessId, collected) {
  * Build the completion message with published URL and portal link.
  */
 function buildCompletionMessage(publishedUrl, businessName) {
-  let msg = `🎉 ¡Tu página web está lista!\n\n`;
+  let msg = `🎉 ¡Tu prueba gratis de PáginaPro está lista!\n\n`;
   msg += `*${businessName}*\n`;
-  if (publishedUrl) msg += `🌐 ${publishedUrl}\n`;
+  if (publishedUrl) msg += `🌐 Dirección temporal asignada: ${publishedUrl}\n`;
+  msg += `\nTienes 1 mes gratis, sin tarjeta. También incluye una reunión de diseño con tu agente de Customer Success para dejar la página como quieres.\n`;
   msg += `\n📱 Administra tu página en: ahoratengopagina.com/mipagina\n`;
-  msg += `\nTe enviamos un correo con los datos de acceso a tu portal. Si necesitas hacer cambios en tu página, escríbenos aquí o desde el portal. 😊`;
+  msg += `\nCuando actives el plan mensual, conectamos tu dominio propio y seguimos ayudándote a conseguir más clientes por WhatsApp.`;
   return msg;
 }
 

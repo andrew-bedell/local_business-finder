@@ -151,7 +151,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 6. Save customer record to Supabase
+    // 6. Save or upgrade customer record to Supabase
     if (businessId) {
       const customerPayload = {
         business_id: businessId,
@@ -163,21 +163,35 @@ export default async function handler(req, res) {
         ...(salesRepEmployeeId ? { sales_rep_employee_id: salesRepEmployeeId } : {}),
       };
 
-      const custRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
-        method: 'POST',
-        headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-        body: JSON.stringify(customerPayload),
-      });
+      const existingCustomerRes = await fetch(
+        `${supabaseUrl}/rest/v1/customers?business_id=eq.${encodeURIComponent(businessId)}&email=eq.${encodeURIComponent(customerEmail)}&select=id`,
+        { headers: supabaseHeaders }
+      );
+      const existingCustomers = existingCustomerRes.ok ? await existingCustomerRes.json() : [];
+      const existingCustomer = Array.isArray(existingCustomers) && existingCustomers.length > 0 ? existingCustomers[0] : null;
+
+      const custRes = existingCustomer
+        ? await fetch(`${supabaseUrl}/rest/v1/customers?id=eq.${encodeURIComponent(existingCustomer.id)}`, {
+          method: 'PATCH',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+          body: JSON.stringify(customerPayload),
+        })
+        : await fetch(`${supabaseUrl}/rest/v1/customers`, {
+          method: 'POST',
+          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
+          body: JSON.stringify(customerPayload),
+        });
 
       // 6. Save subscription record (as incomplete — webhook will update to active)
       if (!custRes.ok) {
-        console.error('Customer insert error:', await custRes.text().catch(() => ''));
+        console.error('Customer upsert error:', await custRes.text().catch(() => ''));
       }
       if (custRes.ok) {
         const custRecords = await custRes.json();
         if (custRecords && custRecords.length > 0) {
+          const customerRecord = custRecords[0];
           const subscriptionPayload = {
-            customer_id: custRecords[0].id,
+            customer_id: customerRecord.id,
             stripe_subscription_id: stripeSub.id,
             stripe_price_id: product.stripe_price_id,
             status: 'incomplete',

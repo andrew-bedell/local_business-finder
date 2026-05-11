@@ -71,7 +71,9 @@ TIPO DE CONTACTO: ${context.contactType}`;
 
 INSTRUCCIÓN PRIORITARIA: Este negocio NO tiene página web todavía.
 - SIEMPRE saluda con el nombre de la persona "${context.contactName || ''}" Y el nombre del negocio "${biz}" — ejemplo: "¡Hola ${context.contactName || ''}! Soy de AhoraTengoPagina, veo que tienes ${biz}..."
-- SIEMPRE menciona que podemos crearle una página web profesional GRATIS
+- SIEMPRE menciona que podemos activar 1 mes gratis de PáginaPro, sin tarjeta
+- Explica que la prueba incluye una dirección temporal asignada y una reunión de diseño con Customer Success
+- Enfatiza que ayudamos a traer más clientes por WhatsApp mejorando visibilidad en Google Maps y recomendaciones de IA como ChatGPT
 - Sé conversacional y amable — no suenes como un vendedor
 - Si ya se le ofreció antes en la conversación, varía las palabras pero IGUAL menciona la página web — este es tu objetivo principal`;
     return prompt;
@@ -99,9 +101,10 @@ INSTRUCCIÓN: Este fue un cliente pero ya no tiene suscripción activa.
     case 'demo':
       prompt += `
 
-INSTRUCCIÓN: Este contacto tiene una DEMOSTRACIÓN de página web lista.
-- Anímalo a revisar su página de demostración: ${context.websiteUrl}
-- Pregunta qué le parece y si le gustaría activarla
+INSTRUCCIÓN: Este contacto tiene una prueba PáginaPro lista.
+- Anímalo a revisar su página de prueba en la dirección temporal asignada: ${context.websiteUrl}
+- Recuérdale que la prueba es 1 mes gratis, sin tarjeta, e incluye una reunión de diseño
+- Pregunta qué le parece y si le gustaría activar el plan mensual para mantenerla publicada
 - Si tiene preguntas sobre precios, dile que un asesor le dará los detalles`;
       break;
 
@@ -111,7 +114,8 @@ INSTRUCCIÓN: Este contacto tiene una DEMOSTRACIÓN de página web lista.
 
 INSTRUCCIÓN: Este es un PROSPECTO — negocio identificado pero aún no es cliente.
 - Explica brevemente nuestro servicio si pregunta
-- Ofrece crear una demostración gratuita de su página web
+- Ofrece activar 1 mes gratis de PáginaPro, sin tarjeta
+- Menciona Google Maps, recomendaciones de IA como ChatGPT y más conversaciones por WhatsApp
 - No presiones, sé informativo y amable`;
       break;
 
@@ -120,7 +124,7 @@ INSTRUCCIÓN: Este es un PROSPECTO — negocio identificado pero aún no es clie
 
 INSTRUCCIÓN: Este contacto se registró en nuestra página de marketing.
 - Agradece su interés
-- Ofrece mostrarle cómo quedaría su página web (demostración gratis)
+- Ofrece activar su prueba gratis de PáginaPro por 1 mes, sin tarjeta
 - Si ya tiene dudas específicas, respóndelas`;
       break;
   }
