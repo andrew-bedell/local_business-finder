@@ -16,9 +16,12 @@
       hero_cta: 'Prueba PáginaPro gratis por 1 mes',
       hero_how: 'Ver Cómo Funciona',
 
-      proof_whatsapp: 'Más mensajes de clientes',
-      proof_maps: 'Más fácil de encontrar',
-      proof_chatgpt: 'Mejor contexto para recomendaciones',
+      proof_whatsapp: 'Más mensajes',
+      proof_maps: 'Más visibilidad',
+      proof_chatgpt: 'Mejor contexto',
+      proof_fast: 'Página lista rápido',
+      proof_no_code: 'Nosotros lo hacemos',
+      proof_customers: 'Empieza hoy',
 
       problem_tag: 'El Problema',
       problem_title: 'Tus clientes te encuentran en Google. Pero se van porque no tienes página.',
@@ -129,9 +132,12 @@
       hero_cta: 'Try PáginaPro free for 1 month',
       hero_how: 'See How It Works',
 
-      proof_whatsapp: 'More customer messages',
-      proof_maps: 'Easier to find',
-      proof_chatgpt: 'Better context for recommendations',
+      proof_whatsapp: 'More messages',
+      proof_maps: 'More visibility',
+      proof_chatgpt: 'Better context',
+      proof_fast: 'Website ready fast',
+      proof_no_code: 'We handle it',
+      proof_customers: 'Start today',
 
       problem_tag: 'The Problem',
       problem_title: 'Your customers find you on Google. But they leave because you have no website.',
