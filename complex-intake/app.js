@@ -3,6 +3,7 @@ const { useMemo, useRef, useState } = React;
 const SUPPORT_WHATSAPP = "529991095806";
 const STORAGE_KEY = "atp_complex_intake";
 const SUBMISSION_KEY = "atp_complex_intake_submission";
+const STEP_KEY = "atp_complex_intake_step";
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const TARGET_IMAGE_BYTES = Math.floor(MAX_IMAGE_BYTES * 0.92);
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
@@ -62,6 +63,15 @@ const actionOptions = [
   ["pricing", "Ver precios", "View pricing"],
   ["download", "Descargar informacion", "Download information"],
   ["other", "Otro", "Other"],
+];
+
+const intakeSteps = [
+  { id: "basico", label: "Negocio", title: "1. Informacion basica", english: "Basic business information" },
+  { id: "contacto", label: "Tus datos", title: "2. Tus datos", english: "Private coordination contact and public business contact" },
+  { id: "oferta", label: "Oferta", title: "3. Que vendes", english: "Products, services, or both" },
+  { id: "estrategia", label: "Estrategia", title: "4. Clientes, mercado y estrategia", english: "Customers, market, and website strategy" },
+  { id: "presencia", label: "Presencia online", title: "5. Sitio actual, dominio y presencia online", english: "Current website, domain, socials, and maps" },
+  { id: "materiales", label: "Materiales", title: "6. Materiales disponibles", english: "Photos, testimonials, logos, references" },
 ];
 
 const defaultCategory = (type) => ({
@@ -130,6 +140,21 @@ function loadSavedForm() {
   } catch {
     return createDefaultForm();
   }
+}
+
+function loadSavedSubmission() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SUBMISSION_KEY) || "null");
+    return saved && typeof saved === "object" ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadSavedStep() {
+  const saved = parseInt(localStorage.getItem(STEP_KEY) || "0", 10);
+  if (!Number.isFinite(saved)) return 0;
+  return Math.max(0, Math.min(intakeSteps.length - 1, saved));
 }
 
 function safeText(value) {
@@ -257,6 +282,47 @@ function buildExtraNotes(form) {
     `Materiales disponibles: ${form.materialsStatus}`,
     `Inspiracion/competidores: ${form.inspiration}`,
   ].filter(Boolean).join("\n\n");
+}
+
+function buildLeadPayload(form) {
+  return {
+    company: form.businessName,
+    contactName: form.personalName,
+    contactEmail: form.personalEmail,
+    contactWhatsapp: form.personalWhatsapp,
+    publicEmail: form.publicEmail,
+    businessType: form.businessCategory || form.businessModel || "negocio",
+    businessPhone: form.publicWhatsapp,
+    addressFull: form.publicAddress || form.address,
+    city: form.city,
+    aboutBusiness: [form.oneLineDescription, form.strategicNotes].filter(Boolean).join("\n\n"),
+    hours: form.businessHours ? { horario: form.businessHours } : null,
+    extraNotes: buildExtraNotes(form),
+  };
+}
+
+function validateStep(stepIndex, form) {
+  const step = intakeSteps[stepIndex];
+  if (!step) return "";
+
+  const requiredByStep = {
+    basico: [
+      ["businessName", "nombre del negocio"],
+      ["businessCategory", "giro del negocio"],
+    ],
+    contacto: [
+      ["personalName", "tu nombre"],
+      ["personalEmail", "email personal"],
+      ["personalWhatsapp", "WhatsApp personal"],
+    ],
+    estrategia: [
+      ["siteGoal", "meta principal del sitio"],
+    ],
+  };
+
+  const missing = (requiredByStep[step.id] || []).filter(([key]) => !safeText(form[key]));
+  if (!missing.length) return "";
+  return `Faltan estos campos: ${missing.map((item) => item[1]).join(", ")}.`;
 }
 
 function Topbar({ mode }) {
@@ -440,7 +506,7 @@ function CategoryEditor({ form, setForm, type, title, intro }) {
   );
 }
 
-function Progress({ form }) {
+function Progress({ form, currentStep }) {
   const important = [
     form.businessName,
     form.businessCategory,
@@ -460,15 +526,16 @@ function Progress({ form }) {
   ];
   const complete = important.filter((value) => safeText(value)).length;
   const percent = Math.round((complete / important.length) * 100);
+  const step = intakeSteps[currentStep] || intakeSteps[0];
 
   return (
     <div className="ci-progress-wrap">
       <div className="ci-progress-row">
-        <span className="ci-progress-label">Avance del formulario</span>
-        <span className="ci-progress-meta">{percent}% completo</span>
+        <span className="ci-progress-label">Paso {currentStep + 1} de {intakeSteps.length}: {step.label}</span>
+        <span className="ci-progress-meta">{percent}% de datos clave completo</span>
       </div>
       <div className="ci-progress-track">
-        <div className="ci-progress-fill" style={{ width: `${percent}%` }} />
+        <div className="ci-progress-fill" style={{ width: `${Math.round(((currentStep + 1) / intakeSteps.length) * 100)}%` }} />
       </div>
     </div>
   );
@@ -799,6 +866,384 @@ function IntakePage() {
               </button>
             </div>
           </Section>
+        </main>
+      </form>
+
+      <AiHelper form={form} setForm={setForm} />
+    </div>
+  );
+}
+
+function IntakePageWizard() {
+  const savedSubmissionAtBoot = useMemo(loadSavedSubmission, []);
+  const [form, setFormState] = useState(loadSavedForm);
+  const [currentStep, setCurrentStep] = useState(loadSavedStep);
+  const [businessId, setBusinessId] = useState(() => savedSubmissionAtBoot && savedSubmissionAtBoot.businessId ? savedSubmissionAtBoot.businessId : "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [saveState, setSaveState] = useState(() => businessId ? "saved" : "local");
+  const saveTimerRef = useRef(null);
+  const lastSavedRef = useRef("");
+
+  const showProducts = form.businessModel === "products" || form.businessModel === "both";
+  const showServices = form.businessModel === "services" || form.businessModel === "both";
+  const currentStepMeta = intakeSteps[currentStep] || intakeSteps[0];
+  const isLastStep = currentStep === intakeSteps.length - 1;
+
+  function setForm(updater) {
+    setFormState((current) => {
+      const next = typeof updater === "function" ? updater(current) : updater;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      if (businessId) {
+        localStorage.setItem(SUBMISSION_KEY, JSON.stringify({ businessId, form: next }));
+      }
+      return next;
+    });
+  }
+
+  function updateStep(nextStep) {
+    const bounded = Math.max(0, Math.min(intakeSteps.length - 1, nextStep));
+    setCurrentStep(bounded);
+    localStorage.setItem(STEP_KEY, String(bounded));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function saveProgress(formToSave = form, showSaving = false, idOverride = businessId) {
+    if (!idOverride) return null;
+    const payload = { businessId: idOverride, ...buildLeadPayload(formToSave) };
+    const snapshot = JSON.stringify(payload);
+    if (snapshot === lastSavedRef.current && !showSaving) return idOverride;
+
+    if (showSaving) setSaveState("saving");
+    try {
+      const response = await fetch("/api/public-builder/save-intake-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "No se pudo guardar el avance");
+      lastSavedRef.current = snapshot;
+      localStorage.setItem(SUBMISSION_KEY, JSON.stringify({ businessId: idOverride, form: formToSave }));
+      setSaveState("saved");
+      return idOverride;
+    } catch (err) {
+      setSaveState("error");
+      if (showSaving) setError(err.message || "No se pudo guardar el avance");
+      return null;
+    }
+  }
+
+  async function ensureLeadSaved() {
+    if (businessId) {
+      await saveProgress(form, true, businessId);
+      return businessId;
+    }
+
+    const firstStepError = validateStep(0, form);
+    const contactStepError = validateStep(1, form);
+    if (firstStepError || contactStepError) {
+      setError(firstStepError || contactStepError);
+      return "";
+    }
+
+    setSaveState("saving");
+    try {
+      const response = await fetch("/api/public-builder/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildLeadPayload(form)),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok && response.status !== 409) throw new Error(result.error || "No se pudo guardar el formulario");
+
+      const savedBusinessId = result.businessId || (result.business && result.business.id);
+      if (!savedBusinessId) throw new Error("No pudimos confirmar el negocio guardado.");
+      setBusinessId(savedBusinessId);
+      localStorage.setItem(SUBMISSION_KEY, JSON.stringify({ businessId: savedBusinessId, form }));
+      setSaveState("saved");
+      return savedBusinessId;
+    } catch (err) {
+      setSaveState("error");
+      setError(err.message || "No se pudo guardar el formulario");
+      return "";
+    }
+  }
+
+  React.useEffect(() => {
+    if (!businessId) return undefined;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveState("pending");
+    saveTimerRef.current = setTimeout(() => {
+      saveProgress(form, false, businessId);
+    }, 1200);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [form, businessId]);
+
+  async function goNext() {
+    setError("");
+    const stepError = validateStep(currentStep, form);
+    if (stepError) {
+      setError(stepError);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (currentStep === 1) {
+        const savedId = await ensureLeadSaved();
+        if (!savedId) return;
+      } else if (businessId) {
+        await saveProgress(form, true, businessId);
+      }
+      updateStep(currentStep + 1);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function finishIntake(event) {
+    event.preventDefault();
+    setError("");
+
+    if (!safeText(form.siteGoal)) {
+      setError("Antes de crear el catalogo, necesitamos la meta principal del sitio.");
+      updateStep(3);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const savedId = businessId || await ensureLeadSaved();
+      if (!savedId) return;
+      await saveProgress(form, true, savedId);
+      window.location.href = `/crear-tu-pagina/catalogo?businessId=${encodeURIComponent(savedId)}`;
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function renderStep() {
+    if (currentStepMeta.id === "basico") {
+      return (
+        <Section id="basico" title={currentStepMeta.title} english={currentStepMeta.english}>
+          <div className="ci-grid">
+            <TextInput form={form} setForm={setForm} path="businessName" label="Nombre del negocio" english="Business name" required />
+            <TextInput form={form} setForm={setForm} path="businessCategory" label="Giro o tipo de negocio" english="Business category" required placeholder="Ej: cirujano plastico, administracion de Airbnbs" />
+            <TextArea form={form} setForm={setForm} path="oneLineDescription" label="Describe tu negocio en una frase" english="Describe your business in one sentence" />
+            <TextInput form={form} setForm={setForm} path="city" label="Ciudad principal" english="Main city" />
+            <TextInput form={form} setForm={setForm} path="country" label="Pais" english="Country" />
+            <TextInput form={form} setForm={setForm} path="address" label="Direccion interna o referencia" english="Internal address or reference" />
+            <ChoiceGroup form={form} setForm={setForm} path="locationType" label="Donde atiendes o vendes principalmente?" english="Where do you mainly serve or sell?" options={locationOptions} />
+            <ChoiceGroup form={form} setForm={setForm} path="visitPreference" label="Quieres que los clientes visiten tu ubicacion fisica?" english="Do you want customers to visit your physical location?" options={visitOptions} />
+          </div>
+        </Section>
+      );
+    }
+
+    if (currentStepMeta.id === "contacto") {
+      return (
+        <Section id="contacto" title={currentStepMeta.title} english={currentStepMeta.english}>
+          <div className="ci-alert">
+            Al terminar este paso guardamos tu avance en la base de datos. Si cierras el formulario mas adelante, podremos recuperar lo que ya compartiste.
+            <div className="ci-english">After this step, your progress is saved in the database so later answers can be recovered.</div>
+          </div>
+          <div className="ci-grid">
+            <TextInput form={form} setForm={setForm} path="personalName" label="Tu nombre" english="Your name" required />
+            <TextInput form={form} setForm={setForm} path="personalEmail" label="Email personal para coordinar" english="Personal email for coordination" type="email" required />
+            <TextInput form={form} setForm={setForm} path="personalWhatsapp" label="WhatsApp personal para coordinar" english="Personal WhatsApp for coordination" required />
+            <TextInput form={form} setForm={setForm} path="publicWhatsapp" label="WhatsApp publico del negocio" english="Public business WhatsApp" />
+            <TextInput form={form} setForm={setForm} path="publicEmail" label="Email publico del negocio" english="Public business email" type="email" />
+            <TextInput form={form} setForm={setForm} path="publicAddress" label="Direccion publica si quieres mostrarla" english="Public address, if you want to show it" />
+            <TextArea form={form} setForm={setForm} path="businessHours" label="Horarios de atencion" english="Business hours" />
+          </div>
+        </Section>
+      );
+    }
+
+    if (currentStepMeta.id === "oferta") {
+      return (
+        <Section id="oferta" title={currentStepMeta.title} english={currentStepMeta.english}>
+          <ChoiceGroup form={form} setForm={setForm} path="businessModel" label="Que vende tu negocio?" english="What does your business sell?" options={businessModelOptions} required />
+          {form.businessModel === "both" ? (
+            <div className="ci-grid">
+              <TextArea form={form} setForm={setForm} path="businessStructure" label="Todo pertenece al mismo negocio o deberian ser sitios separados?" english="Is this all one business, or should parts be separate websites?" />
+              <TextInput form={form} setForm={setForm} path="primaryModel" label="Tu negocio principal es mas de productos o servicios?" english="Is your main business more product-based or service-based?" />
+            </div>
+          ) : null}
+          {showProducts ? (
+            <CategoryEditor
+              form={form}
+              setForm={setForm}
+              type="product"
+              title="Categoria de producto"
+              intro="Agrupa tus productos en categorias. No necesitas escribir todo tu catalogo ahora. Si vendes productos muy diferentes, agrega varias categorias; si vendes productos relacionados, una categoria puede ser suficiente."
+            />
+          ) : null}
+          {showServices ? (
+            <CategoryEditor
+              form={form}
+              setForm={setForm}
+              type="service"
+              title="Categoria de servicio"
+              intro="Agrupa tus servicios en categorias. No necesitas escribir cada servicio exacto ahora. Si ofreces servicios muy diferentes, agrega varias categorias; si tu oferta es simple, una categoria puede ser suficiente."
+            />
+          ) : null}
+        </Section>
+      );
+    }
+
+    if (currentStepMeta.id === "estrategia") {
+      return (
+        <Section id="estrategia" title={currentStepMeta.title} english={currentStepMeta.english}>
+          <ChoiceGroup form={form} setForm={setForm} path="marketReach" label="Donde quieres vender con esta pagina?" english="Where do you want this website to sell?" options={marketReachOptions} />
+          <TextArea form={form} setForm={setForm} path="targetCustomers" label="Quien es tu cliente ideal?" english="Who is your ideal customer?" large />
+          <ChoiceGroup form={form} setForm={setForm} path="siteGoal" label="Cual es el objetivo principal del sitio?" english="What is the main goal of the website?" options={goalOptions} required />
+          <ChoiceGroup form={form} setForm={setForm} path="primaryAction" label="Que accion debe tomar un visitante?" english="What action should a visitor take?" options={actionOptions} />
+          <TextArea form={form} setForm={setForm} path="customerQuestions" label="Que dudas o miedos tienen tus clientes antes de comprar?" english="What doubts, fears, or questions do customers have before buying?" large />
+          <TextArea form={form} setForm={setForm} path="strategicNotes" label="Que debemos saber para vender bien tu negocio?" english="What should we know to market your business well?" large />
+          <TextArea form={form} setForm={setForm} path="promotions" label="Promociones, temporadas o campanas importantes" english="Promotions, seasons, or campaigns to highlight" />
+        </Section>
+      );
+    }
+
+    if (currentStepMeta.id === "presencia") {
+      return (
+        <Section id="presencia" title={currentStepMeta.title} english={currentStepMeta.english}>
+          <div className="ci-grid">
+            <SelectInput form={form} setForm={setForm} path="currentWebsite" label="Tienes sitio web actualmente?" english="Do you currently have a website?">
+              <option value="no">No</option>
+              <option value="yes">Si</option>
+            </SelectInput>
+            <TextInput form={form} setForm={setForm} path="websiteUrl" label="URL del sitio actual" english="Current website URL" placeholder="https://..." />
+            <TextArea form={form} setForm={setForm} path="websiteProblems" label="Que no te gusta del sitio actual?" english="What is wrong with the current site?" />
+            <SelectInput form={form} setForm={setForm} path="hasDomain" label="Ya compraste un dominio?" english="Have you already bought a domain?">
+              <option value="no">No</option>
+              <option value="yes">Si</option>
+              <option value="not_sure">No estoy seguro</option>
+            </SelectInput>
+            <TextArea form={form} setForm={setForm} path="domainDetails" label="Dominio y donde lo compraste" english="Domain and where you bought it" placeholder="Ej: medellinairbnb.com en GoDaddy" />
+          </div>
+          <div className="ci-social-grid">
+            <TextInput form={form} setForm={setForm} path="socialInstagram" label="Instagram" english="Instagram" />
+            <TextInput form={form} setForm={setForm} path="socialFacebook" label="Facebook" english="Facebook" />
+            <TextInput form={form} setForm={setForm} path="socialTikTok" label="TikTok" english="TikTok" />
+            <TextInput form={form} setForm={setForm} path="socialLinkedIn" label="LinkedIn" english="LinkedIn" />
+          </div>
+          <TextArea form={form} setForm={setForm} path="socialOther" label="Otros perfiles o directorios" english="Other profiles or directories" />
+          <div className="ci-grid">
+            <SelectInput form={form} setForm={setForm} path="googleMapsStatus" label="Tienes ficha de Google Maps?" english="Do you have a Google Maps listing?">
+              <option value="">Selecciona una opcion</option>
+              <option value="yes_link">Si, puedo pegar el enlace</option>
+              <option value="yes_no_link">Si, pero no tengo el enlace ahora</option>
+              <option value="no">No</option>
+              <option value="not_sure">No estoy seguro</option>
+            </SelectInput>
+            <TextInput form={form} setForm={setForm} path="googleMapsUrl" label="Enlace de Google Maps" english="Google Maps link" />
+          </div>
+        </Section>
+      );
+    }
+
+    return (
+      <Section id="materiales" title={currentStepMeta.title} english={currentStepMeta.english}>
+        <SelectInput form={form} setForm={setForm} path="materialsStatus" label="Tienes fotos, videos, testimonios, certificaciones o logo?" english="Do you have photos, videos, testimonials, certifications, or a logo?">
+          <option value="">Selecciona una opcion</option>
+          <option value="ready">Si, ya los tengo listos</option>
+          <option value="later">Si, los puedo enviar despues</option>
+          <option value="not_yet">No todavia</option>
+          <option value="need_help">Necesito ayuda con eso</option>
+        </SelectInput>
+        <TextArea form={form} setForm={setForm} path="inspiration" label="Sitios, marcas o competidores que te gusten" english="Websites, brands, or competitors you like" large />
+      </Section>
+    );
+  }
+
+  const saveCopy = {
+    local: "Guardado en este navegador",
+    pending: "Pendiente de guardar",
+    saving: "Guardando...",
+    saved: "Guardado en base de datos",
+    error: "No se pudo guardar automaticamente",
+  }[saveState] || "Guardado en este navegador";
+
+  return (
+    <div className="ci-shell">
+      <Topbar mode="intake" />
+      <header className="ci-header">
+        <div>
+          <p className="ci-kicker">Formulario estrategico</p>
+          <h1 className="ci-title">Crea tu pagina web personalizada</h1>
+          <p className="ci-lead">
+            Este formulario esta dividido en pasos cortos. Despues de tus datos personales, guardamos el avance para que puedas volver sin empezar de cero.
+          </p>
+          <p className="ci-english">
+            This form is split into shorter steps. After personal contact info, progress is saved so customers can return later.
+          </p>
+        </div>
+        <div className="ci-hero-panel">
+          <strong>Quieres algo mas rapido?</strong>
+          <p>Si solo necesitas una pagina simple para recibir mas mensajes por WhatsApp, usa el formulario por chat.</p>
+          <p className="ci-english">For the low-friction version, use the chat intake.</p>
+          <div style={{ marginTop: 14 }}>
+            <a className="ci-btn ci-btn--ghost" href="/crear-tu-pagina/chat">Ir al chat simple</a>
+          </div>
+        </div>
+      </header>
+
+      <Progress form={form} currentStep={currentStep} />
+
+      <form className="ci-wizard" onSubmit={finishIntake}>
+        <nav className="ci-stepper" aria-label="Pasos del formulario">
+          {intakeSteps.map((step, index) => (
+            <button
+              className={`ci-step-pill${index === currentStep ? " is-current" : ""}${index < currentStep ? " is-done" : ""}`}
+              key={step.id}
+              type="button"
+              disabled={index > currentStep && !businessId}
+              onClick={() => {
+                if (index <= currentStep || businessId) updateStep(index);
+              }}
+            >
+              <span>{index + 1}</span>
+              {step.label}
+            </button>
+          ))}
+        </nav>
+        <main className="ci-main">
+          {renderStep()}
+          {error ? <div className="ci-alert ci-alert--error">{error}</div> : null}
+          <div className="ci-wizard-footer">
+            <div className={`ci-save-state ci-save-state--${saveState}`}>
+              <span />
+              {saveCopy}
+              {businessId ? <small>ID {businessId}</small> : null}
+            </div>
+            <div className="ci-form-actions">
+              <button className="ci-btn ci-btn--ghost" type="button" disabled={currentStep === 0 || submitting} onClick={() => updateStep(currentStep - 1)}>
+                Anterior
+              </button>
+              <button className="ci-btn ci-btn--ghost" type="button" onClick={() => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+                if (businessId) saveProgress(form, true, businessId);
+              }}>
+                Guardar borrador
+              </button>
+              {isLastStep ? (
+                <button className="ci-btn ci-btn--primary" type="submit" disabled={submitting}>
+                  {submitting ? <span className="ci-spinner" /> : null}
+                  Continuar al catalogo
+                </button>
+              ) : (
+                <button className="ci-btn ci-btn--primary" type="button" disabled={submitting} onClick={goNext}>
+                  {submitting ? <span className="ci-spinner" /> : null}
+                  {currentStep === 1 ? "Guardar y continuar" : "Continuar"}
+                </button>
+              )}
+            </div>
+          </div>
         </main>
       </form>
 
@@ -1177,7 +1622,7 @@ function CatalogPage() {
 
 function App() {
   const isCatalog = window.location.pathname.indexOf("/catalogo") !== -1;
-  return isCatalog ? <CatalogPage /> : <IntakePage />;
+  return isCatalog ? <CatalogPage /> : <IntakePageWizard />;
 }
 
 const root = document.getElementById("complex-intake-root");
