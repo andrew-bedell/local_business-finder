@@ -16,7 +16,6 @@
       hero_cta: 'Empieza gratis — página lista en 20 minutos',
       hero_how: 'Ver Cómo Funciona',
 
-      proof_businesses: 'negocios atendidos',
       proof_delivery: 'Tiempo de entrega',
       proof_cancel: 'Costo de cancelación',
       proof_support: 'Soporte en español',
@@ -130,7 +129,6 @@
       hero_cta: 'Start free — website ready in 20 minutes',
       hero_how: 'See How It Works',
 
-      proof_businesses: 'businesses served',
       proof_delivery: 'Delivery time',
       proof_cancel: 'Cancellation cost',
       proof_support: 'Spanish support',
