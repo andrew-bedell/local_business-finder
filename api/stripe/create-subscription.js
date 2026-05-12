@@ -3,6 +3,11 @@
 
 import { matchOrCreateBusiness } from '../_lib/match-business.js';
 
+function cleanBusinessId(value) {
+  const raw = String(value || '').trim();
+  return /^\d+$/.test(raw) ? raw : '';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -27,7 +32,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { productId, customerName, customerEmail, customerPhone, businessName, websiteId, repCode } = req.body || {};
+  const { productId, customerName, customerEmail, customerPhone, businessName, websiteId, businessId: rawBusinessId, repCode } = req.body || {};
 
   if (!productId || !customerEmail || !customerName) {
     return res.status(400).json({ error: 'Missing required fields: productId, customerEmail, customerName' });
@@ -57,8 +62,20 @@ export default async function handler(req, res) {
 
     // 2. Resolve business_id — look up existing website or create new business
     let businessId = null;
+    const requestedBusinessId = cleanBusinessId(rawBusinessId);
 
-    if (websiteId) {
+    if (requestedBusinessId) {
+      const businessRes = await fetch(
+        `${supabaseUrl}/rest/v1/businesses?id=eq.${encodeURIComponent(requestedBusinessId)}&select=id`,
+        { headers: supabaseHeaders }
+      );
+      const businesses = businessRes.ok ? await businessRes.json() : [];
+      if (Array.isArray(businesses) && businesses.length > 0) {
+        businessId = requestedBusinessId;
+      }
+    }
+
+    if (!businessId && websiteId) {
       // Employee flow: look up business from website
       const websiteRes = await fetch(
         `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}`,

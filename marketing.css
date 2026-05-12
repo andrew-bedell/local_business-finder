@@ -761,6 +761,13 @@ ul, ol { list-style: none; }
   transform: scale(1.04);
   box-shadow: 0 8px 30px rgba(34, 197, 94, 0.12);
 }
+.m-pricing-card.m-pricing-premium {
+  background: #f8fbff;
+  border-color: rgba(26, 86, 219, 0.18);
+}
+.m-pricing-card.m-pricing-premium:hover {
+  border-color: rgba(26, 86, 219, 0.45);
+}
 .m-pricing-badge {
   position: absolute;
   top: -12px;
@@ -774,6 +781,9 @@ ul, ol { list-style: none; }
   border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+.m-pricing-badge--premium {
+  background: var(--m-blue);
 }
 .m-pricing-price {
   font-size: 48px;
@@ -867,6 +877,16 @@ ul, ol { list-style: none; }
 }
 .m-pricing-cta:hover { background: var(--m-green-dark); }
 .m-pricing-cta:active { transform: scale(0.97); }
+.m-pricing-premium .m-pricing-after {
+  background: #eff6ff;
+  border-color: rgba(26, 86, 219, 0.18);
+}
+.m-pricing-premium .m-pricing-cta {
+  background: var(--m-blue);
+}
+.m-pricing-premium .m-pricing-cta:hover {
+  background: var(--m-blue-dark);
+}
 
 /* ============================================================================
    FAQ
