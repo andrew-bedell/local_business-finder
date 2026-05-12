@@ -91,30 +91,42 @@
   <!-- ── Visibility Bar ── -->
   <section class="m-proof">
     <div class="m-proof-inner" data-reveal>
-      <div class="m-proof-item">
-        <div class="m-proof-value">WhatsApp</div>
-        <div class="m-proof-label" data-i18n="proof_whatsapp">Más mensajes</div>
-      </div>
-      <div class="m-proof-item">
-        <div class="m-proof-value">Google Maps</div>
-        <div class="m-proof-label" data-i18n="proof_maps">Más visibilidad</div>
-      </div>
-      <div class="m-proof-item">
-        <div class="m-proof-value">ChatGPT</div>
-        <div class="m-proof-label" data-i18n="proof_chatgpt">Mejor contexto</div>
-      </div>
-      <div class="m-proof-item">
-        <div class="m-proof-value">20 min</div>
-        <div class="m-proof-label" data-i18n="proof_fast">Página lista rápido</div>
-      </div>
-      <div class="m-proof-item">
-        <div class="m-proof-value">Sin código</div>
-        <div class="m-proof-label" data-i18n="proof_no_code">Nosotros lo hacemos</div>
-      </div>
-      <div class="m-proof-item">
-        <div class="m-proof-value">Más clientes</div>
-        <div class="m-proof-label" data-i18n="proof_customers">Empieza hoy</div>
-      </div>
+      <button class="m-proof-item" type="button" data-proof-key="whatsapp" aria-haspopup="dialog" aria-controls="m-proof-popover" aria-expanded="false" data-i18n-aria-label="proof_detail_whatsapp_aria">
+        <span class="m-proof-value">WhatsApp</span>
+        <span class="m-proof-label" data-i18n="proof_whatsapp">Más mensajes</span>
+        <span class="m-proof-info" aria-hidden="true">i</span>
+      </button>
+      <button class="m-proof-item" type="button" data-proof-key="maps" aria-haspopup="dialog" aria-controls="m-proof-popover" aria-expanded="false" data-i18n-aria-label="proof_detail_maps_aria">
+        <span class="m-proof-value">Google Maps</span>
+        <span class="m-proof-label" data-i18n="proof_maps">Más visibilidad</span>
+        <span class="m-proof-info" aria-hidden="true">i</span>
+      </button>
+      <button class="m-proof-item" type="button" data-proof-key="chatgpt" aria-haspopup="dialog" aria-controls="m-proof-popover" aria-expanded="false" data-i18n-aria-label="proof_detail_chatgpt_aria">
+        <span class="m-proof-value">ChatGPT</span>
+        <span class="m-proof-label" data-i18n="proof_chatgpt">Mejor contexto</span>
+        <span class="m-proof-info" aria-hidden="true">i</span>
+      </button>
+      <button class="m-proof-item" type="button" data-proof-key="fast" aria-haspopup="dialog" aria-controls="m-proof-popover" aria-expanded="false" data-i18n-aria-label="proof_detail_fast_aria">
+        <span class="m-proof-value">20 min</span>
+        <span class="m-proof-label" data-i18n="proof_fast">Página lista rápido</span>
+        <span class="m-proof-info" aria-hidden="true">i</span>
+      </button>
+      <button class="m-proof-item" type="button" data-proof-key="no_code" aria-haspopup="dialog" aria-controls="m-proof-popover" aria-expanded="false" data-i18n-aria-label="proof_detail_no_code_aria">
+        <span class="m-proof-value">Sin código</span>
+        <span class="m-proof-label" data-i18n="proof_no_code">Nosotros lo hacemos</span>
+        <span class="m-proof-info" aria-hidden="true">i</span>
+      </button>
+      <button class="m-proof-item" type="button" data-proof-key="customers" aria-haspopup="dialog" aria-controls="m-proof-popover" aria-expanded="false" data-i18n-aria-label="proof_detail_customers_aria">
+        <span class="m-proof-value">Más clientes</span>
+        <span class="m-proof-label" data-i18n="proof_customers">Empieza hoy</span>
+        <span class="m-proof-info" aria-hidden="true">i</span>
+      </button>
+    </div>
+    <div class="m-proof-popover" id="m-proof-popover" role="dialog" aria-modal="false" aria-labelledby="m-proof-popover-title" aria-describedby="m-proof-popover-body" hidden>
+      <button class="m-proof-popover-close" type="button" id="m-proof-popover-close" aria-label="Cerrar" data-i18n-aria-label="proof_detail_close">&times;</button>
+      <p class="m-proof-popover-kicker" id="m-proof-popover-kicker"></p>
+      <h3 id="m-proof-popover-title"></h3>
+      <p id="m-proof-popover-body"></p>
     </div>
   </section>
 

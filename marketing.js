@@ -22,6 +22,25 @@
       proof_fast: 'Página lista rápido',
       proof_no_code: 'Nosotros lo hacemos',
       proof_customers: 'Empieza hoy',
+      proof_detail_close: 'Cerrar',
+      proof_detail_whatsapp_aria: 'Ver detalle de WhatsApp',
+      proof_detail_maps_aria: 'Ver detalle de Google Maps',
+      proof_detail_chatgpt_aria: 'Ver detalle de ChatGPT',
+      proof_detail_fast_aria: 'Ver detalle de 20 minutos',
+      proof_detail_no_code_aria: 'Ver detalle de sin código',
+      proof_detail_customers_aria: 'Ver detalle de más clientes',
+      proof_detail_whatsapp_title: 'Convertimos visitas en conversaciones',
+      proof_detail_whatsapp_body: 'Tu página muestra botones claros para escribir, llamar o cotizar por WhatsApp justo cuando el cliente ya está interesado.',
+      proof_detail_maps_title: 'Damos más contexto a tu ficha',
+      proof_detail_maps_body: 'Conectamos tu página con tu presencia en Google para que la gente encuentre horarios, servicios, fotos, ubicación y formas de contacto en un solo lugar.',
+      proof_detail_chatgpt_title: 'Tu negocio queda más fácil de entender',
+      proof_detail_chatgpt_body: 'Organizamos tus servicios, zona, horarios y datos clave para que asistentes de IA tengan mejor información al explicar o recomendar tu negocio.',
+      proof_detail_fast_title: 'Una primera versión rápida',
+      proof_detail_fast_body: 'Con tus datos, fotos y perfiles existentes armamos una página inicial en minutos para que puedas revisarla y pedir ajustes antes de publicar.',
+      proof_detail_no_code_title: 'Nosotros hacemos la parte técnica',
+      proof_detail_no_code_body: 'No necesitas tocar dominios, hosting, diseño o código. Nuestro equipo prepara, publica y mantiene la página contigo.',
+      proof_detail_customers_title: 'Menos dudas, más acciones',
+      proof_detail_customers_body: 'La meta es que más personas pasen de buscarte a contactarte: con información clara, confianza y botones listos para comprar, reservar o cotizar.',
 
       problem_tag: 'El Problema',
       problem_title: 'Tus clientes te encuentran en Google. Pero se van porque no tienes página.',
@@ -138,6 +157,25 @@
       proof_fast: 'Website ready fast',
       proof_no_code: 'We handle it',
       proof_customers: 'Start today',
+      proof_detail_close: 'Close',
+      proof_detail_whatsapp_aria: 'View WhatsApp detail',
+      proof_detail_maps_aria: 'View Google Maps detail',
+      proof_detail_chatgpt_aria: 'View ChatGPT detail',
+      proof_detail_fast_aria: 'View 20 minute detail',
+      proof_detail_no_code_aria: 'View no-code detail',
+      proof_detail_customers_aria: 'View more customers detail',
+      proof_detail_whatsapp_title: 'We turn visits into conversations',
+      proof_detail_whatsapp_body: 'Your page shows clear buttons to message, call, or request a quote on WhatsApp right when the customer is already interested.',
+      proof_detail_maps_title: 'We give your listing more context',
+      proof_detail_maps_body: 'We connect your page with your Google presence so people can find hours, services, photos, location, and contact options in one place.',
+      proof_detail_chatgpt_title: 'Your business becomes easier to understand',
+      proof_detail_chatgpt_body: 'We organize your services, service area, hours, and key details so AI assistants have better information when explaining or recommending your business.',
+      proof_detail_fast_title: 'A fast first version',
+      proof_detail_fast_body: 'Using your details, photos, and existing profiles, we build an initial page in minutes so you can review it and request edits before publishing.',
+      proof_detail_no_code_title: 'We handle the technical work',
+      proof_detail_no_code_body: 'You do not need to touch domains, hosting, design, or code. Our team prepares, publishes, and maintains the page with you.',
+      proof_detail_customers_title: 'Fewer doubts, more action',
+      proof_detail_customers_body: 'The goal is to move more people from searching to contacting you with clear information, trust, and buttons ready for buying, booking, or quoting.',
 
       problem_tag: 'The Problem',
       problem_title: 'Your customers find you on Google. But they leave because you have no website.',
@@ -278,6 +316,9 @@
     document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
       el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
     });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(function(el) {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+    });
     document.documentElement.lang = currentLang;
     // Toggle data-lang blocks (used on about page)
     var aboutSection = document.querySelector('.m-about');
@@ -291,6 +332,7 @@
     var toggleMobile = document.getElementById('m-lang-toggle-mobile');
     if (toggleDesktop) toggleDesktop.textContent = otherLang;
     if (toggleMobile) toggleMobile.textContent = otherLang;
+    if (activeProofKey) updateProofPopoverContent(activeProofKey);
   }
 
   function toggleLanguage() {
@@ -309,6 +351,14 @@
   var formSubmitBtn = document.getElementById('m-form-submit');
   var formSuccess = document.getElementById('m-form-success');
   var pricingGrid = document.getElementById('pricing-grid');
+  var proofPopover = document.getElementById('m-proof-popover');
+  var proofPopoverClose = document.getElementById('m-proof-popover-close');
+  var proofPopoverKicker = document.getElementById('m-proof-popover-kicker');
+  var proofPopoverTitle = document.getElementById('m-proof-popover-title');
+  var proofPopoverBody = document.getElementById('m-proof-popover-body');
+  var proofButtons = document.querySelectorAll('[data-proof-key]');
+  var activeProofKey = null;
+  var activeProofButton = null;
 
   // ── Language Toggle ──
   document.getElementById('m-lang-toggle').addEventListener('click', toggleLanguage);
@@ -433,6 +483,107 @@
     });
   }
 
+  // ── Proof Detail Popovers ──
+  var proofLabelKeys = {
+    whatsapp: 'proof_whatsapp',
+    maps: 'proof_maps',
+    chatgpt: 'proof_chatgpt',
+    fast: 'proof_fast',
+    no_code: 'proof_no_code',
+    customers: 'proof_customers'
+  };
+
+  function updateProofPopoverContent(key) {
+    if (!proofPopover) return;
+    proofPopoverKicker.textContent = t(proofLabelKeys[key] || 'proof_customers');
+    proofPopoverTitle.textContent = t('proof_detail_' + key + '_title');
+    proofPopoverBody.textContent = t('proof_detail_' + key + '_body');
+  }
+
+  function positionProofPopover() {
+    if (!proofPopover || !activeProofButton || !activeProofKey) return;
+
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      proofPopover.style.left = '';
+      proofPopover.style.top = '';
+      return;
+    }
+
+    var margin = 16;
+    var rect = activeProofButton.getBoundingClientRect();
+    var popoverWidth = proofPopover.offsetWidth;
+    var popoverHeight = proofPopover.offsetHeight;
+    var top = rect.bottom + 12;
+    var left = rect.left + (rect.width / 2) - (popoverWidth / 2);
+
+    if (top + popoverHeight > window.innerHeight - margin && rect.top - popoverHeight - 12 > margin) {
+      top = rect.top - popoverHeight - 12;
+    }
+
+    left = Math.max(margin, Math.min(left, window.innerWidth - popoverWidth - margin));
+    top = Math.max(margin, Math.min(top, window.innerHeight - popoverHeight - margin));
+
+    proofPopover.style.left = left + 'px';
+    proofPopover.style.top = top + 'px';
+  }
+
+  function closeProofDetail(restoreFocus) {
+    if (!proofPopover || !activeProofKey) return;
+    proofPopover.classList.remove('m-active');
+    proofPopover.hidden = true;
+    proofButtons.forEach(function(btn) {
+      btn.classList.remove('m-active');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+    if (restoreFocus !== false && activeProofButton) {
+      activeProofButton.focus();
+    }
+    activeProofKey = null;
+    activeProofButton = null;
+  }
+
+  function openProofDetail(key, button) {
+    if (!proofPopover || !key || !button) return;
+    activeProofKey = key;
+    activeProofButton = button;
+    updateProofPopoverContent(key);
+
+    proofButtons.forEach(function(btn) {
+      var isActive = btn === button;
+      btn.classList.toggle('m-active', isActive);
+      btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+    });
+
+    proofPopover.hidden = false;
+    proofPopover.classList.add('m-active');
+    positionProofPopover();
+    if (proofPopoverClose) {
+      setTimeout(function() { proofPopoverClose.focus(); }, 0);
+    }
+  }
+
+  proofButtons.forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openProofDetail(btn.getAttribute('data-proof-key'), btn);
+    });
+  });
+
+  if (proofPopoverClose) {
+    proofPopoverClose.addEventListener('click', function() {
+      closeProofDetail(true);
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!activeProofKey || !proofPopover) return;
+    if (proofPopover.contains(e.target) || (activeProofButton && activeProofButton.contains(e.target))) return;
+    closeProofDetail(false);
+  });
+
+  window.addEventListener('resize', positionProofPopover);
+  window.addEventListener('scroll', positionProofPopover, { passive: true });
+
   // ── FAQ Accordion ──
   document.querySelectorAll('.m-faq-question').forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -486,6 +637,10 @@
 
   // Close on Escape
   document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && activeProofKey) {
+      closeProofDetail(true);
+      return;
+    }
     if (e.key === 'Escape' && leadModal.classList.contains('m-active')) {
       closeModal();
     }
