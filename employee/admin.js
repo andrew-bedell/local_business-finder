@@ -8,6 +8,7 @@
     pipeline: {
       items: [
         { label: 'navPipeline', tab: 'saved' },
+        { label: 'navLeads', tab: 'leads' },
         { label: 'navDemoAnalytics', tab: 'demo_analytics' },
         { label: 'navOutreach', tab: 'outreach' }
       ],
@@ -61,6 +62,7 @@
       navSearch: 'Search',
       navSaved: 'Saved',
       navPipeline: 'Pipeline',
+      navLeads: 'Leads',
       navGroupPipeline: 'Pipeline',
       navGroupMessaging: 'Messaging',
       navGroupCustomers: 'Customers',
@@ -117,14 +119,34 @@
       pipelineSaveBtn: 'Save Pipeline Status',
       stageSaved: 'Saved',
       stageLead: 'Lead',
+      stageWebsiteCreated: 'Website Created',
+      stageInterested: 'Interested',
       stageColdOutreach: 'Outreach Ready',
       stageDemo: 'Demo',
       stageActiveCustomer: 'Active',
       stageInactiveCustomer: 'Inactive',
+      leadsTitle: 'Inbound Leads',
+      leadsRefresh: 'Refresh',
+      leadsSummary: '{0} website leads, {1} advanced leads',
+      leadsGeneralTitle: 'General Website Leads',
+      leadsAdvancedTitle: 'Advanced Intake Leads',
+      leadsReceived: 'Received',
+      leadsEmptyColumn: 'No leads in this stage',
+      leadsEmptyTable: 'No leads found',
+      leadsViewDetails: 'View',
+      leadsOpenWebsite: 'Open',
+      leadsNoWebsite: 'No site',
+      leadStageLead: 'Lead',
+      leadStageWebsiteCreated: 'Website Created',
+      leadStageInterested: 'Interested',
+      leadStagePaidCustomer: 'Paid Customer',
+      leadMoveToStage: 'Move to stage',
       leadSource: 'Lead Source',
       srcSearch: 'Internal Search',
       srcColdOutreach: 'Cold Outreach',
       srcWebsiteForm: 'Website Form',
+      srcAdvancedIntake: 'Advanced Intake',
+      highValueLead: 'High value',
       srcWhatsappInbound: 'WhatsApp Inbound',
       srcReferral: 'Referral',
       srcAdMeta: 'Facebook / Instagram Ad',
@@ -153,6 +175,7 @@
       filterLocation: 'Location',
       filterLocationPlaceholder: 'City, state, or zip...',
       filterCountry: 'Country',
+      filterSource: 'Lead Source',
       filterAll: 'All',
       filterAny: 'Any',
       filterYes: 'Yes',
@@ -953,6 +976,7 @@
       navSearch: 'Buscar',
       navSaved: 'Guardados',
       navPipeline: 'Pipeline',
+      navLeads: 'Leads',
       navGroupPipeline: 'Pipeline',
       navGroupMessaging: 'Mensajes',
       navGroupCustomers: 'Clientes',
@@ -1009,14 +1033,34 @@
       pipelineSaveBtn: 'Guardar Etapa',
       stageSaved: 'Guardado',
       stageLead: 'Lead',
+      stageWebsiteCreated: 'Sitio Creado',
+      stageInterested: 'Interesado',
       stageColdOutreach: 'Listo para Contactar',
       stageDemo: 'Demo',
       stageActiveCustomer: 'Activo',
       stageInactiveCustomer: 'Inactivo',
+      leadsTitle: 'Leads Entrantes',
+      leadsRefresh: 'Actualizar',
+      leadsSummary: '{0} leads web, {1} leads avanzados',
+      leadsGeneralTitle: 'Leads del Formulario Web',
+      leadsAdvancedTitle: 'Leads del Intake Avanzado',
+      leadsReceived: 'Recibido',
+      leadsEmptyColumn: 'Sin leads en esta etapa',
+      leadsEmptyTable: 'No hay leads',
+      leadsViewDetails: 'Ver',
+      leadsOpenWebsite: 'Abrir',
+      leadsNoWebsite: 'Sin sitio',
+      leadStageLead: 'Lead',
+      leadStageWebsiteCreated: 'Sitio Creado',
+      leadStageInterested: 'Interesado',
+      leadStagePaidCustomer: 'Cliente Pagado',
+      leadMoveToStage: 'Mover a etapa',
       leadSource: 'Fuente del Lead',
       srcSearch: 'Búsqueda Interna',
       srcColdOutreach: 'Contacto en Frío',
       srcWebsiteForm: 'Formulario Web',
+      srcAdvancedIntake: 'Intake Avanzado',
+      highValueLead: 'Alto valor',
       srcWhatsappInbound: 'WhatsApp Entrante',
       srcReferral: 'Referido',
       srcAdMeta: 'Anuncio Facebook / Instagram',
@@ -1045,6 +1089,7 @@
       filterLocation: 'Ubicación',
       filterLocationPlaceholder: 'Ciudad, estado o código postal...',
       filterCountry: 'País',
+      filterSource: 'Fuente del Lead',
       filterAll: 'Todos',
       filterAny: 'Cualquiera',
       filterYes: 'Sí',
@@ -2127,6 +2172,7 @@
   const selectedIds = new Set(); // Selected business IDs for bulk actions
   let allBusinesses = []; // Unfiltered dataset for pipeline counts
   let allBusinessesRaw = []; // Completely unfiltered dataset for cross-tab features (outreach)
+  let leadsBusinesses = [];
   let pipelineStage = 'all'; // Currently selected pipeline filter
   // Cache for detail modal data (keyed by business ID)
   const detailCache = {};
@@ -2134,6 +2180,13 @@
   const OUTREACH_COLUMNS_STORAGE_PREFIX = 'admin_outreach_table_columns_v1_';
   const FIXED_SAVED_COLUMNS = ['select', 'rowNumber', 'name'];
   const OUTREACH_SECTIONS = ['followup', 'today', 'schedule', 'visitors', 'ready', 'progress', 'complete', 'cancelled'];
+  const LEAD_SOURCE_VALUES = ['website_form', 'advanced_intake'];
+  const LEAD_KANBAN_STAGES = [
+    { id: 'lead', moveStatus: 'lead', labelKey: 'leadStageLead', statuses: ['lead'] },
+    { id: 'website_created', moveStatus: 'website_created', labelKey: 'leadStageWebsiteCreated', statuses: ['website_created', 'demo', 'cold_outreach_ready'] },
+    { id: 'interested', moveStatus: 'interested', labelKey: 'leadStageInterested', statuses: ['interested'] },
+    { id: 'paid_customer', moveStatus: 'active_customer', labelKey: 'leadStagePaidCustomer', statuses: ['active_customer'] },
+  ];
   let savedTableConfig = { order: [], visible: {} };
   const outreachTableConfig = {};
 
@@ -2254,6 +2307,7 @@
   const filterLocation = $('#filter-location');
   const filterCountry = $('#filter-country');
   const filterType = $('#filter-type');
+  const filterSource = $('#filter-source');
   const filterRating = $('#filter-rating');
   const filterReviews = $('#filter-reviews');
   const filterInstagram = $('#filter-instagram');
@@ -2620,6 +2674,11 @@
       pipelineSearch.addEventListener('input', () => applyPipelineFilter());
     }
 
+    const btnRefreshLeads = document.getElementById('btn-refresh-leads');
+    if (btnRefreshLeads) {
+      btnRefreshLeads.addEventListener('click', loadLeadsDashboard);
+    }
+
     // Section nav (search/pipeline scroll pills)
     initSectionNav();
 
@@ -2640,6 +2699,7 @@
       filterLocation.value = '';
       filterCountry.value = '';
       filterType.value = '';
+      if (filterSource) filterSource.value = '';
       filterRating.value = '';
       filterReviews.value = '';
       filterInstagram.value = '';
@@ -2917,6 +2977,10 @@
       if (type) {
         query = query.eq('category', type);
       }
+      const source = filterSource ? filterSource.value : '';
+      if (source) {
+        query = query.eq('lead_source', source);
+      }
       const minRating = filterRating.value;
       if (minRating) {
         query = query.gte('rating', parseFloat(minRating));
@@ -3032,6 +3096,241 @@
       pill.classList.toggle('active', pill.getAttribute('data-stage') === pipelineStage);
     });
     refreshVisibleBusinessTables({ resetPage: true });
+  }
+
+  function patchBusinessInMemory(businessId, patch) {
+    [allBusinesses, allBusinessesRaw, allFiltered, currentResults, currentQueueResults, leadsBusinesses].forEach((collection) => {
+      if (!Array.isArray(collection)) return;
+      const business = collection.find((item) => String(item.id) === String(businessId));
+      if (business) Object.assign(business, patch);
+    });
+  }
+
+  function getLeadKanbanStage(business) {
+    const status = business && business.pipeline_status ? business.pipeline_status : 'lead';
+    if (status === 'active_customer') return 'paid_customer';
+    if (status === 'interested') return 'interested';
+    if (status === 'website_created' || status === 'demo' || status === 'cold_outreach_ready') return 'website_created';
+    if (hasGeneratedWebsite(business) && (status === 'lead' || status === 'saved')) return 'website_created';
+    return 'lead';
+  }
+
+  function getLeadKanbanStageDef(stageId) {
+    return LEAD_KANBAN_STAGES.find((stage) => stage.id === stageId) || LEAD_KANBAN_STAGES[0];
+  }
+
+  function getLeadStageLabel(stageId) {
+    const stage = getLeadKanbanStageDef(stageId);
+    return t(stage.labelKey);
+  }
+
+  function getLeadStageBadgeHtml(business) {
+    const stageId = getLeadKanbanStage(business);
+    return `<span class="badge-stage badge-lead-stage-${escapeHtml(stageId)}">${escapeHtml(getLeadStageLabel(stageId))}</span>`;
+  }
+
+  function getLeadWebsiteLinkHtml(business) {
+    const url = getPublishedWebsiteUrl(business);
+    if (!url) return `<span class="td-empty-placeholder">${escapeHtml(t('leadsNoWebsite'))}</span>`;
+    return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="website-url-link">${escapeHtml(t('leadsOpenWebsite'))}</a>`;
+  }
+
+  function getLeadContactHtml(business) {
+    const primary = getPrimaryContact(business);
+    const name = (primary && primary.contact_name) || business.contact_name || '';
+    const email = (primary && primary.contact_email) || business.contact_email || '';
+    const phone = (primary && (primary.contact_whatsapp || primary.contact_phone)) || business.contact_whatsapp || business.contact_phone || business.phone || '';
+    const rows = [];
+    if (name) rows.push(`<strong>${escapeHtml(name)}</strong>`);
+    if (email) rows.push(`<span>${escapeHtml(email)}</span>`);
+    if (phone) rows.push(`<span>${escapeHtml(phone)}</span>`);
+    return rows.length ? `<div class="lead-contact-stack">${rows.join('')}</div>` : '<span class="td-empty-placeholder">—</span>';
+  }
+
+  function getLeadStageSelectHtml(business) {
+    const currentStage = getLeadKanbanStage(business);
+    const options = LEAD_KANBAN_STAGES.map((stage) => {
+      return `<option value="${escapeHtml(stage.id)}" ${stage.id === currentStage ? 'selected' : ''}>${escapeHtml(t(stage.labelKey))}</option>`;
+    }).join('');
+    return `<select class="input lead-stage-select" data-id="${business.id}" aria-label="${escapeHtml(t('leadMoveToStage'))}">${options}</select>`;
+  }
+
+  function renderLeadCard(business) {
+    const stageId = getLeadKanbanStage(business);
+    const websiteHtml = getLeadWebsiteLinkHtml(business);
+    return `
+      <article class="lead-card ${business.lead_source === 'advanced_intake' ? 'lead-card-advanced' : ''}" draggable="true" data-id="${business.id}">
+        <div class="lead-card-topline">
+          ${getLeadSourceBadgeHtml(business.lead_source)}
+          <span class="lead-card-date">${escapeHtml(formatAdminDateTime(business.created_at))}</span>
+        </div>
+        <h4>${escapeHtml(business.name || '—')}</h4>
+        <div class="lead-card-meta">${escapeHtml(extractCity(business.address_full || business.address_city || ''))}</div>
+        ${getLeadContactHtml(business)}
+        <div class="lead-card-footer">
+          ${websiteHtml}
+          ${getLeadStageSelectHtml(business)}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderLeadsKanban() {
+    const kanban = document.getElementById('leads-kanban');
+    if (!kanban) return;
+    const grouped = {};
+    LEAD_KANBAN_STAGES.forEach((stage) => { grouped[stage.id] = []; });
+    leadsBusinesses.forEach((business) => {
+      const stageId = getLeadKanbanStage(business);
+      if (!grouped[stageId]) grouped[stageId] = [];
+      grouped[stageId].push(business);
+    });
+
+    kanban.innerHTML = LEAD_KANBAN_STAGES.map((stage) => {
+      const items = grouped[stage.id] || [];
+      return `
+        <section class="lead-kanban-column" data-stage="${escapeHtml(stage.id)}">
+          <div class="lead-kanban-column-header">
+            <h3>${escapeHtml(t(stage.labelKey))}</h3>
+            <span class="lead-kanban-count">${items.length}</span>
+          </div>
+          <div class="lead-kanban-cards">
+            ${items.length ? items.map(renderLeadCard).join('') : `<div class="lead-kanban-empty">${escapeHtml(t('leadsEmptyColumn'))}</div>`}
+          </div>
+        </section>
+      `;
+    }).join('');
+
+    bindLeadKanbanEvents();
+  }
+
+  function renderLeadTableRows(tbodyId, businesses, summaryId) {
+    const tbody = document.getElementById(tbodyId);
+    const summary = document.getElementById(summaryId);
+    if (summary) summary.textContent = t('showingCount', businesses.length, businesses.length);
+    if (!tbody) return;
+    if (!businesses.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:22px;color:var(--text-muted)">${escapeHtml(t('leadsEmptyTable'))}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = businesses.map((business) => {
+      return `
+        <tr>
+          <td><strong>${escapeHtml(business.name || '—')}</strong><div class="lead-table-sub">${escapeHtml(extractCity(business.address_full || business.address_city || ''))}</div></td>
+          <td>${getLeadStageBadgeHtml(business)}${getLeadStageSelectHtml(business)}</td>
+          <td>${getLeadContactHtml(business)}</td>
+          <td>${getLeadWebsiteLinkHtml(business)}</td>
+          <td>${escapeHtml(formatAdminDateTime(business.created_at))}</td>
+          <td><button class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderLeadTables() {
+    const general = leadsBusinesses.filter((business) => business.lead_source === 'website_form');
+    const advanced = leadsBusinesses.filter((business) => business.lead_source === 'advanced_intake');
+    const summary = document.getElementById('leads-summary');
+    if (summary) summary.textContent = t('leadsSummary', general.length, advanced.length);
+    renderLeadTableRows('leads-general-body', general, 'leads-general-summary');
+    renderLeadTableRows('leads-advanced-body', advanced, 'leads-advanced-summary');
+  }
+
+  function renderLeadsDashboard() {
+    renderLeadsKanban();
+    renderLeadTables();
+    bindLeadTableEvents();
+  }
+
+  async function loadLeadsDashboard() {
+    if (!supabaseClient) return;
+    const summary = document.getElementById('leads-summary');
+    const kanban = document.getElementById('leads-kanban');
+    if (summary) summary.textContent = t('loadingData');
+    if (kanban) kanban.innerHTML = `<div class="lead-kanban-loading">${escapeHtml(t('loadingData'))}</div>`;
+
+    try {
+      const { data, error } = await supabaseClient
+        .from('businesses')
+        .select('*, generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)')
+        .in('lead_source', LEAD_SOURCE_VALUES)
+        .in('pipeline_status', ['lead', 'website_created', 'interested', 'active_customer', 'demo', 'cold_outreach_ready'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      leadsBusinesses = data || [];
+      renderLeadsDashboard();
+    } catch (err) {
+      console.error('Leads load error:', err);
+      showToast(t('errorLoading'), 'error');
+      leadsBusinesses = [];
+      renderLeadsDashboard();
+    }
+  }
+
+  async function updateLeadKanbanStage(businessId, stageId) {
+    const stage = getLeadKanbanStageDef(stageId);
+    const business = leadsBusinesses.find((item) => String(item.id) === String(businessId));
+    if (!business || !stage) return;
+    const nextStatus = stage.moveStatus;
+    if (business.pipeline_status === nextStatus) return;
+
+    try {
+      const res = await fetch('/api/businesses/update-pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId, pipeline_status: nextStatus }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      patchBusinessInMemory(businessId, { pipeline_status: nextStatus, pipeline_status_changed_at: new Date().toISOString() });
+      renderLeadsDashboard();
+      updatePipelineCounts(allBusinesses);
+      showToast(t('pipelineChangeSuccess'), 'success');
+    } catch (err) {
+      console.error('Lead stage update error:', err);
+      showToast(t('pipelineChangeError'), 'error');
+      renderLeadsDashboard();
+    }
+  }
+
+  function bindLeadKanbanEvents() {
+    document.querySelectorAll('.lead-card').forEach((card) => {
+      card.addEventListener('dragstart', (event) => {
+        event.dataTransfer.setData('text/plain', card.dataset.id || '');
+        event.dataTransfer.effectAllowed = 'move';
+        card.classList.add('dragging');
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.lead-kanban-column.is-drag-over').forEach((column) => column.classList.remove('is-drag-over'));
+      });
+    });
+
+    document.querySelectorAll('.lead-kanban-column').forEach((column) => {
+      column.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        column.classList.add('is-drag-over');
+      });
+      column.addEventListener('dragleave', () => column.classList.remove('is-drag-over'));
+      column.addEventListener('drop', (event) => {
+        event.preventDefault();
+        column.classList.remove('is-drag-over');
+        const businessId = event.dataTransfer.getData('text/plain');
+        if (businessId) updateLeadKanbanStage(businessId, column.dataset.stage);
+      });
+    });
+  }
+
+  function bindLeadTableEvents() {
+    document.querySelectorAll('.lead-stage-select').forEach((select) => {
+      select.addEventListener('change', () => updateLeadKanbanStage(select.dataset.id, select.value));
+    });
+    document.querySelectorAll('.lead-detail-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        const business = leadsBusinesses.find((item) => String(item.id) === String(button.dataset.id));
+        if (business) openDetailModal(business);
+      });
+    });
   }
 
   // ── Helpers ──
@@ -3310,6 +3609,8 @@
     const classMap = {
       saved: 'badge-saved',
       lead: 'badge-lead',
+      website_created: 'badge-website-created',
+      interested: 'badge-interested',
       cold_outreach_ready: 'badge-cold-outreach',
       demo: 'badge-demo',
       active_customer: 'badge-active-customer',
@@ -3318,6 +3619,8 @@
     const labelMap = {
       saved: 'stageSaved',
       lead: 'stageLead',
+      website_created: 'stageWebsiteCreated',
+      interested: 'stageInterested',
       cold_outreach_ready: 'stageColdOutreach',
       demo: 'stageDemo',
       active_customer: 'stageActiveCustomer',
@@ -3326,6 +3629,26 @@
     const cls = classMap[s] || 'badge-saved';
     const label = t(labelMap[s] || 'stageSaved');
     return `<span class="badge-stage ${cls}">${escapeHtml(label)}</span>`;
+  }
+
+  function getLeadSourceLabel(source) {
+    const key = 'src' + (source || 'other').replace(/(^|_)([a-z])/g, (_, __, c) => c.toUpperCase());
+    return t(key);
+  }
+
+  function getLeadSourceBadgeHtml(source) {
+    const value = source || 'other';
+    const label = escapeHtml(getLeadSourceLabel(value));
+    if (value === 'advanced_intake') {
+      return `<span class="badge badge-source-advanced">${label}<span class="badge-source-priority">${escapeHtml(t('highValueLead'))}</span></span>`;
+    }
+    if (value === 'website_form') {
+      return `<span class="badge badge-source-website">${label}</span>`;
+    }
+    if (value === 'search') {
+      return `<span class="badge badge-source-search">${label}</span>`;
+    }
+    return `<span class="badge badge-source-default">${label}</span>`;
   }
 
   function extractCity(addressFull) {
@@ -3465,7 +3788,7 @@
       case 'stage':
         return `<td class="td-center td-editable td-editable-stage" data-id="${business.id}" data-field="pipeline_status" data-value="${escapeHtml(business.pipeline_status || 'saved')}" title="${t('clickToEdit')}">${getStageBadgeHtml(business.pipeline_status)}</td>`;
       case 'source':
-        return `<td style="font-size:11px;color:var(--text-muted)">${t('src' + (business.lead_source || 'other').replace(/(^|_)([a-z])/g, (_, __, c) => c.toUpperCase()))}</td>`;
+        return `<td>${getLeadSourceBadgeHtml(business.lead_source)}</td>`;
       case 'country':
         return `<td class="td-editable" data-id="${business.id}" data-field="address_country" data-value="${escapeHtml(business.address_country || '')}" title="${business.address_country ? t('clickToEdit') : t('clickToAdd')}">${business.address_country ? escapeHtml(business.address_country) : '<span class="td-empty-placeholder">+</span>'}</td>`;
       case 'contacts':
@@ -4061,6 +4384,8 @@
       const stages = [
         { value: 'saved', label: t('stageSaved') },
         { value: 'lead', label: t('stageLead') },
+        { value: 'website_created', label: t('stageWebsiteCreated') },
+        { value: 'interested', label: t('stageInterested') },
         { value: 'cold_outreach_ready', label: t('stageColdOutreach') },
         { value: 'demo', label: t('stageDemo') },
         { value: 'active_customer', label: t('stageActiveCustomer') },
@@ -4178,17 +4503,12 @@
       td.setAttribute('title', newValue ? t('clickToEdit') : t('clickToAdd'));
 
       // Update local data
-      const business = allBusinesses.find(b => String(b.id) === String(businessId));
-      if (business) {
-        business[field] = newValue;
-        // Also update in currentResults
-        const cr = currentResults.find(b => String(b.id) === String(businessId));
-        if (cr) cr[field] = newValue;
-      }
+      patchBusinessInMemory(businessId, { [field]: newValue });
 
       // If pipeline_status changed, update counts
       if (field === 'pipeline_status') {
         updatePipelineCounts(allBusinesses);
+        if (activeTab === 'leads') renderLeadsDashboard();
       }
 
       // Brief success flash
@@ -5874,6 +6194,8 @@
                 <select class="input" id="modal-pipeline-status">
                   <option value="saved" ${(business.pipeline_status || 'saved') === 'saved' ? 'selected' : ''}>${t('stageSaved')}</option>
                   <option value="lead" ${business.pipeline_status === 'lead' ? 'selected' : ''}>${t('stageLead')}</option>
+                  <option value="website_created" ${business.pipeline_status === 'website_created' ? 'selected' : ''}>${t('stageWebsiteCreated')}</option>
+                  <option value="interested" ${business.pipeline_status === 'interested' ? 'selected' : ''}>${t('stageInterested')}</option>
                   <option value="cold_outreach_ready" ${business.pipeline_status === 'cold_outreach_ready' ? 'selected' : ''}>${t('stageColdOutreach')}</option>
                   <option value="demo" ${business.pipeline_status === 'demo' ? 'selected' : ''}>${t('stageDemo')}</option>
                   <option value="active_customer" ${business.pipeline_status === 'active_customer' ? 'selected' : ''}>${t('stageActiveCustomer')}</option>
@@ -5886,6 +6208,7 @@
                   <option value="search" ${business.lead_source === 'search' ? 'selected' : ''}>${t('srcSearch')}</option>
                   <option value="cold_outreach" ${business.lead_source === 'cold_outreach' ? 'selected' : ''}>${t('srcColdOutreach')}</option>
                   <option value="website_form" ${business.lead_source === 'website_form' ? 'selected' : ''}>${t('srcWebsiteForm')}</option>
+                  <option value="advanced_intake" ${business.lead_source === 'advanced_intake' ? 'selected' : ''}>${t('srcAdvancedIntake')}</option>
                   <option value="whatsapp_inbound" ${business.lead_source === 'whatsapp_inbound' ? 'selected' : ''}>${t('srcWhatsappInbound')}</option>
                   <option value="referral" ${business.lead_source === 'referral' ? 'selected' : ''}>${t('srcReferral')}</option>
                   <option value="ad_meta" ${business.lead_source === 'ad_meta' ? 'selected' : ''}>${t('srcAdMeta')}</option>
@@ -6029,18 +6352,15 @@
         if (!res.ok) throw new Error('Failed');
 
         // Update local business object so table re-renders correctly
-        business.pipeline_status = payload.pipeline_status;
-        business.lead_source = payload.lead_source;
-
-        // Update allBusinesses too
-        const idx = allBusinesses.findIndex(b => b.id === business.id);
-        if (idx >= 0) {
-          allBusinesses[idx].pipeline_status = payload.pipeline_status;
-        }
+        patchBusinessInMemory(business.id, {
+          pipeline_status: payload.pipeline_status,
+          lead_source: payload.lead_source,
+        });
 
         // Re-apply pipeline counts and filter
         updatePipelineCounts(allBusinesses);
-        applyPipelineFilter(pipelineStage);
+        if (activeTab === 'leads') renderLeadsDashboard();
+        else applyPipelineFilter(pipelineStage);
 
         showToast(t('pipelineChangeSuccess'), 'success');
       } catch (err) {
@@ -8009,6 +8329,24 @@
                 localRecord.site_status = 'active';
                 localRecord.published_url = pubData.website.published_url;
               }
+              if (business.pipeline_status === 'lead' || business.pipeline_status === 'saved' || !business.pipeline_status) {
+                fetch('/api/businesses/update-pipeline', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ businessId: business.id, pipeline_status: 'website_created' }),
+                }).then((stageRes) => {
+                  if (stageRes.ok) {
+                    patchBusinessInMemory(business.id, {
+                      pipeline_status: 'website_created',
+                      pipeline_status_changed_at: new Date().toISOString(),
+                    });
+                    updatePipelineCounts(allBusinesses);
+                    if (activeTab === 'leads') renderLeadsDashboard();
+                  }
+                }).catch((stageErr) => {
+                  console.warn('Website-created stage update failed:', stageErr);
+                });
+              }
               showToast(t('websiteSaved'), 'success');
             } else {
               console.warn('Auto-publish failed, website saved as draft');
@@ -8082,6 +8420,7 @@
     activeTab = tab;
     const sections = {
       saved: ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section'],
+      leads: ['leads-section'],
       audiences: ['audiences-section'],
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
@@ -8098,7 +8437,7 @@
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section', 'leads-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -8118,11 +8457,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-leads', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', wa_logs: 'nav-wa-logs', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', leads: 'nav-leads', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', wa_logs: 'nav-wa-logs', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
 
@@ -8147,6 +8486,7 @@
     if (tab === 'products') loadProducts();
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
+    if (tab === 'leads') loadLeadsDashboard();
     if (tab === 'demo_analytics') loadDemoAnalytics();
     if (tab === 'outreach') loadOutreach();
     if (tab === 'earnings') loadEarnings();

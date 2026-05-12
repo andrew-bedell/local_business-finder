@@ -36,6 +36,7 @@
                 </a>
                 <div class="nav-dropdown">
                   <a href="#" class="nav-dropdown-item active" id="nav-saved" data-tab="saved" data-i18n="navPipeline">Pipeline</a>
+                  <a href="#" class="nav-dropdown-item" id="nav-leads" data-tab="leads" data-i18n="navLeads">Leads</a>
                   <a href="#" class="nav-dropdown-item" id="nav-demo-analytics" data-tab="demo_analytics" data-i18n="navDemoAnalytics">Demo Analytics</a>
                   <a href="#" class="nav-dropdown-item" id="nav-outreach" data-tab="outreach" data-i18n="navOutreach">Outreach</a>
                 </div>
@@ -429,6 +430,21 @@
             </select>
           </div>
           <div class="form-group">
+            <label for="filter-source" data-i18n="filterSource">Lead Source</label>
+            <select id="filter-source" class="input">
+              <option value="" data-i18n="filterAll">All</option>
+              <option value="advanced_intake" data-i18n="srcAdvancedIntake">Advanced Intake</option>
+              <option value="website_form" data-i18n="srcWebsiteForm">Website Form</option>
+              <option value="search" data-i18n="srcSearch">Internal Search</option>
+              <option value="cold_outreach" data-i18n="srcColdOutreach">Cold Outreach</option>
+              <option value="whatsapp_inbound" data-i18n="srcWhatsappInbound">WhatsApp Inbound</option>
+              <option value="referral" data-i18n="srcReferral">Referral</option>
+              <option value="ad_meta" data-i18n="srcAdMeta">Facebook / Instagram Ad</option>
+              <option value="manual" data-i18n="srcManual">Manual Entry</option>
+              <option value="other" data-i18n="srcOther">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label for="filter-rating" data-i18n="filterMinRating">Min Rating</label>
             <select id="filter-rating" class="input">
               <option value="" data-i18n="filterAny">Any</option>
@@ -586,6 +602,69 @@
 
         <div class="no-results" id="no-results" style="display:none;">
           <p data-i18n="adminNoResults">No businesses match your filters.</p>
+        </div>
+      </section>
+
+      <!-- Leads Pipeline -->
+      <section id="leads-section" style="display:none">
+        <div class="leads-header">
+          <div>
+            <h2 data-i18n="leadsTitle">Inbound Leads</h2>
+            <p class="results-summary" id="leads-summary"></p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-refresh-leads" data-i18n="leadsRefresh">Refresh</button>
+        </div>
+
+        <div class="leads-kanban" id="leads-kanban"></div>
+
+        <div class="leads-tables-grid">
+          <section class="leads-table-card">
+            <div class="leads-table-header">
+              <div>
+                <h3 data-i18n="leadsGeneralTitle">General Website Leads</h3>
+                <p class="results-summary" id="leads-general-summary"></p>
+              </div>
+            </div>
+            <div class="results-table-wrapper">
+              <table class="results-table leads-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="thName">Business Name</th>
+                    <th data-i18n="thStage">Stage</th>
+                    <th data-i18n="thContact">Contact</th>
+                    <th data-i18n="thWebsite">Website</th>
+                    <th data-i18n="leadsReceived">Received</th>
+                    <th data-i18n="thActions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leads-general-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="leads-table-card leads-table-card-advanced">
+            <div class="leads-table-header">
+              <div>
+                <h3 data-i18n="leadsAdvancedTitle">Advanced Intake Leads</h3>
+                <p class="results-summary" id="leads-advanced-summary"></p>
+              </div>
+            </div>
+            <div class="results-table-wrapper">
+              <table class="results-table leads-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="thName">Business Name</th>
+                    <th data-i18n="thStage">Stage</th>
+                    <th data-i18n="thContact">Contact</th>
+                    <th data-i18n="thWebsite">Website</th>
+                    <th data-i18n="leadsReceived">Received</th>
+                    <th data-i18n="thActions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leads-advanced-body"></tbody>
+              </table>
+            </div>
+          </section>
         </div>
       </section>
 

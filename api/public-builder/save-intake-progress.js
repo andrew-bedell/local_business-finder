@@ -3,6 +3,10 @@ function cleanBusinessId(value) {
   return /^\d+$/.test(raw) ? raw : '';
 }
 
+function resolveLeadSource(body) {
+  return body && body.leadSource === 'advanced_intake' ? 'advanced_intake' : '';
+}
+
 async function savePrimaryContact(supabaseUrl, serviceKey, businessId, body) {
   var headers = {
     'apikey': serviceKey,
@@ -87,6 +91,8 @@ export default async function handler(req, res) {
   if (body.contactEmail != null) updatePayload.contact_email = body.contactEmail || null;
   if (body.contactWhatsapp != null) updatePayload.contact_whatsapp = body.contactWhatsapp || null;
   if (body.extraNotes != null) updatePayload.notes = body.extraNotes || null;
+  var leadSource = resolveLeadSource(body);
+  if (leadSource) updatePayload.lead_source = leadSource;
   if (body.hours && typeof body.hours === 'object' && Object.keys(body.hours).length) {
     updatePayload.hours = body.hours;
   }

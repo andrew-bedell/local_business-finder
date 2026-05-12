@@ -348,7 +348,7 @@ export async function generateAIPhotos(researchReport, businessId, supabaseUrl, 
   async function generateOnePhoto(slot) {
     const resp = await fetch(`${API_BASE}/api/ai/generate-photos`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getInternalApiHeaders(),
       body: JSON.stringify({
         prompt: slot.aiPrompt,
         section: slot.section,
@@ -739,7 +739,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   console.log(`[WebsitePipeline] Publishing website...`);
   const publishRes = await fetch(`${API_BASE}/api/websites/publish`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getInternalApiHeaders(),
     body: JSON.stringify({ websiteId, action: 'publish' }),
   });
 

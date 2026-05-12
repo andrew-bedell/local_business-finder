@@ -355,7 +355,7 @@ async function logConversation({ supabaseUrl, headers, canonicalPhone, businessI
 
 /**
  * Determine the contact type based on business pipeline_status, website, and subscription.
- * Priority: active_customer > demo > lead > saved_business
+ * Priority: active_customer > demo/website_created > lead/interested > saved_business
  */
 function classifyBusiness(business, website, subscription) {
   // Active paying customer
@@ -369,7 +369,7 @@ function classifyBusiness(business, website, subscription) {
   }
 
   // Has a demo website generated
-  if (business.pipeline_status === 'demo') {
+  if (business.pipeline_status === 'demo' || business.pipeline_status === 'website_created') {
     return 'demo';
   }
   if (website && (website.status === 'published' || website.status === 'draft') && !subscription) {
@@ -377,7 +377,7 @@ function classifyBusiness(business, website, subscription) {
   }
 
   // Lead status
-  if (business.pipeline_status === 'lead') {
+  if (business.pipeline_status === 'lead' || business.pipeline_status === 'interested') {
     return 'lead';
   }
 
