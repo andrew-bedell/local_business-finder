@@ -499,6 +499,97 @@ a {
   font-size: 14px;
 }
 
+.ci-choice span {
+  display: block;
+  margin-top: 6px;
+  color: var(--ci-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.ci-logo-tool {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--ci-line);
+  border-radius: 8px;
+  background: #fbfcff;
+}
+
+.ci-logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--ci-line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ci-logo-preview img {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--ci-line);
+  background: #fff;
+}
+
+.ci-logo-preview strong,
+.ci-logo-preview span {
+  display: block;
+}
+
+.ci-logo-preview span {
+  margin-top: 4px;
+  color: var(--ci-muted);
+  font-size: 13px;
+}
+
+.ci-logo-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.ci-logo-option {
+  min-height: 190px;
+  border: 1px solid var(--ci-line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.ci-logo-option:hover {
+  border-color: var(--ci-blue);
+  transform: translateY(-1px);
+}
+
+.ci-logo-option.is-selected {
+  border-color: var(--ci-green);
+  box-shadow: 0 0 0 3px rgba(31, 174, 90, 0.12);
+}
+
+.ci-logo-option img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.ci-logo-option span {
+  color: #344054;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .ci-repeater {
   display: grid;
   gap: 14px;
@@ -912,6 +1003,14 @@ a {
 .ci-upgrade-footnote {
   margin: 14px 0 0;
   font-size: 13px;
+}
+
+.ci-spinner--dark {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: -3px;
+  border-color: rgba(36, 87, 214, 0.2);
+  border-top-color: var(--ci-blue);
 }
 
 @keyframes ci-spin {

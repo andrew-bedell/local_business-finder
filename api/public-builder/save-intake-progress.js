@@ -51,6 +51,51 @@ async function savePrimaryContact(supabaseUrl, serviceKey, businessId, body) {
   });
 }
 
+async function saveLogoPhoto(supabaseUrl, serviceKey, businessId, body) {
+  var logo = body.logoPhoto || null;
+  if (!logo) return;
+
+  var headers = {
+    'apikey': serviceKey,
+    'Authorization': 'Bearer ' + serviceKey,
+    'Content-Type': 'application/json'
+  };
+
+  var sourceFilter = 'source=in.(customer_logo_upload,customer_generated_logo,customer_upload)';
+  await fetch(
+    supabaseUrl + '/rest/v1/business_photos?business_id=eq.' + encodeURIComponent(businessId) + '&photo_type=eq.logo&' + sourceFilter,
+    {
+      method: 'DELETE',
+      headers: {
+        ...headers,
+        'Prefer': 'return=minimal'
+      }
+    }
+  );
+
+  if (logo.clear) return;
+
+  var logoUrl = String(logo.public_url || logo.url || '').trim();
+  if (!logoUrl) return;
+
+  await fetch(supabaseUrl + '/rest/v1/business_photos', {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({
+      business_id: parseInt(businessId, 10),
+      source: logo.source === 'generated' ? 'customer_generated_logo' : 'customer_logo_upload',
+      photo_type: 'logo',
+      storage_path: logo.storage_path || null,
+      url: logoUrl,
+      caption: logo.label || null,
+      is_primary: false
+    })
+  });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -129,6 +174,10 @@ export default async function handler(req, res) {
 
     await savePrimaryContact(supabaseUrl, serviceKey, businessId, body).catch(function (err) {
       console.warn('save-intake-progress contact warning:', err && err.message || err);
+    });
+
+    await saveLogoPhoto(supabaseUrl, serviceKey, businessId, body).catch(function (err) {
+      console.warn('save-intake-progress logo warning:', err && err.message || err);
     });
 
     return res.status(200).json({ success: true, businessId: parseInt(businessId, 10) });

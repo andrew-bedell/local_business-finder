@@ -124,6 +124,12 @@ function createDefaultForm() {
     googleMapsStatus: "",
     googleMapsUrl: "",
     materialsStatus: "",
+    logoStatus: "",
+    wantsGeneratedLogo: "",
+    logoUrl: "",
+    logoStoragePath: "",
+    logoSource: "",
+    logoLabel: "",
     inspiration: "",
     personalName: "",
     personalEmail: "",
@@ -300,6 +306,7 @@ function summarizeForm(form) {
 }
 
 function buildExtraNotes(form) {
+  const hasCurrentWebsite = form.currentWebsite === "yes";
   const productNotes = (form.productCategories || [])
     .filter((item) => safeText(item.name) || safeText(item.description))
     .map((item, index) => [
@@ -342,8 +349,8 @@ function buildExtraNotes(form) {
     `Dudas del cliente: ${form.customerQuestions}`,
     `Notas estrategicas: ${form.strategicNotes}`,
     `Promociones/campanas: ${form.promotions}`,
-    `Sitio actual: ${form.currentWebsite} ${form.websiteUrl || ""}`,
-    `Problemas del sitio actual: ${form.websiteProblems}`,
+    `Sitio actual: ${form.currentWebsite}${hasCurrentWebsite && form.websiteUrl ? ` ${form.websiteUrl}` : ""}`,
+    hasCurrentWebsite ? `Problemas del sitio actual: ${form.websiteProblems}` : "",
     `Dominio: ${form.hasDomain} ${form.domainDetails || ""}`,
     `Instagram: ${form.socialInstagram}`,
     `Facebook: ${form.socialFacebook}`,
@@ -352,11 +359,30 @@ function buildExtraNotes(form) {
     `Otros perfiles: ${form.socialOther}`,
     `Google Maps: ${form.googleMapsStatus} ${form.googleMapsUrl || ""}`,
     `Materiales disponibles: ${form.materialsStatus}`,
+    form.logoUrl ? `Logo: ${form.logoSource === "generated" ? "generado por IA" : "subido por cliente"}${form.logoLabel ? ` - ${form.logoLabel}` : ""}` : "",
     `Inspiracion/competidores: ${form.inspiration}`,
   ].filter(Boolean).join("\n\n");
 }
 
+function buildLogoPhoto(form) {
+  if (form.logoStatus === "no" && form.wantsGeneratedLogo === "no") {
+    return { clear: true };
+  }
+
+  if (!form.logoUrl) return null;
+
+  return {
+    photo_type: "logo",
+    public_url: form.logoUrl,
+    url: form.logoUrl,
+    storage_path: form.logoStoragePath || null,
+    source: form.logoSource || "upload",
+    label: form.logoLabel || "",
+  };
+}
+
 function buildLeadPayload(form) {
+  const logoPhoto = buildLogoPhoto(form);
   return {
     company: form.businessName,
     contactName: form.personalName,
@@ -371,6 +397,8 @@ function buildLeadPayload(form) {
     aboutBusiness: [form.oneLineDescription, form.strategicNotes].filter(Boolean).join("\n\n"),
     hours: form.businessHours ? { horario: form.businessHours } : null,
     extraNotes: buildExtraNotes(form),
+    logoPhoto,
+    photos: logoPhoto && !logoPhoto.clear ? [logoPhoto] : [],
   };
 }
 
@@ -458,13 +486,46 @@ function TextArea({ form, setForm, path, label, english, required, large, placeh
   );
 }
 
-function SelectInput({ form, setForm, path, label, english, children, required }) {
+function SelectInput({ form, setForm, path, label, english, children, required, onChange }) {
+  function handleChange(event) {
+    const nextValue = event.target.value;
+    setForm((current) => onChange ? onChange(current, nextValue) : setByPath(current, path, nextValue));
+  }
+
   return (
     <Field label={label} english={english} required={required}>
-      <select className="ci-select" value={getByPath(form, path) || ""} onChange={(event) => setForm((current) => setByPath(current, path, event.target.value))}>
+      <select className="ci-select" value={getByPath(form, path) || ""} onChange={handleChange}>
         {children}
       </select>
     </Field>
+  );
+}
+
+function CurrentWebsiteFields({ form, setForm }) {
+  const hasCurrentWebsite = form.currentWebsite === "yes";
+
+  function updateCurrentWebsite(current, value) {
+    const next = setByPath(current, "currentWebsite", value);
+    if (value !== "yes") {
+      next.websiteUrl = "";
+      next.websiteProblems = "";
+    }
+    return next;
+  }
+
+  return (
+    <>
+      <SelectInput form={form} setForm={setForm} path="currentWebsite" label="Tienes sitio web actualmente?" english="Do you currently have a website?" onChange={updateCurrentWebsite}>
+        <option value="no">No</option>
+        <option value="yes">Si</option>
+      </SelectInput>
+      {hasCurrentWebsite ? (
+        <>
+          <TextInput form={form} setForm={setForm} path="websiteUrl" label="URL del sitio actual" english="Current website URL" placeholder="https://..." />
+          <TextArea form={form} setForm={setForm} path="websiteProblems" label="Que no te gusta del sitio actual?" english="What is wrong with the current site?" />
+        </>
+      ) : null}
+    </>
   );
 }
 
@@ -485,6 +546,208 @@ function ChoiceGroup({ form, setForm, path, label, english, options, required })
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function LogoIntake({ form, setForm }) {
+  const fileRef = useRef(null);
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  function updateLogo(values) {
+    setForm((current) => ({ ...current, ...values }));
+  }
+
+  function chooseLogoStatus(value) {
+    setError("");
+    if (value === "yes") {
+      updateLogo({ logoStatus: "yes", wantsGeneratedLogo: "", logoUrl: "", logoStoragePath: "", logoSource: "", logoLabel: "" });
+    } else {
+      updateLogo({ logoStatus: "no", wantsGeneratedLogo: "", logoUrl: "", logoStoragePath: "", logoSource: "", logoLabel: "" });
+    }
+  }
+
+  async function uploadLogo(file) {
+    if (!file) return;
+    setError("");
+    setLoading(true);
+    try {
+      const fileType = file.type || (/\.svg$/i.test(file.name || "") ? "image/svg+xml" : "");
+      if (!fileType || fileType.indexOf("image/") !== 0) {
+        throw new Error("Usa una imagen para el logo.");
+      }
+
+      const isSvg = fileType === "image/svg+xml";
+      const prepared = isSvg
+        ? { blob: file, contentType: fileType }
+        : await normalizeImageFile(file);
+
+      const response = await fetch("/api/public-builder/upload-photo?photo_type=logo", {
+        method: "POST",
+        headers: { "Content-Type": prepared.contentType },
+        body: prepared.blob,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "No se pudo subir el logo.");
+
+      updateLogo({
+        logoStatus: "yes",
+        wantsGeneratedLogo: "",
+        logoUrl: result.public_url,
+        logoStoragePath: result.storage_path || "",
+        logoSource: "upload",
+        logoLabel: file.name || "Logo subido",
+      });
+      setOptions([]);
+    } catch (err) {
+      setError(err.message || "No se pudo subir el logo.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function generateLogos() {
+    setError("");
+    setLoading(true);
+    try {
+      const response = await fetch("/api/public-builder/generate-logos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: form.businessName,
+          businessCategory: form.businessCategory || form.businessModel,
+          businessDescription: form.oneLineDescription || form.strategicNotes,
+          context: summarizeForm(form),
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "No se pudieron crear los logos.");
+      if (!Array.isArray(result.logos) || !result.logos.length) throw new Error("No recibimos opciones de logo.");
+      setOptions(result.logos);
+      updateLogo({ logoStatus: "no", wantsGeneratedLogo: "yes", logoUrl: "", logoStoragePath: "", logoSource: "", logoLabel: "" });
+    } catch (err) {
+      setError(err.message || "No se pudieron crear los logos.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function pickGeneratedLogo(option) {
+    updateLogo({
+      logoStatus: "no",
+      wantsGeneratedLogo: "yes",
+      logoUrl: option.public_url || option.url || "",
+      logoStoragePath: option.storage_path || "",
+      logoSource: "generated",
+      logoLabel: option.label || "Logo generado",
+    });
+  }
+
+  return (
+    <div className="ci-field ci-field--full">
+      <div className="ci-label">Tienes logo para tu negocio?</div>
+      <div className="ci-segment-grid">
+        <button type="button" className={`ci-choice${form.logoStatus === "yes" ? " is-selected" : ""}`} onClick={() => chooseLogoStatus("yes")}>
+          <strong>Si, lo puedo subir</strong>
+          <span>Agrega una imagen lista de tu marca.</span>
+        </button>
+        <button type="button" className={`ci-choice${form.logoStatus === "no" ? " is-selected" : ""}`} onClick={() => chooseLogoStatus("no")}>
+          <strong>No tengo logo</strong>
+          <span>Podemos crear opciones iniciales con IA.</span>
+        </button>
+      </div>
+
+      {form.logoStatus === "yes" ? (
+        <div className="ci-logo-tool">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,.svg"
+            hidden
+            onChange={(event) => {
+              uploadLogo(event.target.files && event.target.files[0]);
+              event.target.value = "";
+            }}
+          />
+          <button className="ci-btn ci-btn--ghost" type="button" disabled={loading} onClick={() => fileRef.current && fileRef.current.click()}>
+            {loading ? <span className="ci-spinner ci-spinner--dark" /> : null}
+            Subir logo
+          </button>
+          {form.logoUrl && form.logoSource === "upload" ? (
+            <div className="ci-logo-preview">
+              <img src={form.logoUrl} alt="Logo seleccionado" />
+              <div>
+                <strong>{form.logoLabel || "Logo subido"}</strong>
+                <span>Usaremos este logo en la pagina.</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {form.logoStatus === "no" ? (
+        <div className="ci-logo-tool">
+          <div className="ci-label">Quieres que creemos uno para ti?</div>
+          <div className="ci-segment-grid">
+            <button
+              type="button"
+              className={`ci-choice${form.wantsGeneratedLogo === "yes" ? " is-selected" : ""}`}
+              onClick={() => {
+                updateLogo({ wantsGeneratedLogo: "yes" });
+                if (!options.length && !form.logoUrl) generateLogos();
+              }}
+            >
+              <strong>Si, crear 4 opciones</strong>
+              <span>Las generamos con IA y eliges tu favorita.</span>
+            </button>
+            <button
+              type="button"
+              className={`ci-choice${form.wantsGeneratedLogo === "no" ? " is-selected" : ""}`}
+              onClick={() => {
+                setOptions([]);
+                updateLogo({ wantsGeneratedLogo: "no", logoUrl: "", logoStoragePath: "", logoSource: "", logoLabel: "" });
+              }}
+            >
+              <strong>No, continuar sin logo</strong>
+              <span>Podemos usar un logo de texto con el nombre.</span>
+            </button>
+          </div>
+
+          {form.wantsGeneratedLogo === "yes" ? (
+            <>
+              <div className="ci-form-actions">
+                <button className="ci-btn ci-btn--ghost" type="button" disabled={loading} onClick={generateLogos}>
+                  {loading ? <span className="ci-spinner ci-spinner--dark" /> : null}
+                  {options.length ? "Crear otras 4 opciones" : "Crear 4 logos"}
+                </button>
+              </div>
+              {options.length ? (
+                <div className="ci-logo-options">
+                  {options.map((option, index) => {
+                    const optionUrl = option.public_url || option.url || "";
+                    const selected = form.logoUrl && form.logoUrl === optionUrl;
+                    return (
+                      <button
+                        type="button"
+                        className={`ci-logo-option${selected ? " is-selected" : ""}`}
+                        key={option.id || optionUrl || index}
+                        onClick={() => pickGeneratedLogo(option)}
+                      >
+                        {optionUrl ? <img src={optionUrl} alt={option.label || `Logo ${index + 1}`} /> : null}
+                        <span>{option.label || `Opcion ${index + 1}`}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
+      {error ? <div className="ci-alert ci-alert--error">{error}</div> : null}
     </div>
   );
 }
@@ -636,6 +899,8 @@ function AiHelper({ form, setForm }) {
           fieldLabel: activeField ? activeField.label : "",
           fieldValue: activeField ? getByPath(form, activeField.path) : "",
           businessContext: summarizeForm(form),
+          formData: form,
+          formPurpose: "Formulario personalizado para crear una pagina web a la medida, optimizada para marketing, anuncios de Facebook e Instagram, promociones de temporada y soporte humano posterior.",
         }),
       });
       const result = await response.json().catch(() => ({}));
@@ -733,20 +998,7 @@ function IntakePage() {
       return;
     }
 
-    const payload = {
-      company: form.businessName,
-      contactName: form.personalName,
-      contactEmail: form.personalEmail,
-      contactWhatsapp: form.personalWhatsapp,
-      businessType: form.businessCategory || form.businessModel || "negocio",
-      leadSource: "advanced_intake",
-      businessPhone: form.publicWhatsapp,
-      addressFull: form.publicAddress || form.address,
-      city: form.city,
-      aboutBusiness: [form.oneLineDescription, form.strategicNotes].filter(Boolean).join("\n\n"),
-      hours: form.businessHours ? { horario: form.businessHours } : null,
-      extraNotes: buildExtraNotes(form),
-    };
+    const payload = buildLeadPayload(form);
 
     setSubmitting(true);
     try {
@@ -775,7 +1027,7 @@ function IntakePage() {
           <p className="ci-kicker">Formulario estrategico</p>
           <h1 className="ci-title">Crea tu pagina web personalizada</h1>
           <p className="ci-lead">
-            Este formulario es para negocios con varias ofertas, clientes en diferentes mercados o metas de marketing mas especificas. Con tus respuestas creamos una primera version y despues la ajustamos contigo.
+            Para negocios con metas de marketing claras. Te hacemos preguntas a fondo para que nuestra IA construya una pagina hecha a la medida, y despues una persona del equipo trabaja contigo para ajustar todo, lanzar promociones de temporada, optimizar para tus campanas de Facebook e Instagram, y crear contenido para anuncios. Soporte humano mientras seas cliente. Para algo mas rapido, ve al formulario por chat.
           </p>
         </div>
         <div className="ci-hero-panel">
@@ -863,12 +1115,7 @@ function IntakePage() {
 
           <Section id="presencia" title="4. Sitio actual, dominio y presencia online" english="Current website, domain, socials, and maps">
             <div className="ci-grid">
-              <SelectInput form={form} setForm={setForm} path="currentWebsite" label="Tienes sitio web actualmente?" english="Do you currently have a website?">
-                <option value="no">No</option>
-                <option value="yes">Si</option>
-              </SelectInput>
-              <TextInput form={form} setForm={setForm} path="websiteUrl" label="URL del sitio actual" english="Current website URL" placeholder="https://..." />
-              <TextArea form={form} setForm={setForm} path="websiteProblems" label="Que no te gusta del sitio actual?" english="What is wrong with the current site?" />
+              <CurrentWebsiteFields form={form} setForm={setForm} />
               <SelectInput form={form} setForm={setForm} path="hasDomain" label="Ya compraste un dominio?" english="Have you already bought a domain?">
                 <option value="no">No</option>
                 <option value="yes">Si</option>
@@ -903,6 +1150,7 @@ function IntakePage() {
               <option value="not_yet">No todavia</option>
               <option value="need_help">Necesito ayuda con eso</option>
             </SelectInput>
+            <LogoIntake form={form} setForm={setForm} />
             <TextArea form={form} setForm={setForm} path="inspiration" label="Sitios, marcas o competidores que te gusten" english="Websites, brands, or competitors you like" large />
           </Section>
 
@@ -1173,12 +1421,7 @@ function IntakePageWizard() {
       return (
         <Section id="presencia" title={currentStepMeta.title} english={currentStepMeta.english}>
           <div className="ci-grid">
-            <SelectInput form={form} setForm={setForm} path="currentWebsite" label="Tienes sitio web actualmente?" english="Do you currently have a website?">
-              <option value="no">No</option>
-              <option value="yes">Si</option>
-            </SelectInput>
-            <TextInput form={form} setForm={setForm} path="websiteUrl" label="URL del sitio actual" english="Current website URL" placeholder="https://..." />
-            <TextArea form={form} setForm={setForm} path="websiteProblems" label="Que no te gusta del sitio actual?" english="What is wrong with the current site?" />
+            <CurrentWebsiteFields form={form} setForm={setForm} />
             <SelectInput form={form} setForm={setForm} path="hasDomain" label="Ya compraste un dominio?" english="Have you already bought a domain?">
               <option value="no">No</option>
               <option value="yes">Si</option>
@@ -1216,6 +1459,7 @@ function IntakePageWizard() {
           <option value="not_yet">No todavia</option>
           <option value="need_help">Necesito ayuda con eso</option>
         </SelectInput>
+        <LogoIntake form={form} setForm={setForm} />
         <TextArea form={form} setForm={setForm} path="inspiration" label="Sitios, marcas o competidores que te gusten" english="Websites, brands, or competitors you like" large />
       </Section>
     );
@@ -1237,7 +1481,7 @@ function IntakePageWizard() {
           <p className="ci-kicker">Formulario estrategico</p>
           <h1 className="ci-title">Crea tu pagina web personalizada</h1>
           <p className="ci-lead">
-            Este formulario esta dividido en pasos cortos. Despues de tus datos personales, guardamos el avance para que puedas volver sin empezar de cero.
+            Para negocios con metas de marketing claras. Te hacemos preguntas a fondo para que nuestra IA construya una pagina hecha a la medida, y despues una persona del equipo trabaja contigo para ajustar todo, lanzar promociones de temporada, optimizar para tus campanas de Facebook e Instagram, y crear contenido para anuncios. Soporte humano mientras seas cliente. Para algo mas rapido, ve al formulario por chat.
           </p>
         </div>
         <div className="ci-hero-panel">
@@ -1394,6 +1638,114 @@ function makeCatalogItem(service, currency) {
   };
 }
 
+function CatalogCompletionScreen({ mode, error, websiteUrl, onChoosePremium, onChooseAutomatic, onGenerate, onBackToCatalog }) {
+  if (mode === "service_choice") {
+    return (
+      <main className="ci-catalog-layout">
+        <section className="ci-section">
+          <div className="ci-section-head">
+            <h2>Catalogo guardado</h2>
+            <p>Ya tenemos la informacion principal de tu negocio y tu catalogo. Ahora puedes elegir si quieres el servicio premium con edicion humana o una primera demo automatica.</p>
+          </div>
+          <div className="ci-section-body">
+            <div className="ci-segment-grid">
+              <button className="ci-choice" type="button" onClick={onChoosePremium}>
+                <strong>Si, quiero el servicio premium</strong>
+                <span>Trabajamos contigo desde el principio para pulir estrategia, texto, diseno y anuncios.</span>
+              </button>
+              <button className="ci-choice is-selected" type="button" onClick={onChooseAutomatic}>
+                <strong>No quiero pagar premium ahora</strong>
+                <span>Generamos una primera pagina con IA usando lo que ya compartiste.</span>
+              </button>
+            </div>
+            <div className="ci-form-actions">
+              <button className="ci-btn ci-btn--ghost" type="button" onClick={onBackToCatalog}>Volver al catalogo</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (mode === "premium") {
+    return (
+      <main className="ci-catalog-layout">
+        <section className="ci-section">
+          <div className="ci-section-head">
+            <h2>Listo, vamos con ayuda premium</h2>
+            <p>Guardamos tu catalogo. Puedes entrar a tu portal o escribirnos por WhatsApp para coordinar la edicion humana de tu pagina.</p>
+          </div>
+          <div className="ci-section-body">
+            <div className="ci-form-actions">
+              <a className="ci-btn ci-btn--primary" href="/mipagina">Ir a mi portal</a>
+              <a className="ci-btn ci-btn--ghost" href={`https://wa.me/${SUPPORT_WHATSAPP}`}>Hablar con soporte</a>
+              <button className="ci-btn ci-btn--ghost" type="button" onClick={onChooseAutomatic}>Crear demo automatico primero</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (mode === "generating") {
+    return (
+      <main className="ci-catalog-layout">
+        <section className="ci-section">
+          <div className="ci-section-head">
+            <h2>Estamos creando tu demo</h2>
+            <p>La IA esta organizando tus respuestas, catalogo, textos e imagenes en una primera pagina. Esto puede tomar un momento.</p>
+          </div>
+          <div className="ci-section-body">
+            <div className="ci-alert"><span className="ci-spinner ci-spinner--dark" /> Generando tu pagina demo...</div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (mode === "generated") {
+    return (
+      <main className="ci-catalog-layout">
+        <section className="ci-section">
+          <div className="ci-section-head">
+            <h2>Tu demo esta lista</h2>
+            <p>Ya puedes revisar la primera version automatica. Despues trabajaremos contigo para editarla hasta que quede exactamente como quieres.</p>
+          </div>
+          <div className="ci-section-body">
+            <div className="ci-form-actions">
+              {websiteUrl ? <a className="ci-btn ci-btn--primary" href={websiteUrl} target="_blank" rel="noopener">Ver mi demo</a> : null}
+              <a className="ci-btn ci-btn--ghost" href="/mipagina">Ir a mi portal</a>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="ci-catalog-layout">
+      <section className="ci-section">
+        <div className="ci-section-head">
+          <h2>Ya tenemos todo para crear tu demo</h2>
+          <p>Tenemos toda la informacion. Creemos tu pagina demo.</p>
+        </div>
+        <div className="ci-section-body">
+          <div className="ci-alert">
+            Vamos a crearla automaticamente con tus respuestas y tu catalogo. Despues trabajaremos contigo para editarla hasta que quede exactamente como te gusta.
+            <br /><br />
+            Recuerda: esta primera version se hace automaticamente, asi que puede no ser la version final que quieres. Un humano puede ajustarla para que quede exactamente como quieres y optimizada para publicidad.
+          </div>
+          {error ? <div className="ci-alert ci-alert--error">{error}</div> : null}
+          <div className="ci-form-actions">
+            <button className="ci-btn ci-btn--primary" type="button" onClick={onGenerate}>Crear mi demo automaticamente</button>
+            <button className="ci-btn ci-btn--ghost" type="button" onClick={onBackToCatalog}>Volver al catalogo</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 function CatalogPage() {
   const savedSubmission = useMemo(() => {
     try {
@@ -1408,14 +1760,46 @@ function CatalogPage() {
   const businessType = (savedSubmission && savedSubmission.form && savedSubmission.form.businessCategory) || "";
   const inputRef = useRef(null);
   const [currency, setCurrency] = useState("COP");
+  const [catalogSource, setCatalogSource] = useState("upload");
   const [files, setFiles] = useState([]);
   const [items, setItems] = useState([]);
   const [premiumProduct, setPremiumProduct] = useState(() => productFromPremiumIntent(premiumIntent));
   const [premiumChoice, setPremiumChoice] = useState(null);
+  const [hasExtractedItems, setHasExtractedItems] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [catalogStage, setCatalogStage] = useState("catalog");
+  const [demoUrl, setDemoUrl] = useState("");
+  const isManualCatalog = catalogSource === "manual";
+  const listTitle = isManualCatalog
+    ? "2. Agrega tu lista manualmente"
+    : hasExtractedItems
+      ? "2. Revisa la lista extraida"
+      : "2. Revisa o completa tu lista";
+  const listDescription = isManualCatalog
+    ? "Escribe cada producto o servicio con nombre, descripcion y precio. Puedes agregar tantos items como necesites."
+    : hasExtractedItems
+      ? "Edita nombres, descripciones y precios. Agrega manualmente cualquier producto o servicio que la IA no haya encontrado."
+      : "Cuando subas archivos, aqui aparecera lo que la IA pueda extraer. Tambien puedes agregar productos o servicios manualmente.";
+  const emptyListMessage = isManualCatalog
+    ? "Agrega el primer producto o servicio manualmente para crear tu catalogo."
+    : "Todavia no hay productos o servicios. Sube fotos de tu catalogo o agrega el primer item manualmente.";
+
+  function chooseCatalogSource(value) {
+    setCatalogSource(value);
+    setError("");
+    setSuccess("");
+    if (value === "manual" && !items.length) {
+      setItems([makeCatalogItem(null, currency)]);
+    }
+  }
+
+  function moveToCatalogStage(stage) {
+    setCatalogStage(stage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   React.useEffect(() => {
     let cancelled = false;
@@ -1502,6 +1886,7 @@ function CatalogPage() {
         });
         const parseResult = await parseResponse.json().catch(() => ({}));
         if (parseResponse.ok && Array.isArray(parseResult.services) && parseResult.services.length) {
+          setHasExtractedItems(true);
           setItems((current) => [...current, ...parseResult.services.map((service) => makeCatalogItem(service, currency))]);
         } else {
           setItems((current) => current.length ? current : [makeCatalogItem(null, currency)]);
@@ -1547,16 +1932,17 @@ function CatalogPage() {
         body: JSON.stringify({
           businessId,
           items: cleanItems,
-          files,
+          files: isManualCatalog ? [] : files,
           replaceServices: true,
         }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "No se pudo guardar el catalogo");
+      setSuccess("");
       if (premiumProduct && premiumProduct.id) {
         setPremiumChoice({ product: premiumProduct, savedItems: result.savedItems || cleanItems.length });
       } else {
-        setSuccess("Listo. Guardamos tu catalogo y ya tenemos la informacion para crear tu pagina.");
+        moveToCatalogStage("service_choice");
       }
     } catch (err) {
       setError(err.message || "No se pudo guardar el catalogo");
@@ -1580,7 +1966,34 @@ function CatalogPage() {
     localStorage.setItem(PREMIUM_DEFERRED_KEY, JSON.stringify(deferred));
     localStorage.removeItem(PREMIUM_INTENT_KEY);
     setPremiumChoice(null);
-    setSuccess("Listo. Guardamos tu catalogo y seguimos con la creacion de tu pagina. Podras activar Pagina Negocio+ cuando quieras agregar las funciones premium.");
+    moveToCatalogStage("demo_ready");
+  }
+
+  async function generateDemoPage() {
+    setError("");
+    setDemoUrl("");
+    if (!businessId) {
+      setError("No encontramos el negocio. Vuelve al formulario personalizado.");
+      return;
+    }
+
+    moveToCatalogStage("generating");
+    try {
+      const response = await fetch("/api/public-builder/generate-demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "No se pudo generar la demo");
+
+      const nextUrl = result.publishedUrl || result.previewUrl || (result.websiteId ? `/ver/${result.websiteId}` : "");
+      setDemoUrl(nextUrl);
+      moveToCatalogStage("generated");
+    } catch (err) {
+      setError(err.message || "No se pudo generar la demo. Puedes intentarlo otra vez o hablar con soporte.");
+      moveToCatalogStage("demo_ready");
+    }
   }
 
   return (
@@ -1589,17 +2002,32 @@ function CatalogPage() {
       <header className="ci-header">
         <div>
           <p className="ci-kicker">Paso final antes de crear la pagina</p>
-          <h1 className="ci-title">Sube tu catalogo real</h1>
+          <h1 className="ci-title">Carga tu catalogo real</h1>
           <p className="ci-lead">
-            Sube fotos de listas de precios, menus, productos, servicios o PDF. La IA extrae nombre, descripcion y precio para que puedas editar lo que falte.
+            Si tienes fotos de menu, listas de precios, productos, servicios o PDF, puedes subirlas para que la IA extraiga los datos. Si no, escribe tu catalogo manualmente.
           </p>
         </div>
         <div className="ci-hero-panel">
-          <strong>Limites de carga</strong>
-          <p>Las fotos se optimizan antes de subir. El limite final es 4MB por imagen. Los PDF pueden pesar hasta 10MB.</p>
+          <strong>Dos formas de cargarlo</strong>
+          <p>Con archivo, las fotos se optimizan antes de subir. El limite final es 4MB por imagen y 10MB por PDF.</p>
         </div>
       </header>
 
+      {catalogStage !== "catalog" ? (
+        <CatalogCompletionScreen
+          mode={catalogStage}
+          error={error}
+          websiteUrl={demoUrl}
+          onChoosePremium={() => moveToCatalogStage("premium")}
+          onChooseAutomatic={() => moveToCatalogStage("demo_ready")}
+          onGenerate={generateDemoPage}
+          onBackToCatalog={() => {
+            setError("");
+            setSuccess("");
+            moveToCatalogStage("catalog");
+          }}
+        />
+      ) : (
       <main className="ci-catalog-layout">
         {!businessId ? (
           <div className="ci-alert ci-alert--error">
@@ -1612,10 +2040,29 @@ function CatalogPage() {
 
         <section className="ci-section">
           <div className="ci-section-head">
-            <h2>1. Sube archivos</h2>
-            <p>Selecciona varias fotos o un PDF. Si una foto es muy grande, la pagina intenta reducirla automaticamente antes de enviarla.</p>
+            <h2>1. Elige como cargar tu catalogo</h2>
+            <p>Si tienes fotos o PDF, la IA intentara extraer la lista. Si no, puedes pasar directo a escribir los productos o servicios manualmente.</p>
           </div>
           <div className="ci-section-body">
+            <div className="ci-field ci-field--full">
+              <div className="ci-label">Tienes una foto, menu o PDF del catalogo para subir?</div>
+              <div className="ci-segment-grid">
+                <button
+                  className={`ci-choice${catalogSource === "upload" ? " is-selected" : ""}`}
+                  type="button"
+                  onClick={() => chooseCatalogSource("upload")}
+                >
+                  <strong>Si, quiero subir archivo</strong>
+                </button>
+                <button
+                  className={`ci-choice${catalogSource === "manual" ? " is-selected" : ""}`}
+                  type="button"
+                  onClick={() => chooseCatalogSource("manual")}
+                >
+                  <strong>No, lo escribire manualmente</strong>
+                </button>
+              </div>
+            </div>
             <div className="ci-grid">
               <SelectInput form={{ currency }} setForm={(updater) => {
                 const next = typeof updater === "function" ? updater({ currency }) : updater;
@@ -1624,37 +2071,39 @@ function CatalogPage() {
                 {currencies.map((option) => <option key={option} value={option}>{option}</option>)}
               </SelectInput>
             </div>
-            <div
-              className={`ci-upload-zone${dragging ? " is-dragging" : ""}`}
-              onClick={() => inputRef.current && inputRef.current.click()}
-              onDragOver={(event) => {
-                event.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(event) => {
-                event.preventDefault();
-                setDragging(false);
-                processFiles(event.dataTransfer.files);
-              }}
-            >
-              <strong>Elegir fotos o PDF del catalogo</strong>
-              <span>Tambien puedes arrastrar archivos aqui.</span>
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/*,application/pdf"
-                multiple
-                hidden
-                onChange={(event) => {
-                  processFiles(event.target.files);
-                  event.target.value = "";
+            {!isManualCatalog ? (
+              <div
+                className={`ci-upload-zone${dragging ? " is-dragging" : ""}`}
+                onClick={() => inputRef.current && inputRef.current.click()}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setDragging(true);
                 }}
-              />
-            </div>
+                onDragLeave={() => setDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setDragging(false);
+                  processFiles(event.dataTransfer.files);
+                }}
+              >
+                <strong>Elegir fotos o PDF del catalogo</strong>
+                <span>Tambien puedes arrastrar archivos aqui.</span>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  multiple
+                  hidden
+                  onChange={(event) => {
+                    processFiles(event.target.files);
+                    event.target.value = "";
+                  }}
+                />
+              </div>
+            ) : null}
             {busy ? <div className="ci-alert">Procesando archivos. Esto puede tomar un momento.</div> : null}
             {error ? <div className="ci-alert ci-alert--error">{error}</div> : null}
-            {files.length ? (
+            {!isManualCatalog && files.length ? (
               <div className="ci-file-grid">
                 {files.map((file) => (
                   <article className="ci-file-card" key={file.id}>
@@ -1674,8 +2123,8 @@ function CatalogPage() {
 
         <section className="ci-section">
           <div className="ci-section-head">
-            <h2>2. Revisa la lista extraida</h2>
-            <p>Edita nombres, descripciones y precios. Agrega manualmente cualquier producto o servicio que la IA no haya encontrado.</p>
+            <h2>{listTitle}</h2>
+            <p>{listDescription}</p>
           </div>
           <div className="ci-section-body">
             {items.length ? (
@@ -1694,7 +2143,7 @@ function CatalogPage() {
               </div>
             ) : (
               <div className="ci-empty">
-                Todavia no hay productos o servicios. Sube fotos de tu catalogo o agrega el primer item manualmente.
+                {emptyListMessage}
               </div>
             )}
             <div className="ci-form-actions">
@@ -1718,6 +2167,7 @@ function CatalogPage() {
           </div>
         </section>
       </main>
+      )}
 
       {premiumChoice ? (
         <div className="ci-modal-backdrop" role="presentation" onClick={createPageBeforePremium}>
