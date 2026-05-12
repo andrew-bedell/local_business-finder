@@ -812,6 +812,108 @@ a {
   animation: ci-spin 700ms linear infinite;
 }
 
+.ci-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(16, 24, 40, 0.56);
+  backdrop-filter: blur(8px);
+}
+
+.ci-upgrade-modal {
+  width: min(100%, 520px);
+  position: relative;
+  overflow: hidden;
+  background: var(--ci-panel);
+  border: 1px solid rgba(36, 87, 214, 0.18);
+  border-radius: 8px;
+  box-shadow: var(--ci-shadow);
+  padding: 28px;
+}
+
+.ci-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--ci-line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  color: var(--ci-muted);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.ci-modal-close:hover,
+.ci-modal-close:focus-visible {
+  color: var(--ci-blue);
+  border-color: rgba(36, 87, 214, 0.32);
+  outline: none;
+}
+
+.ci-upgrade-kicker {
+  margin: 0 0 8px;
+  color: var(--ci-green-dark);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ci-upgrade-modal h2 {
+  margin: 0;
+  max-width: 420px;
+  font-size: 28px;
+  line-height: 1.08;
+}
+
+.ci-upgrade-modal p {
+  color: #3d4a5c;
+  line-height: 1.55;
+}
+
+.ci-upgrade-price {
+  margin: 18px 0;
+  padding: 16px;
+  display: grid;
+  gap: 4px;
+  background: var(--ci-blue-soft);
+  border: 1px solid rgba(36, 87, 214, 0.18);
+  border-radius: 8px;
+}
+
+.ci-upgrade-price span {
+  color: var(--ci-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ci-upgrade-price strong {
+  font-size: 24px;
+}
+
+.ci-upgrade-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ci-upgrade-actions .ci-btn {
+  flex: 1 1 190px;
+  justify-content: center;
+}
+
+.ci-upgrade-footnote {
+  margin: 14px 0 0;
+  font-size: 13px;
+}
+
 @keyframes ci-spin {
   to {
     transform: rotate(360deg);
@@ -915,5 +1017,13 @@ a {
   .ci-helper-panel {
     right: 10px;
     bottom: 74px;
+  }
+
+  .ci-upgrade-modal {
+    padding: 24px 18px;
+  }
+
+  .ci-upgrade-modal h2 {
+    font-size: 24px;
   }
 }

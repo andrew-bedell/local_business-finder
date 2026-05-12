@@ -96,6 +96,10 @@
       pricing_f6: 'Soporte 24 horas para cambios pequeños al activar tu plan',
       pricing_f7: 'Panel de analíticas incluido',
       pricing_cta: 'Empezar prueba gratis',
+      pricing_premium_badge: 'Premium',
+      pricing_premium_label: 'Plan premium',
+      pricing_premium_note: 'Pago requerido para activar citas, pagos, reservas y herramientas premium en tu página.',
+      pricing_premium_cta: 'Elegir Página Negocio+',
 
       faq_tag: 'Preguntas Frecuentes',
       faq_title: 'Resolvemos tus dudas',
@@ -231,6 +235,10 @@
       pricing_f6: '24-hour support for small changes after activation',
       pricing_f7: 'Analytics dashboard included',
       pricing_cta: 'Start free trial',
+      pricing_premium_badge: 'Premium',
+      pricing_premium_label: 'Premium plan',
+      pricing_premium_note: 'Payment is required to activate booking, payments, reservations, and premium tools on your website.',
+      pricing_premium_cta: 'Choose Página Negocio+',
 
       faq_tag: 'Frequently Asked Questions',
       faq_title: 'We answer your questions',
@@ -607,8 +615,61 @@
   // create-page experience. The legacy lead modal is kept in the DOM for now
   // but no longer opened from these CTAs.
   var TRIAL_START_URL = '/crear-tu-pagina';
+  var PREMIUM_START_URL = '/crear-tu-pagina/personalizada';
+  var PREMIUM_INTENT_KEY = 'atp_premium_plan_intent';
+
+  function normalizePlanText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isPremiumProduct(product) {
+    var text = normalizePlanText([product && product.name, product && product.description].filter(Boolean).join(' '));
+    return text.indexOf('negocio') !== -1 && text.indexOf('+') !== -1;
+  }
+
+  function buildPlanUrl(baseUrl, params) {
+    var url = new URL(baseUrl, window.location.origin);
+    Object.keys(params || {}).forEach(function(key) {
+      if (params[key] != null && params[key] !== '') {
+        url.searchParams.set(key, params[key]);
+      }
+    });
+    return url.pathname + url.search;
+  }
+
+  function savePremiumIntent(dataset) {
+    var intent = {
+      productId: dataset.productId || '',
+      productName: dataset.productName || '',
+      productPrice: dataset.productPrice || '',
+      productCurrency: dataset.productCurrency || '',
+      billingInterval: dataset.billingInterval || '',
+      selectedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(PREMIUM_INTENT_KEY, JSON.stringify(intent));
+    return intent;
+  }
+
+  function clearPremiumIntent() {
+    localStorage.removeItem(PREMIUM_INTENT_KEY);
+  }
+
   function startTrial(e) {
     if (e) e.preventDefault();
+    var trigger = e && e.currentTarget;
+    var dataset = trigger && trigger.dataset ? trigger.dataset : {};
+    if (dataset.planType === 'premium') {
+      var intent = savePremiumIntent(dataset);
+      window.location.href = buildPlanUrl(PREMIUM_START_URL, {
+        plan: 'negocio-plus',
+        premiumProductId: intent.productId,
+      });
+      return;
+    }
+    clearPremiumIntent();
     window.location.href = TRIAL_START_URL;
   }
   document.querySelectorAll('[data-open-modal]').forEach(function(btn) {
@@ -830,7 +891,7 @@
         }
         pricingGrid.setAttribute('data-cols', products.length);
         pricingGrid.innerHTML = products.map(function(p, i) {
-          var isFeatured = i === 0;
+          var isFeatured = i === 0 && !isPremiumProduct(p);
           return renderPricingCard(p, isFeatured);
         }).join('');
 
@@ -856,12 +917,18 @@
     var intervalLabels = { monthly: ' / mes', yearly: ' / año', one_time: '' };
     var intervalText = (product.currency || 'MXN') + (intervalLabels[product.billing_interval] || '');
     var features = product.features || [];
+    var isPremium = isPremiumProduct(product);
     var featuredClass = isFeatured ? ' m-pricing-featured' : '';
-    var badgeHtml = isFeatured ? '<span class="m-pricing-badge">' + (currentLang === 'en' ? '1 month free' : '1 mes gratis') + '</span>' : '';
-    var noteKey = currentLang === 'en'
+    var premiumClass = isPremium ? ' m-pricing-premium' : '';
+    var badgeHtml = isPremium
+      ? '<span class="m-pricing-badge m-pricing-badge--premium">' + t('pricing_premium_badge') + '</span>'
+      : (isFeatured ? '<span class="m-pricing-badge">' + (currentLang === 'en' ? '1 month free' : '1 mes gratis') + '</span>' : '');
+    var noteKey = isPremium
+      ? t('pricing_premium_note')
+      : (currentLang === 'en'
       ? 'No card to start. You add payment only when you activate.'
-      : 'Sin tarjeta para empezar. Pagas solo cuando activas.';
-    var afterTrialLabel = currentLang === 'en' ? 'After the free month' : 'Después del mes gratis';
+      : 'Sin tarjeta para empezar. Pagas solo cuando activas.');
+    var afterTrialLabel = isPremium ? t('pricing_premium_label') : (currentLang === 'en' ? 'After the free month' : 'Después del mes gratis');
     var futurePriceLabel = formattedPrice + ' ' + intervalText;
 
     var featuresHtml = features.map(function(f) {
@@ -869,11 +936,14 @@
     }).join('');
 
     var descHtml = product.description ? '<p class="m-pricing-desc">' + escapeHtml(product.description) + '</p>' : '';
-    var trialHeadline = currentLang === 'en' ? '1 month free' : '1 mes gratis';
-    var trialSubline = currentLang === 'en' ? 'PáginaPro trial' : 'Prueba PáginaPro';
-    var ctaText = t('pricing_cta');
+    var trialHeadline = isPremium ? formattedPrice : (currentLang === 'en' ? '1 month free' : '1 mes gratis');
+    var trialSubline = isPremium ? intervalText : (currentLang === 'en' ? 'PáginaPro trial' : 'Prueba PáginaPro');
+    var ctaText = isPremium ? t('pricing_premium_cta') : t('pricing_cta');
+    var buttonAttrs = isPremium
+      ? ' data-open-modal data-plan-type="premium" data-product-id="' + escapeHtml(product.id || '') + '" data-product-name="' + escapeHtml(product.name || '') + '" data-product-price="' + escapeHtml(product.price || '') + '" data-product-currency="' + escapeHtml(product.currency || '') + '" data-billing-interval="' + escapeHtml(product.billing_interval || '') + '"'
+      : ' data-open-modal';
 
-    return '<div class="m-pricing-card' + featuredClass + '" data-reveal>' +
+    return '<div class="m-pricing-card' + featuredClass + premiumClass + '" data-reveal>' +
       badgeHtml +
       '<div class="m-pricing-price">' + trialHeadline + ' <span>' + trialSubline + '</span></div>' +
       '<div class="m-pricing-after"><span>' + afterTrialLabel + '</span><strong>' + futurePriceLabel + '</strong></div>' +
@@ -881,7 +951,7 @@
       (product.name ? '<p style="font-size:16px;font-weight:700;margin-bottom:16px;color:#0c1b33">' + escapeHtml(product.name) + '</p>' : '') +
       descHtml +
       '<div class="m-pricing-features">' + featuresHtml + '</div>' +
-      '<button class="m-pricing-cta" data-open-modal>' + ctaText + '</button>' +
+      '<button class="m-pricing-cta"' + buttonAttrs + '>' + ctaText + '</button>' +
     '</div>';
   }
 

@@ -4,6 +4,8 @@ const SUPPORT_WHATSAPP = "529991095806";
 const STORAGE_KEY = "atp_complex_intake";
 const SUBMISSION_KEY = "atp_complex_intake_submission";
 const STEP_KEY = "atp_complex_intake_step";
+const PREMIUM_INTENT_KEY = "atp_premium_plan_intent";
+const PREMIUM_DEFERRED_KEY = "atp_premium_plan_deferred";
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const TARGET_IMAGE_BYTES = Math.floor(MAX_IMAGE_BYTES * 0.92);
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
@@ -159,6 +161,76 @@ function loadSavedStep() {
 
 function safeText(value) {
   return String(value || "").trim();
+}
+
+function normalizePlanText(value) {
+  return safeText(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function isNegocioPlusProduct(product) {
+  const text = normalizePlanText([product && product.name, product && product.description].filter(Boolean).join(" "));
+  return text.indexOf("negocio") !== -1 && text.indexOf("+") !== -1;
+}
+
+function countryToCode(value) {
+  const text = normalizePlanText(value);
+  if (text.indexOf("colombia") !== -1 || text === "co") return "CO";
+  if (text.indexOf("mexico") !== -1 || text === "mx") return "MX";
+  if (text.indexOf("ecuador") !== -1 || text === "ec") return "EC";
+  return "";
+}
+
+function readPremiumIntent() {
+  const params = new URLSearchParams(window.location.search);
+  let stored = null;
+  try {
+    stored = JSON.parse(localStorage.getItem(PREMIUM_INTENT_KEY) || "null");
+  } catch {
+    stored = null;
+  }
+
+  if (params.get("plan") === "negocio-plus" || params.get("premiumProductId")) {
+    const next = {
+      ...(stored && typeof stored === "object" ? stored : {}),
+      productId: params.get("premiumProductId") || (stored && stored.productId) || "",
+      selectedAt: (stored && stored.selectedAt) || new Date().toISOString(),
+    };
+    localStorage.setItem(PREMIUM_INTENT_KEY, JSON.stringify(next));
+    return next;
+  }
+
+  return stored && typeof stored === "object" ? stored : null;
+}
+
+function productFromPremiumIntent(intent) {
+  if (!intent || !intent.productId) return null;
+  return {
+    id: intent.productId,
+    name: intent.productName || "Pagina Negocio+",
+    price: intent.productPrice || "",
+    currency: intent.productCurrency || "",
+    billing_interval: intent.billingInterval || "monthly",
+  };
+}
+
+function formatProductPrice(product) {
+  if (!product || product.price === "" || product.price == null) return "";
+  const price = parseFloat(product.price);
+  if (!Number.isFinite(price)) return "";
+  const intervalLabels = { monthly: "/mes", yearly: "/ano", one_time: "" };
+  return `$${price.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ${product.currency || ""} ${intervalLabels[product.billing_interval] || ""}`.trim();
+}
+
+function buildPremiumCheckoutUrl(product, businessId, form) {
+  const params = new URLSearchParams();
+  if (businessId) params.set("business", businessId);
+  params.set("source", "catalog-premium-upsell");
+  const businessName = safeText(form && form.businessName);
+  if (businessName) params.set("business_name", businessName);
+  return `/checkout/${encodeURIComponent(product.id)}?${params.toString()}`;
 }
 
 function formatChoice(options, value) {
@@ -1330,6 +1402,7 @@ function CatalogPage() {
       return null;
     }
   }, []);
+  const premiumIntent = useMemo(readPremiumIntent, []);
   const params = new URLSearchParams(window.location.search);
   const businessId = params.get("businessId") || (savedSubmission && savedSubmission.businessId) || "";
   const businessType = (savedSubmission && savedSubmission.form && savedSubmission.form.businessCategory) || "";
@@ -1337,10 +1410,37 @@ function CatalogPage() {
   const [currency, setCurrency] = useState("COP");
   const [files, setFiles] = useState([]);
   const [items, setItems] = useState([]);
+  const [premiumProduct, setPremiumProduct] = useState(() => productFromPremiumIntent(premiumIntent));
+  const [premiumChoice, setPremiumChoice] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const formCountry = savedSubmission && savedSubmission.form && savedSubmission.form.country;
+    const countryCode = countryToCode(formCountry);
+    const url = "/api/products/list" + (countryCode ? `?country=${encodeURIComponent(countryCode)}` : "");
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        if (cancelled) return;
+        const products = Array.isArray(data.products) ? data.products.filter((product) => parseFloat(product.price) > 0) : [];
+        const byIntent = premiumIntent && premiumIntent.productId
+          ? products.find((product) => String(product.id) === String(premiumIntent.productId))
+          : null;
+        setPremiumProduct(byIntent || products.find(isNegocioPlusProduct) || productFromPremiumIntent(premiumIntent));
+      })
+      .catch(() => {
+        if (!cancelled) setPremiumProduct(productFromPremiumIntent(premiumIntent));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [premiumIntent && premiumIntent.productId, savedSubmission && savedSubmission.form && savedSubmission.form.country]);
 
   async function processFiles(fileList) {
     setError("");
@@ -1453,12 +1553,34 @@ function CatalogPage() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "No se pudo guardar el catalogo");
-      setSuccess("Listo. Guardamos tu catalogo y ya tenemos la informacion para crear tu pagina.");
+      if (premiumProduct && premiumProduct.id) {
+        setPremiumChoice({ product: premiumProduct, savedItems: result.savedItems || cleanItems.length });
+      } else {
+        setSuccess("Listo. Guardamos tu catalogo y ya tenemos la informacion para crear tu pagina.");
+      }
     } catch (err) {
       setError(err.message || "No se pudo guardar el catalogo");
     } finally {
       setBusy(false);
     }
+  }
+
+  function payForPremiumNow() {
+    if (!premiumChoice || !premiumChoice.product || !premiumChoice.product.id) return;
+    window.location.href = buildPremiumCheckoutUrl(premiumChoice.product, businessId, savedSubmission && savedSubmission.form);
+  }
+
+  function createPageBeforePremium() {
+    const deferred = {
+      businessId,
+      productId: premiumChoice && premiumChoice.product && premiumChoice.product.id,
+      productName: premiumChoice && premiumChoice.product && premiumChoice.product.name,
+      deferredAt: new Date().toISOString(),
+    };
+    localStorage.setItem(PREMIUM_DEFERRED_KEY, JSON.stringify(deferred));
+    localStorage.removeItem(PREMIUM_INTENT_KEY);
+    setPremiumChoice(null);
+    setSuccess("Listo. Guardamos tu catalogo y seguimos con la creacion de tu pagina. Podras activar Pagina Negocio+ cuando quieras agregar las funciones premium.");
   }
 
   return (
@@ -1596,6 +1718,34 @@ function CatalogPage() {
           </div>
         </section>
       </main>
+
+      {premiumChoice ? (
+        <div className="ci-modal-backdrop" role="presentation" onClick={createPageBeforePremium}>
+          <div className="ci-upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="premium-choice-title" onClick={(event) => event.stopPropagation()}>
+            <button className="ci-modal-close" type="button" aria-label="Cerrar" onClick={createPageBeforePremium}>X</button>
+            <p className="ci-upgrade-kicker">Pagina Negocio+</p>
+            <h2 id="premium-choice-title">Quieres activar las funciones premium ahora?</h2>
+            <p>
+              Ya guardamos tu catalogo. Si quieres que agreguemos citas, pagos en linea, reservas automaticas y herramientas de crecimiento, activa el plan premium antes de que lo implementemos en tu pagina.
+            </p>
+            <div className="ci-upgrade-price">
+              <span>{premiumChoice.product.name || "Pagina Negocio+"}</span>
+              <strong>{formatProductPrice(premiumChoice.product) || "Plan premium"}</strong>
+            </div>
+            <div className="ci-upgrade-actions">
+              <button className="ci-btn ci-btn--primary" type="button" onClick={payForPremiumNow}>
+                Pagar premium ahora
+              </button>
+              <button className="ci-btn ci-btn--ghost" type="button" onClick={createPageBeforePremium}>
+                Crear mi pagina primero
+              </button>
+            </div>
+            <p className="ci-upgrade-footnote">
+              Si creas la pagina primero, no te cobraremos Pagina Negocio+ hasta que decidas actualizar.
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

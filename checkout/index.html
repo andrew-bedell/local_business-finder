@@ -216,6 +216,7 @@
     var stripe = null, elements = null, selectedProduct = null;
     var urlParams = new URLSearchParams(window.location.search);
     var websiteId = urlParams.get('website') || null;
+    var businessId = urlParams.get('business') || urlParams.get('businessId') || null;
 
     // Read sales rep code from URL param or localStorage (with expiry check)
     var repCode = urlParams.get('rep') || null;
@@ -268,6 +269,7 @@
         paymentElement.mount('#payment-element');
         paymentElement.on('ready', function() { document.getElementById('submit-btn').disabled = false; });
         renderOrderSummary(selectedProduct);
+        prefillCheckoutFields();
         document.getElementById('page-loading').style.display = 'none';
         document.getElementById('checkout-content').style.display = '';
         document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
@@ -288,6 +290,22 @@
       document.getElementById('submit-text').textContent = 'Pagar ahora \u2014 ' + formatted + ' ' + curr + interval;
     }
 
+    function prefillCheckoutFields() {
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('atp_complex_intake_submission') || 'null'); } catch (e) { saved = null; }
+      var savedForm = saved && saved.form ? saved.form : {};
+      var fieldMap = {
+        'field-name': urlParams.get('name') || savedForm.personalName || '',
+        'field-email': urlParams.get('email') || savedForm.personalEmail || '',
+        'field-phone': urlParams.get('phone') || savedForm.personalWhatsapp || savedForm.publicWhatsapp || '',
+        'field-business': urlParams.get('business_name') || savedForm.businessName || '',
+      };
+      Object.keys(fieldMap).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && fieldMap[id]) el.value = fieldMap[id];
+      });
+    }
+
     async function handleSubmit(e) {
       e.preventDefault();
       var submitBtn = document.getElementById('submit-btn');
@@ -298,13 +316,13 @@
         if (submitResult.error) throw new Error(submitResult.error.message);
         var res = await fetch('/api/stripe/create-subscription', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: document.getElementById('field-email').value.trim(), customerPhone: document.getElementById('field-phone').value.trim() || null, businessName: document.getElementById('field-business').value.trim() || null, websiteId: websiteId, repCode: repCode })
+          body: JSON.stringify({ productId: selectedProduct.id, customerName: document.getElementById('field-name').value.trim(), customerEmail: document.getElementById('field-email').value.trim(), customerPhone: document.getElementById('field-phone').value.trim() || null, businessName: document.getElementById('field-business').value.trim() || null, websiteId: websiteId, businessId: businessId, repCode: repCode })
         });
         var data = await res.json();
         if (!res.ok) throw new Error(data.error || data.detail || 'Error al procesar el pago.');
         var confirmResult = await stripe.confirmPayment({
           elements: elements, clientSecret: data.clientSecret,
-          confirmParams: { return_url: window.location.origin + '/checkout/' + productId + '?redirect_status=succeeded' + (websiteId ? '&website=' + encodeURIComponent(websiteId) : ''), payment_method_data: { billing_details: { name: document.getElementById('field-name').value.trim(), email: document.getElementById('field-email').value.trim() } } },
+          confirmParams: { return_url: window.location.origin + '/checkout/' + productId + '?redirect_status=succeeded' + (websiteId ? '&website=' + encodeURIComponent(websiteId) : '') + (businessId ? '&business=' + encodeURIComponent(businessId) : ''), payment_method_data: { billing_details: { name: document.getElementById('field-name').value.trim(), email: document.getElementById('field-email').value.trim() } } },
           redirect: 'if_required'
         });
         if (confirmResult.error) throw new Error(confirmResult.error.message);
