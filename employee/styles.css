@@ -1116,6 +1116,40 @@ select.input {
   color: var(--success);
 }
 
+.badge-source-advanced {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  border-radius: 8px;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.badge-source-website {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.badge-source-search,
+.badge-source-default {
+  background: var(--bg-input);
+  color: var(--text-muted);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.badge-source-priority {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  color: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 /* Maps link */
 .maps-link {
   display: inline-flex;
@@ -4927,6 +4961,28 @@ select.input {
   color: #60a5fa;
 }
 
+.badge-website-created,
+.badge-lead-stage-website_created {
+  background: rgba(20, 184, 166, 0.14);
+  color: #5eead4;
+}
+
+.badge-interested,
+.badge-lead-stage-interested {
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+}
+
+.badge-lead-stage-lead {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.badge-lead-stage-paid_customer {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
 .badge-demo {
   background: var(--warning-bg);
   color: var(--warning);
@@ -4984,6 +5040,176 @@ select.input {
   color: var(--text-dim);
   max-width: 260px;
   white-space: normal;
+}
+
+/* === Inbound Leads === */
+.leads-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.leads-header h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.leads-kanban {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.lead-kanban-column {
+  min-width: 240px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.lead-kanban-column.is-drag-over {
+  border-color: var(--primary);
+  background: var(--primary-bg);
+}
+
+.lead-kanban-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.lead-kanban-column-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.lead-kanban-count {
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--bg-input);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lead-kanban-cards {
+  display: grid;
+  gap: 10px;
+}
+
+.lead-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 12px;
+  cursor: grab;
+}
+
+.lead-card.dragging {
+  opacity: 0.55;
+}
+
+.lead-card-advanced {
+  border-color: rgba(239, 68, 68, 0.34);
+}
+
+.lead-card-topline,
+.lead-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.lead-card-topline {
+  margin-bottom: 8px;
+}
+
+.lead-card h4 {
+  margin: 0 0 5px;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.lead-card-date,
+.lead-card-meta,
+.lead-table-sub {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.lead-contact-stack {
+  display: grid;
+  gap: 2px;
+  margin: 8px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.lead-contact-stack strong {
+  color: var(--text);
+}
+
+.lead-stage-select {
+  min-width: 132px;
+  max-width: 170px;
+  height: 32px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.lead-kanban-empty,
+.lead-kanban-loading {
+  padding: 18px 10px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  text-align: center;
+  font-size: 12px;
+}
+
+.leads-tables-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.leads-table-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.leads-table-card-advanced {
+  border-color: rgba(239, 68, 68, 0.22);
+}
+
+.leads-table-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.leads-table-header h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.leads-table .lead-stage-select {
+  display: block;
+  margin-top: 8px;
 }
 
 /* === Contact Edit Section (Detail Modal) === */
@@ -5164,6 +5390,18 @@ select.input {
 
   .footer {
     margin-bottom: 56px;
+  }
+
+  .leads-header {
+    flex-direction: column;
+  }
+
+  .leads-kanban {
+    grid-template-columns: repeat(4, 78vw);
+  }
+
+  .leads-tables-grid {
+    grid-template-columns: 1fr;
   }
 }
 

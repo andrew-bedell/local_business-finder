@@ -151,9 +151,9 @@ async function fetchBusinessContext(businessId, supabaseUrl, headers) {
 function classifyContact(business, website, subscription) {
   if (business.pipeline_status === 'active_customer' || subscription) return 'active_customer';
   if (business.pipeline_status === 'inactive_customer') return 'inactive_customer';
-  if (business.pipeline_status === 'demo') return 'demo';
+  if (business.pipeline_status === 'demo' || business.pipeline_status === 'website_created') return 'demo';
   if (website && (website.status === 'published' || website.status === 'draft') && !subscription) return 'demo';
-  if (business.pipeline_status === 'lead') return 'lead';
+  if (business.pipeline_status === 'lead' || business.pipeline_status === 'interested') return 'lead';
   return 'saved_business';
 }
 

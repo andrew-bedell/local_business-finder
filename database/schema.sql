@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS businesses (
                               'search',             -- outbound: employee Google Places search
                               'cold_outreach',       -- outbound: door-to-door, cold call, cold message
                               'website_form',        -- inbound: ahoratengopagina.com form fill
+                              'advanced_intake',     -- inbound high-intent: personalized intake form
                               'whatsapp_inbound',    -- inbound: business messaged us on WhatsApp
                               'referral',            -- inbound: customer or partner referral
                               'ad_meta',             -- inbound paid: Facebook / Instagram ad
@@ -91,7 +92,8 @@ CREATE TABLE IF NOT EXISTS businesses (
   -- Pipeline
   pipeline_status         TEXT DEFAULT 'saved'
                             CHECK (pipeline_status IN (
-                              'saved', 'lead', 'cold_outreach_ready', 'demo', 'active_customer', 'inactive_customer'
+                              'saved', 'lead', 'website_created', 'interested',
+                              'cold_outreach_ready', 'demo', 'active_customer', 'inactive_customer'
                             )),
   contact_name            TEXT,                -- DEPRECATED: use business_contacts table. Kept for backward compat.
   contact_phone           TEXT,                -- DEPRECATED: use business_contacts table

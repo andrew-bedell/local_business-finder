@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required field: businessId' });
   }
 
-  const validStatuses = ['saved', 'lead', 'demo', 'active_customer', 'inactive_customer'];
+  const validStatuses = ['saved', 'lead', 'website_created', 'interested', 'cold_outreach_ready', 'demo', 'active_customer', 'inactive_customer'];
   if (pipeline_status && !validStatuses.includes(pipeline_status)) {
     return res.status(400).json({ error: 'Invalid pipeline_status. Must be one of: ' + validStatuses.join(', ') });
   }

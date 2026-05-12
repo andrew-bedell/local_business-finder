@@ -30,6 +30,10 @@ function compactString(value) {
   return text || '';
 }
 
+function resolveLeadSource(body) {
+  return body && body.leadSource === 'advanced_intake' ? 'advanced_intake' : 'website_form';
+}
+
 function buildNotes(body) {
   var notes = [];
   var extraNotes = compactString(body.extraNotes);
@@ -126,6 +130,7 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
   var hasExplicitBusinessWhatsapp = Object.prototype.hasOwnProperty.call(body, 'businessWhatsapp');
   var businessWhatsapp = hasExplicitBusinessWhatsapp ? (body.businessWhatsapp || null) : (body.contactWhatsapp || null);
   var notes = buildNotes(body);
+  var leadSource = resolveLeadSource(body);
   var insertPayload = {
     name: match.name || body.company,
     place_id: match.placeId,
@@ -148,7 +153,7 @@ async function createOrUpdateBusinessFromGoogleMatch(supabaseUrl, serviceKey, ma
     hours: body.hours && Object.keys(body.hours).length ? body.hours : null,
     owner_name: body.founderName || null,
     founder_description: body.founderStory || null,
-    lead_source: 'website_form',
+    lead_source: leadSource,
     pipeline_status: 'lead',
     contact_name: body.contactName || null,
     contact_email: body.contactEmail || null,
@@ -211,6 +216,7 @@ export default async function handler(req, res) {
     var hasExplicitBusinessWhatsapp = Object.prototype.hasOwnProperty.call(body, 'businessWhatsapp');
     var businessWhatsapp = hasExplicitBusinessWhatsapp ? (body.businessWhatsapp || null) : (body.contactWhatsapp || null);
     var notes = buildNotes(body);
+    var leadSource = resolveLeadSource(body);
     var businessId = null;
 
     if (selectedGoogleMatch && selectedGoogleMatch.placeId) {
@@ -232,7 +238,7 @@ export default async function handler(req, res) {
         owner_name: body.founderName || null,
         founder_description: body.founderStory || null,
         hours: body.hours && Object.keys(body.hours).length ? body.hours : null,
-        lead_source: 'website_form',
+        lead_source: leadSource,
         pipeline_status: 'lead',
         contact_name: contactName || null,
         contact_email: contactEmail || null,
@@ -285,7 +291,7 @@ export default async function handler(req, res) {
       owner_name: body.founderName || null,
       founder_description: body.founderStory || null,
       hours: body.hours && Object.keys(body.hours).length ? body.hours : null,
-      lead_source: 'website_form',
+      lead_source: leadSource,
       pipeline_status: 'lead',
       contact_name: contactName || null,
       contact_email: contactEmail || null,
