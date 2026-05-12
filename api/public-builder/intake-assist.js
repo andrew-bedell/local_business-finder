@@ -23,6 +23,13 @@ export default async function handler(req, res) {
   var fieldLabel = trimBlock(body.fieldLabel, 180);
   var fieldValue = trimBlock(body.fieldValue, 2500);
   var businessContext = trimBlock(body.businessContext, 5000);
+  var formPurpose = trimBlock(body.formPurpose, 1000);
+  var formData = '';
+  try {
+    formData = trimBlock(JSON.stringify(body.formData || {}, null, 2), 12000);
+  } catch {
+    formData = '';
+  }
 
   if (!fieldLabel) {
     return res.status(400).json({ error: 'Selecciona un campo del formulario primero.' });
@@ -31,6 +38,8 @@ export default async function handler(req, res) {
   var system = [
     'Eres un asistente de intake para AhoraTengoPagina.',
     'Ayudas a duenos de negocios en Mexico y Colombia a escribir respuestas claras para crear una pagina web.',
+    'Este formulario sirve para reunir informacion profunda del negocio y crear una pagina web personalizada, con contexto para marketing, promociones, campanas de Facebook e Instagram y soporte humano posterior.',
+    'Usa todo el contexto disponible del formulario actual para que tus respuestas sean mas especificas conforme el usuario avanza.',
     'Responde siempre en espanol de negocio, natural, claro y persuasivo.',
     'No inventes datos especificos como certificaciones, precios, direcciones, resultados medicos, garantias o testimonios.',
     'Si falta informacion, escribe una respuesta util pero deja espacios suaves como "podemos destacar..." solo cuando sea apropiado.',
@@ -49,6 +58,12 @@ export default async function handler(req, res) {
     '',
     'Contexto del resto del formulario:',
     businessContext || '(sin contexto)',
+    '',
+    'Proposito del formulario:',
+    formPurpose || '(formulario personalizado de pagina web)',
+    '',
+    'Datos completos actuales del formulario en JSON:',
+    formData || '(sin datos completos)',
     '',
     mode === 'improve'
       ? 'Mejora el texto actual para que sea mas claro, especifico y persuasivo. Conserva los hechos.'
