@@ -716,6 +716,25 @@ select.input {
   background: var(--bg-hover);
 }
 
+.table-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.table-sort-button:hover,
+.table-sort-button.active {
+  color: var(--text);
+}
+
 /* === Sticky Columns (Pipeline Table) === */
 .pipeline-table .col-sticky {
   position: sticky;

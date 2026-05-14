@@ -8,6 +8,7 @@
     pipeline: {
       items: [
         { label: 'navPipeline', tab: 'saved' },
+        { label: 'navWebsites', tab: 'saved', stage: 'has_website' },
         { label: 'navLeads', tab: 'leads' },
         { label: 'navDemoAnalytics', tab: 'demo_analytics' },
         { label: 'navOutreach', tab: 'outreach' }
@@ -62,6 +63,7 @@
       navSearch: 'Search',
       navSaved: 'Saved',
       navPipeline: 'Pipeline',
+      navWebsites: 'Has Website',
       navLeads: 'Leads',
       navGroupPipeline: 'Pipeline',
       navGroupMessaging: 'Messaging',
@@ -70,6 +72,7 @@
       pipelineAll: 'All',
       pipelineSaved: 'Saved',
       pipelineLead: 'Leads',
+      pipelineHasWebsite: 'Has Website',
       pipelineColdOutreach: 'Outreach Ready',
       pipelineNoWhatsapp: 'No WhatsApp',
       pipelineDemo: 'Demo',
@@ -200,6 +203,14 @@
       filterHasFacebook: 'Has Facebook',
       filterHasReport: 'Has Report',
       filterHasWebsite: 'Has Website',
+      filterSortMetric: 'Sort Metric',
+      filterSortDirection: 'Sort Order',
+      sortMetricBusinessCreated: 'Business Created',
+      sortMetricWebsiteCreated: 'Website Created',
+      sortMetricPipelineUpdated: 'Pipeline Updated',
+      sortMetricUpdated: 'Last Updated',
+      sortLatestFirst: 'Latest First',
+      sortEarliestFirst: 'Earliest First',
       adminResultsTitle: 'Enriched Businesses',
       enrichmentQueueTitle: 'Needs Enrichment',
       enrichmentQueueSummary: '{0} businesses are still enriching or waiting to retry.',
@@ -988,6 +999,7 @@
       navSearch: 'Buscar',
       navSaved: 'Guardados',
       navPipeline: 'Pipeline',
+      navWebsites: 'Tiene Sitio',
       navLeads: 'Leads',
       navGroupPipeline: 'Pipeline',
       navGroupMessaging: 'Mensajes',
@@ -996,6 +1008,7 @@
       pipelineAll: 'Todos',
       pipelineSaved: 'Guardados',
       pipelineLead: 'Leads',
+      pipelineHasWebsite: 'Tiene Sitio',
       pipelineColdOutreach: 'Listo para Contactar',
       pipelineNoWhatsapp: 'Sin WhatsApp',
       pipelineDemo: 'Demo',
@@ -1126,6 +1139,14 @@
       filterHasFacebook: 'Tiene Facebook',
       filterHasReport: 'Tiene Informe',
       filterHasWebsite: 'Tiene Sitio Web',
+      filterSortMetric: 'Ordenar por',
+      filterSortDirection: 'Orden',
+      sortMetricBusinessCreated: 'Negocio Creado',
+      sortMetricWebsiteCreated: 'Sitio Creado',
+      sortMetricPipelineUpdated: 'Pipeline Actualizado',
+      sortMetricUpdated: 'Ultima Actualizacion',
+      sortLatestFirst: 'Mas Reciente Primero',
+      sortEarliestFirst: 'Mas Antiguo Primero',
       adminResultsTitle: 'Negocios Enriquecidos',
       enrichmentQueueTitle: 'Pendientes de Enriquecer',
       enrichmentQueueSummary: '{0} negocios siguen enriqueciéndose o esperando reintento.',
@@ -2198,6 +2219,8 @@
   let allBusinessesRaw = []; // Completely unfiltered dataset for cross-tab features (outreach)
   let leadsBusinesses = [];
   let pipelineStage = 'all'; // Currently selected pipeline filter
+  let savedSortMetric = 'business_created';
+  let savedSortDirection = 'desc';
   // Cache for detail modal data (keyed by business ID)
   const detailCache = {};
   const SAVED_COLUMNS_STORAGE_KEY = 'admin_saved_table_columns_v1';
@@ -2205,6 +2228,17 @@
   const FIXED_SAVED_COLUMNS = ['select', 'rowNumber', 'name'];
   const OUTREACH_SECTIONS = ['followup', 'today', 'schedule', 'visitors', 'ready', 'progress', 'complete', 'cancelled'];
   const LEAD_SOURCE_VALUES = ['website_form', 'advanced_intake'];
+  const SAVED_SORT_METRICS = {
+    business_created: { labelKey: 'sortMetricBusinessCreated', columnId: 'createdAt' },
+    website_created: { labelKey: 'sortMetricWebsiteCreated', columnId: 'websiteCreatedAt' },
+    pipeline_updated: { labelKey: 'sortMetricPipelineUpdated', columnId: null },
+    updated: { labelKey: 'sortMetricUpdated', columnId: 'updatedAt' },
+  };
+  const SAVED_SORT_COLUMN_METRICS = {
+    createdAt: 'business_created',
+    websiteCreatedAt: 'website_created',
+    updatedAt: 'updated',
+  };
   const LEAD_KANBAN_STAGES = [
     { id: 'lead', moveStatus: 'lead', labelKey: 'leadStageLead', statuses: ['lead'] },
     { id: 'website_created', moveStatus: 'website_created', labelKey: 'leadStageWebsiteCreated', statuses: ['website_created', 'demo', 'cold_outreach_ready'] },
@@ -2247,9 +2281,9 @@
     { id: 'placeId', label: 'Place ID', defaultVisible: false, help: 'Google place identifier' },
     { id: 'mapsUrl', label: 'Maps URL', defaultVisible: false, help: 'Stored Google Maps link' },
     { id: 'dataCompleteness', label: 'Completeness', defaultVisible: false, help: 'Data completeness score' },
-    { id: 'createdAt', label: 'Record Created At', defaultVisible: false, help: 'When the business record was created' },
+    { id: 'createdAt', label: 'Record Created At', defaultVisible: true, help: 'When the business record was created' },
     { id: 'enrichedAt', label: 'Enriched At', defaultVisible: false, help: 'When Google-photo enrichment completed' },
-    { id: 'websiteCreatedAt', label: 'Website Created At', defaultVisible: false, help: 'When the first website was generated' },
+    { id: 'websiteCreatedAt', label: 'Website Created At', defaultVisible: true, help: 'When the first website was generated' },
     { id: 'updatedAt', label: 'Updated At', defaultVisible: false, help: 'Last business record update' },
     { id: 'notes', label: 'Notes', defaultVisible: false, help: 'Operator notes' },
     { id: 'description', label: 'Description', defaultVisible: false, help: 'Saved business description' },
@@ -2339,6 +2373,8 @@
   const filterFacebook = $('#filter-facebook');
   const filterReport = $('#filter-report');
   const filterWebsite = $('#filter-website');
+  const filterSortMetric = $('#filter-sort-metric');
+  const filterSortDirection = $('#filter-sort-direction');
   const pipelineSearch = document.getElementById('pipeline-search');
 
   function getSavedColumnDef(id) {
@@ -2670,6 +2706,7 @@
     loadTableConfigs();
 
     applyLanguage();
+    syncSavedSortControls();
     ensureResultsColumnsUI();
     ensureOutreachColumnsUI();
 
@@ -2714,9 +2751,22 @@
 
     // Apply filters
     $('#btn-apply-filters').addEventListener('click', () => {
+      readSavedSortControls();
       currentPage = 0;
       loadBusinesses();
     });
+
+    if (filterSortMetric) {
+      filterSortMetric.addEventListener('change', () => {
+        updateSavedSort(filterSortMetric.value, filterSortDirection ? filterSortDirection.value : savedSortDirection);
+      });
+    }
+
+    if (filterSortDirection) {
+      filterSortDirection.addEventListener('change', () => {
+        updateSavedSort(filterSortMetric ? filterSortMetric.value : savedSortMetric, filterSortDirection.value);
+      });
+    }
 
     // Clear filters
     $('#btn-clear-filters').addEventListener('click', () => {
@@ -2732,6 +2782,7 @@
       filterFacebook.value = '';
       filterReport.value = '';
       filterWebsite.value = '';
+      updateSavedSort('business_created', 'desc', { refresh: false });
       if (pipelineSearch) pipelineSearch.value = '';
       currentPage = 0;
       loadBusinesses();
@@ -2799,6 +2850,10 @@
       item.addEventListener('click', (e) => {
         e.preventDefault();
         switchTab(item.dataset.tab);
+        if (item.dataset.tab === 'saved') {
+          applyPipelineFilter(item.dataset.stage || 'all');
+          if (item.dataset.stage) scrollToPipelineSection();
+        }
         // Close dropdown
         document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
       });
@@ -2925,6 +2980,8 @@
     } else if (pipelineStage === 'no_whatsapp') {
       const src = allBusinessesRaw.length ? allBusinessesRaw : allBusinesses;
       filtered = src.filter(b => b.whatsapp_status === 'invalid');
+    } else if (pipelineStage === 'has_website') {
+      filtered = filtered.filter(b => hasGeneratedWebsite(b));
     } else if (pipelineStage !== 'all') {
       filtered = filtered.filter(b => (b.pipeline_status || 'saved') === pipelineStage);
     }
@@ -2948,7 +3005,8 @@
     const options = opts || {};
     const stageFiltered = getPipelineStageFilteredBusinesses();
     const searched = applyPipelineSearchToBusinesses(stageFiltered);
-    const partitioned = partitionBusinessesByEnrichment(searched);
+    const sorted = sortVisibleBusinesses(searched);
+    const partitioned = partitionBusinessesByEnrichment(sorted);
 
     currentQueueResults = partitioned.queue;
     renderEnrichmentQueueTable();
@@ -3080,11 +3138,12 @@
 
   // ── Pipeline Counts ──
   function updatePipelineCounts(businesses) {
-    const counts = { all: businesses.length, saved: 0, lead: 0, cold_outreach_ready: 0, no_whatsapp: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
+    const counts = { all: businesses.length, has_website: 0, saved: 0, lead: 0, cold_outreach_ready: 0, no_whatsapp: 0, demo: 0, active_customer: 0, inactive_customer: 0 };
     businesses.forEach(b => {
       const status = b.pipeline_status || 'saved';
       if (counts[status] !== undefined) counts[status]++;
     });
+    counts.has_website = businesses.filter(b => hasGeneratedWebsite(b)).length;
     // Override cold_outreach_ready with dynamic count: has website + phone + outreach not complete, exclude cancelled + invalid whatsapp
     const src = allBusinessesRaw.length ? allBusinessesRaw : businesses;
     counts.cold_outreach_ready = src.filter(b => {
@@ -3103,6 +3162,7 @@
     counts.no_whatsapp = src.filter(b => b.whatsapp_status === 'invalid').length;
     const el = (id) => document.getElementById(id);
     el('pill-count-all').textContent = counts.all;
+    el('pill-count-has-website').textContent = counts.has_website;
     el('pill-count-saved').textContent = counts.saved;
     el('pill-count-lead').textContent = counts.lead;
     el('pill-count-cold-outreach').textContent = counts.cold_outreach_ready;
@@ -3113,12 +3173,21 @@
   }
 
   // ── Pipeline Filter (client-side re-filter from allBusinesses) ──
+  function syncSavedPipelineNavActiveState() {
+    const savedNav = document.getElementById('nav-saved');
+    const websiteNav = document.getElementById('nav-websites');
+    if (savedNav) savedNav.classList.toggle('active', activeTab === 'saved' && pipelineStage !== 'has_website');
+    if (websiteNav) websiteNav.classList.toggle('active', activeTab === 'saved' && pipelineStage === 'has_website');
+  }
+
   function applyPipelineFilter(stage) {
     if (stage !== undefined) pipelineStage = stage;
     // Update active pill
     document.querySelectorAll('.pipeline-pill').forEach(pill => {
       pill.classList.toggle('active', pill.getAttribute('data-stage') === pipelineStage);
     });
+    syncSavedPipelineNavActiveState();
+    updateMobileNav(activeTab);
     refreshVisibleBusinessTables({ resetPage: true });
   }
 
@@ -3649,6 +3718,71 @@
     return record.generated_at || record.created_at || record.published_at || null;
   }
 
+  function getSavedSortRawValue(business, metric) {
+    switch (metric) {
+      case 'website_created':
+        return getWebsiteCreatedAt(business);
+      case 'pipeline_updated':
+        return business && business.pipeline_status_changed_at ? business.pipeline_status_changed_at : null;
+      case 'updated':
+        return business && (business.last_updated_at || business.updated_at) ? (business.last_updated_at || business.updated_at) : null;
+      case 'business_created':
+      default:
+        return getBusinessCreatedAt(business);
+    }
+  }
+
+  function getSavedSortTime(business, metric) {
+    const raw = getSavedSortRawValue(business, metric);
+    if (!raw) return null;
+    const time = new Date(raw).getTime();
+    return Number.isFinite(time) ? time : null;
+  }
+
+  function normalizeSavedSortMetric(metric) {
+    return SAVED_SORT_METRICS[metric] ? metric : 'business_created';
+  }
+
+  function normalizeSavedSortDirection(direction) {
+    return direction === 'asc' ? 'asc' : 'desc';
+  }
+
+  function syncSavedSortControls() {
+    if (filterSortMetric) filterSortMetric.value = savedSortMetric;
+    if (filterSortDirection) filterSortDirection.value = savedSortDirection;
+  }
+
+  function readSavedSortControls() {
+    savedSortMetric = normalizeSavedSortMetric(filterSortMetric ? filterSortMetric.value : savedSortMetric);
+    savedSortDirection = normalizeSavedSortDirection(filterSortDirection ? filterSortDirection.value : savedSortDirection);
+    syncSavedSortControls();
+  }
+
+  function updateSavedSort(metric, direction, opts) {
+    const options = opts || {};
+    savedSortMetric = normalizeSavedSortMetric(metric);
+    savedSortDirection = normalizeSavedSortDirection(direction);
+    syncSavedSortControls();
+    if (options.refresh !== false) {
+      refreshVisibleBusinessTables({ resetPage: true });
+    }
+  }
+
+  function sortVisibleBusinesses(businesses) {
+    const metric = normalizeSavedSortMetric(savedSortMetric);
+    const direction = normalizeSavedSortDirection(savedSortDirection);
+    const multiplier = direction === 'asc' ? 1 : -1;
+    return (businesses || []).slice().sort((a, b) => {
+      const aTime = getSavedSortTime(a, metric);
+      const bTime = getSavedSortTime(b, metric);
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      if (aTime !== bTime) return (aTime - bTime) * multiplier;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }
+
   function isBusinessEnriched(business) {
     const status = getEffectiveEnrichmentStatus(business);
     return status === 'completed';
@@ -4051,8 +4185,26 @@
       if (id === 'select') {
         return `<th class="${escapeHtml(def.headerClass || '')}" style="${def.width ? `width:${def.width}` : ''}"><input type="checkbox" id="select-all" class="pipeline-checkbox" title="Select all"></th>`;
       }
-      return `<th class="${escapeHtml(def.headerClass || '')}" ${def.width ? `style="width:${def.width}"` : ''}>${escapeHtml(label)}</th>`;
+      const sortMetric = SAVED_SORT_COLUMN_METRICS[id];
+      const isSorted = sortMetric && savedSortMetric === sortMetric;
+      const sortIcon = isSorted ? (savedSortDirection === 'asc' ? '\u2191' : '\u2193') : '\u2195';
+      const labelHtml = sortMetric
+        ? `<button type="button" class="table-sort-button ${isSorted ? 'active' : ''}" data-sort-metric="${escapeHtml(sortMetric)}">${escapeHtml(label)} <span aria-hidden="true">${sortIcon}</span></button>`
+        : escapeHtml(label);
+      return `<th class="${escapeHtml(def.headerClass || '')}" ${def.width ? `style="width:${def.width}"` : ''}>${labelHtml}</th>`;
     }).join('') + '</tr>';
+    bindSavedTableHeaderSort();
+  }
+
+  function bindSavedTableHeaderSort() {
+    if (!resultsTable) return;
+    resultsTable.querySelectorAll('.table-sort-button[data-sort-metric]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const metric = button.getAttribute('data-sort-metric');
+        const direction = metric === savedSortMetric && savedSortDirection === 'desc' ? 'asc' : 'desc';
+        updateSavedSort(metric, direction);
+      });
+    });
   }
 
   function renderOutreachTableHeader(section, bodyId) {
@@ -8639,13 +8791,14 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-leads', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-websites', 'nav-leads', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
     const tabToNav = { saved: 'nav-saved', leads: 'nav-leads', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', wa_logs: 'nav-wa-logs', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
+    syncSavedPipelineNavActiveState();
 
     // Update desktop group trigger active states
     document.querySelectorAll('.nav-group-trigger').forEach(tr => tr.classList.remove('active'));
@@ -8684,6 +8837,13 @@
   });
 
   // ── Sticky Section Nav ──
+  function scrollToPipelineSection() {
+    const target = document.getElementById('pipeline-anchor') || document.getElementById('filter-section');
+    if (target) {
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+    }
+  }
+
   function initSectionNav() {
     var searchBtn = document.getElementById('section-nav-search');
     var pipelineBtn = document.getElementById('section-nav-pipeline');
@@ -13042,8 +13202,8 @@
       if (item.href) {
         html += '<a href="' + item.href + '" class="sub-nav-pill">' + t(item.label) + '</a>';
       } else {
-        var isActive = activeTab === item.tab;
-        html += '<button class="sub-nav-pill ' + (isActive ? 'active' : '') + '" data-tab="' + item.tab + '">' + t(item.label) + '</button>';
+        var isActive = activeTab === item.tab && (!item.stage ? pipelineStage !== 'has_website' : pipelineStage === item.stage);
+        html += '<button class="sub-nav-pill ' + (isActive ? 'active' : '') + '" data-tab="' + item.tab + '"' + (item.stage ? ' data-stage="' + item.stage + '"' : '') + '>' + t(item.label) + '</button>';
       }
     });
 
@@ -13055,6 +13215,10 @@
     subNavRow.querySelectorAll('[data-tab]').forEach(pill => {
       pill.addEventListener('click', () => {
         switchTab(pill.dataset.tab);
+        if (pill.dataset.tab === 'saved') {
+          applyPipelineFilter(pill.dataset.stage || 'all');
+          if (pill.dataset.stage) scrollToPipelineSection();
+        }
       });
     });
 
@@ -13078,7 +13242,8 @@
     const subNavRow = document.getElementById('sub-nav-row');
     if (subNavRow) {
       subNavRow.querySelectorAll('.sub-nav-pill').forEach(p => {
-        p.classList.toggle('active', p.dataset.tab === tab);
+        const isActive = p.dataset.tab === tab && (!p.dataset.stage ? pipelineStage !== 'has_website' : pipelineStage === p.dataset.stage);
+        p.classList.toggle('active', isActive);
       });
     }
   }
