@@ -27,12 +27,6 @@ export default async function handler(req, res) {
     // Auth: JWT → business_id
     const { businessId } = await resolveCustomerBusiness(req, supabaseUrl, serviceKey);
 
-    // Validate content type
-    const contentType = (req.headers['content-type'] || '').split(';')[0].trim();
-    if (!contentType.startsWith('image/')) {
-      return res.status(400).json({ error: 'Content-Type must be image/*' });
-    }
-
     // Validate photo_type
     const photoType = req.query.photo_type || 'product';
     const validTypes = ['exterior', 'interior', 'product', 'food', 'team', 'logo', 'menu', 'founder', 'service'];
@@ -47,15 +41,29 @@ export default async function handler(req, res) {
     }
     const body = Buffer.concat(chunks);
 
-    // Validate size (4MB max)
-    if (body.length > 4 * 1024 * 1024) {
-      return res.status(413).json({ error: 'Image too large. Maximum 4MB.' });
+    const contentType = (req.headers['content-type'] || '').split(';')[0].trim();
+
+    // Mobile browsers sometimes send camera uploads without a reliable MIME type.
+    if (contentType && !contentType.startsWith('image/') && contentType !== 'application/octet-stream') {
+      return res.status(400).json({ error: 'Content-Type must be image/*' });
+    }
+
+    // Allow a larger raw upload because images are optimized to WebP before storage.
+    if (body.length > 12 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Image too large. Maximum 12MB before optimization.' });
     }
     if (body.length === 0) {
       return res.status(400).json({ error: 'Empty body' });
     }
 
-    const optimized = await optimizePhotoForStorage(body, { sourceContentType: contentType });
+    let optimized;
+    try {
+      optimized = await optimizePhotoForStorage(body, { sourceContentType: contentType || 'application/octet-stream' });
+    } catch (optimizeError) {
+      const message = optimizeError && optimizeError.message ? optimizeError.message : 'Invalid image file';
+      const isTooLarge = /compressed under/i.test(message) || /too large/i.test(message);
+      return res.status(isTooLarge ? 413 : 400).json({ error: message });
+    }
 
     // Generate unique ID for the photo
     const uuid8 = Math.random().toString(36).substring(2, 10);

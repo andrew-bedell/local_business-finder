@@ -426,7 +426,7 @@ export default async function handler(req, res) {
       });
 
       if (photoRows.length) {
-        await fetch(supabaseUrl + '/rest/v1/business_photos', {
+        var photoInsertRes = await fetch(supabaseUrl + '/rest/v1/business_photos', {
           method: 'POST',
           headers: {
             'apikey': serviceKey,
@@ -436,6 +436,12 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify(photoRows)
         });
+
+        if (!photoInsertRes.ok) {
+          var photoInsertErr = await photoInsertRes.text().catch(function () { return ''; });
+          console.error('public-builder submit photo insert error:', photoInsertRes.status, photoInsertErr.substring(0, 300));
+          return res.status(502).json({ error: 'Failed to save uploaded photos' });
+        }
       }
     }
 

@@ -6050,6 +6050,9 @@
   var wizardStarRating = 5;
   var wizardSvcPhotoId = null;  // temp photo ID for service being edited
   var wizardSvcPhotoUrl = null; // temp photo URL for service being edited
+  var WIZARD_MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+  var WIZARD_TARGET_UPLOAD_BYTES = Math.floor(WIZARD_MAX_UPLOAD_BYTES * 0.92);
+  var WIZARD_MAX_PHOTO_DIMENSION = 1600;
 
   function tArgs(key) {
     var str = t(key);
@@ -6058,6 +6061,94 @@
       str = str.replace('{' + i + '}', args[i]);
     }
     return str;
+  }
+
+  function loadImageFromWizardFile(file) {
+    return new Promise(function (resolve, reject) {
+      var objectUrl = URL.createObjectURL(file);
+      var image = new Image();
+      image.onload = function () {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
+      };
+      image.onerror = function () {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('No se pudo leer la imagen.'));
+      };
+      image.src = objectUrl;
+    });
+  }
+
+  function wizardCanvasToBlob(canvas, type, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (blob) {
+        if (blob) {
+          resolve(blob);
+          return;
+        }
+        reject(new Error('No se pudo preparar la imagen.'));
+      }, type, quality);
+    });
+  }
+
+  async function normalizeWizardPhotoUpload(file) {
+    if (!file || !file.size) return file;
+
+    if (file.type === 'image/gif') {
+      if (file.size > WIZARD_MAX_UPLOAD_BYTES) {
+        throw new Error('El GIF es demasiado pesado. Usa un archivo menor de 4MB.');
+      }
+      return file;
+    }
+
+    if (file.type && file.type.indexOf('image/') !== 0) {
+      return file;
+    }
+
+    var isSupported = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
+    if (isSupported && file.size <= WIZARD_TARGET_UPLOAD_BYTES) {
+      return file;
+    }
+
+    var image = await loadImageFromWizardFile(file);
+    var sourceWidth = image.naturalWidth || image.width || 1;
+    var sourceHeight = image.naturalHeight || image.height || 1;
+    var baseScale = Math.min(1, WIZARD_MAX_PHOTO_DIMENSION / Math.max(sourceWidth, sourceHeight));
+    var scaleSteps = [1, 0.9, 0.8, 0.7, 0.6];
+    var qualitySteps = [0.88, 0.8, 0.72, 0.64, 0.56];
+    var bestBlob = file;
+
+    for (var i = 0; i < scaleSteps.length; i++) {
+      var scale = Math.min(1, baseScale * scaleSteps[i]);
+      var width = Math.max(1, Math.round(sourceWidth * scale));
+      var height = Math.max(1, Math.round(sourceHeight * scale));
+      var canvas = document.createElement('canvas');
+      var context = canvas.getContext('2d');
+
+      if (!context) {
+        throw new Error('No se pudo preparar la imagen.');
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, width, height);
+      context.drawImage(image, 0, 0, width, height);
+
+      for (var j = 0; j < qualitySteps.length; j++) {
+        var candidate = await wizardCanvasToBlob(canvas, 'image/jpeg', qualitySteps[j]);
+        if (candidate.size < bestBlob.size) bestBlob = candidate;
+        if (candidate.size <= WIZARD_TARGET_UPLOAD_BYTES) {
+          return candidate;
+        }
+      }
+    }
+
+    if (bestBlob.size <= WIZARD_MAX_UPLOAD_BYTES) {
+      return bestBlob;
+    }
+
+    throw new Error('La imagen es demasiado pesada incluso despues de optimizarla. Usa una menor de 4MB.');
   }
 
   async function loadWizardData() {
@@ -6562,12 +6653,9 @@
     var token = await getAuthToken();
     if (!token) return;
 
-    if (file.size > 4 * 1024 * 1024) {
-      showToast(t('wiz_upload_too_large'), 'warning');
-      return;
-    }
-
     try {
+      var optimizedFile = await normalizeWizardPhotoUpload(file);
+
       // Remove existing founder photo first
       var existing = wizardPhotos.filter(function (p) { return p.photo_type === 'founder'; })[0];
       if (existing) {
@@ -6578,18 +6666,19 @@
         wizardPhotos = wizardPhotos.filter(function (p) { return p.id !== existing.id; });
       }
 
-      var buffer = await file.arrayBuffer();
+      var buffer = await optimizedFile.arrayBuffer();
       var res = await fetch('/api/wizard/upload-photo?photo_type=founder', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + token,
-          'Content-Type': file.type,
+          'Content-Type': optimizedFile.type || file.type || 'image/jpeg',
         },
         body: buffer,
       });
 
-      if (!res.ok) throw new Error('Upload failed');
-      var data = await res.json();
+      var payload = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(payload.error || 'Upload failed');
+      var data = payload;
 
       wizardPhotos.unshift({
         id: data.id,
@@ -6611,24 +6700,21 @@
     var token = await getAuthToken();
     if (!token) return null;
 
-    if (file.size > 4 * 1024 * 1024) {
-      showToast(t('wiz_upload_too_large'), 'warning');
-      return null;
-    }
-
     try {
-      var buffer = await file.arrayBuffer();
+      var optimizedFile = await normalizeWizardPhotoUpload(file);
+      var buffer = await optimizedFile.arrayBuffer();
       var res = await fetch('/api/wizard/upload-photo?photo_type=service', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + token,
-          'Content-Type': file.type,
+          'Content-Type': optimizedFile.type || file.type || 'image/jpeg',
         },
         body: buffer,
       });
 
-      if (!res.ok) throw new Error('Upload failed');
-      var data = await res.json();
+      var payload = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(payload.error || 'Upload failed');
+      var data = payload;
 
       wizardPhotos.unshift({
         id: data.id,
@@ -6919,23 +7005,20 @@
 
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
-      if (!file.type.startsWith('image/')) continue;
-      if (file.size > 4 * 1024 * 1024) {
-        showToast(t('wiz_upload_too_large'), 'warning');
-        continue;
-      }
+      if (file.type && !file.type.startsWith('image/')) continue;
 
       if (uploadZone) uploadZone.classList.add('uploading');
 
       try {
-        var buffer = await file.arrayBuffer();
+        var optimizedFile = await normalizeWizardPhotoUpload(file);
+        var buffer = await optimizedFile.arrayBuffer();
 
         // Upload as menu photo
         var res = await fetch('/api/wizard/upload-photo?photo_type=menu', {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + token,
-            'Content-Type': file.type,
+            'Content-Type': optimizedFile.type || file.type || 'image/jpeg',
           },
           body: buffer,
         });
@@ -7360,24 +7443,19 @@
       var file = files[i];
 
       // Validate type
-      if (!file.type.startsWith('image/')) continue;
-
-      // Validate size (4MB)
-      if (file.size > 4 * 1024 * 1024) {
-        showToast(t('wiz_upload_too_large'), 'warning');
-        continue;
-      }
+      if (file.type && !file.type.startsWith('image/')) continue;
 
       if (uploadZone) uploadZone.classList.add('uploading');
 
       try {
-        var buffer = await file.arrayBuffer();
+        var optimizedFile = await normalizeWizardPhotoUpload(file);
+        var buffer = await optimizedFile.arrayBuffer();
 
         var res = await fetch('/api/wizard/upload-photo?photo_type=' + encodeURIComponent(photoType), {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + token,
-            'Content-Type': file.type,
+            'Content-Type': optimizedFile.type || file.type || 'image/jpeg',
           },
           body: buffer,
         });
