@@ -391,11 +391,30 @@ export async function generateResearchReport(businessData, name, language) {
  * Generate AI photos based on the photoAssetPlan.
  * Runs up to 3 in parallel with retry on failure.
  */
-export async function generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders) {
-  const plan = researchReport?.photoAssetPlan || [];
-  const aiSlots = plan.filter(p => p.recommendation === 'generate_ai' && p.aiPrompt);
+function readNonNegativeIntEnv(name, fallback) {
+  const value = Number.parseInt(process.env[name] || '', 10);
+  return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
 
-  if (aiSlots.length === 0) return [];
+function isTrueEnv(name) {
+  return ['1', 'true', 'yes', 'on'].includes(String(process.env[name] || '').trim().toLowerCase());
+}
+
+export async function generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders, options = {}) {
+  const plan = researchReport?.photoAssetPlan || [];
+  const allAiSlots = plan.filter(p => p.recommendation === 'generate_ai' && p.aiPrompt);
+  const existingPhotoCount = Number.isFinite(options.existingPhotoCount) ? options.existingPhotoCount : 0;
+  const minExistingPhotos = readNonNegativeIntEnv('AI_PHOTO_MIN_EXISTING_PHOTOS', 6);
+  const maxSlots = readNonNegativeIntEnv('AI_PHOTO_MAX_SLOTS', 6);
+
+  if (allAiSlots.length === 0 || maxSlots === 0) return [];
+
+  if (!isTrueEnv('AI_PHOTO_FORCE_GENERATION') && existingPhotoCount >= minExistingPhotos) {
+    console.log(`[WebsitePipeline] Skipping AI photos: ${existingPhotoCount} existing website photo(s) available`);
+    return [];
+  }
+
+  const aiSlots = allAiSlots.slice(0, maxSlots);
 
   const results = [];
 
@@ -822,7 +841,9 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
 
   // Generate AI photos
   console.log(`[WebsitePipeline] Generating AI photos...`);
-  const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders);
+  const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders, {
+    existingPhotoCount: photoInventory.length,
+  });
 
   // Add AI photos to inventory
   const sectionCounts = {};
