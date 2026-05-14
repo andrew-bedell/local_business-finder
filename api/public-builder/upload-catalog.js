@@ -1,5 +1,7 @@
 export const config = { api: { bodyParser: false } };
 
+import { optimizePhotoForStorage } from '../_lib/photo-optimize.js';
+
 function cleanBusinessId(value) {
   var raw = String(value || '').trim();
   return /^\d+$/.test(raw) ? raw : 'unassigned';
@@ -51,8 +53,17 @@ export default async function handler(req, res) {
       return res.status(413).json({ error: isPdf ? 'PDF too large. Maximum 10MB.' : 'Image too large. Maximum 4MB.' });
     }
 
+    var uploadBody = body;
+    var uploadContentType = contentType;
+    var optimized = null;
+    if (isImage) {
+      optimized = await optimizePhotoForStorage(body, { sourceContentType: contentType });
+      uploadBody = optimized.buffer;
+      uploadContentType = optimized.contentType;
+    }
+
     var businessId = cleanBusinessId(req.query.business_id || req.query.businessId);
-    var ext = extensionFor(contentType);
+    var ext = optimized ? optimized.extension : extensionFor(contentType);
     var suffix = Math.random().toString(36).slice(2, 10);
     var storagePath = 'public-builder/' + businessId + '/catalog-' + Date.now() + '-' + suffix + '.' + ext;
 
@@ -61,10 +72,10 @@ export default async function handler(req, res) {
       headers: {
         'apikey': serviceKey,
         'Authorization': 'Bearer ' + serviceKey,
-        'Content-Type': contentType,
+        'Content-Type': uploadContentType,
         'x-upsert': 'true'
       },
-      body: body
+      body: uploadBody
     });
 
     if (!uploadRes.ok) {
@@ -77,8 +88,12 @@ export default async function handler(req, res) {
     return res.status(200).json({
       public_url: publicUrl,
       storage_path: storagePath,
-      content_type: contentType,
-      file_type: isPdf ? 'pdf' : 'image'
+      content_type: uploadContentType,
+      file_type: isPdf ? 'pdf' : 'image',
+      original_size_bytes: optimized ? optimized.originalByteLength : body.length,
+      size_bytes: optimized ? optimized.byteLength : body.length,
+      width: optimized ? optimized.width : null,
+      height: optimized ? optimized.height : null
     });
   } catch (err) {
     console.error('public-builder/upload-catalog error:', err);

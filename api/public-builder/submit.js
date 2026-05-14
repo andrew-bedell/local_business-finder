@@ -412,6 +412,13 @@ export default async function handler(req, res) {
           photo_type: photo.photo_type || 'product',
           storage_path: photo.storage_path || null,
           url: photo.public_url || photo.url || null,
+          original_url: null,
+          content_type: photo.content_type || null,
+          byte_size: photo.size_bytes || photo.byte_size || null,
+          width: photo.width || null,
+          height: photo.height || null,
+          optimized_at: photo.content_type === 'image/webp' ? new Date().toISOString() : null,
+          is_website_eligible: photo.content_type === 'image/webp' && /\.webp$/i.test(String(photo.storage_path || '')),
           is_primary: index === 0
         };
       }).filter(function (row) {

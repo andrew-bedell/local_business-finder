@@ -219,6 +219,8 @@ export default async function handler(req, res) {
       storagePath: filePath,
       contentType: optimized.contentType,
       sizeBytes: optimized.byteLength,
+      width: optimized.width,
+      height: optimized.height,
     });
   } catch (err) {
     console.error('Photo generation error:', err);

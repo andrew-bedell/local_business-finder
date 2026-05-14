@@ -69,7 +69,9 @@ export default async function handler(req, res) {
       public_url: publicUrl,
       content_type: optimized.contentType,
       original_size_bytes: optimized.originalByteLength,
-      size_bytes: optimized.byteLength
+      size_bytes: optimized.byteLength,
+      width: optimized.width,
+      height: optimized.height
     });
   } catch (err) {
     console.error('public-builder/upload-photo error:', err);

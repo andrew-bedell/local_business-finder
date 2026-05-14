@@ -90,6 +90,13 @@ async function saveLogoPhoto(supabaseUrl, serviceKey, businessId, body) {
       photo_type: 'logo',
       storage_path: logo.storage_path || null,
       url: logoUrl,
+      original_url: null,
+      content_type: logo.content_type || null,
+      byte_size: logo.size_bytes || logo.byte_size || null,
+      width: logo.width || null,
+      height: logo.height || null,
+      optimized_at: logo.content_type === 'image/webp' ? new Date().toISOString() : null,
+      is_website_eligible: logo.content_type === 'image/webp' && /\.webp$/i.test(String(logo.storage_path || '')),
       caption: logo.label || null,
       is_primary: false
     })

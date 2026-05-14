@@ -100,6 +100,13 @@ export default async function handler(req, res) {
         photo_type: photoType,
         storage_path: storagePath,
         url: publicUrl,
+        original_url: null,
+        content_type: optimized.contentType,
+        byte_size: optimized.byteLength,
+        width: optimized.width,
+        height: optimized.height,
+        optimized_at: new Date().toISOString(),
+        is_website_eligible: true,
         is_primary: false,
       }),
     });
@@ -121,6 +128,8 @@ export default async function handler(req, res) {
       content_type: optimized.contentType,
       original_size_bytes: optimized.originalByteLength,
       size_bytes: optimized.byteLength,
+      width: optimized.width,
+      height: optimized.height,
     });
 
   } catch (err) {

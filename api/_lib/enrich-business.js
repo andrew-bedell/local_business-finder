@@ -2,7 +2,7 @@
 // from Google Places first, with SearchAPI fallback for socials/deeper reviews.
 
 import photoPersistModule from './photo-persist.js';
-const { persistPhotoFromRecord } = photoPersistModule;
+const { persistPhotoFromRecord, persistPhotoFromUrl } = photoPersistModule;
 let googlePlacesHelpersPromise = null;
 
 function getGooglePlacesHelpers() {
@@ -341,13 +341,15 @@ async function enrichPhotos({ businessId, placeId, dataId, googlePlacesApiKey, s
       });
       if (!photos.length) return { ok: true, photoCount: 0, provider: 'google_places' };
 
-      const photoRows = photos.map((photo, index) => ({
-        business_id: businessId,
-        source: 'google',
-        photo_type: photo.photoType || null,
-        url: photo.url,
-        is_primary: index === 0,
-      })).filter((row) => row.url);
+      const photoRows = await buildOptimizedGooglePhotoRows({
+        businessId,
+        photos: photos.map((photo) => ({
+          url: photo.url,
+          photoType: photo.photoType || null,
+        })),
+        supabaseUrl,
+      });
+      if (!photoRows.length) return { ok: true, photoCount: 0, provider: 'google_places' };
 
       const insertRes = await fetch(`${supabaseUrl}/rest/v1/business_photos`, {
         method: 'POST',
@@ -359,8 +361,7 @@ async function enrichPhotos({ businessId, placeId, dataId, googlePlacesApiKey, s
         throw new Error(`photo_insert_failed:${errText.substring(0, 120)}`);
       }
 
-      const insertedRows = await insertRes.json().catch(() => []);
-      await persistInsertedPhotos(insertedRows, supabaseUrl);
+      await insertRes.json().catch(() => []);
 
       return { ok: true, photoCount: photoRows.length, provider: 'google_places' };
     } catch (googleError) {
@@ -399,13 +400,14 @@ async function enrichPhotos({ businessId, placeId, dataId, googlePlacesApiKey, s
     if (c.category_id) categoryMap[c.category_id] = mapCategoryToPhotoType(c.name);
   }
 
-  const photoRows = photos.slice(0, 20).map((p, i) => ({
-    business_id: businessId,
-    source: 'google',
-    photo_type: null,  // Default photos don't have category, will be null
-    url: p.image || p.thumbnail || '',
-    is_primary: i === 0,
-  })).filter(r => r.url);
+  const photoRows = await buildOptimizedGooglePhotoRows({
+    businessId,
+    photos: photos.slice(0, 20).map((p) => ({
+      url: p.image || p.thumbnail || '',
+      photoType: null,
+    })),
+    supabaseUrl,
+  });
 
   if (photoRows.length === 0) return { ok: true, photoCount: 0 };
 
@@ -481,6 +483,37 @@ async function persistInsertedPhotos(insertedRows, supabaseUrl) {
   if (failed.length > 0) {
     console.warn(`Google photo persistence incomplete: ${failed.length}/${insertedRows.length} failed`);
   }
+}
+
+async function buildOptimizedGooglePhotoRows({ businessId, photos, supabaseUrl }) {
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseKey) throw new Error('missing_supabase_key_for_photo_persistence');
+
+  const rows = [];
+  const candidates = (photos || []).filter((photo) => photo?.url);
+
+  for (const [index, photo] of candidates.entries()) {
+    const result = await persistPhotoFromUrl({
+      businessId,
+      source: 'google',
+      photoType: photo.photoType || null,
+      url: photo.url,
+      supabaseUrl,
+      supabaseKey,
+    });
+
+    if (result?.success && result.row) {
+      rows.push({
+        ...result.row,
+        is_primary: rows.length === 0,
+      });
+    } else {
+      const message = result?.error || 'unknown_error';
+      console.warn(`Google photo optimization failed for photo ${index + 1}:`, message);
+    }
+  }
+
+  return rows;
 }
 
 /**

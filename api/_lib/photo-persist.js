@@ -1,5 +1,6 @@
 // Shared logic: download external photo → upload to Supabase Storage → update business_photos record
 
+const crypto = require('crypto');
 const { getPublicPhotoUrl, resolveStoredPhotoLocation } = require('./photo-urls.js');
 const { optimizePhotoForStorage } = require('./photo-optimize.js');
 
@@ -10,6 +11,32 @@ function withWebpExtension(storagePath, extension) {
     return path.replace(/\.[a-z0-9]+$/i, `.${extension}`);
   }
   return `${path}.${extension}`;
+}
+
+function isWebpStoragePath(storagePath) {
+  return /\.webp$/i.test(String(storagePath || '').split('?')[0]);
+}
+
+function buildPhotoStoragePath({ businessId, source, photoType, idPrefix, extension }) {
+  const cleanBusinessId = String(businessId || 'unassigned').replace(/[^a-z0-9-_]/gi, '-');
+  const cleanSource = String(source || 'photo').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
+  const cleanType = String(photoType || 'photo').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
+  const cleanId = String(idPrefix || crypto.randomUUID()).replace(/[^a-z0-9-_]/gi, '').substring(0, 12);
+  return `${cleanBusinessId}/${cleanSource}-${cleanType}-${cleanId}.${extension}`;
+}
+
+function buildPhotoRecordMetadata({ originalUrl, publicUrl, storagePath, optimized }) {
+  return {
+    original_url: originalUrl || null,
+    storage_path: storagePath,
+    url: publicUrl,
+    content_type: optimized.contentType,
+    byte_size: optimized.byteLength,
+    width: optimized.width,
+    height: optimized.height,
+    optimized_at: new Date().toISOString(),
+    is_website_eligible: true,
+  };
 }
 
 /**
@@ -23,10 +50,10 @@ function withWebpExtension(storagePath, extension) {
  * @param {boolean} [params.forceOptimize] - Reprocess already-persisted photos into optimized WebP
  * @returns {Promise<{success: boolean, storagePath?: string, publicUrl?: string, skipped?: boolean, error?: string}>}
  */
-async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceOptimize = false }) {
+async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceOptimize = false, updateRecord = true }) {
   try {
-    // Skip if already persisted or URL is already Supabase Storage
-    if (record.storage_path && !forceOptimize) {
+    // Skip only when the canonical persisted asset is already optimized WebP.
+    if (record.storage_path && isWebpStoragePath(record.storage_path) && !forceOptimize) {
       return { success: true, skipped: true };
     }
 
@@ -39,7 +66,7 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceO
       ? getPublicPhotoUrl(supabaseUrl, storedLocation.storagePath, storedLocation.bucket)
       : record.url;
 
-    if (!sourceUrl || (!forceOptimize && sourceUrl.includes(supabaseUrl))) {
+    if (!sourceUrl) {
       return { success: true, skipped: true };
     }
 
@@ -76,7 +103,13 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceO
     const idPrefix = String(record.id || '').substring(0, 8) || Date.now().toString(36);
     const storagePath = record.storage_path
       ? withWebpExtension(record.storage_path, optimized.extension)
-      : `${record.business_id}/${source}-${photoType}-${idPrefix}.${optimized.extension}`;
+      : buildPhotoStoragePath({
+          businessId: record.business_id,
+          source,
+          photoType,
+          idPrefix,
+          extension: optimized.extension,
+        });
     const publicUrl = getPublicPhotoUrl(supabaseUrl, storagePath);
 
     // Upload normalized WebP to Supabase Storage.
@@ -96,27 +129,7 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceO
       return { success: false, error: `Storage upload failed: ${uploadRes.status} ${errText.substring(0, 200)}` };
     }
 
-    // Update the business_photos record with storage_path
-    const patchRes = await fetch(
-      `${supabaseUrl}/rest/v1/business_photos?id=eq.${record.id}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
-          'apikey': supabaseKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal',
-        },
-        body: JSON.stringify({ storage_path: storagePath, url: publicUrl }),
-      }
-    );
-
-    if (!patchRes.ok) {
-      const errText = await patchRes.text();
-      return { success: false, error: `DB update failed: ${patchRes.status} ${errText.substring(0, 200)}` };
-    }
-
-    return {
+    const result = {
       success: true,
       storagePath,
       publicUrl,
@@ -127,10 +140,97 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceO
       width: optimized.width,
       height: optimized.height,
       quality: optimized.quality,
+      contentType: optimized.contentType,
+      optimizedAt: new Date().toISOString(),
     };
+
+    if (!updateRecord) {
+      return result;
+    }
+
+    // Update the business_photos record with canonical WebP metadata.
+    const patchRes = await fetch(
+      `${supabaseUrl}/rest/v1/business_photos?id=eq.${record.id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': supabaseKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify(buildPhotoRecordMetadata({
+          originalUrl: record.original_url || record.url || null,
+          publicUrl,
+          storagePath,
+          optimized,
+        })),
+      }
+    );
+
+    if (!patchRes.ok) {
+      const errText = await patchRes.text();
+      return { success: false, error: `DB update failed: ${patchRes.status} ${errText.substring(0, 200)}` };
+    }
+
+    return result;
   } catch (err) {
     return { success: false, error: err.message || String(err) };
   }
 }
 
-module.exports = { persistPhotoFromRecord, getPublicPhotoUrl };
+async function persistPhotoFromUrl({
+  businessId,
+  source,
+  photoType,
+  url,
+  supabaseUrl,
+  supabaseKey,
+  idPrefix,
+}) {
+  const record = {
+    id: idPrefix || crypto.randomUUID(),
+    business_id: businessId,
+    source,
+    photo_type: photoType,
+    url,
+    original_url: url,
+    storage_path: null,
+  };
+
+  const result = await persistPhotoFromRecord({
+    record,
+    supabaseUrl,
+    supabaseKey,
+    forceOptimize: true,
+    updateRecord: false,
+  });
+
+  if (!result.success) return result;
+
+  return {
+    ...result,
+    row: {
+      business_id: businessId,
+      source,
+      photo_type: photoType || null,
+      url: result.publicUrl,
+      storage_path: result.storagePath,
+      original_url: url,
+      content_type: 'image/webp',
+      byte_size: result.optimizedBytes,
+      width: result.width,
+      height: result.height,
+      optimized_at: result.optimizedAt,
+      is_website_eligible: true,
+    },
+  };
+}
+
+module.exports = {
+  buildPhotoRecordMetadata,
+  getPublicPhotoUrl,
+  isWebpStoragePath,
+  persistPhotoFromRecord,
+  persistPhotoFromUrl,
+};

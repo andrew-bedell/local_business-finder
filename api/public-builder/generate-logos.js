@@ -1,5 +1,7 @@
 export const config = { maxDuration: 120 };
 
+import { optimizePhotoForStorage } from '../_lib/photo-optimize.js';
+
 function cleanText(value, maxLength) {
   return String(value || '').trim().slice(0, maxLength);
 }
@@ -26,17 +28,21 @@ function buildLogoPrompt(body) {
 }
 
 async function uploadLogo({ supabaseUrl, serviceKey, buffer, index }) {
+  var optimized = await optimizePhotoForStorage(buffer, {
+    sourceContentType: 'image/png',
+    maxBytes: process.env.LOGO_WEBP_MAX_BYTES || 80 * 1024
+  });
   var suffix = Math.random().toString(36).slice(2, 10);
-  var storagePath = 'public-builder/generated-logos/logo-' + Date.now() + '-' + index + '-' + suffix + '.png';
+  var storagePath = 'public-builder/generated-logos/logo-' + Date.now() + '-' + index + '-' + suffix + '.' + optimized.extension;
   var uploadRes = await fetch(supabaseUrl + '/storage/v1/object/photos/' + storagePath, {
     method: 'POST',
     headers: {
       apikey: serviceKey,
       Authorization: 'Bearer ' + serviceKey,
-      'Content-Type': 'image/png',
+      'Content-Type': optimized.contentType,
       'x-upsert': 'true'
     },
-    body: buffer
+    body: optimized.buffer
   });
 
   if (!uploadRes.ok) {
@@ -47,7 +53,10 @@ async function uploadLogo({ supabaseUrl, serviceKey, buffer, index }) {
   return {
     public_url: supabaseUrl + '/storage/v1/object/public/photos/' + storagePath,
     storage_path: storagePath,
-    content_type: 'image/png'
+    content_type: optimized.contentType,
+    size_bytes: optimized.byteLength,
+    width: optimized.width,
+    height: optimized.height
   };
 }
 
