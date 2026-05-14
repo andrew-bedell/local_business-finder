@@ -1,5 +1,7 @@
 export const config = { api: { bodyParser: false } };
 
+import { optimizePhotoForStorage } from '../_lib/photo-optimize.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -38,23 +40,20 @@ export default async function handler(req, res) {
       return res.status(413).json({ error: 'Image too large. Maximum 4MB.' });
     }
 
-    var ext = 'jpg';
-    if (contentType.indexOf('png') !== -1) ext = 'png';
-    if (contentType.indexOf('webp') !== -1) ext = 'webp';
-    if (contentType.indexOf('svg+xml') !== -1) ext = 'svg';
+    var optimized = await optimizePhotoForStorage(body, { sourceContentType: contentType });
 
     var suffix = Math.random().toString(36).slice(2, 10);
-    var storagePath = 'public-builder/' + Date.now() + '-' + suffix + '-' + photoType + '.' + ext;
+    var storagePath = 'public-builder/' + Date.now() + '-' + suffix + '-' + photoType + '.' + optimized.extension;
 
     var uploadRes = await fetch(supabaseUrl + '/storage/v1/object/photos/' + storagePath, {
       method: 'POST',
       headers: {
         'apikey': serviceKey,
         'Authorization': 'Bearer ' + serviceKey,
-        'Content-Type': contentType,
+        'Content-Type': optimized.contentType,
         'x-upsert': 'true'
       },
-      body: body
+      body: optimized.buffer
     });
 
     if (!uploadRes.ok) {
@@ -67,7 +66,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       photo_type: photoType,
       storage_path: storagePath,
-      public_url: publicUrl
+      public_url: publicUrl,
+      content_type: optimized.contentType,
+      original_size_bytes: optimized.originalByteLength,
+      size_bytes: optimized.byteLength
     });
   } catch (err) {
     console.error('public-builder/upload-photo error:', err);

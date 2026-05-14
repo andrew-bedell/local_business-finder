@@ -9,6 +9,10 @@ import {
   inferPresetFromSection,
   resolveStoredPhotoLocation,
 } from './photo-urls.js';
+import {
+  analyzeHeroPhotoCandidates,
+  analyzeHeroPhotoSuitability,
+} from './photo-suitability.js';
 
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
 const INTERNAL_SERVICE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -24,13 +28,44 @@ function isProductLedBusiness(business) {
   return businessType === 'retail' || businessType === 'furniture';
 }
 
+function requiresCleanTextScan(photo) {
+  return ['google', 'google_places', 'ai_generated'].includes(String(photo?.source || '').toLowerCase());
+}
+
 export function filterWebsitePhotos(photos) {
   return (photos || []).filter((photo) => {
     if (!photo) return false;
     if (!(photo.url || photo.storage_path)) return false;
     if (photo.has_text_overlay === true) return false;
+    if (requiresCleanTextScan(photo) && photo.has_text_overlay !== false) return false;
     return true;
   });
+}
+
+export function hasUnscannedWebsitePhotos(photos) {
+  return (photos || []).some((photo) => (
+    photo &&
+    (photo.url || photo.storage_path) &&
+    photo.has_text_overlay == null &&
+    requiresCleanTextScan(photo)
+  ));
+}
+
+export async function scanPhotoTextOverlaysForBusiness(businessId) {
+  if (!businessId) return { scanned: 0, flagged: 0, skipped: true };
+
+  const resp = await fetch(`${API_BASE}/api/photos/scan-text`, {
+    method: 'POST',
+    headers: getInternalApiHeaders(),
+    body: JSON.stringify({ businessId }),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '');
+    throw new Error(`Photo text scan failed (${resp.status}): ${text.substring(0, 200)}`);
+  }
+
+  return resp.json();
 }
 
 function buildOptimizedRecordPhotoUrl(photo, supabaseUrl, preset = 'card') {
@@ -251,6 +286,25 @@ export function buildPhotoInventory(photos, supabaseUrl) {
       preset: 'section',
     }),
   }));
+}
+
+function isHeroPhotoSlot(section, slot = '') {
+  return /(hero|cover|banner)/i.test(`${section || ''} ${slot || ''}`);
+}
+
+function getPhotoKey(photo) {
+  return photo?.id || photo?.storagePath || photo?.originalUrl || photo?.url || '';
+}
+
+function attachSuitabilityToManifestItem(item, suitability) {
+  if (!suitability) return item;
+  return {
+    ...item,
+    objectPosition: suitability.objectPosition || null,
+    desktopPosition: suitability.desktopPosition || suitability.objectPosition || null,
+    mobilePosition: suitability.mobilePosition || suitability.objectPosition || null,
+    heroSuitability: suitability,
+  };
 }
 
 
@@ -497,6 +551,136 @@ export function buildPhotoManifest(photoAssetPlan, photoInventory, supabaseUrl) 
   return manifest;
 }
 
+/**
+ * Build a photo manifest with hero-image suitability scoring.
+ * Hero slots prefer images that survive both the 1440x720 desktop crop and a
+ * narrow mobile crop, and carry object-position hints into the design engine.
+ */
+export async function buildPhotoManifestWithSuitability(photoAssetPlan, photoInventory, supabaseUrl, options = {}) {
+  const usedPhotoKeys = new Set();
+  const manifest = [];
+  const suitabilityByKey = new Map();
+  const candidateLimit = options.maxHeroCandidates || 12;
+  const scoreThreshold = options.heroScoreThreshold || 48;
+
+  const heroAnalyses = await analyzeHeroPhotoCandidates(photoInventory || [], {
+    supabaseUrl,
+    maxHeroCandidates: candidateLimit,
+    concurrency: options.concurrency || 4,
+    timeoutMs: options.timeoutMs || 6000,
+    maxBytes: options.maxBytes || 10 * 1024 * 1024,
+  });
+
+  heroAnalyses.forEach(({ photo, suitability }) => {
+    const key = getPhotoKey(photo);
+    if (key) suitabilityByKey.set(key, suitability);
+  });
+
+  async function getSuitability(photo) {
+    const key = getPhotoKey(photo);
+    if (!key) return null;
+    if (suitabilityByKey.has(key)) return suitabilityByKey.get(key);
+    const suitability = await analyzeHeroPhotoSuitability(photo, {
+      supabaseUrl,
+      timeoutMs: options.timeoutMs || 6000,
+      maxBytes: options.maxBytes || 10 * 1024 * 1024,
+    });
+    suitabilityByKey.set(key, suitability);
+    return suitability;
+  }
+
+  function bestUnusedHeroPhoto() {
+    const usable = heroAnalyses.find(({ photo, suitability }) => {
+      const key = getPhotoKey(photo);
+      return key && !usedPhotoKeys.has(key) && suitability?.usable && suitability.score >= scoreThreshold;
+    });
+    if (usable) return usable.photo;
+
+    const bestAvailable = heroAnalyses.find(({ photo }) => {
+      const key = getPhotoKey(photo);
+      return key && !usedPhotoKeys.has(key);
+    });
+    return bestAvailable?.photo || photoInventory?.[0] || null;
+  }
+
+  async function buildManifestItem(item, selectedPhoto, preset, suitability = null) {
+    if (!selectedPhoto) return null;
+    const url = getOptimizedPhotoUrl({
+      url: selectedPhoto.originalUrl || selectedPhoto.url,
+      storagePath: selectedPhoto.storagePath,
+      bucket: selectedPhoto.bucket,
+      supabaseUrl,
+      preset,
+    }) || selectedPhoto.url;
+
+    if (!url) return null;
+
+    const selectedKey = getPhotoKey(selectedPhoto);
+    if (selectedKey) usedPhotoKeys.add(selectedKey);
+
+    const manifestItem = {
+      bucket: selectedPhoto.bucket || null,
+      section: item.section,
+      slot: item.slot,
+      storagePath: selectedPhoto.storagePath || null,
+      url,
+    };
+
+    return isHeroPhotoSlot(item.section, item.slot)
+      ? attachSuitabilityToManifestItem(manifestItem, suitability || await getSuitability(selectedPhoto))
+      : manifestItem;
+  }
+
+  if ((!photoAssetPlan || photoAssetPlan.length === 0) && photoInventory && photoInventory.length > 0) {
+    const fallback = bestUnusedHeroPhoto();
+    const suitability = fallback ? await getSuitability(fallback) : null;
+    const fallbackItem = await buildManifestItem(
+      { section: 'hero', slot: 'fallback' },
+      fallback,
+      'hero',
+      suitability
+    );
+    return fallbackItem ? [fallbackItem] : [];
+  }
+
+  for (const item of photoAssetPlan || []) {
+    let selectedPhoto = null;
+
+    if (item.recommendation === 'use_existing' && item.existingPhotoId) {
+      selectedPhoto = photoInventory.find(p => p.id === item.existingPhotoId) || null;
+    }
+
+    if (!selectedPhoto && item.recommendation === 'generate_ai') {
+      const section = (item.section || '').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      selectedPhoto = photoInventory.find(p => p.id.startsWith(`ai_${section}_`)) || null;
+    }
+
+    if (isHeroPhotoSlot(item.section, item.slot)) {
+      const plannedSuitability = selectedPhoto ? await getSuitability(selectedPhoto) : null;
+      if (!plannedSuitability?.usable || plannedSuitability.score < scoreThreshold) {
+        const betterPhoto = bestUnusedHeroPhoto();
+        if (betterPhoto) selectedPhoto = betterPhoto;
+      }
+    }
+
+    if (!selectedPhoto) {
+      selectedPhoto = photoInventory.find((p) => {
+        const key = getPhotoKey(p);
+        return !usedPhotoKeys.has(key);
+      }) || photoInventory[0] || null;
+    }
+
+    const manifestItem = await buildManifestItem(
+      item,
+      selectedPhoto,
+      inferPresetFromSection(item.section, item.slot)
+    );
+    if (manifestItem) manifest.push(manifestItem);
+  }
+
+  return manifest;
+}
+
 
 /**
  * Fetch enriched business data (reviews, photos, social profiles, menus, services) in parallel.
@@ -550,8 +734,21 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   const { autoGenerated = false } = options;
   const businessId = business.id;
 
-  // Fetch enriched data
-  const { reviews, photos, websitePhotos, socialProfiles, menus, services } = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+  // Fetch enriched data. Scan Google/AI images for text before any website photo selection.
+  let enriched = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+  if (hasUnscannedWebsitePhotos(enriched.photos)) {
+    try {
+      const scanResult = await scanPhotoTextOverlaysForBusiness(businessId);
+      if (scanResult.flagged > 0) {
+        console.log(`[WebsitePipeline] Flagged ${scanResult.flagged}/${scanResult.scanned} text-heavy photo(s) for ${business.name}`);
+      }
+      enriched = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+    } catch (err) {
+      console.warn('[WebsitePipeline] Photo text scan failed; unscanned Google/AI photos will be excluded:', err.message);
+    }
+  }
+
+  const { reviews, photos, websitePhotos, socialProfiles, menus, services } = enriched;
 
   // Auto-parse menu photos if we have menu photos but no menu items yet
   if (menus.length === 0) {
@@ -644,7 +841,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
   });
 
   // Build photo manifest
-  const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
+  const photoManifest = await buildPhotoManifestWithSuitability(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
 
   // Write content
   console.log(`[WebsitePipeline] Writing website content...`);
@@ -658,6 +855,7 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
       language,
       category: business.category || '',
       subcategory: business.subcategory || '',
+      country: business.address_country || '',
     }),
   });
   if (!writeContentRes.ok) {
@@ -677,7 +875,15 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
     body: JSON.stringify({
       websiteContent,
       designPalette: researchReport.designPalette || {},
-      photoManifest: (photoManifest || []).map(p => ({ section: p.section, slot: p.slot, url: p.url })),
+      photoManifest: (photoManifest || []).map(p => ({
+        section: p.section,
+        slot: p.slot,
+        url: p.url,
+        objectPosition: p.objectPosition || null,
+        desktopPosition: p.desktopPosition || null,
+        mobilePosition: p.mobilePosition || null,
+        heroSuitability: p.heroSuitability || null,
+      })),
       name: business.name,
       language,
       category: business.category || '',
@@ -685,6 +891,15 @@ export async function generateWebsiteForBusiness(business, supabaseUrl, supabase
       phone: business.phone || '',
       whatsapp: business.whatsapp || '',
       address: business.address_full || '',
+      city: business.address_city || '',
+      state: business.address_state || '',
+      country: business.address_country || '',
+      hours: business.hours || [],
+      rating: business.rating || null,
+      reviewCount: business.review_count || null,
+      paymentMethods: business.payment_methods || [],
+      highlights: business.highlights || [],
+      serviceOptions: business.service_options || [],
       mapsUrl: business.maps_url || '',
       socialProfiles: socialProfiles.map(sp => ({ platform: sp.platform, url: sp.profile_url })),
       menuItems: menus.map(m => ({ category: m.menu_category, name: m.item_name, description: m.item_description, price: m.price, currency: m.currency })),

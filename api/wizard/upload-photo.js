@@ -5,6 +5,7 @@
 export const config = { api: { bodyParser: false } };
 
 import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+import { optimizePhotoForStorage } from '../_lib/photo-optimize.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -54,15 +55,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Empty body' });
     }
 
-    // Determine file extension
-    let ext = 'jpg';
-    if (contentType.includes('png')) ext = 'png';
-    else if (contentType.includes('webp')) ext = 'webp';
-    else if (contentType.includes('gif')) ext = 'gif';
+    const optimized = await optimizePhotoForStorage(body, { sourceContentType: contentType });
 
     // Generate unique ID for the photo
     const uuid8 = Math.random().toString(36).substring(2, 10);
-    const storagePath = `${businessId}/customer_upload-${photoType}-${uuid8}.${ext}`;
+    const storagePath = `${businessId}/customer_upload-${photoType}-${uuid8}.${optimized.extension}`;
 
     const supabaseHeaders = {
       'apikey': serviceKey,
@@ -74,10 +71,10 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         ...supabaseHeaders,
-        'Content-Type': contentType,
+        'Content-Type': optimized.contentType,
         'x-upsert': 'true',
       },
-      body,
+      body: optimized.buffer,
     });
 
     if (!uploadRes.ok) {
@@ -121,6 +118,9 @@ export default async function handler(req, res) {
       photo_type: photoType,
       public_url: publicUrl,
       storage_path: storagePath,
+      content_type: optimized.contentType,
+      original_size_bytes: optimized.originalByteLength,
+      size_bytes: optimized.byteLength,
     });
 
   } catch (err) {

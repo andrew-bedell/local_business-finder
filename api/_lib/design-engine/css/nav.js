@@ -19,6 +19,83 @@ export function getNavCSS() {
       backdrop-filter: blur(12px);
     }
 
+    .local-utility-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1002;
+      background: rgba(255,255,255,0.96);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      color: var(--color-text);
+      backdrop-filter: blur(12px);
+    }
+
+    .local-utility-bar__inner {
+      max-width: 1200px;
+      min-height: 36px;
+      margin: 0 auto;
+      padding: 0 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .local-utility-bar__inner span,
+    .local-utility-bar__inner a {
+      color: var(--color-text);
+      text-decoration: none;
+    }
+
+    .local-utility-bar__inner span:not(:last-child)::after,
+    .local-utility-bar__inner a:not(:last-child)::after {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 3px;
+      margin-left: 0.85rem;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.28);
+      vertical-align: middle;
+    }
+
+    .site-nav--local {
+      top: 36px;
+      padding: 0.85rem 0;
+      background: rgba(26, 23, 20, 0.76);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(14px);
+    }
+
+    .site-nav--local.scrolled {
+      top: 36px;
+      padding: 0.72rem 0;
+      background: rgba(26, 23, 20, 0.95);
+    }
+
+    .site-nav--local .site-nav__primary,
+    .site-nav--local .hamburger {
+      mix-blend-mode: normal;
+    }
+
+    .site-nav--local .site-nav__logo {
+      font-size: clamp(1rem, 0.82rem + 0.5vw, 1.25rem);
+    }
+
+    .site-nav--local .site-nav__links {
+      gap: clamp(0.8rem, 1.25vw, 1.7rem);
+    }
+
+    .site-nav--local .site-nav__links a,
+    .site-nav--local .site-nav__cta {
+      letter-spacing: 0.08em;
+    }
+
     .site-nav__inner {
       max-width: 1200px;
       margin: 0 auto;

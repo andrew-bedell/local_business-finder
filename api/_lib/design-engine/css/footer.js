@@ -106,6 +106,7 @@ export function getFooterCSS() {
     /* Sticky CTA rail */
     .sticky-cta-spacer {
       height: 88px;
+      display: none;
     }
 
     .sticky-cta-bar {
@@ -117,6 +118,7 @@ export function getFooterCSS() {
       padding: 1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
       background: linear-gradient(180deg, rgba(247,243,238,0) 0%, rgba(247,243,238,0.92) 24%, rgba(247,243,238,0.98) 100%);
       backdrop-filter: blur(12px);
+      display: none;
     }
 
     .sticky-cta-bar__inner {
@@ -125,6 +127,10 @@ export function getFooterCSS() {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 0.75rem;
+    }
+
+    .sticky-cta-bar--local .sticky-cta-bar__inner {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .sticky-cta-btn {

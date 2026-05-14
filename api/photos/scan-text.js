@@ -32,8 +32,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'businessId required' });
   }
 
-  const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
-  if (!session) return;
+  const internalKey = req.headers['x-internal-service-key'] || '';
+  const authHeader = req.headers.authorization || req.headers.Authorization || '';
+  const isInternalRequest = supabaseKey && (
+    internalKey === supabaseKey ||
+    authHeader === `Bearer ${supabaseKey}`
+  );
+
+  if (!isInternalRequest) {
+    const session = await ensureEmployeeSession(req, res, { supabaseUrl, serviceKey: supabaseKey });
+    if (!session) return;
+  }
 
   try {
     // Fetch photos that haven't been scanned yet and have accessible URLs
@@ -110,22 +119,7 @@ export default async function handler(req, res) {
         }));
       } catch (err) {
         console.warn(`Batch scan error (batch starting at ${i}):`, err.message);
-        // Mark batch as scanned with false to avoid re-scanning on retry
-        await Promise.all(batch.map(async (photo) => {
-          try {
-            await fetch(`${supabaseUrl}/rest/v1/business_photos?id=eq.${photo.id}`, {
-              method: 'PATCH',
-              headers: {
-                'Authorization': `Bearer ${supabaseKey}`,
-                'apikey': supabaseKey,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal',
-              },
-              body: JSON.stringify({ has_text_overlay: false }),
-            });
-            scanned++;
-          } catch {}
-        }));
+        errors.push({ batchStart: i, error: err.message });
       }
     }
 
@@ -178,9 +172,7 @@ async function scanBatch(photos, apiKey) {
 
   // Filter out failed downloads
   const valid = downloads.filter(d => d.img);
-  if (valid.length === 0) {
-    return photos.map(p => ({ id: p.id, hasText: false }));
-  }
+  if (valid.length === 0) return [];
 
   // Build Claude message content
   const content = [];
@@ -201,9 +193,13 @@ async function scanBatch(photos, apiKey) {
 
   content.push({
     type: 'text',
-    text: `For each image above, determine if it has significant text overlays — promotional text, sale/discount announcements, event dates, decorative large text, price tags, menus overlaid on the image, hashtags, or any added text that covers a meaningful portion of the image and could interfere with website text placement or contain outdated information.
+    text: `For each image above, determine if it is text-heavy for website use. Flag images with significant visible text that could interfere with website text placement, reduce readability as a background, or contain outdated information.
 
-Things that do NOT count as text overlays: business name signs naturally visible in the scene, small subtle watermarks, text on products (like labels), or street signs.
+Count these as text-heavy: promotional text, sale/discount announcements, event dates, decorative large text, price tags, menu boards, posters/flyers, screenshots, social-media graphics, dense product packaging/labels, dense shelf tags, large storefront signs, hours/phone signs, QR-code signs, hashtags, or any readable text covering a meaningful portion of the image.
+
+Do NOT count: tiny incidental street signs, tiny subtle watermarks, or a few small product labels that do not visually dominate the image.
+
+Err on the side of flagging the image when it would be distracting behind website copy or might show stale information.
 
 Respond with ONLY a JSON array, no other text: [{"id": "the_photo_id", "has_text": true}] — include only photos that HAVE text overlays. Omit photos that are clean.`,
   });
@@ -240,13 +236,13 @@ Respond with ONLY a JSON array, no other text: [{"id": "the_photo_id", "has_text
       for (const item of parsed) {
         if (item.has_text === true) flaggedIds.add(item.id);
       }
-    } catch {
-      // If parsing fails, assume no text overlays
+    } catch (err) {
+      throw new Error(`Failed to parse Claude text-overlay response: ${err.message}`);
     }
   }
 
-  // Build results: flagged photos get true, all others get false
-  return photos.map(p => ({
+  // Build results: successfully scanned photos get true/false; failed downloads stay unscanned.
+  return valid.map(p => ({
     id: p.id,
     hasText: flaggedIds.has(p.id),
   }));

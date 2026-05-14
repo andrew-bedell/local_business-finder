@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Anthropic API key not configured' });
   }
 
-  const { researchReport, businessData: rawBusinessData, photoManifest, language, category, subcategory } = req.body || {};
+  const { researchReport, businessData: rawBusinessData, photoManifest, language, category, subcategory, country } = req.body || {};
 
   if (!researchReport || !rawBusinessData) {
     return res.status(400).json({ error: 'Missing required fields: researchReport, businessData' });
@@ -40,6 +40,16 @@ export default async function handler(req, res) {
 
   const langName = language === 'es' ? 'Spanish' : 'English';
   const cat = (category || '').toLowerCase();
+  const countryCode = String(country || '').toUpperCase();
+  const isLocalLatam = countryCode === 'MX' || countryCode === 'CO' || /\b(MX|CO|Mexico|México|Colombia)\b/i.test(businessData);
+  const localLatamInstructions = isLocalLatam ? `
+- LOCAL LATAM MODE: Use direct, local Spanish. Avoid vague corporate phrases.
+- Put practical information early in the copy: what they sell/do, city or area, WhatsApp/contact, hours, services/products/menu, reviews, and location.
+- Headlines should usually include the business category plus city/region when known.
+- Use country-aware wording when supported by data:
+  - Mexico: Cotiza por WhatsApp, cómo llegar, precios en MXN, facturamos only if supported.
+  - Colombia: Agenda tu cita, domicilios disponibles, PBX, precios en COP, pago contra entrega only if supported.
+- Do not invent claims such as 24/7, warranty, free delivery, years of experience, payment methods, or ratings unless they appear in the data.` : '';
 
   // Build category-specific schema additions
   let categorySchema = '';
@@ -188,6 +198,7 @@ CRITICAL RULES:
   - Services language for appointment-based and professional businesses
   - Products language for retail, boutiques, furniture, jewelry, clothing, and stores
 - If pricing is available anywhere in the data, surface it in the offer section instead of hiding it deep in the page
+${localLatamInstructions}
 
 Respond with ONLY valid JSON (no markdown fences, no extra text) matching this schema:
 {
