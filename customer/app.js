@@ -2965,6 +2965,25 @@
     }, 4000);
   }
 
+  function getErrorMessage(err, fallback) {
+    if (!err) return fallback || 'Error desconocido.';
+    if (typeof err === 'string') return err;
+    if (err.message) return err.message;
+    return fallback || 'Error desconocido.';
+  }
+
+  function showUploadErrorPopup(contextLabel, err, fallback) {
+    var message = getErrorMessage(err, fallback || 'No se pudo completar la carga.');
+    var prefix = contextLabel ? ('Error al subir ' + contextLabel + ': ') : 'Error: ';
+    var fullMessage = prefix + message;
+    showToast(fullMessage, 'error');
+    window.alert(fullMessage);
+  }
+
+  function copySelectedFiles(fileList) {
+    return Array.prototype.slice.call(fileList || []);
+  }
+
   // ── Domain Management ──
   function renderDomainCard(website) {
     var card = $('#domain-card');
@@ -6651,7 +6670,10 @@
 
   async function uploadFounderPhoto(file) {
     var token = await getAuthToken();
-    if (!token) return;
+    if (!token) {
+      showUploadErrorPopup('la foto', 'Tu sesión expiró o no se pudo validar. Recarga la página e inicia sesión de nuevo.');
+      return;
+    }
 
     try {
       var optimizedFile = await normalizeWizardPhotoUpload(file);
@@ -6677,7 +6699,7 @@
       });
 
       var payload = await res.json().catch(function () { return {}; });
-      if (!res.ok) throw new Error(payload.error || 'Upload failed');
+      if (!res.ok) throw new Error((payload.error || 'Upload failed') + ' (HTTP ' + res.status + ')');
       var data = payload;
 
       wizardPhotos.unshift({
@@ -6692,13 +6714,16 @@
       renderFounderPhoto();
     } catch (err) {
       console.error('Founder photo upload error:', err);
-      showToast(t('wiz_upload_error'), 'error');
+      showUploadErrorPopup('la foto del fundador', err, t('wiz_upload_error'));
     }
   }
 
   async function uploadServicePhoto(file) {
     var token = await getAuthToken();
-    if (!token) return null;
+    if (!token) {
+      showUploadErrorPopup('la foto', 'Tu sesión expiró o no se pudo validar. Recarga la página e inicia sesión de nuevo.');
+      return null;
+    }
 
     try {
       var optimizedFile = await normalizeWizardPhotoUpload(file);
@@ -6713,7 +6738,7 @@
       });
 
       var payload = await res.json().catch(function () { return {}; });
-      if (!res.ok) throw new Error(payload.error || 'Upload failed');
+      if (!res.ok) throw new Error((payload.error || 'Upload failed') + ' (HTTP ' + res.status + ')');
       var data = payload;
 
       wizardPhotos.unshift({
@@ -6728,7 +6753,7 @@
       return { id: data.id, url: data.public_url };
     } catch (err) {
       console.error('Service photo upload error:', err);
-      showToast(t('wiz_upload_error'), 'error');
+      showUploadErrorPopup('la foto del servicio', err, t('wiz_upload_error'));
       return null;
     }
   }
@@ -6813,7 +6838,10 @@
 
   async function handleCatalogUpload(files) {
     var token = await getAuthToken();
-    if (!token) return;
+    if (!token) {
+      showUploadErrorPopup('el catálogo', 'Tu sesión expiró o no se pudo validar. Recarga la página e inicia sesión de nuevo.');
+      return;
+    }
 
     var uploadZone = document.getElementById('wiz-catalog-upload-zone');
     var parsingEl = document.getElementById('wiz-catalog-parsing');
@@ -6900,7 +6928,7 @@
         }
       } catch (err) {
         console.error('Catalog upload/parse error:', err);
-        showToast('Error al procesar el catálogo', 'error');
+        showUploadErrorPopup('el catálogo', err, 'Error al procesar el catálogo');
       }
     }
 
@@ -6998,7 +7026,10 @@
 
   async function handleMenuPhotoUpload(files) {
     var token = await getAuthToken();
-    if (!token) return;
+    if (!token) {
+      showUploadErrorPopup('la foto del menú', 'Tu sesión expiró o no se pudo validar. Recarga la página e inicia sesión de nuevo.');
+      return;
+    }
 
     var uploadZone = document.getElementById('wiz-menu-upload-zone');
     var parsingEl = document.getElementById('wiz-menu-parsing');
@@ -7025,7 +7056,7 @@
 
         if (!res.ok) {
           var errData = await res.json().catch(function () { return {}; });
-          throw new Error(errData.error || 'Upload failed');
+          throw new Error((errData.error || 'Upload failed') + ' (HTTP ' + res.status + ')');
         }
 
         var data = await res.json();
@@ -7086,7 +7117,7 @@
         }
       } catch (err) {
         console.error('Menu photo upload/parse error:', err);
-        showToast('Error al subir la foto del menú', 'error');
+        showUploadErrorPopup('la foto del menú', err, 'Error al subir la foto del menú');
       }
     }
 
@@ -7184,8 +7215,9 @@
 
       photoInput.addEventListener('change', function () {
         if (photoInput.files && photoInput.files.length > 0) {
-          handleWizardPhotoUpload(photoInput.files);
+          var selectedFiles = copySelectedFiles(photoInput.files);
           photoInput.value = '';
+          handleWizardPhotoUpload(selectedFiles);
         }
       });
 
@@ -7201,7 +7233,7 @@
         e.preventDefault();
         uploadZone.classList.remove('drag-over');
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-          handleWizardPhotoUpload(e.dataTransfer.files);
+          handleWizardPhotoUpload(copySelectedFiles(e.dataTransfer.files));
         }
       });
     }
@@ -7350,8 +7382,9 @@
       });
       catalogInput.addEventListener('change', function () {
         if (catalogInput.files && catalogInput.files.length > 0) {
-          handleCatalogUpload(catalogInput.files);
+          var selectedFiles = copySelectedFiles(catalogInput.files);
           catalogInput.value = '';
+          handleCatalogUpload(selectedFiles);
         }
       });
       catalogUploadZone.addEventListener('dragover', function (e) {
@@ -7365,7 +7398,7 @@
         e.preventDefault();
         catalogUploadZone.classList.remove('drag-over');
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-          handleCatalogUpload(e.dataTransfer.files);
+          handleCatalogUpload(copySelectedFiles(e.dataTransfer.files));
         }
       });
     }
@@ -7379,8 +7412,9 @@
       });
       menuPhotoInput.addEventListener('change', function () {
         if (menuPhotoInput.files && menuPhotoInput.files.length > 0) {
-          handleMenuPhotoUpload(menuPhotoInput.files);
+          var selectedFiles = copySelectedFiles(menuPhotoInput.files);
           menuPhotoInput.value = '';
+          handleMenuPhotoUpload(selectedFiles);
         }
       });
       menuUploadZone.addEventListener('dragover', function (e) {
@@ -7394,7 +7428,7 @@
         e.preventDefault();
         menuUploadZone.classList.remove('drag-over');
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-          handleMenuPhotoUpload(e.dataTransfer.files);
+          handleMenuPhotoUpload(copySelectedFiles(e.dataTransfer.files));
         }
       });
     }
@@ -7433,7 +7467,10 @@
 
   async function handleWizardPhotoUpload(files) {
     var token = await getAuthToken();
-    if (!token) return;
+    if (!token) {
+      showUploadErrorPopup('la foto', 'Tu sesión expiró o no se pudo validar. Recarga la página e inicia sesión de nuevo.');
+      return;
+    }
 
     var typeSelect = document.getElementById('wiz-photo-type');
     var photoType = typeSelect ? typeSelect.value : 'product';
@@ -7462,7 +7499,7 @@
 
         if (!res.ok) {
           var errData = await res.json().catch(function () { return {}; });
-          throw new Error(errData.error || 'Upload failed');
+          throw new Error((errData.error || 'Upload failed') + ' (HTTP ' + res.status + ')');
         }
 
         var data = await res.json();
@@ -7479,7 +7516,7 @@
 
       } catch (err) {
         console.error('Photo upload error:', err);
-        showToast(t('wiz_upload_error'), 'error');
+        showUploadErrorPopup('la foto', err, t('wiz_upload_error'));
       }
     }
 
