@@ -5132,6 +5132,25 @@ select.input {
   gap: 8px;
 }
 
+.lead-card-actions,
+.lead-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lead-card-actions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.lead-delete-btn {
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
 .lead-card-topline {
   margin-bottom: 8px;
 }
@@ -5209,6 +5228,115 @@ select.input {
 
 .leads-table .lead-stage-select {
   display: block;
+  margin-top: 8px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.intake-summary {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(37, 40, 51, 0.72);
+}
+
+.intake-summary-section {
+  margin-top: 14px;
+}
+
+.intake-summary-section:first-child {
+  margin-top: 8px;
+}
+
+.intake-summary-section h4 {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.intake-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.intake-note-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  padding: 12px;
+}
+
+.intake-note-card h5 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.intake-note-card dl {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.intake-note-field dt {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.intake-note-field dd {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.intake-note-freeform {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.intake-raw-notes-panel {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.intake-raw-notes-panel summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.intake-raw-notes-panel textarea {
+  margin-top: 10px;
+  min-height: 190px;
+  line-height: 1.5;
+}
+
+.intake-raw-actions {
   margin-top: 8px;
 }
 

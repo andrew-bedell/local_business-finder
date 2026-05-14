@@ -105,6 +105,17 @@
       businessNotes: 'Business Notes',
       businessNotesPlaceholder: 'Add notes about this business...',
       businessNotesSaved: 'Notes saved',
+      businessNotesSaveBtn: 'Save Notes',
+      intakeSummary: 'Intake Summary',
+      intakeEditRawNotes: 'Edit raw notes',
+      intakeRawNotes: 'Raw notes',
+      intakeEmpty: 'No intake notes saved yet.',
+      intakeSectionBasics: 'Business Basics',
+      intakeSectionLocation: 'Location & Access',
+      intakeSectionOffers: 'Products & Services',
+      intakeSectionStrategy: 'Customers & Strategy',
+      intakeSectionOnline: 'Online Presence',
+      intakeSectionOther: 'Other Notes',
       pipelineStage: 'Pipeline Stage',
       pipelineContactSection: 'Contacts & Pipeline',
       pipelineChangeSuccess: 'Pipeline updated successfully',
@@ -134,6 +145,7 @@
       leadsEmptyColumn: 'No leads in this stage',
       leadsEmptyTable: 'No leads found',
       leadsViewDetails: 'View',
+      leadsDelete: 'Delete',
       leadsOpenWebsite: 'Open',
       leadsNoWebsite: 'No site',
       leadStageLead: 'Lead',
@@ -1019,6 +1031,17 @@
       businessNotes: 'Notas del Negocio',
       businessNotesPlaceholder: 'Agregar notas sobre este negocio...',
       businessNotesSaved: 'Notas guardadas',
+      businessNotesSaveBtn: 'Guardar Notas',
+      intakeSummary: 'Resumen del Intake',
+      intakeEditRawNotes: 'Editar notas originales',
+      intakeRawNotes: 'Notas originales',
+      intakeEmpty: 'Todavia no hay notas del intake guardadas.',
+      intakeSectionBasics: 'Datos del Negocio',
+      intakeSectionLocation: 'Ubicacion y Acceso',
+      intakeSectionOffers: 'Productos y Servicios',
+      intakeSectionStrategy: 'Clientes y Estrategia',
+      intakeSectionOnline: 'Presencia Online',
+      intakeSectionOther: 'Otras Notas',
       pipelineStage: 'Etapa del Pipeline',
       pipelineContactSection: 'Contactos y Pipeline',
       pipelineChangeSuccess: 'Pipeline actualizado exitosamente',
@@ -1048,6 +1071,7 @@
       leadsEmptyColumn: 'Sin leads en esta etapa',
       leadsEmptyTable: 'No hay leads',
       leadsViewDetails: 'Ver',
+      leadsDelete: 'Eliminar',
       leadsOpenWebsite: 'Abrir',
       leadsNoWebsite: 'Sin sitio',
       leadStageLead: 'Lead',
@@ -3155,8 +3179,128 @@
     return `<select class="input lead-stage-select" data-id="${business.id}" aria-label="${escapeHtml(t('leadMoveToStage'))}">${options}</select>`;
   }
 
+  function normalizeNoteLabel(label) {
+    return String(label || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function getIntakeSectionForBlock(block) {
+    const haystack = normalizeNoteLabel([
+      block.title,
+      ...(block.entries || []).map((entry) => entry.label),
+    ].filter(Boolean).join(' '));
+
+    if (/producto|servicio|precio|problema|diferenciador|venta|entrega|modelo|estructura|negocio principal/.test(haystack)) {
+      return 'offers';
+    }
+    if (/cliente|meta|accion|duda|miedo|estrateg|promoc|campana|alcance|inspiracion|competidor|slogan/.test(haystack)) {
+      return 'strategy';
+    }
+    if (/ubicacion|direccion|atencion|google maps|zona|local|publica|privada/.test(haystack)) {
+      return 'location';
+    }
+    if (/sitio actual|dominio|instagram|facebook|tiktok|linkedin|perfil|redes|material|logo|website/.test(haystack)) {
+      return 'online';
+    }
+    if (/descripcion|giro|negocio|tipo original/.test(haystack)) {
+      return 'basics';
+    }
+    return 'other';
+  }
+
+  function parseBusinessNotes(notes) {
+    const normalized = String(notes || '').replace(/\r\n/g, '\n').trim();
+    if (!normalized) return [];
+
+    return normalized.split(/\n\s*\n/).map((paragraph) => {
+      const lines = paragraph.split('\n').map((line) => line.trim()).filter(Boolean);
+      if (!lines.length) return null;
+
+      if (lines.length === 1 && /^[A-Z0-9\s_-]{5,}$/.test(lines[0]) && !lines[0].includes(':')) {
+        return null;
+      }
+
+      const entries = lines.map((line) => {
+        const match = line.match(/^([^:]{2,90}):\s*(.*)$/);
+        if (!match) return { label: '', value: line };
+        return {
+          label: match[1].trim(),
+          value: match[2].trim(),
+        };
+      }).filter((entry) => entry.value || !entry.label);
+
+      if (!entries.length) return null;
+
+      let title = '';
+      let items = entries;
+      if (entries.length > 1 && entries[0].label && entries[0].value) {
+        title = entries[0].label + ': ' + entries[0].value;
+        items = entries.slice(1);
+      }
+
+      const block = {
+        title,
+        entries: items,
+      };
+      block.section = getIntakeSectionForBlock(block);
+      return block;
+    }).filter(Boolean);
+  }
+
+  function renderBusinessNoteBlock(block) {
+    const entries = block.entries || [];
+    const entryHtml = entries.map((entry) => {
+      if (!entry.label) {
+        return `<p class="intake-note-freeform">${escapeHtml(entry.value)}</p>`;
+      }
+      return `
+        <div class="intake-note-field">
+          <dt>${escapeHtml(entry.label)}</dt>
+          <dd>${escapeHtml(entry.value || '—')}</dd>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <article class="intake-note-card">
+        ${block.title ? `<h5>${escapeHtml(block.title)}</h5>` : ''}
+        ${entryHtml ? `<dl>${entryHtml}</dl>` : ''}
+      </article>
+    `;
+  }
+
+  function buildBusinessNotesSummaryHtml(notes) {
+    const blocks = parseBusinessNotes(notes);
+    if (!blocks.length) {
+      return `<p class="section-subtitle">${escapeHtml(t('intakeEmpty'))}</p>`;
+    }
+
+    const sections = [
+      { id: 'basics', labelKey: 'intakeSectionBasics' },
+      { id: 'location', labelKey: 'intakeSectionLocation' },
+      { id: 'offers', labelKey: 'intakeSectionOffers' },
+      { id: 'strategy', labelKey: 'intakeSectionStrategy' },
+      { id: 'online', labelKey: 'intakeSectionOnline' },
+      { id: 'other', labelKey: 'intakeSectionOther' },
+    ];
+
+    return sections.map((section) => {
+      const sectionBlocks = blocks.filter((block) => block.section === section.id);
+      if (!sectionBlocks.length) return '';
+      return `
+        <section class="intake-summary-section">
+          <h4>${escapeHtml(t(section.labelKey))}</h4>
+          <div class="intake-summary-grid">
+            ${sectionBlocks.map(renderBusinessNoteBlock).join('')}
+          </div>
+        </section>
+      `;
+    }).join('');
+  }
+
   function renderLeadCard(business) {
-    const stageId = getLeadKanbanStage(business);
     const websiteHtml = getLeadWebsiteLinkHtml(business);
     return `
       <article class="lead-card ${business.lead_source === 'advanced_intake' ? 'lead-card-advanced' : ''}" draggable="true" data-id="${business.id}">
@@ -3170,6 +3314,10 @@
         <div class="lead-card-footer">
           ${websiteHtml}
           ${getLeadStageSelectHtml(business)}
+        </div>
+        <div class="lead-card-actions">
+          <button type="button" class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button>
+          <button type="button" class="btn btn-secondary btn-sm lead-delete-btn" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}">${escapeHtml(t('leadsDelete'))}</button>
         </div>
       </article>
     `;
@@ -3221,7 +3369,12 @@
           <td>${getLeadContactHtml(business)}</td>
           <td>${getLeadWebsiteLinkHtml(business)}</td>
           <td>${escapeHtml(formatAdminDateTime(business.created_at))}</td>
-          <td><button class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button></td>
+          <td>
+            <div class="lead-table-actions">
+              <button type="button" class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button>
+              <button type="button" class="btn btn-secondary btn-sm lead-delete-btn" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}">${escapeHtml(t('leadsDelete'))}</button>
+            </div>
+          </td>
         </tr>
       `;
     }).join('');
@@ -3329,6 +3482,11 @@
       button.addEventListener('click', () => {
         const business = leadsBusinesses.find((item) => String(item.id) === String(button.dataset.id));
         if (business) openDetailModal(business);
+      });
+    });
+    document.querySelectorAll('.lead-delete-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        deleteBusiness(button.dataset.id, button.dataset.name || '');
       });
     });
   }
@@ -6163,6 +6321,8 @@
     const existingWebsite = findGeneratedWebsiteRecord(business);
     const reportRecord = findResearchReportRecord(business);
     const hasReport = !!reportRecord || !!business._cachedReport;
+    const businessNotesSummaryHtml = buildBusinessNotesSummaryHtml(business.notes || '');
+    const businessNotesHeading = business.lead_source === 'advanced_intake' ? t('intakeSummary') : t('businessNotes');
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -6227,12 +6387,19 @@
           </div>
 
           <!-- Business Notes -->
-          <div class="modal-section">
-            <h3>${t('businessNotes')}</h3>
-            <textarea class="input" id="modal-business-notes" rows="3" placeholder="${t('businessNotesPlaceholder')}" style="width:100%;resize:vertical">${escapeHtml(business.notes || '')}</textarea>
-            <div style="margin-top:8px">
-              <button class="btn btn-primary btn-sm" id="modal-save-notes">${t('pipelineSaveBtn')}</button>
+          <div class="modal-section intake-summary">
+            <h3>${businessNotesHeading}</h3>
+            <div id="modal-business-notes-summary">
+              ${businessNotesSummaryHtml}
             </div>
+            <details class="intake-raw-notes-panel">
+              <summary>${escapeHtml(t('intakeEditRawNotes'))}</summary>
+              <label class="sr-only" for="modal-business-notes">${escapeHtml(t('intakeRawNotes'))}</label>
+              <textarea class="input" id="modal-business-notes" rows="8" placeholder="${t('businessNotesPlaceholder')}" style="width:100%;resize:vertical">${escapeHtml(business.notes || '')}</textarea>
+              <div class="intake-raw-actions">
+                <button class="btn btn-primary btn-sm" id="modal-save-notes">${t('businessNotesSaveBtn')}</button>
+              </div>
+            </details>
           </div>
 
           <!-- Contacts -->
@@ -6389,8 +6556,9 @@
         if (!res.ok) throw new Error('Failed');
 
         business.notes = notesValue;
-        const idx = allBusinesses.findIndex(b => b.id === business.id);
-        if (idx >= 0) allBusinesses[idx].notes = notesValue;
+        patchBusinessInMemory(business.id, { notes: notesValue });
+        const summaryEl = modal.querySelector('#modal-business-notes-summary');
+        if (summaryEl) summaryEl.innerHTML = buildBusinessNotesSummaryHtml(notesValue);
 
         showToast(t('businessNotesSaved'), 'success');
       } catch (err) {
@@ -7019,6 +7187,9 @@
       selectedIds.delete(String(businessId));
       updateBulkActionsBar();
       await loadBusinesses();
+      if (activeTab === 'leads') {
+        await loadLeadsDashboard();
+      }
       loadStats();
     } catch (err) {
       console.error('Delete business error:', err);
