@@ -2,6 +2,7 @@ const DEFAULT_BUCKET = 'photos';
 
 const PHOTO_PRESETS = {
   hero: { width: 1600, widths: [640, 960, 1280, 1600], quality: 72 },
+  latamHero: { width: 1440, height: 720, widths: [640, 960, 1280, 1440], quality: 72, resize: 'cover' },
   section: { width: 1200, widths: [480, 768, 1200], quality: 74 },
   gallery: { width: 960, widths: [360, 540, 720, 960], quality: 72 },
   card: { width: 720, widths: [320, 480, 720], quality: 72 },

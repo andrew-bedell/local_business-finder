@@ -10,8 +10,10 @@ import {
   deriveProductRows,
   generateResearchReport,
   generateAIPhotos,
-  buildPhotoManifest,
+  buildPhotoManifestWithSuitability,
   fetchEnrichedData,
+  hasUnscannedWebsitePhotos,
+  scanPhotoTextOverlaysForBusiness,
 } from '../_lib/website-pipeline.js';
 
 export const config = { maxDuration: 300 };
@@ -69,8 +71,20 @@ export default async function handler(req, res) {
     }
     const business = bizData[0];
 
-    // Step 3: Fetch enriched data
-    const { reviews, photos, websitePhotos, socialProfiles, menus, services } = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+    // Step 3: Fetch enriched data and scan Google/AI photos before website selection
+    let enriched = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+    if (hasUnscannedWebsitePhotos(enriched.photos)) {
+      try {
+        const scanResult = await scanPhotoTextOverlaysForBusiness(businessId);
+        if (scanResult.flagged > 0) {
+          console.log(`[GenerateWebsite] Flagged ${scanResult.flagged}/${scanResult.scanned} text-heavy photo(s) for ${business.name}`);
+        }
+        enriched = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
+      } catch (scanErr) {
+        console.warn('[GenerateWebsite] Photo text scan failed; unscanned Google/AI photos will be excluded:', scanErr.message);
+      }
+    }
+    const { reviews, photos, websitePhotos, socialProfiles, menus, services } = enriched;
 
     // Step 4: Rate limit check
     // Updates: 1 per hour. New generation: 1 per 24 hours.
@@ -147,7 +161,7 @@ export default async function handler(req, res) {
 
     // Step 10: Build photo manifest
     console.log('[GenerateWebsite] Step 10: Building photo manifest...');
-    const photoManifest = buildPhotoManifest(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
+    const photoManifest = await buildPhotoManifestWithSuitability(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
 
     // Step 10: Call /api/ai/write-content
     console.log('[GenerateWebsite] Step 10: Writing website content...');
@@ -161,6 +175,7 @@ export default async function handler(req, res) {
         language,
         category: business.category || '',
         subcategory: business.subcategory || '',
+        country: business.address_country || '',
       }),
     });
     if (!writeContentRes.ok) {
@@ -180,7 +195,15 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         websiteContent,
         designPalette: researchReport.designPalette || {},
-        photoManifest: (photoManifest || []).map(p => ({ section: p.section, slot: p.slot, url: p.url })),
+        photoManifest: (photoManifest || []).map(p => ({
+          section: p.section,
+          slot: p.slot,
+          url: p.url,
+          objectPosition: p.objectPosition || null,
+          desktopPosition: p.desktopPosition || null,
+          mobilePosition: p.mobilePosition || null,
+          heroSuitability: p.heroSuitability || null,
+        })),
         name: business.name,
         language,
         category: business.category || '',
@@ -188,6 +211,15 @@ export default async function handler(req, res) {
         phone: business.phone || '',
         whatsapp: business.whatsapp || '',
         address: business.address_full || '',
+        city: business.address_city || '',
+        state: business.address_state || '',
+        country: business.address_country || '',
+        hours: business.hours || [],
+        rating: business.rating || null,
+        reviewCount: business.review_count || null,
+        paymentMethods: business.payment_methods || [],
+        highlights: business.highlights || [],
+        serviceOptions: business.service_options || [],
         mapsUrl: business.maps_url || '',
         socialProfiles: socialProfiles.map(sp => ({ platform: sp.platform, url: sp.profile_url })),
         menuItems: menus.map(m => ({ category: m.menu_category, name: m.item_name, description: m.item_description, price: m.price, currency: m.currency })),

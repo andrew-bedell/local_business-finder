@@ -2,6 +2,7 @@
 // Deterministic variation selection, mood mapping, and category detection
 
 import { getOfferMode, normalizeBusinessType } from './taxonomy.js';
+import { shouldUsePremiumLocalLatam } from './local-latam.js';
 
 const VARIATIONS = ['editorial', 'dynamic', 'minimal', 'immersive'];
 
@@ -128,9 +129,13 @@ function selectTemplateProfile({ businessType, offerMode, photoCount, content })
 
 /**
  * Select layout variation using business type first, then deterministic hashing
- * Returns: 'editorial' | 'dynamic' | 'minimal' | 'immersive'
+ * Returns: 'editorial' | 'dynamic' | 'minimal' | 'immersive' | 'premium-local-latam'
  */
-export function selectVariation({ businessName, category, subcategory, content, photoManifest }) {
+export function selectVariation({ businessName, category, subcategory, content, photoManifest, business }) {
+  if (shouldUsePremiumLocalLatam({ ...(business || {}), category, subcategory })) {
+    return 'premium-local-latam';
+  }
+
   const businessType = normalizeBusinessType(category, subcategory);
   const offerMode = getOfferMode(businessType);
   const photoCount = (photoManifest || []).filter((item) => item && item.url).length;

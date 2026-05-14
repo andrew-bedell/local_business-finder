@@ -6767,11 +6767,22 @@
   }
 
   // ── Compile Business Data for Prompt ──
+  function requiresCleanTextScan(photo) {
+    return ['google', 'google_places', 'ai_generated'].includes(String(photo && photo.source || '').toLowerCase());
+  }
+
+  function isWebsitePhotoEligible(photo) {
+    if (!photo) return false;
+    if (photo.has_text_overlay === true) return false;
+    if (requiresCleanTextScan(photo) && photo.has_text_overlay !== false) return false;
+    return true;
+  }
+
   function compileBusinessDataForPrompt(business, details) {
     const sections = [];
     const profiles = business.business_social_profiles || [];
     const reviews = details.reviews || [];
-    const photos = details.photos || [];
+    const photos = (details.photos || []).filter(isWebsitePhotoEligible);
 
     sections.push('=== BUSINESS IDENTITY ===');
     sections.push(`Name: ${business.name}`);
@@ -6877,7 +6888,7 @@
   function buildPhotoInventory(details) {
     const photos = details.photos || [];
     return photos
-      .filter(p => p.has_text_overlay !== true)
+      .filter(isWebsitePhotoEligible)
       .map((p, i) => ({
         id: `${p.source}_photo_${i}`,
         source: p.source,
@@ -6935,8 +6946,8 @@
   }
 
   // ── Scan Photos for Text Overlays ──
-  // Uses Claude vision to detect promotional text, sale announcements, etc. on photos.
-  // Photos flagged with has_text_overlay=true are excluded from website generation.
+  // Uses Claude vision to detect prominent readable text on photos.
+  // Google/AI photos must be scanned clean before website generation can use them.
   async function scanPhotosForText(businessId) {
     const res = await withTimeout(
       fetch('/api/photos/scan-text', {
@@ -7554,7 +7565,7 @@
     const menus = details.menus || [];
 
     // Photos: 20 pts (5 for any, 15 for 3+)
-    const photoCount = photos.filter(p => p.has_text_overlay !== true).length;
+    const photoCount = photos.filter(isWebsitePhotoEligible).length;
     checks.push({
       key: 'completenessPhotos',
       score: photoCount >= 3 ? 20 : photoCount >= 1 ? 5 : 0,

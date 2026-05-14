@@ -2,7 +2,12 @@
 // Protected by CRON_SECRET header. Can also be run as a Vercel cron job.
 
 import { persistPhotoFromRecord } from '../_lib/photo-persist.js';
-import { getOptimizedPhotoUrl, rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
+import {
+  getOptimizedPhotoUrl,
+  getPublicPhotoUrl,
+  resolveStoredPhotoLocation,
+  rewriteSupabasePhotoUrlsInHtml,
+} from '../_lib/photo-urls.js';
 
 export const config = { maxDuration: 300 };
 
@@ -30,38 +35,54 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'Supabase not configured' });
   }
 
-  const { source, businessId, limit = 50, fixHtml = false } = req.body || {};
+  const params = req.method === 'GET' ? (req.query || {}) : (req.body || {});
+  const { source, businessId } = params;
+  const fixHtml = params.fixHtml === true || params.fixHtml === 'true' || params.fixHtml === '1';
+  const limit = Math.min(parseInt(params.limit || 50, 10) || 50, 100);
+  const reprocessStored = params.reprocessStored !== false && params.reprocessStored !== 'false';
 
   try {
-    // Build query for unpersisted photos
-    let queryUrl = `${supabaseUrl}/rest/v1/business_photos?storage_path=is.null&select=id,business_id,source,photo_type,url,storage_path&limit=${Math.min(limit, 100)}`;
-    if (source) queryUrl += `&source=eq.${source}`;
-    if (businessId) queryUrl += `&business_id=eq.${businessId}`;
-
-    const queryRes = await fetch(queryUrl, {
-      headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
-        'apikey': supabaseKey,
-      },
+    const unpersisted = await queryPhotoRecords({
+      supabaseUrl,
+      supabaseKey,
+      storageFilter: 'storage_path=is.null',
+      source,
+      businessId,
+      limit,
     });
 
-    if (!queryRes.ok) {
-      const errText = await queryRes.text();
-      return res.status(500).json({ error: 'Failed to query photos', detail: errText.substring(0, 200) });
-    }
+    const remaining = Math.max(0, limit - unpersisted.length);
+    const storedToReprocess = reprocessStored && remaining > 0
+      ? await queryPhotoRecords({
+          supabaseUrl,
+          supabaseKey,
+          storageFilter: 'storage_path=not.is.null&storage_path=not.ilike.*.webp',
+          source,
+          businessId,
+          limit: remaining,
+        })
+      : [];
 
-    const records = await queryRes.json();
-    console.log(`Backfill: found ${records.length} photos to persist`);
+    const records = [
+      ...unpersisted.map((record) => ({ ...record, __forceOptimize: false })),
+      ...storedToReprocess.map((record) => ({ ...record, __forceOptimize: true })),
+    ];
+    console.log(`Backfill: found ${unpersisted.length} photos to persist and ${storedToReprocess.length} stored photos to optimize`);
 
     // Process photos (sequentially in batches of 5 to avoid overwhelming)
-    let persisted = 0, skipped = 0, failed = 0;
+    let persisted = 0, reprocessed = 0, skipped = 0, failed = 0;
     const errors = [];
     const persistedMap = {}; // oldUrl -> newPublicUrl
 
     for (let i = 0; i < records.length; i += 5) {
       const batch = records.slice(i, i + 5);
       const results = await Promise.allSettled(
-        batch.map(record => persistPhotoFromRecord({ record, supabaseUrl, supabaseKey }))
+        batch.map(record => persistPhotoFromRecord({
+          record,
+          supabaseUrl,
+          supabaseKey,
+          forceOptimize: record.__forceOptimize,
+        }))
       );
 
       results.forEach((r, j) => {
@@ -72,15 +93,9 @@ export default async function handler(req, res) {
         } else if (r.value.skipped) {
           skipped++;
         } else if (r.value.success) {
-          persisted++;
-          if (r.value.publicUrl && record.url) {
-            persistedMap[record.url] = getOptimizedPhotoUrl({
-              url: r.value.publicUrl,
-              storagePath: r.value.storagePath,
-              supabaseUrl,
-              preset: 'existing_html',
-            }) || r.value.publicUrl;
-          }
+          if (record.__forceOptimize) reprocessed++;
+          else persisted++;
+          addUrlReplacements(persistedMap, record, r.value, supabaseUrl);
         } else {
           failed++;
           errors.push({ id: record.id, error: r.value.error });
@@ -88,7 +103,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`Backfill persist: ${persisted} persisted, ${skipped} skipped, ${failed} failed`);
+    console.log(`Backfill persist: ${persisted} persisted, ${reprocessed} reprocessed, ${skipped} skipped, ${failed} failed`);
 
     // Fix HTML in generated_websites if requested
     let htmlFixed = 0;
@@ -96,10 +111,70 @@ export default async function handler(req, res) {
       htmlFixed = await fixWebsiteHtml(supabaseUrl, supabaseKey, persistedMap);
     }
 
-    return res.status(200).json({ persisted, skipped, failed, htmlFixed, errors: errors.slice(0, 10) });
+    return res.status(200).json({ persisted, reprocessed, skipped, failed, htmlFixed, errors: errors.slice(0, 10) });
   } catch (err) {
     console.error('Photo backfill error:', err);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function queryPhotoRecords({ supabaseUrl, supabaseKey, storageFilter, source, businessId, limit }) {
+  let queryUrl = `${supabaseUrl}/rest/v1/business_photos?${storageFilter}&select=id,business_id,source,photo_type,url,storage_path&limit=${limit}`;
+  if (source) queryUrl += `&source=eq.${encodeURIComponent(source)}`;
+  if (businessId) queryUrl += `&business_id=eq.${encodeURIComponent(businessId)}`;
+
+  const queryRes = await fetch(queryUrl, {
+    headers: {
+      'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey,
+    },
+  });
+
+  if (!queryRes.ok) {
+    const errText = await queryRes.text();
+    throw new Error(`Failed to query photos: ${queryRes.status} ${errText.substring(0, 200)}`);
+  }
+
+  return queryRes.json();
+}
+
+function addUrlReplacements(persistedMap, record, result, supabaseUrl) {
+  if (!result?.publicUrl) return;
+
+  const replacementUrl = getOptimizedPhotoUrl({
+    url: result.publicUrl,
+    storagePath: result.storagePath,
+    supabaseUrl,
+    preset: 'existing_html',
+  }) || result.publicUrl;
+
+  if (record.url) {
+    persistedMap[record.url] = replacementUrl;
+  }
+
+  if (!record.storage_path) return;
+
+  const previousLocation = resolveStoredPhotoLocation({
+    url: record.url,
+    storagePath: record.storage_path,
+    supabaseUrl,
+  });
+  if (!previousLocation) return;
+
+  const previousPublicUrl = getPublicPhotoUrl(supabaseUrl, previousLocation.storagePath, previousLocation.bucket);
+  if (previousPublicUrl) {
+    persistedMap[previousPublicUrl] = replacementUrl;
+  }
+
+  const previousOptimizedUrl = getOptimizedPhotoUrl({
+    url: previousPublicUrl,
+    storagePath: previousLocation.storagePath,
+    bucket: previousLocation.bucket,
+    supabaseUrl,
+    preset: 'existing_html',
+  });
+  if (previousOptimizedUrl) {
+    persistedMap[previousOptimizedUrl] = replacementUrl;
   }
 }
 

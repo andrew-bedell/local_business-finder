@@ -30,6 +30,15 @@ export default async function handler(req, res) {
     phone,
     whatsapp,
     address,
+    city,
+    state,
+    country,
+    hours,
+    rating,
+    reviewCount,
+    paymentMethods,
+    highlights,
+    serviceOptions,
     mapsUrl,
     socialProfiles,
     menuItems,
@@ -75,7 +84,15 @@ export default async function handler(req, res) {
     const html = assembleWebsite({
       content: websiteContent,
       researchReport: { designPalette: designPalette || {}, toneRecommendations: researchReport?.toneRecommendations },
-      photoManifest: (photoManifest || []).map(p => ({ section: p.section, slot: p.slot, url: p.url })),
+        photoManifest: (photoManifest || []).map(p => ({
+          section: p.section,
+          slot: p.slot,
+          url: p.url,
+          objectPosition: p.objectPosition || null,
+          desktopPosition: p.desktopPosition || null,
+          mobilePosition: p.mobilePosition || null,
+          heroSuitability: p.heroSuitability || null,
+        })),
       business: {
         name,
         category: category || '',
@@ -83,6 +100,15 @@ export default async function handler(req, res) {
         phone: phone || '',
         whatsapp: whatsapp || '',
         address: address || '',
+        addressCity: city || '',
+        addressState: state || '',
+        addressCountry: country || '',
+        hours: hours || [],
+        rating: rating || null,
+        reviewCount: reviewCount || null,
+        paymentMethods: paymentMethods || [],
+        highlights: highlights || [],
+        serviceOptions: serviceOptions || [],
         mapsUrl: mapsUrl || '',
         socialProfiles: socialProfiles || [],
         language: language || 'es',
@@ -96,7 +122,7 @@ export default async function handler(req, res) {
     });
 
     res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).json({ html, engine: 'v2', variation: html.match(/class="(\w+)"/)?.[1] || 'unknown' });
+    return res.status(200).json({ html, engine: 'v2', variation: html.match(/class="([^"]+)"/)?.[1]?.split(/\s+/)[0] || 'unknown' });
   } catch (err) {
     console.error('V2 website assembly error:', err);
     return res.status(500).json({ error: 'Website assembly failed: ' + err.message });

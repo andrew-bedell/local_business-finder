@@ -4,6 +4,7 @@
 export const config = { maxDuration: 30 };
 
 import { ensureEmployeeSession } from '../_lib/employee-session.js';
+import { optimizePhotoForStorage } from '../_lib/photo-optimize.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -65,23 +66,23 @@ export default async function handler(req, res) {
       return res.status(503).json({ error: 'Supabase storage not configured for generated images' });
     }
 
-    // 2. Upload to Supabase Storage and require a durable URL
-    const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
+    // 2. Normalize to storage-ready WebP and require a durable URL.
     const timestamp = Date.now();
     const sanitizedSection = (section || 'photo').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
-    const filePath = `ai-generated/${timestamp}-${sanitizedSection}.${ext}`;
 
     const imageBuffer = Buffer.from(imageBase64, 'base64');
+    const optimized = await optimizePhotoForStorage(imageBuffer, { sourceContentType: mimeType });
+    const filePath = `ai-generated/${timestamp}-${sanitizedSection}.${optimized.extension}`;
 
     const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/photos/${filePath}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${supabaseKey}`,
         'apikey': supabaseKey,
-        'Content-Type': mimeType,
+        'Content-Type': optimized.contentType,
         'x-upsert': 'true',
       },
-      body: imageBuffer,
+      body: optimized.buffer,
     });
 
     if (!uploadRes.ok) {
@@ -97,6 +98,8 @@ export default async function handler(req, res) {
       slot,
       storage: 'supabase',
       storagePath: filePath,
+      contentType: optimized.contentType,
+      sizeBytes: optimized.byteLength,
     });
   } catch (err) {
     console.error('Photo generation error:', err);

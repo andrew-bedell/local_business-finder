@@ -1,3 +1,5 @@
+import { persistPhotoFromRecord } from '../_lib/photo-persist.js';
+
 function cleanBusinessId(value) {
   var raw = String(value || '').trim();
   return /^\d+$/.test(raw) ? raw : '';
@@ -62,14 +64,26 @@ export default async function handler(req, res) {
       });
 
     if (imageRows.length) {
-      await fetch(supabaseUrl + '/rest/v1/business_photos', {
+      var photoInsertRes = await fetch(supabaseUrl + '/rest/v1/business_photos', {
         method: 'POST',
         headers: {
           ...headers,
-          'Prefer': 'return=minimal'
+          'Prefer': 'return=representation'
         },
         body: JSON.stringify(imageRows)
       });
+
+      if (photoInsertRes.ok) {
+        var insertedPhotos = await photoInsertRes.json().catch(function () { return []; });
+        await Promise.allSettled((Array.isArray(insertedPhotos) ? insertedPhotos : []).map(function (record) {
+          return persistPhotoFromRecord({
+            record: record,
+            supabaseUrl: supabaseUrl,
+            supabaseKey: serviceKey,
+            forceOptimize: true
+          });
+        }));
+      }
     }
 
     if (body.replaceServices) {

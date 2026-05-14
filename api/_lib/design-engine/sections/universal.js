@@ -32,6 +32,11 @@ function getPhotoForSection(photos, sectionName) {
   return match ? match.url : null;
 }
 
+function getPhotoRecordForSection(photos, sectionName) {
+  if (!photos || !photos.length) return null;
+  return photos.find((photo) => photo.section && photo.section.toLowerCase().includes(sectionName.toLowerCase())) || null;
+}
+
 function getPhotosForSection(photos, sectionName) {
   if (!photos || !photos.length) return [];
   return photos
@@ -102,6 +107,14 @@ function getFallbackHeroPhoto(business) {
 
 function collapseWhitespace(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeBackgroundPosition(value) {
+  const match = String(value || '').trim().match(/^(\d{1,3})%\s+(\d{1,3})%$/);
+  if (!match) return 'center center';
+  const x = Math.min(100, Math.max(0, Number(match[1])));
+  const y = Math.min(100, Math.max(0, Number(match[2])));
+  return `${x}% ${y}%`;
 }
 
 function splitTitleParts(value) {
@@ -209,14 +222,15 @@ function mergeCommercialItems({ mode, content, business, photos }) {
 
 // ── Hero Section ──
 export function heroSection(content, photos, business, pageContext = {}) {
+  const heroPhotoRecord =
+    getPhotoRecordForSection(photos, 'hero') ||
+    getPhotoRecordForSection(photos, 'gallery') ||
+    getPhotoRecordForSection(photos, 'services') ||
+    getPhotoRecordForSection(photos, 'products') ||
+    (photos && photos[0] ? photos[0] : null);
   const heroPhoto =
-    getPhotoForSection(photos, 'hero') ||
-    getPhotoForSection(photos, 'gallery') ||
-    getPhotoForSection(photos, 'services') ||
-    getPhotoForSection(photos, 'products') ||
-    (photos && photos[0] ? photos[0].url : '') ||
+    heroPhotoRecord?.url ||
     getFallbackHeroPhoto(business);
-  const optimizedHeroPhoto = getOptimizedBackgroundUrl(heroPhoto, 'hero');
   const headline = esc(content?.hero?.headline || business.name);
   const subheadline = esc(content?.hero?.subheadline || '');
   const language = pageContext.language || business?.language || 'es';
@@ -226,10 +240,238 @@ export function heroSection(content, photos, business, pageContext = {}) {
   const whatsappHref = pageContext.whatsappHref || buildWhatsAppHref(business, { businessType, language });
   const primaryHref = whatsappHref || '#contact';
   const primaryAttrs = whatsappHref ? ' target="_blank" rel="noopener"' : '';
-
+  const localDesign = pageContext.localDesign || {};
+  const optimizedHeroPhoto = getOptimizedBackgroundUrl(heroPhoto, localDesign.enabled ? 'latamHero' : 'hero');
+  const desktopPosition = sanitizeBackgroundPosition(heroPhotoRecord?.desktopPosition || heroPhotoRecord?.objectPosition || heroPhotoRecord?.heroSuitability?.desktopPosition);
+  const mobilePosition = sanitizeBackgroundPosition(heroPhotoRecord?.mobilePosition || heroPhotoRecord?.heroSuitability?.mobilePosition || desktopPosition);
+  const heroOverlay = localDesign.enabled
+    ? 'linear-gradient(90deg, rgba(18,18,16,0.9) 0%, rgba(18,18,16,0.58) 48%, rgba(18,18,16,0.74) 100%)'
+    : 'linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7))';
   const bgStyle = optimizedHeroPhoto
-    ? `background: linear-gradient(to bottom, rgba(26,23,20,0.3), rgba(26,23,20,0.7)), url('${esc(optimizedHeroPhoto)}') center/cover no-repeat;`
+    ? (localDesign.enabled
+      ? `--hero-bg-position-desktop:${esc(desktopPosition)};--hero-bg-position-mobile:${esc(mobilePosition)};--hero-bg-position:var(--hero-bg-position-desktop);background-image:${heroOverlay}, url('${esc(optimizedHeroPhoto)}');background-size:cover;background-repeat:no-repeat;background-position:var(--hero-bg-position);`
+      : `background: ${heroOverlay}, url('${esc(optimizedHeroPhoto)}') ${esc(desktopPosition)}/cover no-repeat;`)
     : `background: linear-gradient(135deg, var(--color-dark) 0%, rgba(26,23,20,0.9) 100%);`;
+
+  if (localDesign.enabled) {
+    const localHero = localDesign.hero || {};
+    const heroHeadline = esc(localHero.headline || content?.hero?.headline || business.name);
+    const eyebrow = esc(localHero.eyebrow || business.category || '');
+    const chips = localHero.chips || [];
+    const actions = localHero.actions || [];
+    const panelItems = [
+      business.whatsapp || business.phone ? { label: 'WhatsApp', value: business.whatsapp || business.phone } : null,
+      localDesign.location ? { label: 'Ubicación', value: localDesign.location } : null,
+      (content?.hours?.formatted || business?.hours || []).length ? { label: 'Horario', value: 'Horario disponible' } : null,
+      business.rating ? { label: 'Reseñas', value: `${business.rating} estrellas` } : null,
+    ].filter(Boolean).slice(0, localDesign.isInstitutional ? 4 : 3);
+
+    const actionClass = (kind) => {
+      if (kind === 'primary') return 'btn btn--primary';
+      if (kind === 'ghost') return 'btn btn--ghost-light';
+      return 'btn btn--white';
+    };
+    const panelActionLabel = localDesign.isUrgent
+      ? 'Atención inmediata'
+      : (actions.find((action) => action.kind === 'primary')?.label || 'Escríbenos por WhatsApp');
+
+    return {
+      html: `
+    <section class="hero latam-hero latam-hero--density-${localDesign.density}" style="${bgStyle}">
+      <div class="container latam-hero__grid">
+        <div class="latam-hero__content hero-animate">
+          <span class="eyebrow">${eyebrow}</span>
+          <h1>${heroHeadline}</h1>
+          ${subheadline ? `<p class="hero__sub">${subheadline}</p>` : ''}
+          <div class="latam-hero__actions">
+            ${actions.map((action) => `<a href="${esc(action.href)}" class="${actionClass(action.kind)}"${action.external ? ' target="_blank" rel="noopener"' : ''}>${esc(action.label)}</a>`).join('\n            ')}
+          </div>
+          <div class="latam-trust-chips" aria-label="Datos de confianza">
+            ${chips.map((chip) => `<span>${esc(chip)}</span>`).join('\n            ')}
+          </div>
+        </div>
+        <aside class="latam-hero__panel hero-animate" aria-label="Información rápida">
+          <div class="latam-panel__label">${localDesign.isInstitutional ? 'Accesos rápidos' : 'Información útil'}</div>
+          ${panelItems.map((item) => `
+          <div class="latam-panel__item">
+            <span>${esc(item.label)}</span>
+            <strong>${esc(item.value)}</strong>
+          </div>`).join('')}
+          ${whatsappHref ? `<a href="${whatsappHref}" target="_blank" rel="noopener" class="latam-panel__whatsapp">${esc(panelActionLabel)}</a>` : ''}
+        </aside>
+      </div>
+    </section>`,
+      css: `
+    .latam-hero {
+      min-height: clamp(540px, 66vh, 680px);
+      align-items: center;
+      padding-top: 6.7rem;
+      padding-bottom: 4.5rem;
+      overflow: hidden;
+      background-position: center center;
+    }
+
+    .latam-hero::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 26%;
+      background: linear-gradient(to top, rgba(0,0,0,0.38), transparent);
+      pointer-events: none;
+    }
+
+    .latam-hero--density-5 {
+      min-height: clamp(520px, 62vh, 640px);
+    }
+
+    .latam-hero__grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.62fr);
+      gap: clamp(1.5rem, 4vw, 4rem);
+      align-items: center;
+      width: 100%;
+    }
+
+    .latam-hero__content {
+      max-width: 760px;
+    }
+
+    .latam-hero__content h1 {
+      font-size: clamp(2.3rem, 4.1vw, 4rem);
+      color: #fff;
+      margin: 0.45rem 0 0.9rem;
+      max-width: 820px;
+    }
+
+    .latam-hero--density-5 .latam-hero__content h1 {
+      font-size: clamp(2.15rem, 3.6vw, 3.55rem);
+    }
+
+    .latam-hero .hero__sub {
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 18px rgba(0,0,0,0.28);
+      max-width: 660px;
+      margin-bottom: 0;
+      line-height: 1.55;
+    }
+
+    .latam-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1.15rem 0 0.95rem;
+    }
+
+    .latam-hero__actions .btn {
+      border-radius: 999px;
+      letter-spacing: 0.08em;
+      padding: 0.9rem 1.35rem;
+    }
+
+    .latam-trust-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      max-width: 720px;
+    }
+
+    .latam-trust-chips span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      font-size: 0.82rem;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+
+    .latam-hero__panel {
+      background: rgba(255,255,255,0.92);
+      color: var(--color-text);
+      border: 1px solid rgba(255,255,255,0.34);
+      border-radius: 16px;
+      padding: 1.2rem;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.24);
+      backdrop-filter: blur(18px);
+      align-self: center;
+    }
+
+    .latam-panel__label {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .latam-panel__item {
+      display: grid;
+      gap: 0.15rem;
+      padding: 0.8rem 0;
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .latam-panel__item span {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .latam-panel__item strong {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+
+    .latam-panel__whatsapp {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.85rem;
+      padding: 0.85rem 1rem;
+      border-radius: 999px;
+      background: var(--color-accent);
+      color: var(--color-on-accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 900px) {
+      .latam-hero {
+        --hero-bg-position: var(--hero-bg-position-mobile);
+        min-height: auto;
+        padding: 7rem 0 2rem;
+      }
+      .latam-hero__grid {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+      .latam-hero__content {
+        padding-bottom: 0;
+      }
+      .latam-hero__panel {
+        border-radius: 12px;
+      }
+      .latam-hero__actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }`,
+    };
+  }
 
   return {
     html: `
@@ -481,6 +723,90 @@ export function gallerySection(content, photos) {
   };
 }
 
+// ── Local LATAM Quick Actions ──
+export function localQuickActionsSection(content, business, pageContext = {}) {
+  const localDesign = pageContext.localDesign || {};
+  const cards = localDesign.quickCards || [];
+  if (!localDesign.enabled || cards.length === 0) return { html: '', css: '' };
+
+  return {
+    html: `
+    <section id="acciones" class="latam-quick-actions">
+      <div class="container">
+        <div class="latam-quick-actions__grid reveal">
+          ${cards.map((card) => `
+          <a href="${esc(card.href)}" class="latam-action-card"${/^https?:\/\//.test(card.href) ? ' target="_blank" rel="noopener"' : ''}>
+            <span>${esc(card.detail || 'Acceso rápido')}</span>
+            <strong>${esc(card.label)}</strong>
+          </a>`).join('')}
+        </div>
+      </div>
+    </section>`,
+    css: `
+    .latam-quick-actions {
+      position: relative;
+      z-index: 2;
+      margin-top: -3.4rem;
+      padding: 0 0 2.1rem;
+    }
+
+    .latam-quick-actions__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.9rem;
+    }
+
+    .latam-action-card {
+      min-height: 104px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 10px;
+      background: var(--color-bg);
+      color: var(--color-text);
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 12px 34px rgba(0,0,0,0.08);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .latam-action-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(var(--color-accent-rgb), 0.45);
+      box-shadow: 0 18px 42px rgba(0,0,0,0.12);
+      opacity: 1;
+    }
+
+    .latam-action-card span {
+      color: var(--color-text-muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+
+    .latam-action-card strong {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
+      line-height: 1.2;
+      color: var(--color-text);
+    }
+
+    @media (max-width: 900px) {
+      .latam-quick-actions {
+        margin-top: 0;
+        padding-top: 0.8rem;
+      }
+      .latam-quick-actions__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .latam-action-card {
+        min-height: 98px;
+      }
+    }`,
+  };
+}
+
 // ── CTA Section ──
 export function ctaSection(content, business, pageContext = {}) {
   const language = pageContext.language || business?.language || 'es';
@@ -608,16 +934,31 @@ export function navHTML(business, ctaLabel, options = {}) {
   const language = options.language || business?.language || 'es';
   const businessType = options.businessType || normalizeBusinessType(business?.category, business?.subcategory);
   const availableSections = options.availableSections || new Set(['about', 'services', 'gallery', 'testimonials', 'contact']);
-  const navItems = getNavigationItems(businessType, availableSections, language);
+  const localDesign = options.localDesign || {};
+  const navItems = localDesign.enabled && localDesign.navItems?.length
+    ? localDesign.navItems
+    : getNavigationItems(businessType, availableSections, language);
   const whatsappHref = options.whatsappHref || buildWhatsAppHref(business, { businessType, language });
   const cta = whatsappHref ? getStickyWhatsappLabel(language) : (language === 'en' ? 'Contact' : 'Contacto');
-  const navBrand = deriveNavBrandName(business, options.content);
+  const navBrand = localDesign.enabled
+    ? (formatBusinessName(collapseWhitespace(business?.name)) || deriveNavBrandName(business, options.content))
+    : deriveNavBrandName(business, options.content);
   const compactCTA = compactNavCTALabel(whatsappHref ? cta : (ctaLabel || cta));
   const ctaHref = whatsappHref || '#contact';
   const ctaAttrs = whatsappHref ? ' target="_blank" rel="noopener"' : '';
+  const utilityItems = localDesign.enabled ? (localDesign.utilityItems || []) : [];
+  const navClass = localDesign.enabled ? 'site-nav site-nav--local' : 'site-nav';
 
   return `
-  <nav class="site-nav">
+  ${utilityItems.length ? `
+  <div class="local-utility-bar">
+    <div class="local-utility-bar__inner">
+      ${utilityItems.map((item) => item.href
+        ? `<a href="${esc(item.href)}"${/^https?:\/\//.test(item.href) ? ' target="_blank" rel="noopener"' : ''}>${esc(item.label)}</a>`
+        : `<span>${esc(item.label)}</span>`).join('\n      ')}
+    </div>
+  </div>` : ''}
+  <nav class="${navClass}">
     <div class="site-nav__inner">
       <div class="site-nav__primary">
         <a href="#" class="site-nav__logo" title="${esc(business.name)}">${esc(navBrand || business.name)}</a>
@@ -641,6 +982,19 @@ export function stickyBottomActions(business, pageContext = {}) {
   const language = pageContext.language || business?.language || 'es';
   const businessType = pageContext.businessType || normalizeBusinessType(business?.category, business?.subcategory);
   const offer = pageContext.offer || getOfferConfig(businessType, new Set(), language);
+  const localDesign = pageContext.localDesign || {};
+
+  if (localDesign.enabled && localDesign.stickyActions?.length) {
+    return `
+  <div class="sticky-cta-spacer" aria-hidden="true"></div>
+  <div class="sticky-cta-bar sticky-cta-bar--local" aria-label="Acciones rápidas">
+    <div class="sticky-cta-bar__inner">
+      ${localDesign.stickyActions.map((action, index) => `
+      <a href="${esc(action.href)}" class="sticky-cta-btn ${index === 0 ? 'sticky-cta-btn--primary' : 'sticky-cta-btn--secondary'}"${action.external ? ' target="_blank" rel="noopener"' : ''}>${esc(action.label)}</a>`).join('')}
+    </div>
+  </div>`;
+  }
+
   const whatsappHref = pageContext.whatsappHref || buildWhatsAppHref(business, { businessType, language });
   const primaryLabel = whatsappHref ? getStickyWhatsappLabel(language) : (language === 'en' ? 'Contact' : 'Contacto');
   const primaryHref = whatsappHref || '#contact';

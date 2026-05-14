@@ -10,6 +10,9 @@ export function getResponsiveCSS() {
       .site-nav__cta--desktop { display: none; }
 
       .site-nav__inner { padding: 0 1.5rem; }
+      .local-utility-bar { display: none; }
+      .site-nav--local,
+      .site-nav--local.scrolled { top: 0; }
       .site-nav__logo {
         flex: 1 1 auto;
         max-width: none;
@@ -75,10 +78,12 @@ export function getResponsiveCSS() {
       /* Sticky CTA rail */
       .sticky-cta-spacer {
         height: 96px;
+        display: block;
       }
 
       .sticky-cta-bar {
         padding: 0.75rem 0.9rem calc(0.9rem + env(safe-area-inset-bottom));
+        display: block;
       }
 
       .sticky-cta-bar__inner {
@@ -89,6 +94,14 @@ export function getResponsiveCSS() {
         min-height: 50px;
         padding: 0.9rem 0.85rem;
         font-size: 0.7rem;
+      }
+
+      .sticky-cta-bar--local .sticky-cta-btn {
+        min-width: 0;
+        padding: 0.85rem 0.35rem;
+        font-size: 0.62rem;
+        letter-spacing: 0;
+        white-space: nowrap;
       }
 
       /* Menu items */

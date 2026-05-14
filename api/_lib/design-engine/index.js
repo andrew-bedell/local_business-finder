@@ -10,6 +10,7 @@ import { getNavCSS } from './css/nav.js';
 import { getFooterCSS } from './css/footer.js';
 import { getResponsiveCSS } from './css/responsive.js';
 import { getRuntimeJS } from './js-runtime.js';
+import { getLocalLatamContext } from './local-latam.js';
 import {
   buildWhatsAppHref,
   getOfferConfig,
@@ -25,6 +26,7 @@ import {
   heroSection, aboutSection, servicesSection, whyChooseUsSection,
   testimonialsSection, gallerySection, ctaSection, hoursSection,
   contactSection, footerSection, navHTML, stickyBottomActions,
+  localQuickActionsSection,
 } from './sections/universal.js';
 
 // Business-type section modules
@@ -44,8 +46,9 @@ import * as editorial from './variations/editorial.js';
 import * as dynamic from './variations/dynamic.js';
 import * as minimal from './variations/minimal.js';
 import * as immersive from './variations/immersive.js';
+import * as premiumLocalLatam from './variations/premium-local-latam.js';
 
-const VARIATIONS = { editorial, dynamic, minimal, immersive };
+const VARIATIONS = { editorial, dynamic, minimal, immersive, 'premium-local-latam': premiumLocalLatam };
 
 // Map category keywords to section renderers
 function getCategorySections(category, subcategory) {
@@ -118,6 +121,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
     businessName: normalizedBusiness.name,
     category: normalizedBusiness.category,
     subcategory: normalizedBusiness.subcategory,
+    business: normalizedBusiness,
     content,
     photoManifest: photos,
   });
@@ -172,8 +176,17 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
     primaryActionLabel: getPrimaryActionLabel(businessType, lang),
     whatsappHref: buildWhatsAppHref(normalizedBusiness, { businessType, language: lang }),
   };
+  pageContext.localDesign = getLocalLatamContext({
+    business: normalizedBusiness,
+    content,
+    businessType,
+    language: lang,
+    offer: pageContext.offer,
+    availableSections,
+  });
 
   sectionMap.hero = heroSection(content, photos, normalizedBusiness, pageContext);
+  sectionMap.localQuickActions = localQuickActionsSection(content, normalizedBusiness, pageContext);
   sectionMap.cta = ctaSection(content, normalizedBusiness, pageContext);
   sectionMap.contact = contactSection(content, normalizedBusiness, photos, pageContext);
 
@@ -199,6 +212,7 @@ export function assembleWebsite({ content, researchReport, photoManifest, busine
     content,
     language: lang,
     whatsappHref: pageContext.whatsappHref,
+    localDesign: pageContext.localDesign,
   });
   const stickyActions = stickyBottomActions(normalizedBusiness, pageContext);
 
