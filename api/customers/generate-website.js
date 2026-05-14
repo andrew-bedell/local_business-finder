@@ -141,7 +141,9 @@ export default async function handler(req, res) {
 
     // Step 8: Generate AI photos for generate_ai slots (max 3 parallel)
     console.log('[GenerateWebsite] Step 8: Generating AI photos...');
-    const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders);
+    const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders, {
+      existingPhotoCount: photoInventory.length,
+    });
 
     // Add AI photos to inventory
     const sectionCounts = {};
