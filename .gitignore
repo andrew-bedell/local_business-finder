@@ -1,6 +1,7 @@
 .vercel
 .env*
 .DS_Store
+backups/
 node_modules/
 supabase/.temp/
 whatsapp-bridge/node_modules/

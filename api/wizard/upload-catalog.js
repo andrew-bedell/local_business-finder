@@ -5,6 +5,7 @@
 export const config = { api: { bodyParser: false } };
 
 import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
+import { optimizePhotoForStorage } from '../_lib/photo-optimize.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -49,14 +50,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Empty body' });
     }
 
-    // Determine file extension
-    let ext = 'pdf';
+    let uploadBody = body;
+    let uploadContentType = contentType;
+    let optimized = null;
     if (isImage) {
-      ext = 'jpg';
-      if (contentType.includes('png')) ext = 'png';
-      else if (contentType.includes('webp')) ext = 'webp';
-      else if (contentType.includes('gif')) ext = 'gif';
+      optimized = await optimizePhotoForStorage(body, { sourceContentType: contentType });
+      uploadBody = optimized.buffer;
+      uploadContentType = optimized.contentType;
     }
+
+    // Determine file extension
+    let ext = isImage ? optimized.extension : 'pdf';
 
     const uuid8 = Math.random().toString(36).substring(2, 10);
     const storagePath = `${businessId}/catalog-${uuid8}.${ext}`;
@@ -71,10 +75,10 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         ...supabaseHeaders,
-        'Content-Type': contentType,
+        'Content-Type': uploadContentType,
         'x-upsert': 'true',
       },
-      body,
+      body: uploadBody,
     });
 
     if (!uploadRes.ok) {
@@ -88,8 +92,12 @@ export default async function handler(req, res) {
     return res.status(200).json({
       public_url: publicUrl,
       storage_path: storagePath,
-      content_type: contentType,
+      content_type: uploadContentType,
       file_type: isPdf ? 'pdf' : 'image',
+      original_size_bytes: optimized ? optimized.originalByteLength : body.length,
+      size_bytes: optimized ? optimized.byteLength : body.length,
+      width: optimized ? optimized.width : null,
+      height: optimized ? optimized.height : null,
     });
   } catch (err) {
     const status = err.status || 500;

@@ -59,6 +59,13 @@ export default async function handler(req, res) {
           photo_type: 'product',
           storage_path: file.storage_path || null,
           url: file.public_url || file.url,
+          original_url: null,
+          content_type: file.content_type || null,
+          byte_size: file.size_bytes || file.byte_size || null,
+          width: file.width || null,
+          height: file.height || null,
+          optimized_at: file.content_type === 'image/webp' ? new Date().toISOString() : null,
+          is_website_eligible: file.content_type === 'image/webp' && /\.webp$/i.test(String(file.storage_path || '')),
           is_primary: index === 0
         };
       });

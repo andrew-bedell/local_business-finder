@@ -35,6 +35,9 @@ function requiresCleanTextScan(photo) {
 export function filterWebsitePhotos(photos) {
   return (photos || []).filter((photo) => {
     if (!photo) return false;
+    if (photo.is_website_eligible !== true) return false;
+    if (!photo.storage_path || !/\.webp$/i.test(String(photo.storage_path).split('?')[0])) return false;
+    if (photo.content_type && photo.content_type !== 'image/webp') return false;
     if (!(photo.url || photo.storage_path)) return false;
     if (photo.has_text_overlay === true) return false;
     if (requiresCleanTextScan(photo) && photo.has_text_overlay !== false) return false;
@@ -449,6 +452,13 @@ export async function generateAIPhotos(researchReport, businessId, supabaseUrl, 
             photo_type: 'ai_generated',
             storage_path: result.storagePath || null,
             url: result.url,
+            original_url: null,
+            content_type: result.contentType || 'image/webp',
+            byte_size: result.sizeBytes || null,
+            width: result.width || null,
+            height: result.height || null,
+            optimized_at: new Date().toISOString(),
+            is_website_eligible: true,
             caption: slot.slot,
           }),
         }
