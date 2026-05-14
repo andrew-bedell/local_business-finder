@@ -36,6 +36,7 @@
                 </a>
                 <div class="nav-dropdown">
                   <a href="#" class="nav-dropdown-item active" id="nav-saved" data-tab="saved" data-i18n="navPipeline">Pipeline</a>
+                  <a href="#" class="nav-dropdown-item" id="nav-websites" data-tab="saved" data-stage="has_website" data-i18n="navWebsites">Has Website</a>
                   <a href="#" class="nav-dropdown-item" id="nav-leads" data-tab="leads" data-i18n="navLeads">Leads</a>
                   <a href="#" class="nav-dropdown-item" id="nav-demo-analytics" data-tab="demo_analytics" data-i18n="navDemoAnalytics">Demo Analytics</a>
                   <a href="#" class="nav-dropdown-item" id="nav-outreach" data-tab="outreach" data-i18n="navOutreach">Outreach</a>
@@ -379,6 +380,7 @@
       <!-- Pipeline Stage Pills -->
       <section class="pipeline-pills" id="pipeline-pills">
         <button class="pipeline-pill active" data-stage="all"><span data-i18n="pipelineAll">All</span> <span class="pill-count" id="pill-count-all">0</span></button>
+        <button class="pipeline-pill" data-stage="has_website"><span data-i18n="pipelineHasWebsite">Has Website</span> <span class="pill-count" id="pill-count-has-website">0</span></button>
         <button class="pipeline-pill" data-stage="saved"><span data-i18n="pipelineSaved">Saved</span> <span class="pill-count" id="pill-count-saved">0</span></button>
         <button class="pipeline-pill" data-stage="lead"><span data-i18n="pipelineLead">Leads</span> <span class="pill-count" id="pill-count-lead">0</span></button>
         <button class="pipeline-pill" data-stage="cold_outreach_ready"><span data-i18n="pipelineColdOutreach">Outreach Ready</span> <span class="pill-count" id="pill-count-cold-outreach">0</span></button>
@@ -492,6 +494,22 @@
               <option value="" data-i18n="filterAny">Any</option>
               <option value="yes" data-i18n="filterYes">Yes</option>
               <option value="no" data-i18n="filterNo">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-sort-metric" data-i18n="filterSortMetric">Sort Metric</label>
+            <select id="filter-sort-metric" class="input">
+              <option value="business_created" data-i18n="sortMetricBusinessCreated">Business Created</option>
+              <option value="website_created" data-i18n="sortMetricWebsiteCreated">Website Created</option>
+              <option value="pipeline_updated" data-i18n="sortMetricPipelineUpdated">Pipeline Updated</option>
+              <option value="updated" data-i18n="sortMetricUpdated">Last Updated</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-sort-direction" data-i18n="filterSortDirection">Sort Order</label>
+            <select id="filter-sort-direction" class="input">
+              <option value="desc" data-i18n="sortLatestFirst">Latest First</option>
+              <option value="asc" data-i18n="sortEarliestFirst">Earliest First</option>
             </select>
           </div>
         </div>
