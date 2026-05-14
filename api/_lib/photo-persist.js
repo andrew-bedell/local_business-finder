@@ -17,6 +17,12 @@ function isWebpStoragePath(storagePath) {
   return /\.webp$/i.test(String(storagePath || '').split('?')[0]);
 }
 
+function normalizeDownloadUrl(url) {
+  const value = String(url || '').trim();
+  if (value.startsWith('//')) return `https:${value}`;
+  return value;
+}
+
 function buildPhotoStoragePath({ businessId, source, photoType, idPrefix, extension }) {
   const cleanBusinessId = String(businessId || 'unassigned').replace(/[^a-z0-9-_]/gi, '-');
   const cleanSource = String(source || 'photo').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
@@ -62,9 +68,9 @@ async function persistPhotoFromRecord({ record, supabaseUrl, supabaseKey, forceO
       storagePath: record.storage_path,
       supabaseUrl,
     });
-    const sourceUrl = record.storage_path && storedLocation
+    const sourceUrl = normalizeDownloadUrl(record.storage_path && storedLocation
       ? getPublicPhotoUrl(supabaseUrl, storedLocation.storagePath, storedLocation.bucket)
-      : record.url;
+      : record.url);
 
     if (!sourceUrl) {
       return { success: true, skipped: true };

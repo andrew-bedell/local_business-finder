@@ -1,5 +1,8 @@
 {
   "private": true,
+  "scripts": {
+    "test:design-engine": "node scripts/run-design-engine-test.mjs"
+  },
   "dependencies": {
     "@sparticuz/chromium": "^131.0.0",
     "puppeteer-core": "^23.0.0",
