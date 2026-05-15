@@ -3176,7 +3176,7 @@
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), business_photos(id, source), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)');
+        .select('*, business_social_profiles(*), business_photos(id, source), business_services(id, name), business_menus(id, item_name), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -3503,6 +3503,7 @@
 
   function renderLeadCard(business) {
     const websiteHtml = getLeadWebsiteLinkHtml(business);
+    const canCreateWebsite = !hasGeneratedWebsite(business) && isBusinessWebsiteReady(business);
     return `
       <article class="lead-card ${business.lead_source === 'advanced_intake' ? 'lead-card-advanced' : ''}" draggable="true" data-id="${business.id}">
         <div class="lead-card-topline">
@@ -3517,6 +3518,7 @@
           ${getLeadStageSelectHtml(business)}
         </div>
         <div class="lead-card-actions">
+          ${canCreateWebsite ? `<button type="button" class="btn btn-primary btn-sm lead-create-website-btn" data-id="${business.id}">${escapeHtml(t('btnCreateWebsite'))}</button>` : ''}
           <button type="button" class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button>
           <button type="button" class="btn btn-secondary btn-sm lead-delete-btn" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}">${escapeHtml(t('leadsDelete'))}</button>
         </div>
@@ -3563,6 +3565,7 @@
       return;
     }
     tbody.innerHTML = businesses.map((business) => {
+      const canCreateWebsite = !hasGeneratedWebsite(business) && isBusinessWebsiteReady(business);
       return `
         <tr>
           <td><strong>${escapeHtml(business.name || '—')}</strong><div class="lead-table-sub">${escapeHtml(extractCity(business.address_full || business.address_city || ''))}</div></td>
@@ -3572,6 +3575,7 @@
           <td>${escapeHtml(formatAdminDateTime(business.created_at))}</td>
           <td>
             <div class="lead-table-actions">
+              ${canCreateWebsite ? `<button type="button" class="btn btn-primary btn-sm lead-create-website-btn" data-id="${business.id}">${escapeHtml(t('btnCreateWebsite'))}</button>` : ''}
               <button type="button" class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button>
               <button type="button" class="btn btn-secondary btn-sm lead-delete-btn" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}">${escapeHtml(t('leadsDelete'))}</button>
             </div>
@@ -3606,7 +3610,7 @@
     try {
       const { data, error } = await supabaseClient
         .from('businesses')
-        .select('*, generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)')
+        .select('*, business_photos(id, source), business_services(id, name), business_menus(id, item_name), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)')
         .in('lead_source', LEAD_SOURCE_VALUES)
         .in('pipeline_status', ['lead', 'website_created', 'interested', 'active_customer', 'demo', 'cold_outreach_ready'])
         .order('created_at', { ascending: false });
@@ -3683,6 +3687,12 @@
       button.addEventListener('click', () => {
         const business = leadsBusinesses.find((item) => String(item.id) === String(button.dataset.id));
         if (business) openDetailModal(business);
+      });
+    });
+    document.querySelectorAll('.lead-create-website-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        const business = leadsBusinesses.find((item) => String(item.id) === String(button.dataset.id));
+        if (business) handleCreateWebsite(business, button);
       });
     });
     document.querySelectorAll('.lead-delete-btn').forEach((button) => {
@@ -3824,15 +3834,74 @@
   }
 
   function getRelatedCount(business, relationName) {
-    const rows = business && Array.isArray(business[relationName]) ? business[relationName] : [];
+    const rows = getRelatedRows(business, relationName);
     if (!rows.length) return 0;
     const countValue = rows[0] && rows[0].count;
     return Number.isFinite(Number(countValue)) ? Number(countValue) : 0;
   }
 
+  function getRelatedRows(business, relationName) {
+    return business && Array.isArray(business[relationName]) ? business[relationName] : [];
+  }
+
   function getGooglePhotoCount(business) {
-    const rows = business && Array.isArray(business.business_photos) ? business.business_photos : [];
+    const rows = getRelatedRows(business, 'business_photos');
     return rows.filter((row) => row && row.source === 'google').length;
+  }
+
+  function hasTextValue(value, minLength = 1) {
+    return String(value || '').trim().length >= minLength;
+  }
+
+  function hasStructuredHours(hours) {
+    if (!hours) return false;
+    if (Array.isArray(hours)) return hours.some((item) => hasTextValue(item));
+    if (typeof hours === 'object') {
+      return Object.values(hours).some((value) => {
+        if (Array.isArray(value)) return value.some((item) => hasTextValue(item));
+        return hasTextValue(value);
+      });
+    }
+    return hasTextValue(hours);
+  }
+
+  function hasCustomerProvidedPhoto(business) {
+    return getRelatedRows(business, 'business_photos').some((photo) => {
+      const source = String(photo && photo.source || '').toLowerCase();
+      return source.startsWith('customer_') || source === 'customer';
+    });
+  }
+
+  function hasCustomerProvidedWebsiteData(business) {
+    if (!business || !hasTextValue(business.name)) return false;
+
+    const cameThroughIntake = LEAD_SOURCE_VALUES.includes(business.lead_source) || isSyntheticPlaceId(business.place_id);
+    if (!cameThroughIntake) return false;
+
+    const hasBasicAnchor = [
+      business.phone,
+      business.whatsapp,
+      business.email,
+      business.address_full,
+      business.address_city,
+      business.category,
+    ].some((value) => hasTextValue(value));
+
+    const hasUsefulContent = [
+      business.description,
+      business.notes,
+      business.founder_description,
+    ].some((value) => hasTextValue(value, 10))
+      || hasStructuredHours(business.hours)
+      || getRelatedRows(business, 'business_services').some((service) => hasTextValue(service && service.name))
+      || getRelatedRows(business, 'business_menus').some((item) => hasTextValue(item && item.item_name))
+      || hasCustomerProvidedPhoto(business);
+
+    return hasBasicAnchor && hasUsefulContent;
+  }
+
+  function isBusinessWebsiteReady(business) {
+    return getEffectiveEnrichmentStatus(business) === 'completed' || hasCustomerProvidedWebsiteData(business);
   }
 
   function getBusinessCreatedAt(business) {
@@ -3916,8 +3985,7 @@
   }
 
   function isBusinessEnriched(business) {
-    const status = getEffectiveEnrichmentStatus(business);
-    return status === 'completed';
+    return isBusinessWebsiteReady(business);
   }
 
   function getEnrichmentStatusBadgeHtml(status) {
@@ -4273,7 +4341,7 @@
       case 'mapsUrl':
         return `<td>${business.maps_url ? `<a href="${escapeHtml(business.maps_url)}" target="_blank" rel="noopener">${escapeHtml(business.maps_url)}</a>` : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'enrich':
-        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${getEffectiveEnrichmentStatus(business) === 'completed' ? '\u2713' : t('btnEnrich')}</button></td>`;
+        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${isBusinessWebsiteReady(business) ? '\u2713' : t('btnEnrich')}</button></td>`;
       case 'actions':
         return `<td class="td-center">${business.phone ? `<button class="btn-msg" data-id="${business.id}" data-phone="${escapeHtml(business.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>`;
       case 'delete':
@@ -7062,11 +7130,35 @@
     return true;
   }
 
+  function formatHoursForPrompt(hours) {
+    if (!hours) return [];
+    if (Array.isArray(hours)) {
+      return hours.map((item) => String(item || '').trim()).filter(Boolean);
+    }
+    if (typeof hours === 'object') {
+      return Object.entries(hours).map(([day, value]) => {
+        let displayValue = '';
+        if (Array.isArray(value)) {
+          displayValue = value.map((item) => String(item || '').trim()).filter(Boolean).join(' - ');
+        } else if (value && typeof value === 'object') {
+          displayValue = Object.values(value).map((item) => String(item || '').trim()).filter(Boolean).join(' - ');
+        } else {
+          displayValue = String(value || '').trim();
+        }
+        return displayValue ? `${day}: ${displayValue}` : '';
+      }).filter(Boolean);
+    }
+    return [String(hours || '').trim()].filter(Boolean);
+  }
+
   function compileBusinessDataForPrompt(business, details) {
     const sections = [];
-    const profiles = business.business_social_profiles || [];
-    const reviews = details.reviews || [];
-    const photos = (details.photos || []).filter(isWebsitePhotoEligible);
+    const detailRows = details || {};
+    const profiles = business.business_social_profiles && business.business_social_profiles.length > 0
+      ? business.business_social_profiles
+      : (detailRows.socialProfiles || []);
+    const reviews = detailRows.reviews || [];
+    const photos = (detailRows.photos || []).filter(isWebsitePhotoEligible);
 
     sections.push('=== BUSINESS IDENTITY ===');
     sections.push(`Name: ${business.name}`);
@@ -7095,6 +7187,11 @@
       activeDetails.forEach(([label, val]) => sections.push(`${label}: ${val}`));
     }
 
+    if (hasTextValue(business.notes, 5)) {
+      sections.push('\n=== CUSTOMER INTAKE / NOTES ===');
+      sections.push(business.notes);
+    }
+
     sections.push('\n=== RATINGS & REVIEWS OVERVIEW ===');
     sections.push(`Google Rating: ${business.rating || 'N/A'} / 5`);
     sections.push(`Total Reviews: ${business.review_count || 0}`);
@@ -7117,10 +7214,21 @@
       });
     }
 
+    // Customer-provided reviews from the intake/chat flow
+    const customerReviews = reviews.filter(r => !['google', 'facebook'].includes(String(r.source || '').toLowerCase()));
+    if (customerReviews.length > 0) {
+      sections.push('\n=== CUSTOMER-PROVIDED REVIEWS ===');
+      customerReviews.slice(0, 10).forEach((r, i) => {
+        const text = r.review_text || r.text || '';
+        sections.push(`Customer Review ${i + 1} (${r.rating || 'N/A'}★ by ${r.author_name || 'Customer'}): "${text}"`);
+      });
+    }
+
     // Hours
-    if (business.hours && business.hours.length > 0) {
+    const formattedHours = formatHoursForPrompt(business.hours);
+    if (formattedHours.length > 0) {
       sections.push('\n=== BUSINESS HOURS ===');
-      business.hours.forEach(h => sections.push(h));
+      formattedHours.forEach(h => sections.push(h));
     }
 
     // Social profiles
@@ -7143,7 +7251,7 @@
     }
 
     // Customer-defined services/products
-    const services = details.services || [];
+    const services = detailRows.services || [];
     if (services.length > 0) {
       sections.push('\n=== SERVICES / PRODUCTS (customer-provided) ===');
       services.forEach((s, i) => {
@@ -7847,6 +7955,7 @@
     const reviews = details.reviews || [];
     const socials = details.socialProfiles || [];
     const menus = details.menus || [];
+    const services = details.services || [];
 
     // Photos: 20 pts (5 for any, 15 for 3+)
     const photoCount = photos.filter(isWebsitePhotoEligible).length;
@@ -7896,12 +8005,12 @@
     });
 
     // Description: 10 pts
-    const hasDesc = !!(business.description || business.highlights?.length > 0);
+    const hasDesc = !!(business.description || business.notes || business.founder_description || business.highlights?.length > 0 || services.length > 0);
     checks.push({
       key: 'completenessDescription',
       score: hasDesc ? 10 : 0,
       max: 10,
-      detail: '',
+      detail: services.length > 0 ? `${services.length} services/products` : '',
     });
 
     // Category: 5 pts
