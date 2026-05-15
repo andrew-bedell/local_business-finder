@@ -1,36 +1,96 @@
-// Vercel serverless function: Customer-triggered website generation
-// POST — authenticated customer triggers the full generation pipeline
-// Pipeline: fetch data → research report → AI photos → write content → generate HTML → publish
+// Customer-triggered website generation.
+// POST enqueues durable server-side work. GET returns resumable job status.
 
 import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
-import { buildWebsiteConfig } from '../_lib/website-config.js';
 import {
-  compileBusinessDataForPrompt,
-  buildPhotoInventory,
-  deriveProductRows,
-  generateResearchReport,
-  generateAIPhotos,
-  buildPhotoManifestWithSuitability,
-  fetchEnrichedData,
-  hasUnscannedWebsitePhotos,
-  scanPhotoTextOverlaysForBusiness,
-} from '../_lib/website-pipeline.js';
+  createGenerationJob,
+  getActiveGenerationJob,
+  getGenerationJobById,
+  toPublicGenerationJob,
+} from '../_lib/website-generation-jobs.js';
 
-export const config = { maxDuration: 300 };
+export const config = { maxDuration: 60 };
 
 const API_BASE = process.env.API_BASE_URL || 'https://ahoratengopagina.com';
-const INTERNAL_API_HEADERS = {
-  'Content-Type': 'application/json',
-  'x-internal-service-key': process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-};
+
+function getBaseUrl(req) {
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  if (!host) return API_BASE;
+  const proto = req.headers['x-forwarded-proto'] || (String(host).includes('localhost') ? 'http' : 'https');
+  return `${proto}://${host}`;
+}
+
+function kickGenerationWorker(req, serviceKey, jobId) {
+  const baseUrl = getBaseUrl(req);
+  fetch(`${baseUrl}/api/cron/process-website-jobs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${serviceKey}`,
+    },
+    body: JSON.stringify({ jobId }),
+  }).catch((err) => {
+    console.warn('[GenerateWebsite] Best-effort worker kick failed:', err.message);
+  });
+}
+
+async function loadLatestWebsite({ businessId, supabaseUrl, supabaseHeaders }) {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${encodeURIComponent(businessId)}&select=id,created_at,last_edited_at,version,status,published_url,config&order=created_at.desc&limit=1`,
+    { headers: supabaseHeaders }
+  );
+  if (!response.ok) return null;
+  const rows = await response.json().catch(() => []);
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+}
+
+async function loadWebsiteById({ businessId, websiteId, supabaseUrl, supabaseHeaders }) {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&business_id=eq.${encodeURIComponent(businessId)}&select=id,created_at,last_edited_at,version,status,published_url,config&limit=1`,
+    { headers: supabaseHeaders }
+  );
+  if (!response.ok) return null;
+  const rows = await response.json().catch(() => []);
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+}
+
+function enforceGenerationRateLimit({ latestWebsite, isUpdate }) {
+  if (!latestWebsite) {
+    if (isUpdate) {
+      const err = new Error('No existing website to update');
+      err.status = 400;
+      throw err;
+    }
+    return;
+  }
+
+  const lastTime = new Date(latestWebsite.last_edited_at || latestWebsite.created_at);
+  const hoursSince = (Date.now() - lastTime.getTime()) / (1000 * 60 * 60);
+
+  if (isUpdate && hoursSince < 1) {
+    const err = new Error('Puedes actualizar tu página web una vez por hora.');
+    err.status = 429;
+    err.minutesRemaining = Math.ceil(60 - hoursSince * 60);
+    throw err;
+  }
+
+  if (!isUpdate && hoursSince < 24) {
+    const err = new Error('Puedes generar una página web nueva una vez cada 24 horas.');
+    err.status = 429;
+    err.hoursRemaining = Math.ceil(24 - hoursSince);
+    throw err;
+  }
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   const supabaseUrl = process.env.SUPABASE_URL || 'https://xagfwyknlutmmtfufbfi.supabase.co';
   const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -44,292 +104,76 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
-  // Step 1: Resolve customer → business via JWT auth
-  let businessId, customerId;
+  let resolved;
   try {
-    const resolved = await resolveCustomerBusiness(req, supabaseUrl, serviceKey);
-    businessId = resolved.businessId;
-    customerId = resolved.customerId;
+    resolved = await resolveCustomerBusiness(req, supabaseUrl, serviceKey);
   } catch (authErr) {
     const status = authErr.status || 401;
     return res.status(status).json({ error: authErr.message });
   }
 
-  const { mode, existingWebsiteId } = req.body || {};
-  const isUpdate = mode === 'update' && existingWebsiteId;
+  const { businessId, customerId, userId } = resolved;
 
   try {
-    // Step 2: Fetch business data
-    console.log(`[GenerateWebsite] Starting ${isUpdate ? 'UPDATE' : 'NEW'} for business ${businessId}, customer ${customerId}`);
-    const bizRes = await fetch(
-      `${supabaseUrl}/rest/v1/businesses?id=eq.${businessId}&select=*`,
-      { headers: supabaseHeaders }
-    );
-    const bizData = await bizRes.json();
-    if (!Array.isArray(bizData) || bizData.length === 0) {
-      return res.status(404).json({ error: 'Business not found' });
-    }
-    const business = bizData[0];
-
-    // Step 3: Fetch enriched data and scan Google/AI photos before website selection
-    let enriched = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
-    if (hasUnscannedWebsitePhotos(enriched.photos)) {
-      try {
-        const scanResult = await scanPhotoTextOverlaysForBusiness(businessId);
-        if (scanResult.flagged > 0) {
-          console.log(`[GenerateWebsite] Flagged ${scanResult.flagged}/${scanResult.scanned} text-heavy photo(s) for ${business.name}`);
-        }
-        enriched = await fetchEnrichedData(businessId, supabaseUrl, supabaseHeaders);
-      } catch (scanErr) {
-        console.warn('[GenerateWebsite] Photo text scan failed; unscanned Google/AI photos will be excluded:', scanErr.message);
-      }
-    }
-    const { reviews, photos, websitePhotos, socialProfiles, menus, services } = enriched;
-
-    // Step 4: Rate limit check
-    // Updates: 1 per hour. New generation: 1 per 24 hours.
-    const existingWebRes = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${businessId}&select=id,created_at,last_edited_at,version,status,published_url,config&order=created_at.desc&limit=1`,
-      { headers: supabaseHeaders }
-    );
-    const existingWebData = await existingWebRes.json();
-    const latestWebsite = Array.isArray(existingWebData) && existingWebData.length > 0 ? existingWebData[0] : null;
-    if (Array.isArray(existingWebData) && existingWebData.length > 0) {
-      const existing = existingWebData[0];
-      const lastTime = new Date(existing.last_edited_at || existing.created_at);
-      const hoursSince = (Date.now() - lastTime.getTime()) / (1000 * 60 * 60);
-
-      if (isUpdate) {
-        // Updates rate limit: 1 per hour
-        if (hoursSince < 1) {
-          return res.status(429).json({
-            error: 'Puedes actualizar tu página web una vez por hora.',
-            existingWebsiteId: existing.id,
-            minutesRemaining: Math.ceil(60 - hoursSince * 60),
-          });
-        }
-      } else {
-        // New generation rate limit: 1 per 24 hours
-        if (hoursSince < 24) {
-          return res.status(429).json({
-            error: 'Website generation limit: one per 24 hours',
-            existingWebsiteId: existing.id,
-            hoursRemaining: Math.ceil(24 - hoursSince),
-          });
-        }
-      }
-    } else if (isUpdate) {
-      // Can't update if no website exists
-      return res.status(400).json({ error: 'No existing website to update' });
+    if (req.method === 'GET') {
+      const jobId = req.query?.jobId || req.query?.job_id;
+      const job = jobId
+        ? await getGenerationJobById({ jobId, businessId, supabaseUrl, supabaseHeaders })
+        : await getActiveGenerationJob({ businessId, supabaseUrl, supabaseHeaders });
+      return res.status(200).json({ job: toPublicGenerationJob(job) });
     }
 
-    // Step 5: Compile business data into a text prompt
-    const products = deriveProductRows(business, services);
-    const businessData = compileBusinessDataForPrompt(business, reviews, websitePhotos, socialProfiles, menus, services, products);
+    const { mode, existingWebsiteId } = req.body || {};
+    const isUpdate = mode === 'update' && existingWebsiteId;
 
-    // Determine language from address country
-    const country = business.address_country || '';
-    const spanishCountries = ['MX', 'CO', 'AR', 'PE', 'CL', 'EC', 'VE', 'GT', 'CU', 'DO', 'HN', 'SV', 'NI', 'CR', 'PA', 'UY', 'PY', 'BO'];
-    const language = spanishCountries.includes(country) ? 'es' : 'es'; // Default to Spanish
-
-    // Step 6: Build photo inventory from photos rows
-    const photoInventory = buildPhotoInventory(websitePhotos, supabaseUrl);
-
-    // Step 7: Call /api/ai/research-report (SSE response)
-    console.log('[GenerateWebsite] Step 7: Generating research report...');
-    const researchReport = await generateResearchReport(businessData, business.name, language);
-
-    // Step 8: Generate AI photos for generate_ai slots (max 3 parallel)
-    console.log('[GenerateWebsite] Step 8: Generating AI photos...');
-    const aiPhotos = await generateAIPhotos(researchReport, businessId, supabaseUrl, supabaseHeaders, {
-      existingPhotoCount: photoInventory.length,
-    });
-
-    // Add AI photos to inventory
-    const sectionCounts = {};
-    aiPhotos.forEach((photo) => {
-      const section = (photo.section || 'photo').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      const idx = sectionCounts[section] || 0;
-      sectionCounts[section] = idx + 1;
-      photoInventory.push({
-        bucket: 'photos',
-        id: `ai_${section}_${idx}`,
-        originalUrl: photo.url,
-        storagePath: photo.storagePath || null,
-        type: 'ai_generated',
-        url: photo.url,
+    const activeJob = await getActiveGenerationJob({ businessId, supabaseUrl, supabaseHeaders });
+    if (activeJob) {
+      return res.status(202).json({
+        success: true,
+        queued: true,
+        job: toPublicGenerationJob(activeJob),
       });
-    });
-
-    // Step 10: Build photo manifest
-    console.log('[GenerateWebsite] Step 10: Building photo manifest...');
-    const photoManifest = await buildPhotoManifestWithSuitability(researchReport.photoAssetPlan || [], photoInventory, supabaseUrl);
-
-    // Step 10: Call /api/ai/write-content
-    console.log('[GenerateWebsite] Step 10: Writing website content...');
-    const writeContentRes = await fetch(`${API_BASE}/api/ai/write-content`, {
-      method: 'POST',
-      headers: INTERNAL_API_HEADERS,
-      body: JSON.stringify({
-        researchReport,
-        businessData,
-        photoManifest,
-        language,
-        category: business.category || '',
-        subcategory: business.subcategory || '',
-        country: business.address_country || '',
-      }),
-    });
-    if (!writeContentRes.ok) {
-      const errText = await writeContentRes.text().catch(() => '');
-      throw new Error(`Content writing API failed (${writeContentRes.status}): ${errText.substring(0, 200)}`);
-    }
-    const websiteContent = await writeContentRes.json();
-    if (!websiteContent.hero && !websiteContent.about) {
-      throw new Error('Content writing returned incomplete content');
     }
 
-    // Step 11: Call /api/ai/generate-website
-    console.log('[GenerateWebsite] Step 11: Generating website HTML...');
-    const generateHtmlRes = await fetch(`${API_BASE}/api/ai/generate-website`, {
-      method: 'POST',
-      headers: INTERNAL_API_HEADERS,
-      body: JSON.stringify({
-        websiteContent,
-        designPalette: researchReport.designPalette || {},
-        photoManifest: (photoManifest || []).map(p => ({
-          section: p.section,
-          slot: p.slot,
-          url: p.url,
-          objectPosition: p.objectPosition || null,
-          desktopPosition: p.desktopPosition || null,
-          mobilePosition: p.mobilePosition || null,
-          heroSuitability: p.heroSuitability || null,
-        })),
-        name: business.name,
-        language,
-        category: business.category || '',
-        subcategory: business.subcategory || '',
-        phone: business.phone || '',
-        whatsapp: business.whatsapp || '',
-        address: business.address_full || '',
-        city: business.address_city || '',
-        state: business.address_state || '',
-        country: business.address_country || '',
-        hours: business.hours || [],
-        rating: business.rating || null,
-        reviewCount: business.review_count || null,
-        paymentMethods: business.payment_methods || [],
-        highlights: business.highlights || [],
-        serviceOptions: business.service_options || [],
-        mapsUrl: business.maps_url || '',
-        socialProfiles: socialProfiles.map(sp => ({ platform: sp.platform, url: sp.profile_url })),
-        menuItems: menus.map(m => ({ category: m.menu_category, name: m.item_name, description: m.item_description, price: m.price, currency: m.currency })),
-        services: services.map(s => ({ name: s.name, description: s.description, price: s.price, currency: s.currency, photo_url: s.photo_url || '' })),
-        products: products.map(p => ({ name: p.name, description: p.description, price: p.price, currency: p.currency, photo_url: p.photo_url || '' })),
-        founderName: business.owner_name || '',
-        founderDescription: business.founder_description || '',
-        researchReport,
-      }),
-    });
-    if (!generateHtmlRes.ok) {
-      const errText = await generateHtmlRes.text().catch(() => '');
-      throw new Error(`Website generation API failed (${generateHtmlRes.status}): ${errText.substring(0, 200)}`);
-    }
-    const generateResult = await generateHtmlRes.json();
-    if (!generateResult.html) {
-      throw new Error('Website generation returned no HTML');
-    }
-
-    // Step 12: Save generated HTML only after it exists, so we never leave an empty preview row behind.
-    let websiteId = existingWebsiteId;
-    const savedConfig = buildWebsiteConfig({
-      existingConfig: latestWebsite?.config,
-      researchReport,
-      websiteContent,
-      photoManifest,
-      html: generateResult.html,
-    });
-
+    const latestWebsite = await loadLatestWebsite({ businessId, supabaseUrl, supabaseHeaders });
     if (isUpdate) {
-      console.log(`[GenerateWebsite] Step 12: Saving HTML to existing website ${existingWebsiteId}...`);
-      const existingVersion = latestWebsite?.version || 1;
-      const updateWebRes = await fetch(
-        `${supabaseUrl}/rest/v1/generated_websites?id=eq.${existingWebsiteId}`,
-        {
-          method: 'PATCH',
-          headers: { ...supabaseHeaders, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({
-            version: existingVersion + 1,
-            last_edited_at: new Date().toISOString(),
-            config: savedConfig,
-          }),
-        }
-      );
-      if (!updateWebRes.ok) {
-        const errText = await updateWebRes.text().catch(() => '');
-        console.error('[GenerateWebsite] Failed to save HTML:', errText);
-        throw new Error('Failed to save generated HTML');
-      }
-    } else {
-      console.log('[GenerateWebsite] Step 12: Creating website record with completed HTML...');
-      const insertWebRes = await fetch(
-        `${supabaseUrl}/rest/v1/generated_websites`,
-        {
-          method: 'POST',
-          headers: { ...supabaseHeaders, 'Prefer': 'return=representation' },
-          body: JSON.stringify({
-            business_id: businessId,
-            template_name: 'ai_generated',
-            status: 'draft',
-            version: 1,
-            generated_at: new Date().toISOString(),
-            config: savedConfig,
-          }),
-        }
-      );
-      const insertWebData = await insertWebRes.json();
-      if (!insertWebRes.ok || !Array.isArray(insertWebData) || insertWebData.length === 0) {
-        console.error('[GenerateWebsite] Failed to create website record:', insertWebData);
-        return res.status(502).json({ error: 'Failed to create website record' });
-      }
-      websiteId = insertWebData[0].id;
-    }
-
-    // Step 13: Publish only when needed.
-    let publishedUrl = latestWebsite?.published_url || null;
-    const shouldPublish = !isUpdate || latestWebsite?.status !== 'published' || !latestWebsite?.published_url;
-
-    if (shouldPublish) {
-      console.log('[GenerateWebsite] Step 13: Publishing website...');
-      const publishRes = await fetch(`${API_BASE}/api/websites/publish`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ websiteId, action: 'publish' }),
+      const targetWebsite = await loadWebsiteById({
+        businessId,
+        websiteId: existingWebsiteId,
+        supabaseUrl,
+        supabaseHeaders,
       });
-      if (!publishRes.ok) {
-        const errText = await publishRes.text().catch(() => '');
-        console.error('[GenerateWebsite] Publish failed:', errText);
-        return res.status(200).json({
-          success: true,
-          websiteId,
-          publishedUrl,
-          warning: 'Website generated but publishing failed. It can be published manually.',
-        });
+      if (!targetWebsite) {
+        return res.status(400).json({ error: 'No existing website to update' });
       }
-      const publishResult = await publishRes.json();
-      publishedUrl = publishResult?.website?.published_url || publishedUrl;
     }
+    enforceGenerationRateLimit({ latestWebsite, isUpdate });
 
-    // Step 14: Return success
-    console.log(`[GenerateWebsite] Complete! Published URL: ${publishedUrl}`);
-    return res.status(200).json({
+    const job = await createGenerationJob({
+      businessId,
+      customerId,
+      userId,
+      mode: isUpdate ? 'update' : 'create',
+      existingWebsiteId: isUpdate ? existingWebsiteId : null,
+      supabaseUrl,
+      supabaseHeaders,
+    });
+
+    console.log(`[GenerateWebsite] Queued job ${job.id} for business ${businessId}`);
+    kickGenerationWorker(req, serviceKey, job.id);
+
+    return res.status(202).json({
       success: true,
-      websiteId,
-      publishedUrl,
+      queued: true,
+      job: toPublicGenerationJob(job),
     });
   } catch (err) {
     console.error(`[GenerateWebsite] Failed for business ${businessId}:`, err);
-    return res.status(500).json({ error: err.message || 'Website generation failed' });
+    const status = err.status || 500;
+    return res.status(status).json({
+      error: err.message || 'Website generation failed',
+      minutesRemaining: err.minutesRemaining,
+      hoursRemaining: err.hoursRemaining,
+    });
   }
 }

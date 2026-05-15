@@ -972,6 +972,53 @@ CREATE INDEX IF NOT EXISTS idx_customer_users_customer ON customer_users (custom
 
 
 -- ============================================================================
+-- 13b. WEBSITE_GENERATION_JOBS — Durable website generation queue
+-- ============================================================================
+-- Tracks customer-triggered generation work independently of browser sessions.
+
+CREATE TABLE IF NOT EXISTS website_generation_jobs (
+  id                      UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_id             BIGINT NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
+  customer_id             UUID REFERENCES customers(id) ON DELETE SET NULL,
+  requested_by_user_id    UUID,
+
+  mode                    TEXT NOT NULL DEFAULT 'create'
+                            CHECK (mode IN ('create', 'update')),
+  existing_website_id     UUID REFERENCES generated_websites(id) ON DELETE SET NULL,
+
+  status                  TEXT NOT NULL DEFAULT 'queued'
+                            CHECK (status IN ('queued', 'running', 'completed', 'failed', 'cancelled')),
+  stage                   TEXT NOT NULL DEFAULT 'queued'
+                            CHECK (stage IN ('queued', 'research', 'photos', 'content', 'build', 'publish', 'completed', 'failed')),
+  progress                INTEGER NOT NULL DEFAULT 0
+                            CHECK (progress BETWEEN 0 AND 100),
+
+  website_id              UUID REFERENCES generated_websites(id) ON DELETE SET NULL,
+  published_url           TEXT,
+  error_message           TEXT,
+  attempts                INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+  locked_at               TIMESTAMPTZ,
+  locked_by               TEXT,
+  result                  JSONB NOT NULL DEFAULT '{}'::jsonb,
+  metadata                JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+  started_at              TIMESTAMPTZ,
+  finished_at             TIMESTAMPTZ,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_website_generation_jobs_business_active
+  ON website_generation_jobs (business_id, created_at DESC)
+  WHERE status IN ('queued', 'running');
+CREATE INDEX IF NOT EXISTS idx_website_generation_jobs_status_created
+  ON website_generation_jobs (status, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_website_generation_jobs_locked
+  ON website_generation_jobs (status, locked_at)
+  WHERE status = 'running';
+
+
+-- ============================================================================
 -- 14. EDIT_REQUESTS — Customer website change requests
 -- ============================================================================
 -- Submitted by customers via the admin portal. Managed by operators.
@@ -1084,12 +1131,14 @@ CREATE POLICY "Allow all access" ON employee_applications FOR ALL USING (true) W
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customer_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE website_generation_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE edit_requests ENABLE ROW LEVEL SECURITY;
 
 -- Operator (anon key) open access
 CREATE POLICY "Allow all access" ON customers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON subscriptions FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON customer_users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access" ON website_generation_jobs FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access" ON edit_requests FOR ALL USING (true) WITH CHECK (true);
 
 -- Customer-scoped read policies (for authenticated users via Supabase Auth)
@@ -1112,6 +1161,16 @@ CREATE POLICY "Customers read own user record" ON customer_users
 CREATE POLICY "Customers read own team" ON customer_users
   FOR SELECT USING (
     customer_id IN (SELECT customer_id FROM customer_users WHERE auth_user_id = auth.uid())
+  );
+
+CREATE POLICY "Customers read own website generation jobs" ON website_generation_jobs
+  FOR SELECT USING (
+    business_id IN (
+      SELECT c.business_id
+      FROM customers c
+      JOIN customer_users cu ON cu.customer_id = c.id
+      WHERE cu.auth_user_id = auth.uid()
+    )
   );
 
 CREATE POLICY "Customers read own edit requests" ON edit_requests
