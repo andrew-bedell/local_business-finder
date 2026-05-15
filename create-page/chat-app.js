@@ -64,8 +64,8 @@ const FOUND_FIELDS = [
   },
   {
     key: 'telefono',
-    label: 'telefono del negocio',
-    prompt: 'Cual es el numero al que te pueden llamar?'
+    label: 'telefono publico del negocio',
+    prompt: 'Cual es el numero publico del negocio al que tus clientes pueden llamar?\n\n_Este si puede aparecer en tu pagina. Escribe "no" si todavia no tienes uno publico._'
   },
   {
     key: 'horario',
@@ -80,18 +80,80 @@ const FOUND_FIELDS = [
 ];
 
 const CHECKLIST = [
-  { key: 'nombre', label: 'Nombre del negocio' },
-  { key: 'ciudad', label: 'Ciudad' },
-  { key: 'tipo', label: 'Tipo de negocio' },
-  { key: 'direccion', label: 'Direccion' },
-  { key: 'telefono', label: 'Telefono del negocio' },
-  { key: 'whatsapp', label: 'WhatsApp del negocio' },
-  { key: 'contacto_email', label: 'Correo de acceso' },
-  { key: 'contacto_whatsapp', label: 'WhatsApp personal' },
-  { key: 'sobre', label: 'Descripcion' },
-  { key: 'uploaded_photos', label: 'Fotos' },
-  { key: 'offerings_ready', label: 'Servicios o menu' }
+  { key: 'propietario', label: 'Tu nombre de contacto', editable: true, placeholder: 'Nombre de la persona que revisara el sitio' },
+  { key: 'nombre', label: 'Nombre del negocio', editable: true, placeholder: 'Nombre como debe aparecer en tu pagina' },
+  { key: 'ciudad', label: 'Ciudad', editable: true, placeholder: 'Ciudad principal de tu negocio' },
+  { key: 'tipo', label: 'Tipo de negocio', editable: true, placeholder: 'Ej: restaurante, salon, taller' },
+  { key: 'direccion', label: 'Direccion o zona', editable: true, optional: true, placeholder: 'Direccion completa o zona donde atiendes' },
+  { key: 'telefono', label: 'Telefono publico del negocio', editable: true, optional: true, placeholder: 'Numero que tus clientes pueden llamar' },
+  { key: 'horario', label: 'Horario de atencion', editable: true, optional: true, placeholder: 'Ej: Lunes a sabado, 9am-7pm' },
+  { key: 'whatsapp', label: 'WhatsApp publico del negocio', editable: true, optional: true, placeholder: 'Numero que se mostrara en tu pagina' },
+  { key: 'contacto_email', label: 'Correo para tu acceso', editable: true, placeholder: 'Correo donde enviaremos tu acceso' },
+  { key: 'contacto_whatsapp', label: 'WhatsApp personal para ediciones', editable: true, placeholder: 'Numero interno para coordinar contigo', help: 'No se publica en tu pagina.' },
+  { key: 'sobre', label: 'Historia del negocio', editable: true, optional: true, multiline: true, placeholder: 'Que te hace especial y por que vuelven tus clientes' },
+  { key: 'uploaded_photos', label: 'Fotos para el sitio' },
+  { key: 'offerings_ready', label: 'Servicios, productos o menu' }
 ];
+
+function isProgressFieldDone(field, data) {
+  const value = data[field.key];
+  if (field.key === 'telefono') return !!value || data.telefono_skipped === true;
+  if (field.key === 'whatsapp') return !!value || data.whatsapp_skipped === true;
+  if (field.key === 'uploaded_photos') {
+    return (Array.isArray(data.uploaded_photos) && data.uploaded_photos.length > 0)
+      || (Array.isArray(data.photos) && data.photos.length > 0)
+      || data.uploaded_photos_skipped === true;
+  }
+  if (field.key === 'offerings_ready') {
+    return (Array.isArray(data.services) && data.services.length > 0)
+      || (Array.isArray(data.menu_items) && data.menu_items.length > 0);
+  }
+  if (Array.isArray(value)) return value.length > 0;
+  return !!value;
+}
+
+function progressValueLabel(field, data) {
+  const value = data[field.key];
+  if (field.key === 'telefono' && data.telefono_skipped) return 'No tiene telefono publico todavia';
+  if (field.key === 'whatsapp' && data.whatsapp_skipped) return 'Lo definimos despues';
+  if (field.key === 'uploaded_photos') {
+    if (Array.isArray(data.uploaded_photos) && data.uploaded_photos.length > 0) {
+      return data.uploaded_photos.length + ' foto' + (data.uploaded_photos.length !== 1 ? 's' : '') + ' subida' + (data.uploaded_photos.length !== 1 ? 's' : '');
+    }
+    if (Array.isArray(data.photos) && data.photos.length > 0) {
+      return 'Usaremos fotos encontradas en Google';
+    }
+    if (data.uploaded_photos_skipped) return 'Saltado por ahora';
+    return '';
+  }
+  if (field.key === 'offerings_ready') {
+    const serviceCount = Array.isArray(data.services) ? data.services.length : 0;
+    const menuCount = Array.isArray(data.menu_items) ? data.menu_items.length : 0;
+    const total = serviceCount + menuCount;
+    return total ? total + ' elemento' + (total !== 1 ? 's' : '') + ' listo' + (total !== 1 ? 's' : '') : '';
+  }
+  return String(value || '');
+}
+
+function getEditableProgressValue(field, data) {
+  if (field.key === 'telefono' && data.telefono_skipped) return 'no';
+  if (field.key === 'whatsapp' && data.whatsapp_skipped) return 'no';
+  return String(data[field.key] || '');
+}
+
+function getProgressMeta(data) {
+  const completed = CHECKLIST.filter(field => isProgressFieldDone(field, data));
+  const remaining = CHECKLIST.filter(field => !isProgressFieldDone(field, data));
+  const pct = Math.round(completed.length / CHECKLIST.length * 100);
+  const remainingMinutes = remaining.length ? Math.max(2, Math.ceil(remaining.length * 1.25)) : 0;
+  return {
+    completed,
+    remaining,
+    pct,
+    remainingMinutes,
+    isComplete: remaining.length === 0
+  };
+}
 
 const ts = () => new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -870,52 +932,300 @@ function SearchCard({ done, found, biz, count = 1 }) {
   );
 }
 
-function ProgressBar({ data }) {
-  const done = CHECKLIST.filter(field => {
-    const value = data[field.key];
-    if (Array.isArray(value)) return value.length > 0;
-    return !!value;
-  });
-  const pct = Math.round(done.length / CHECKLIST.length * 100);
+function ProgressSticker({ pct, remainingMinutes }) {
+  const almostDone = pct >= 80;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, animation: 'stickerPop .45s ease both' }}>
+      <div
+        style={{
+          width: 58,
+          height: 58,
+          borderRadius: 18,
+          background: almostDone ? 'linear-gradient(135deg,#16A34A,#21C55E)' : 'linear-gradient(135deg,#2563EB,#21C55E)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          fontWeight: 800,
+          fontSize: 17,
+          boxShadow: '0 10px 26px rgba(0,0,0,.25)',
+          transform: 'rotate(-4deg)'
+        }}
+      >
+        {pct}%
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ color: C.waText, fontSize: 14, fontWeight: 700 }}>
+          {almostDone ? 'Ya casi esta listo' : 'Buen avance'}
+        </div>
+        <div style={{ color: C.waSub, fontSize: 12.5, lineHeight: 1.35, marginTop: 2 }}>
+          {remainingMinutes ? 'Te faltan aprox. ' + remainingMinutes + ' min para crear tu sitio.' : 'Ya podemos preparar tu sitio.'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressBar({ data, onUpdateField }) {
+  const meta = getProgressMeta(data || {});
   const [expanded, setExpanded] = useState(false);
+  const [editingKey, setEditingKey] = useState('');
+  const [draft, setDraft] = useState('');
+
+  function startEdit(field) {
+    setEditingKey(field.key);
+    setDraft(getEditableProgressValue(field, data || {}));
+  }
+
+  function saveEdit(field) {
+    if (!field.optional && !String(draft || '').trim()) return;
+    if (onUpdateField) onUpdateField(field.key, draft);
+    setEditingKey('');
+    setDraft('');
+  }
 
   return (
     <div style={{ background: 'rgba(0,0,0,.3)', borderBottom: '1px solid rgba(255,255,255,.05)', flexShrink: 0 }}>
-      <div onClick={() => setExpanded(prev => !prev)} style={{ padding: '7px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,.1)', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: pct + '%', background: C.green, transition: 'width .5s ease', borderRadius: 4 }} />
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        aria-label="Ver avance y por que preguntamos esta informacion"
+        style={{
+          width: '100%',
+          padding: '9px 14px 10px',
+          cursor: 'pointer',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0,1fr) auto',
+          alignItems: 'center',
+          gap: 10,
+          background: 'transparent',
+          border: 'none',
+          color: C.waText,
+          fontFamily: 'DM Sans, sans-serif',
+          textAlign: 'left'
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: 11.5, color: C.waText, fontWeight: 700 }}>{meta.pct}% listo</span>
+            <span style={{ fontSize: 11, color: meta.isComplete ? C.green : C.waSub, whiteSpace: 'nowrap' }}>
+              {meta.isComplete ? 'Listo para crear tu sitio' : meta.remainingMinutes + ' min aprox.'}
+            </span>
+          </div>
+          <div style={{ height: 4, background: 'rgba(255,255,255,.1)', borderRadius: 4, overflow: 'hidden' }}>
+            <div
+              style={{
+                height: '100%',
+                width: meta.pct + '%',
+                background: meta.pct >= 80 ? 'linear-gradient(90deg,#21C55E,#86EFAC)' : C.green,
+                transition: 'width .5s ease',
+                borderRadius: 4,
+                boxShadow: meta.pct >= 80 ? '0 0 12px rgba(33,197,94,.55)' : 'none'
+              }}
+            />
+          </div>
         </div>
-        <span style={{ fontSize: 11, color: pct === 100 ? C.green : C.waSub, whiteSpace: 'nowrap', fontWeight: pct === 100 ? 600 : 400 }}>
-          {pct === 100 ? 'Completo' : done.length + '/' + CHECKLIST.length}
+        <span
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            background: meta.pct >= 80 ? 'rgba(33,197,94,.16)' : 'rgba(255,255,255,.08)',
+            border: '1px solid rgba(255,255,255,.1)',
+            color: meta.pct >= 80 ? C.green : C.waSub,
+            display: 'grid',
+            placeItems: 'center',
+            fontSize: 13,
+            fontWeight: 800,
+            animation: meta.pct >= 80 && !meta.isComplete ? 'softPulse 1.7s ease-in-out infinite' : 'none'
+          }}
+        >
+          i
         </span>
-        <span style={{ fontSize: 10, color: C.waSub, display: 'inline-block', transition: 'transform .2s', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
-      </div>
+      </button>
       {expanded ? (
-        <div style={{ padding: '2px 14px 10px', display: 'flex', flexWrap: 'wrap', gap: '5px 12px' }}>
-          {CHECKLIST.map(field => {
-            const value = data[field.key];
-            const checked = Array.isArray(value) ? value.length > 0 : !!value;
-            return (
-              <div key={field.key} style={{ display: 'flex', alignItems: 'center', gap: 5, opacity: checked ? 1 : 0.38 }}>
-                <div
+        <div
+          onClick={() => {
+            setExpanded(false);
+            setEditingKey('');
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 80,
+            background: 'rgba(3,7,18,.64)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            padding: '18px 12px',
+            backdropFilter: 'blur(8px)'
+          }}
+        >
+          <div
+            onClick={event => event.stopPropagation()}
+            style={{
+              width: 'min(420px,100%)',
+              maxHeight: 'min(720px, calc(100vh - 32px))',
+              overflowY: 'auto',
+              background: C.waHeader,
+              border: '1px solid rgba(255,255,255,.1)',
+              borderRadius: 22,
+              boxShadow: '0 30px 90px rgba(0,0,0,.55)',
+              animation: 'sheetUp .22s ease both'
+            }}
+          >
+            <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: C.green, fontWeight: 800 }}>{meta.pct}% completo</div>
+                  <div style={{ color: C.waText, fontSize: 18, lineHeight: 1.18, fontWeight: 800, marginTop: 3 }}>
+                    {meta.isComplete ? 'Listo para crear tu pagina' : meta.remainingMinutes + ' min aprox. para crear tu pagina'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpanded(false);
+                    setEditingKey('');
+                  }}
+                  aria-label="Cerrar"
                   style={{
-                    width: 14,
-                    height: 14,
+                    width: 32,
+                    height: 32,
                     borderRadius: '50%',
-                    flexShrink: 0,
-                    background: checked ? C.green : 'transparent',
-                    border: checked ? 'none' : '1.5px solid ' + C.waSub,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    border: 'none',
+                    background: 'rgba(255,255,255,.08)',
+                    color: C.waText,
+                    cursor: 'pointer',
+                    fontSize: 18,
+                    lineHeight: 1
                   }}
                 >
-                  {checked ? <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
-                </div>
-                <span style={{ fontSize: 11, color: checked ? C.waText : C.waSub }}>{field.label}</span>
+                  x
+                </button>
               </div>
-            );
-          })}
+              <div style={{ height: 6, background: 'rgba(255,255,255,.1)', borderRadius: 6, overflow: 'hidden', marginTop: 14 }}>
+                <div style={{ height: '100%', width: meta.pct + '%', borderRadius: 6, background: 'linear-gradient(90deg,#21C55E,#86EFAC)', transition: 'width .5s ease' }} />
+              </div>
+            </div>
+
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
+              <div style={{ color: C.waText, fontWeight: 800, fontSize: 13.5, marginBottom: 7 }}>Por que preguntamos esto</div>
+              <div style={{ color: C.waSub, fontSize: 12.5, lineHeight: 1.5 }}>
+                Buscamos la informacion de tu negocio en internet para crear el primer borrador de tu pagina. Si ya tienes ficha de Google, podemos traer datos como direccion, horarios, fotos y resenas. Si falta algo, te hacemos preguntas cortas para completar lo necesario.
+                <br /><br />
+                Cuando la IA termine el borrador, lo revisamos contigo para editarlo hasta que quede como te gusta. Tu WhatsApp personal es solo para coordinar esas ediciones; no se publica en tu pagina.
+              </div>
+            </div>
+
+            <div style={{ padding: '14px 16px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                <div style={{ color: C.waText, fontWeight: 800, fontSize: 13.5 }}>Tu avance</div>
+                <div style={{ color: C.waSub, fontSize: 11.5 }}>
+                  {meta.completed.length}/{CHECKLIST.length} listo
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: 7 }}>
+                {CHECKLIST.map(field => {
+                  const checked = isProgressFieldDone(field, data || {});
+                  const valueLabel = progressValueLabel(field, data || {});
+                  const isEditing = editingKey === field.key;
+                  return (
+                    <div
+                      key={field.key}
+                      style={{
+                        background: checked ? 'rgba(33,197,94,.08)' : 'rgba(255,255,255,.045)',
+                        border: '1px solid ' + (checked ? 'rgba(33,197,94,.22)' : 'rgba(255,255,255,.08)'),
+                        borderRadius: 12,
+                        padding: '10px 11px'
+                      }}
+                    >
+                      <div style={{ display: 'grid', gridTemplateColumns: '18px minmax(0,1fr) auto', alignItems: 'center', gap: 8 }}>
+                        <div
+                          style={{
+                            width: 17,
+                            height: 17,
+                            borderRadius: '50%',
+                            background: checked ? C.green : 'transparent',
+                            border: checked ? 'none' : '1.5px solid ' + C.waSub,
+                            display: 'grid',
+                            placeItems: 'center'
+                          }}
+                        >
+                          {checked ? <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.6L3.4 6L8 1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ color: checked ? C.waText : C.waSub, fontSize: 12.5, fontWeight: 700, lineHeight: 1.25 }}>{field.label}</div>
+                          {valueLabel ? (
+                            <div style={{ color: C.waSub, fontSize: 11.5, lineHeight: 1.35, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {valueLabel}
+                            </div>
+                          ) : null}
+                          {field.help ? <div style={{ color: C.green, fontSize: 11, marginTop: 2 }}>{field.help}</div> : null}
+                        </div>
+                        <div style={{ color: checked ? C.green : C.waSub, fontSize: 11, fontWeight: 800 }}>
+                          {checked ? 'Listo' : 'Falta'}
+                        </div>
+                      </div>
+
+                      {checked && field.editable ? (
+                        <div style={{ marginTop: 8 }}>
+                          {isEditing ? (
+                            <div style={{ display: 'grid', gap: 8 }}>
+                              {field.multiline ? (
+                                <textarea
+                                  value={draft}
+                                  onChange={event => setDraft(event.target.value)}
+                                  placeholder={field.placeholder || field.label}
+                                  rows={3}
+                                  style={{ width: '100%', resize: 'vertical', border: '1px solid rgba(255,255,255,.12)', borderRadius: 10, background: 'rgba(0,0,0,.18)', color: C.waText, padding: '9px 10px', outline: 'none', fontFamily: 'DM Sans, sans-serif', fontSize: 13, lineHeight: 1.4 }}
+                                />
+                              ) : (
+                                <input
+                                  value={draft}
+                                  onChange={event => setDraft(event.target.value)}
+                                  placeholder={field.placeholder || field.label}
+                                  style={{ width: '100%', border: '1px solid rgba(255,255,255,.12)', borderRadius: 10, background: 'rgba(0,0,0,.18)', color: C.waText, padding: '9px 10px', outline: 'none', fontFamily: 'DM Sans, sans-serif', fontSize: 13 }}
+                                />
+                              )}
+                              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingKey('');
+                                    setDraft('');
+                                  }}
+                                  style={{ border: 'none', background: 'rgba(255,255,255,.07)', color: C.waSub, borderRadius: 999, padding: '7px 11px', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => saveEdit(field)}
+                                  disabled={!field.optional && !String(draft || '').trim()}
+                                  style={{ border: 'none', background: C.green, color: '#fff', borderRadius: 999, padding: '7px 12px', cursor: !field.optional && !String(draft || '').trim() ? 'not-allowed' : 'pointer', opacity: !field.optional && !String(draft || '').trim() ? 0.55 : 1, fontSize: 12, fontWeight: 800, fontFamily: 'DM Sans, sans-serif' }}
+                                >
+                                  Guardar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => startEdit(field)}
+                              style={{ border: 'none', background: 'transparent', color: C.green, cursor: 'pointer', fontSize: 12, fontWeight: 800, fontFamily: 'DM Sans, sans-serif', padding: 0 }}
+                            >
+                              Editar respuesta
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       ) : null}
     </div>
@@ -941,6 +1251,7 @@ function App() {
   const lookupModeRef = useRef('lookup');
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const progressNudgesRef = useRef(new Set());
 
   function scrollBottom() {
     if (bottomRef.current) {
@@ -985,8 +1296,8 @@ function App() {
     ? { position: 'fixed', top: 0, left: 0, width: '100%', height: vh + 'px', background: C.navy }
     : { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.navy, padding: '20px' };
   const frameStyle = isMobile
-    ? { width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: C.navy }
-    : { width: '100%', maxWidth: 420, height: 'min(800px, ' + (vh - 40) + 'px)', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,.65)', border: '1px solid rgba(255,255,255,.06)' };
+    ? { position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: C.navy }
+    : { position: 'relative', width: '100%', maxWidth: 420, height: 'min(800px, ' + (vh - 40) + 'px)', borderRadius: 24, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 80px rgba(0,0,0,.65)', border: '1px solid rgba(255,255,255,.06)' };
 
   function pushMsg(message) {
     setMsgs(prev => prev.concat([{ id: Date.now() + Math.random(), ...message }]));
@@ -1008,10 +1319,42 @@ function App() {
   }
 
   function collect(values) {
+    const beforeMeta = getProgressMeta(collRef.current);
     const next = { ...collRef.current, ...values };
     next.offerings_ready = (Array.isArray(next.services) && next.services.length > 0) || (Array.isArray(next.menu_items) && next.menu_items.length > 0);
     collRef.current = next;
     setCollected({ ...next });
+    const afterMeta = getProgressMeta(next);
+    [35, 65, 85].forEach(threshold => {
+      if (beforeMeta.pct < threshold && afterMeta.pct >= threshold && !progressNudgesRef.current.has(threshold)) {
+        progressNudgesRef.current.add(threshold);
+        setTimeout(() => {
+          pushMsg({
+            from: 'bot',
+            time: ts(),
+            rich: <ProgressSticker pct={afterMeta.pct} remainingMinutes={afterMeta.remainingMinutes} />
+          });
+        }, 180);
+      }
+    });
+  }
+
+  function updateProgressAnswer(key, rawValue) {
+    const value = String(rawValue || '').trim();
+    const updates = { [key]: value };
+    if (key === 'propietario') updates.contacto_nombre = value;
+    if (key === 'telefono') {
+      updates.telefono = normalizeMaybeBlank(value);
+      updates.telefono_skipped = isNegative(value);
+    }
+    if (key === 'whatsapp') {
+      updates.whatsapp = normalizeMaybeBlank(value);
+      updates.whatsapp_skipped = isNegative(value);
+    }
+    if (key === 'direccion' || key === 'horario' || key === 'sobre') {
+      updates[key] = normalizeMaybeBlank(value);
+    }
+    collect(updates);
   }
 
   function botSay(text, extra) {
@@ -1029,7 +1372,7 @@ function App() {
   async function introFlow() {
     await sleep(1200);
     setTyping(false);
-    pushMsg({ from: 'bot', text: 'Te ayudare a crear la pagina web de tu negocio en minutos.\n\nComo te llamas?', time: ts() });
+    pushMsg({ from: 'bot', text: 'Te ayudare a crear la pagina web de tu negocio en minutos.\n\nCada respuesta llena una parte del borrador. La barra de arriba te muestra cuanto falta para poder crear tu sitio.\n\nComo te llamas?', time: ts() });
     stepRef.current = 'owner_name';
   }
 
@@ -1039,7 +1382,7 @@ function App() {
 
   async function askListingIntent() {
     setInputOff(true);
-    await botSay('Antes de buscar tu negocio, cuentame algo rapido.');
+    await botSay('Primero vemos si Google ya tiene datos de tu negocio. Si los encontramos, te preguntamos menos y armamos el borrador mas rapido.');
     await botSay('Tu negocio ya aparece en *Google Maps*?');
     pushMsg({
       from: 'bot',
@@ -1078,7 +1421,7 @@ function App() {
 
   async function askNoListingPlan() {
     setInputOff(true);
-    await botSay('Perfecto. Entonces vamos a crear tu pagina primero.');
+    await botSay('Perfecto. Entonces vamos a crear tu pagina primero con preguntas cortas.');
     await botSay('Tu negocio atiende desde un *punto fisico* que la gente puede visitar, o prefieres vender solo *online / por WhatsApp*?');
     pushMsg({
       from: 'bot',
@@ -1094,7 +1437,7 @@ function App() {
                   listing_status: 'needs_google_profile',
                   business_location_mode: 'physical'
                 });
-                await botSay('Buenisimo. Con esa pagina te ayudaremos a conectar tu negocio a *Google Places* para conseguir mas llamadas, mas numeros y mas mensajes por *WhatsApp*.\n\nAdemas, ChatGPT y otros asistentes podran usar esa informacion para recomendar tu negocio con mas frecuencia.');
+                await botSay('Buenisimo. Con esta informacion podemos crear tu pagina y despues ayudarte a conectar tu negocio a *Google Places* para conseguir mas llamadas y mensajes por *WhatsApp*.\n\nAdemas, ChatGPT y otros asistentes podran entender mejor tu negocio y recomendarlo con mas confianza.');
                 await askBusinessIdentity('manual');
               })
             },
@@ -1121,14 +1464,14 @@ function App() {
     setInputOff(false);
     stepRef.current = 'business_name';
     await botSay(mode === 'manual'
-      ? 'Como se llama tu *negocio*?'
-      : 'Como se llama tu *negocio*?');
+      ? 'Como se llama tu *negocio*?\n\n_Esto sera el nombre principal de tu pagina._'
+      : 'Como se llama tu *negocio*?\n\n_Con el nombre y la ciudad intentamos traer datos de Google automaticamente._');
   }
 
   async function handleLookupMiss() {
     setInputOff(true);
     await botSay('No encontre una ficha clara en Google Maps.');
-    await botSay('Si tienes el *link de Google Maps* o el *nombre exacto* como aparece ahi, compártelo. Si no, seguimos con tu pagina y despues te ayudamos a conectarla a Google y a conseguir mas mensajes por *WhatsApp*.');
+    await botSay('Si tienes el *link de Google Maps* o el *nombre exacto* como aparece ahi, compartelo. Si no, seguimos con tu pagina: te hago unas preguntas rapidas para completar los datos que Google no pudo darnos.');
     pushMsg({
       from: 'bot',
       time: ts(),
@@ -1157,7 +1500,7 @@ function App() {
                 if (preference === 'yes') {
                   await botSay('Perfecto. Seguimos con tu pagina y luego revisamos esa ficha contigo para conectarla bien a Google, WhatsApp y asistentes como ChatGPT.');
                 } else {
-                  await botSay('No pasa nada. Con tu pagina te ayudaremos a conectar Google Places para traer mas llamadas, mas numeros y mas mensajes por *WhatsApp*.\n\nTambien haces que ChatGPT y otros asistentes tengan mejor informacion para recomendar tu negocio con mas frecuencia.');
+                  await botSay('No pasa nada. Con estas respuestas creamos tu primer borrador y despues te ayudamos a conectar Google Places para traer mas llamadas y mensajes por *WhatsApp*.');
                 }
                 await beginContactCapture('manual');
               })
@@ -1174,7 +1517,7 @@ function App() {
 
     setInputOff(true);
     stepRef.current = 'searching';
-    await botSay('Perfecto. Voy a buscar *' + businessName + '* en Google Maps... 🔍');
+    await botSay('Perfecto. Voy a buscar *' + businessName + '* en Google Maps para traer direccion, horarios, fotos y resenas si ya existen... 🔍');
     setSearchDone(false);
     setSearchFound(false);
     setSearchBiz(null);
@@ -1237,7 +1580,7 @@ function App() {
       ...primary,
       listing_status: 'matched'
     });
-    await botSay('Encontre tu negocio en Google. Ahora lo revisamos contigo paso a paso.');
+    await botSay('Encontre tu negocio en Google. Ahora lo revisamos contigo paso a paso para que el borrador salga correcto.');
     await askFoundField(0);
   }
 
@@ -1260,7 +1603,7 @@ function App() {
 
     setInputOff(true);
     stepRef.current = 'waiting_found_field';
-    await botSay('Encontre este *' + field.label + '* en Google:\n*' + currentValue + '*\n\nLo dejamos asi?');
+    await botSay('Encontre este *' + field.label + '* en Google:\n*' + currentValue + '*\n\nEsto ira en tu pagina. Lo dejamos asi?');
     pushMsg({
       from: 'bot',
       time: ts(),
@@ -1294,7 +1637,7 @@ function App() {
     if (phone) {
       setInputOff(true);
       stepRef.current = 'waiting_business_whatsapp';
-      await botSay('Tenemos este numero para tu negocio:\n*' + phone + '*\n\nEs tambien el *WhatsApp* que quieres mostrar en tu pagina?');
+      await botSay('Tenemos este *telefono publico del negocio*:\n*' + phone + '*\n\nEs tambien el *WhatsApp publico* que quieres mostrar en tu pagina para que tus clientes te escriban?');
       pushMsg({
         from: 'bot',
         time: ts(),
@@ -1305,7 +1648,7 @@ function App() {
                 label: 'Si, es el mismo',
                 tone: 'solid',
                 onClick: addChoiceReply('Si, es el mismo', async () => {
-                  collect({ whatsapp: phone });
+                  collect({ whatsapp: phone, whatsapp_skipped: false });
                   await continueAfterBusinessWhatsapp();
                 })
               },
@@ -1314,7 +1657,7 @@ function App() {
                 onClick: addChoiceReply('No, es otro', async () => {
                   setInputOff(false);
                   stepRef.current = 'manual_business_whatsapp';
-                  await botSay('Cual es el numero de *WhatsApp* que quieres mostrar en tu pagina?');
+                  await botSay('Cual es el numero de *WhatsApp publico del negocio* que quieres mostrar en tu pagina?');
                 })
               }
             ]}
@@ -1326,7 +1669,7 @@ function App() {
 
     setInputOff(false);
     stepRef.current = 'manual_business_whatsapp';
-    await botSay('Cual es el numero de *WhatsApp* que quieres mostrar en tu pagina?');
+    await botSay('Cual es el numero de *WhatsApp publico del negocio* que quieres mostrar en tu pagina?\n\n_Escribe "no" si quieres definirlo despues._');
   }
 
   async function beginContactCapture(context) {
@@ -1335,13 +1678,13 @@ function App() {
 
     if (!String(collRef.current.contacto_email || '').trim()) {
       stepRef.current = 'contact_email';
-      await botSay('Cual es tu *correo electronico* para crear tu acceso a Mi Pagina?');
+      await botSay('Cual es tu *correo electronico* para crear tu acceso a Mi Pagina?\n\n_Ahi enviaremos tu acceso cuando el borrador este listo._');
       return;
     }
 
     if (!String(collRef.current.contacto_whatsapp || '').trim()) {
       stepRef.current = 'contact_phone';
-      await botSay('Y cual es tu *numero de WhatsApp personal* para coordinar contigo?\n\n_Este numero es interno y no aparecera en la pagina._');
+      await botSay('Y cual es tu *WhatsApp personal para coordinar ediciones*?\n\n_No es el telefono publico del negocio. Lo usamos para avisarte cuando nuestra IA termine el primer borrador y para ajustar la pagina contigo. No aparecera en tu sitio._');
       return;
     }
 
@@ -1372,7 +1715,7 @@ function App() {
     if (foundGooglePhotos) {
       await botSay('Tambien encontramos fotos en Google para tu negocio. Si quieres, ahora puedes subir *tus propias fotos* para que prioricemos esas en tu pagina.');
     } else {
-      await botSay('Excelente. Ahora sube algunas *fotos de tu negocio*.\n\n_Pueden ser del local, equipo, productos, menu o ambiente._');
+      await botSay('Excelente. Ahora sube algunas *fotos de tu negocio* para que el borrador se vea mas real.\n\n_Pueden ser del local, equipo, productos, menu o ambiente._');
     }
 
     pushMsg({
@@ -1396,7 +1739,7 @@ function App() {
   async function handlePhotoUploads(files) {
     if (!files.length) {
       setMsgs(prev => prev.concat([{ id: Date.now() + Math.random(), from: 'user', text: 'Sin fotos por ahora', time: ts(), read: true }]));
-      collect({ uploaded_photos: [] });
+      collect({ uploaded_photos: [], uploaded_photos_skipped: true });
       await askOfferingsUpload();
       return;
     }
@@ -1534,7 +1877,7 @@ function App() {
 
   async function startFinalQuestions() {
     setInputOff(true);
-    await botSay('Ya casi terminamos. Solo un par de preguntas mas.');
+    await botSay('Ya casi terminamos. Solo un par de detalles mas y podremos preparar tu sitio.');
     stepRef.current = 'slogan';
     await botSay('Tienes un *slogan* o frase corta para tu negocio?\n\n_Escribe "no" si no tienes._');
     setInputOff(false);
@@ -1646,7 +1989,9 @@ function App() {
       case 'business_name':
         collect({ nombre: value });
         stepRef.current = 'business_city';
-        await botSay(lookupModeRef.current === 'lookup' ? 'En que *ciudad* esta tu negocio?' : 'En que *ciudad* esta tu negocio?');
+        await botSay(lookupModeRef.current === 'lookup'
+          ? 'En que *ciudad* esta tu negocio?\n\n_Esto nos ayuda a encontrar la ficha correcta y no confundirla con otro negocio parecido._'
+          : 'En que *ciudad* esta tu negocio?\n\n_Esto ayuda a ubicar tu pagina para clientes cercanos._');
         break;
 
       case 'business_city':
@@ -1660,7 +2005,11 @@ function App() {
 
       case 'editing_found_field': {
         const field = FOUND_FIELDS[foundFieldIdxRef.current];
-        collect({ [field.key]: normalizeMaybeBlank(value) });
+        if (field.key === 'telefono') {
+          collect({ telefono: normalizeMaybeBlank(value), telefono_skipped: isNegative(value) });
+        } else {
+          collect({ [field.key]: normalizeMaybeBlank(value) });
+        }
         await askFoundField(foundFieldIdxRef.current + 1);
         break;
       }
@@ -1681,7 +2030,7 @@ function App() {
       case 'contact_email':
         collect({ contacto_email: value });
         stepRef.current = 'contact_phone';
-        await botSay('Y cual es tu *numero de WhatsApp personal* para coordinar contigo?\n\n_Este numero es interno y no aparecera en la pagina._');
+        await botSay('Y cual es tu *WhatsApp personal para coordinar ediciones*?\n\n_No es el telefono publico del negocio. Lo usamos para avisarte cuando nuestra IA termine el primer borrador y para ajustar la pagina contigo. No aparecera en tu sitio._');
         break;
 
       case 'contact_phone':
@@ -1703,7 +2052,7 @@ function App() {
       case 'manual_address':
         collect({ direccion: normalizeMaybeBlank(value) });
         stepRef.current = 'manual_business_phone';
-        await botSay('Cual es el *telefono del negocio*?\n\n_Escribe "no" si todavia no tienes uno publico._');
+        await botSay('Cual es el *telefono publico del negocio*?\n\n_Este si puede aparecer en tu pagina para que clientes llamen. Escribe "no" si todavia no tienes uno publico._');
         break;
 
       case 'manual_neighborhood': {
@@ -1735,12 +2084,12 @@ function App() {
           direccion: buildServiceAreaAddress({ ...collRef.current, pais: pais })
         });
         stepRef.current = 'manual_business_phone';
-        await botSay('Cual es el *telefono del negocio*?\n\n_Escribe "no" si todavia no tienes uno publico._');
+        await botSay('Cual es el *telefono publico del negocio*?\n\n_Este si puede aparecer en tu pagina para que clientes llamen. Escribe "no" si todavia no tienes uno publico._');
         break;
       }
 
       case 'manual_business_phone':
-        collect({ telefono: normalizeMaybeBlank(value) });
+        collect({ telefono: normalizeMaybeBlank(value), telefono_skipped: isNegative(value) });
         stepRef.current = 'manual_hours';
         await botSay('Cual es tu *horario de atencion*?\n\n_Ejemplo: Lunes a sabado, 9am-7pm_');
         break;
@@ -1748,17 +2097,17 @@ function App() {
       case 'manual_hours':
         collect({ horario: normalizeMaybeBlank(value) });
         stepRef.current = 'manual_about';
-        await botSay('Cuentame un poco sobre tu negocio.\n\nQue te hace especial y por que te recomiendan tus clientes?');
+        await botSay('Cuentame un poco sobre tu negocio.\n\n_Esto ayuda a que la IA escriba una pagina con tu tono, no una pagina generica._\n\nQue te hace especial y por que te recomiendan tus clientes?');
         break;
 
       case 'manual_about':
         collect({ sobre: normalizeMaybeBlank(value) });
         stepRef.current = 'manual_business_whatsapp';
-        await botSay('Cual es el *WhatsApp* que quieres mostrar en tu pagina?\n\n_Escribe "no" si quieres definirlo despues._');
+        await botSay('Cual es el *WhatsApp publico del negocio* que quieres mostrar en tu pagina para que clientes te escriban?\n\n_Escribe "no" si quieres definirlo despues._');
         break;
 
       case 'manual_business_whatsapp':
-        collect({ whatsapp: normalizeMaybeBlank(value) });
+        collect({ whatsapp: normalizeMaybeBlank(value), whatsapp_skipped: isNegative(value) });
         await continueAfterBusinessWhatsapp();
         break;
 
@@ -1812,7 +2161,7 @@ function App() {
           </div>
         </div>
 
-        <ProgressBar data={collected} />
+        <ProgressBar data={collected} onUpdateField={updateProgressAnswer} />
 
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 2, background: C.waBg }}>
           <div style={{ flex: '1 0 auto', minHeight: 0 }} />
