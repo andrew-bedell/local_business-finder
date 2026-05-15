@@ -248,8 +248,6 @@ export default async function handler(req, res) {
         const inviteEmailResult = await sendEmail({
           to: customerEmail,
           ...inviteContent,
-          from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-          replyTo: 'andres@ahoratengopagina.com',
         });
         if (!inviteEmailResult.success) {
           console.warn('Portal invite email failed:', inviteEmailResult.error);
@@ -266,8 +264,6 @@ export default async function handler(req, res) {
         await sendEmail({
           to: customerEmail,
           ...welcomeContent,
-          from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-          replyTo: 'andres@ahoratengopagina.com',
         });
       }
     } catch (emailErr) {

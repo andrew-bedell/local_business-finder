@@ -261,7 +261,5 @@ async function sendApprovalEmail(editRequest, summary, business, supabaseUrl, su
   await sendEmail({
     to: customer.email,
     ...emailContent,
-    from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-    replyTo: 'andres@ahoratengopagina.com',
   });
 }

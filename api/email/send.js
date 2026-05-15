@@ -110,8 +110,6 @@ export default async function handler(req, res) {
       subject,
       html: html || undefined,
       text: text || undefined,
-      from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-      replyTo: 'andres@ahoratengopagina.com',
     });
 
     if (!result.success) {

@@ -108,8 +108,6 @@ export default async function handler(req, res) {
         await sendEmail({
           to: custs[0].email,
           ...emailContent,
-          from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-          replyTo: 'andres@ahoratengopagina.com',
         });
       }
     } catch (emailErr) {
