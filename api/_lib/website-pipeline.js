@@ -106,6 +106,31 @@ export function deriveProductRows(business, services) {
 /**
  * Compile business data into a formatted text string for AI prompts.
  */
+function hasPromptText(value, minLength = 1) {
+  return String(value || '').trim().length >= minLength;
+}
+
+function formatHoursForPrompt(hours) {
+  if (!hours) return [];
+  if (Array.isArray(hours)) {
+    return hours.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+  if (typeof hours === 'object') {
+    return Object.entries(hours).map(([day, value]) => {
+      let displayValue = '';
+      if (Array.isArray(value)) {
+        displayValue = value.map((item) => String(item || '').trim()).filter(Boolean).join(' - ');
+      } else if (value && typeof value === 'object') {
+        displayValue = Object.values(value).map((item) => String(item || '').trim()).filter(Boolean).join(' - ');
+      } else {
+        displayValue = String(value || '').trim();
+      }
+      return displayValue ? `${day}: ${displayValue}` : '';
+    }).filter(Boolean);
+  }
+  return [String(hours || '').trim()].filter(Boolean);
+}
+
 export function compileBusinessDataForPrompt(business, reviews, photos, socialProfiles, menus, services, products = []) {
   const sections = [];
   const eligiblePhotos = filterWebsitePhotos(photos);
@@ -142,6 +167,12 @@ export function compileBusinessDataForPrompt(business, reviews, photos, socialPr
     sections.push('');
     sections.push('=== BUSINESS DETAILS ===');
     activeDetails.forEach(([label, val]) => sections.push(`${label}: ${val}`));
+  }
+
+  if (hasPromptText(business.notes, 5)) {
+    sections.push('');
+    sections.push('=== CUSTOMER INTAKE / NOTES ===');
+    sections.push(business.notes);
   }
 
   // Founder description
@@ -186,11 +217,26 @@ export function compileBusinessDataForPrompt(business, reviews, photos, socialPr
     });
   }
 
+  const customerReviews = reviews
+    .filter(r => !['google', 'facebook'].includes(String(r.source || '').toLowerCase()))
+    .slice(0, 10);
+  if (customerReviews.length > 0) {
+    sections.push('');
+    sections.push('=== CUSTOMER-PROVIDED REVIEWS ===');
+    customerReviews.forEach((r, i) => {
+      const author = r.author_name || 'Customer';
+      const stars = r.rating ? `${r.rating}★` : '';
+      const text = r.review_text || r.text || '';
+      sections.push(`Customer Review ${i + 1} (${stars} by ${author}): "${text}"`);
+    });
+  }
+
   // Business hours
-  if (business.hours && business.hours.length > 0) {
+  const formattedHours = formatHoursForPrompt(business.hours);
+  if (formattedHours.length > 0) {
     sections.push('');
     sections.push('=== BUSINESS HOURS ===');
-    business.hours.forEach(h => sections.push(h));
+    formattedHours.forEach(h => sections.push(h));
   }
 
   // Social media profiles
