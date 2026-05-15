@@ -1,7 +1,6 @@
-// Vercel serverless function: Fetch website preview data
-// GET ?id=<uuid> — returns website HTML + business info
+// Vercel serverless function: Fetch public website preview data
+// GET ?id=<uuid> — returns website HTML + business info for shareable /ver/:id links
 
-import { resolveCustomerBusiness } from '../_lib/resolve-customer-business.js';
 import { getWebsiteHtml } from '../_lib/website-config.js';
 import { rewriteSupabasePhotoUrlsInHtml } from '../_lib/photo-urls.js';
 
@@ -31,14 +30,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const resolved = await resolveCustomerBusiness(req, supabaseUrl, supabaseKey);
     const supabaseHeaders = {
       'apikey': supabaseKey,
       'Authorization': `Bearer ${supabaseKey}`,
     };
-    // Fetch website with joined business data
+
+    // /ver/:id is a shareable sales preview, so it must not require a customer
+    // session. The UUID is the public capability for this preview URL.
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&business_id=eq.${encodeURIComponent(resolved.businessId)}&select=*,businesses(id,name,phone,address_full,category)`,
+      `${supabaseUrl}/rest/v1/generated_websites?id=eq.${encodeURIComponent(websiteId)}&select=id,business_id,config,status,site_status,published_url,businesses(id,name,phone,address_full,category)`,
       {
         headers: supabaseHeaders,
       }
@@ -56,19 +56,24 @@ export default async function handler(req, res) {
     }
 
     const website = data[0];
+    if (website.site_status === 'archived' || website.status === 'archived') {
+      return res.status(404).json({ error: 'Website not found' });
+    }
+
     const business = website.businesses || {};
     let html = getWebsiteHtml(website.config);
     let resolvedFromWebsiteId = null;
 
     if (!html && website.business_id) {
       const fallbackResponse = await fetch(
-        `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${website.business_id}&id=neq.${encodeURIComponent(website.id)}&order=created_at.desc&select=id,config,status,published_url&limit=10`,
+        `${supabaseUrl}/rest/v1/generated_websites?business_id=eq.${encodeURIComponent(website.business_id)}&id=neq.${encodeURIComponent(website.id)}&order=created_at.desc&select=id,config,status,site_status,published_url&limit=10`,
         { headers: supabaseHeaders }
       );
 
       if (fallbackResponse.ok) {
         const fallbackCandidates = await fallbackResponse.json();
         const fallbackWebsite = (Array.isArray(fallbackCandidates) ? fallbackCandidates : [])
+          .filter((candidate) => candidate.status !== 'archived' && candidate.site_status !== 'archived')
           .find((candidate) => getWebsiteHtml(candidate.config));
 
         if (fallbackWebsite) {
