@@ -101,15 +101,44 @@ export default async function handler(req, res) {
   var bid = ${business ? business.id : 'null'};
   var wid = '${website.id}';
   if (!bid) return;
+  function getReferrerDomain() {
+    if (!document.referrer) return null;
+    try { return (new URL(document.referrer)).hostname.replace(/^www\\./, ''); }
+    catch (e) { return null; }
+  }
+  function getAttribution() {
+    var keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'ttclid', 'msclkid'];
+    var params = new URLSearchParams(location.search || '');
+    var out = {};
+    keys.forEach(function(key) {
+      var value = params.get(key);
+      if (value) out[key] = value.substring(0, 200);
+    });
+    return out;
+  }
+  function getDeviceType() {
+    var ua = navigator.userAgent || '';
+    if (/iPad|Tablet/i.test(ua)) return 'tablet';
+    if (/Mobi|Android|iPhone/i.test(ua)) return 'mobile';
+    return 'desktop';
+  }
   function track(type, meta) {
+    var attribution = getAttribution();
+    var metadata = Object.assign({
+      page_title: document.title || null,
+      path: location.pathname || '/',
+      viewport: { width: window.innerWidth || null, height: window.innerHeight || null },
+      language: navigator.language || null
+    }, meta || {});
+    if (Object.keys(attribution).length) metadata.attribution = Object.assign({}, attribution, metadata.attribution || {});
     var payload = {
       business_id: bid,
       website_id: wid,
       event_type: type,
       page_url: location.href,
-      referrer: document.referrer ? (new URL(document.referrer)).hostname : null,
-      device_type: /Mobi/i.test(navigator.userAgent) ? 'mobile' : (/Tablet/i.test(navigator.userAgent) ? 'tablet' : 'desktop'),
-      metadata: meta || {}
+      referrer: getReferrerDomain(),
+      device_type: getDeviceType(),
+      metadata: metadata
     };
     if (navigator.sendBeacon) {
       navigator.sendBeacon('/api/analytics/track', JSON.stringify(payload));

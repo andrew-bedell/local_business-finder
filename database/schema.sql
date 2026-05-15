@@ -1311,7 +1311,7 @@ CREATE TABLE IF NOT EXISTS analytics_events (
   device_type             TEXT
                             CHECK (device_type IN ('desktop', 'mobile', 'tablet')),
   visitor_id              TEXT,                -- hashed fingerprint for unique visitor counting (no PII)
-  metadata                JSONB DEFAULT '{}',
+  metadata                JSONB DEFAULT '{}',  -- event data; may include geo and attribution (UTM/click IDs)
 
   created_at              TIMESTAMPTZ DEFAULT NOW()
 );
