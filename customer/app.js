@@ -23,6 +23,8 @@
   let pendingReviewEditRequestId = null;
   let reviewDraftHtml = null;
   let reviewCurrentHtml = null;
+  let generationJobPollTimer = null;
+  let activeGenerationJobId = null;
 
   const CUSTOMER_AUTH_API_PREFIXES = [
     '/api/analytics/stats',
@@ -36,6 +38,7 @@
     '/api/edit-requests/pending',
     '/api/preview/draft',
     '/api/preview/website',
+    '/api/customers/generate-website',
     '/api/stripe/customer-portal',
   ];
   const nativeFetch = window.fetch.bind(window);
@@ -872,6 +875,8 @@
         websiteData = null;
         subscriptionData = null;
         isDashboardLoading = false;
+        stopGenerationPolling();
+        activeGenerationJobId = null;
         showLoginScreen();
       }
     });
@@ -1241,6 +1246,8 @@
       websiteData = null;
       subscriptionData = null;
       isDashboardLoading = false;
+      stopGenerationPolling();
+      activeGenerationJobId = null;
       showLoginScreen();
       showToast('Sesión cerrada.', 'success');
     } catch (err) {
@@ -1643,6 +1650,8 @@
         // Check for pending approvals (show banner)
         checkPendingApprovals();
       }
+
+      resumeWebsiteGenerationJob();
     } catch (err) {
       console.error('Dashboard load failed:', err);
       hideLoading();
@@ -7935,6 +7944,9 @@
   }
 
   function showGenerationProgress(isUpdate) {
+    var existing = document.getElementById('wiz-progress-overlay');
+    if (existing) return;
+
     var title = isUpdate ? 'Actualizando tu página web' : 'Generando tu página web';
     var steps = [
       { id: 'step-research', label: isUpdate ? 'Analizando cambios...' : 'Investigando tu negocio...' },
@@ -7956,10 +7968,15 @@
       html += '</div>';
     }
     html += '</div>';
-    html += '<p style="color:var(--c-text-dim);font-size:13px;">Esto puede tomar 1-2 minutos. No cierres esta ventana.</p>';
+    html += '<p id="wiz-progress-message" style="color:var(--c-text-dim);font-size:13px;">Tu solicitud ya está en el servidor. Puedes cerrar esta ventana y volver después.</p>';
     html += '</div></div>';
 
     document.body.insertAdjacentHTML('beforeend', html);
+  }
+
+  function setProgressMessage(message) {
+    var el = document.getElementById('wiz-progress-message');
+    if (el && message) el.textContent = message;
   }
 
   function updateProgressStep(stepId, state) {
@@ -7977,6 +7994,151 @@
   function removeProgressOverlay() {
     var overlay = document.getElementById('wiz-progress-overlay');
     if (overlay) overlay.remove();
+  }
+
+  var GENERATION_STAGE_INDEX = {
+    queued: 0,
+    research: 0,
+    photos: 1,
+    content: 2,
+    build: 3,
+    publish: 4,
+    completed: 5
+  };
+  var GENERATION_STEP_IDS = ['step-research', 'step-photos', 'step-content', 'step-build', 'step-publish'];
+
+  function updateProgressFromJob(job) {
+    if (!job) return;
+    var stage = job.stage || 'queued';
+    var status = job.status || 'queued';
+
+    if (status === 'completed') {
+      GENERATION_STEP_IDS.forEach(function (stepId) { updateProgressStep(stepId, 'done'); });
+      setProgressMessage('Tu página web está lista.');
+      return;
+    }
+
+    if (status === 'failed') {
+      var failedIndex = typeof GENERATION_STAGE_INDEX[stage] === 'number' ? GENERATION_STAGE_INDEX[stage] : 0;
+      GENERATION_STEP_IDS.forEach(function (stepId, index) {
+        updateProgressStep(stepId, index < failedIndex ? 'done' : '');
+      });
+      setProgressMessage(job.error || 'No se pudo completar la generación.');
+      return;
+    }
+
+    var activeIndex = typeof GENERATION_STAGE_INDEX[stage] === 'number' ? GENERATION_STAGE_INDEX[stage] : 0;
+    GENERATION_STEP_IDS.forEach(function (stepId, index) {
+      if (index < activeIndex) updateProgressStep(stepId, 'done');
+      else if (index === activeIndex) updateProgressStep(stepId, 'active');
+      else updateProgressStep(stepId, '');
+    });
+
+    if (status === 'queued') {
+      setProgressMessage('Tu solicitud está en cola. El servidor la procesará aunque cierres esta ventana.');
+    } else {
+      setProgressMessage('Estamos generando tu página en el servidor. Puedes cerrar esta ventana y volver después.');
+    }
+  }
+
+  function stopGenerationPolling() {
+    if (generationJobPollTimer) {
+      window.clearTimeout(generationJobPollTimer);
+      generationJobPollTimer = null;
+    }
+  }
+
+  async function fetchGenerationJobStatus(jobId) {
+    var url = '/api/customers/generate-website';
+    if (jobId) url += '?jobId=' + encodeURIComponent(jobId);
+    var res = await fetch(url, { method: 'GET' });
+    if (!res.ok) {
+      var errData = await res.json().catch(function () { return {}; });
+      throw new Error(errData.error || 'No se pudo consultar el estado de generación');
+    }
+    return res.json();
+  }
+
+  function scheduleGenerationPoll(jobId, delayMs) {
+    stopGenerationPolling();
+    generationJobPollTimer = window.setTimeout(function () {
+      pollGenerationJob(jobId);
+    }, delayMs || 3000);
+  }
+
+  async function refreshWebsiteAfterGeneration() {
+    if (!businessData || !businessData.id) return;
+    websiteData = await loadWebsiteInfo(businessData.id);
+    var customer = customerData && customerData.customers ? customerData.customers : null;
+    var editRequests = customer ? await loadEditRequests(customer.id) : [];
+    renderDashboard(businessData, websiteData, subscriptionData, editRequests);
+    renderBilling(subscriptionData, customer);
+    renderPortalMode(customer, websiteData, subscriptionData);
+    renderEditRequests(editRequests);
+  }
+
+  async function handleGenerationCompleted(job) {
+    stopGenerationPolling();
+    activeGenerationJobId = null;
+    updateProgressFromJob(job);
+    await wait(700);
+    removeProgressOverlay();
+    await refreshWebsiteAfterGeneration();
+    showToast(job && job.publishedUrl ? '¡Tu página web está lista!' : '¡Tu página web fue creada en modo borrador!', 'success');
+    showSection('dashboard');
+  }
+
+  async function pollGenerationJob(jobId) {
+    if (!jobId) return;
+    try {
+      var data = await fetchGenerationJobStatus(jobId);
+      var job = data && data.job ? data.job : null;
+      if (!job) {
+        stopGenerationPolling();
+        activeGenerationJobId = null;
+        await refreshWebsiteAfterGeneration();
+        removeProgressOverlay();
+        return;
+      }
+
+      var isUpdate = job.mode === 'update';
+      showGenerationProgress(isUpdate);
+      updateProgressFromJob(job);
+
+      if (job.status === 'completed') {
+        await handleGenerationCompleted(job);
+        return;
+      }
+      if (job.status === 'failed') {
+        stopGenerationPolling();
+        activeGenerationJobId = null;
+        await wait(500);
+        removeProgressOverlay();
+        showToast('Error: ' + (job.error || 'No se pudo generar la página web.'), 'error');
+        return;
+      }
+
+      scheduleGenerationPoll(job.id, 3000);
+    } catch (err) {
+      console.error('Website generation status error:', err);
+      scheduleGenerationPoll(jobId, 6000);
+    }
+  }
+
+  async function resumeWebsiteGenerationJob() {
+    if (!businessData || !currentUser) return;
+    try {
+      var data = await fetchGenerationJobStatus();
+      var job = data && data.job ? data.job : null;
+      if (!job || (job.status !== 'queued' && job.status !== 'running')) return;
+
+      activeGenerationJobId = job.id;
+      showGenerationProgress(job.mode === 'update');
+      updateProgressFromJob(job);
+      scheduleGenerationPoll(job.id, 2000);
+    } catch (err) {
+      console.warn('No active website generation job to resume:', err.message || err);
+    }
   }
 
   async function startWebsiteGeneration() {
@@ -8009,33 +8171,26 @@
         throw new Error(errData.error || 'Error al generar la página web');
       }
 
-      // Mark all steps done
-      updateProgressStep('step-research', 'done');
-      updateProgressStep('step-photos', 'done');
-      updateProgressStep('step-content', 'done');
-      updateProgressStep('step-build', 'done');
-      updateProgressStep('step-publish', 'done');
-
       var data = await res.json();
-      removeProgressOverlay();
-
-      var successMsg = isUpdate ? '¡Tu página web ha sido actualizada!' : '¡Tu página web ha sido creada!';
-      var draftMsg = isUpdate ? 'Tu página web fue actualizada en modo borrador.' : 'Tu página web fue creada en modo borrador. Un asesor la revisará.';
-
-      if (data.publishedUrl) {
-        showToast(successMsg, 'success');
-      } else {
-        showToast(draftMsg, 'success');
+      if (data && data.job) {
+        activeGenerationJobId = data.job.id;
+        updateProgressFromJob(data.job);
+        showToast('Tu página se está generando en el servidor.', 'success');
+        scheduleGenerationPoll(data.job.id, 1500);
+        return;
       }
 
-      // Reload website data and navigate to dashboard
-      websiteData = await loadWebsiteInfo(businessData.id);
-      renderDashboard(businessData, websiteData, subscriptionData, []);
-      renderBilling(subscriptionData, customerData ? customerData.customers : null);
-      renderPortalMode(customerData ? customerData.customers : null, websiteData, subscriptionData);
-      showSection('dashboard');
+      await handleGenerationCompleted({
+        status: 'completed',
+        stage: 'completed',
+        mode: isUpdate ? 'update' : 'create',
+        websiteId: data.websiteId,
+        publishedUrl: data.publishedUrl
+      });
     } catch (err) {
       console.error('Website generation error:', err);
+      stopGenerationPolling();
+      activeGenerationJobId = null;
       removeProgressOverlay();
       showToast('Error: ' + (err.message || 'No se pudo generar la página web.'), 'error');
     }
