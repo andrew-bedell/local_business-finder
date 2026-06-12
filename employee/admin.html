@@ -38,6 +38,7 @@
                   <a href="#" class="nav-dropdown-item active" id="nav-saved" data-tab="saved" data-i18n="navPipeline">Pipeline</a>
                   <a href="#" class="nav-dropdown-item" id="nav-websites" data-tab="saved" data-stage="has_website" data-i18n="navWebsites">Has Website</a>
                   <a href="#" class="nav-dropdown-item" id="nav-leads" data-tab="leads" data-i18n="navLeads">Leads</a>
+                  <a href="#" class="nav-dropdown-item" id="nav-web-analytics" data-tab="web_analytics" data-i18n="navWebAnalytics" data-admin-only="true" style="display:none">Web Analytics</a>
                   <a href="#" class="nav-dropdown-item" id="nav-demo-analytics" data-tab="demo_analytics" data-i18n="navDemoAnalytics">Demo Analytics</a>
                   <a href="#" class="nav-dropdown-item" id="nav-outreach" data-tab="outreach" data-i18n="navOutreach">Outreach</a>
                 </div>
@@ -1337,6 +1338,106 @@
         </div>
       </section>
 
+      <!-- Website Analytics -->
+      <section id="web-analytics-section" class="card" style="display:none">
+        <div class="card-header">
+          <div>
+            <h2 data-i18n="webAnalyticsTitle">Website Analytics</h2>
+            <p class="weba-subtitle" data-i18n="webAnalyticsSubtitle">First-party traffic, source, location, and visitor metrics for published sites.</p>
+          </div>
+          <button class="btn btn-secondary" id="weba-refresh" data-i18n="webAnalyticsRefresh">Refresh</button>
+        </div>
+
+        <div class="weba-stats-row" id="weba-stats-row">
+          <div class="weba-stat-card">
+            <div class="weba-stat-value" id="weba-total-views">—</div>
+            <div class="weba-stat-label" data-i18n="webAnalyticsViews">Views</div>
+          </div>
+          <div class="weba-stat-card">
+            <div class="weba-stat-value" id="weba-unique-visitors">—</div>
+            <div class="weba-stat-label" data-i18n="webAnalyticsVisitors">Visitors</div>
+          </div>
+          <div class="weba-stat-card">
+            <div class="weba-stat-value" id="weba-contact-clicks">—</div>
+            <div class="weba-stat-label" data-i18n="webAnalyticsContacts">Contact Actions</div>
+          </div>
+          <div class="weba-stat-card">
+            <div class="weba-stat-value" id="weba-tracked-sites">—</div>
+            <div class="weba-stat-label" data-i18n="webAnalyticsSites">Tracked Sites</div>
+          </div>
+        </div>
+
+        <div class="weba-filters-row" id="weba-filters-row">
+          <select class="input input-sort" id="weba-days-filter" aria-label="Analytics date range">
+            <option value="7" data-i18n="webAnalytics7d">7 days</option>
+            <option value="30" selected data-i18n="webAnalytics30d">30 days</option>
+            <option value="90" data-i18n="webAnalytics90d">90 days</option>
+            <option value="180" data-i18n="webAnalytics180d">180 days</option>
+          </select>
+          <input type="text" class="input" id="weba-search" data-i18n-placeholder="webAnalyticsSearchPlaceholder" placeholder="Search business, source, or location..." style="max-width:300px">
+          <select class="input input-sort" id="weba-metric-filter" aria-label="Analytics sort metric">
+            <option value="page_views" data-i18n="webAnalyticsMetricViews">Views</option>
+            <option value="unique_visitors" data-i18n="webAnalyticsMetricVisitors">Visitors</option>
+            <option value="contact_clicks" data-i18n="webAnalyticsMetricContacts">Contact Actions</option>
+            <option value="phone_clicks" data-i18n="webAnalyticsMetricPhone">Phone Clicks</option>
+            <option value="direction_clicks" data-i18n="webAnalyticsMetricDirections">Directions</option>
+            <option value="form_submissions" data-i18n="webAnalyticsMetricForms">Forms</option>
+            <option value="last_visit" data-i18n="webAnalyticsMetricLastVisit">Last Visit</option>
+          </select>
+          <select class="input input-sort" id="weba-sort-direction" aria-label="Analytics sort direction">
+            <option value="desc" data-i18n="webAnalyticsSortDesc">Highest / latest first</option>
+            <option value="asc" data-i18n="webAnalyticsSortAsc">Lowest / earliest first</option>
+          </select>
+        </div>
+
+        <div class="weba-breakdown-grid">
+          <div class="weba-panel">
+            <h3 data-i18n="webAnalyticsChannelsTitle">Traffic Channels</h3>
+            <div class="weba-list" id="weba-channels"></div>
+          </div>
+          <div class="weba-panel">
+            <h3 data-i18n="webAnalyticsSourcesTitle">Specific Sources</h3>
+            <div class="weba-list" id="weba-referrers"></div>
+          </div>
+          <div class="weba-panel">
+            <h3 data-i18n="webAnalyticsLocationsTitle">Locations</h3>
+            <div class="weba-list" id="weba-locations"></div>
+          </div>
+          <div class="weba-panel">
+            <h3 data-i18n="webAnalyticsDevicesTitle">Devices</h3>
+            <div class="weba-list" id="weba-devices"></div>
+          </div>
+        </div>
+
+        <div class="results-table-wrapper">
+          <table class="results-table" id="weba-sites-table">
+            <thead>
+              <tr>
+                <th data-i18n="webAnalyticsColBusiness">Business</th>
+                <th data-i18n="webAnalyticsColChannel">Channel</th>
+                <th><button type="button" class="table-sort-button weba-sort-header" data-metric="page_views" data-i18n="webAnalyticsColViews">Views</button></th>
+                <th><button type="button" class="table-sort-button weba-sort-header" data-metric="unique_visitors" data-i18n="webAnalyticsColVisitors">Visitors</button></th>
+                <th><button type="button" class="table-sort-button weba-sort-header" data-metric="contact_clicks" data-i18n="webAnalyticsColContacts">Contact Actions</button></th>
+                <th data-i18n="webAnalyticsColSource">Top Source</th>
+                <th data-i18n="webAnalyticsColLocation">Top Location</th>
+                <th><button type="button" class="table-sort-button weba-sort-header" data-metric="last_visit" data-i18n="webAnalyticsColLastVisit">Last Visit</button></th>
+                <th data-i18n="webAnalyticsColSite">Site</th>
+              </tr>
+            </thead>
+            <tbody id="weba-sites-body"></tbody>
+          </table>
+        </div>
+
+        <div class="weba-empty" id="weba-empty" style="display:none">
+          <p data-i18n="webAnalyticsNoData">No website traffic recorded for this filter yet.</p>
+        </div>
+        <div class="weba-pagination" id="weba-pagination">
+          <button class="btn btn-secondary" id="weba-prev" data-i18n="prevPage">Prev</button>
+          <span class="weba-page-info" id="weba-page-info">—</span>
+          <button class="btn btn-secondary" id="weba-next" data-i18n="nextPage">Next</button>
+        </div>
+      </section>
+
       <!-- Demo Analytics -->
       <section id="demo-analytics-section" class="card" style="display:none">
         <div class="card-header">
@@ -1748,6 +1849,6 @@
   <script src="https://unpkg.com/grapesjs-preset-newsletter@1.0.1"></script>
   <script src="/employee/auth.js"></script>
   <script src="/employee/app.js"></script>
-  <script src="/employee/admin.js?v=213"></script>
+  <script src="/employee/admin.js?v=214"></script>
 </body>
 </html>

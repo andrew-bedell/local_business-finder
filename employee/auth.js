@@ -15,6 +15,7 @@
   var isRecoveryMode = false;
   var nativeFetch = window.fetch.bind(window);
   var EMPLOYEE_AUTH_API_PREFIXES = [
+    '/api/analytics/admin-stats',
     '/api/analytics/demo-stats',
     '/api/businesses/update-pipeline',
     '/api/contacts/delete',

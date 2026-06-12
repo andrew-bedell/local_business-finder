@@ -10,6 +10,10 @@ export const config = { maxDuration: 300 };
 const DAILY_CAP = 24;
 const TIME_BUDGET_MS = 240_000; // 240s, leaving 60s buffer within 300s maxDuration
 
+function hasUsefulText(value, minLength = 20) {
+  return String(value || '').trim().length >= minLength;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -64,7 +68,8 @@ export default async function handler(req, res) {
     const remaining = DAILY_CAP - todayCount;
 
     // Query eligible businesses
-    // Criteria: has name, address_full, phone; has reviews; has photos; no generated website with HTML; pipeline_status in saved/lead; operational
+    // Criteria: has basics; has either Google-enriched content or customer-provided intake content;
+    // no generated website with HTML; pipeline_status in saved/lead; operational.
     const eligibleQuery = `${supabaseUrl}/rest/v1/rpc/get_eligible_for_auto_generate`;
     let eligible = [];
 
@@ -92,7 +97,7 @@ export default async function handler(req, res) {
         `and=(or(business_status.eq.OPERATIONAL,business_status.is.null),or(whatsapp_status.eq.valid,whatsapp_status.eq.unvalidated,whatsapp_status.is.null))&` +
         `select=id,name,address_full,address_city,address_state,address_country,phone,whatsapp,category,subcategory,types,business_status,` +
         `description,price_level,service_options,amenities,highlights,payment_methods,languages_spoken,` +
-        `accessibility_info,parking_info,year_established,owner_name,founder_description,hours,rating,review_count,` +
+        `accessibility_info,parking_info,year_established,owner_name,founder_description,notes,hours,rating,review_count,` +
         `maps_url,pipeline_status,email,outreach_steps&` +
         `order=created_at.asc&limit=20`,
         { headers: supabaseHeaders }
@@ -127,7 +132,7 @@ export default async function handler(req, res) {
           { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
         );
         const revData = revRes.ok ? await revRes.json() : [];
-        if (!Array.isArray(revData) || revData.length === 0) continue;
+        const hasReviews = Array.isArray(revData) && revData.length > 0;
 
         // Check for photos
         const photoRes = await fetch(
@@ -135,7 +140,23 @@ export default async function handler(req, res) {
           { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
         );
         const photoData = photoRes.ok ? await photoRes.json() : [];
-        if (!Array.isArray(photoData) || photoData.length === 0) continue;
+        const hasPhotos = Array.isArray(photoData) && photoData.length > 0;
+
+        const servicesRes = await fetch(
+          `${supabaseUrl}/rest/v1/business_services?business_id=eq.${biz.id}&select=id&limit=1`,
+          { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+        );
+        const servicesData = servicesRes.ok ? await servicesRes.json() : [];
+        const hasServices = Array.isArray(servicesData) && servicesData.length > 0;
+
+        const hasCustomerBrief = [
+          biz.description,
+          biz.notes,
+          biz.founder_description,
+        ].some((value) => hasUsefulText(value));
+
+        if (!(hasReviews || hasCustomerBrief || hasServices)) continue;
+        if (!(hasPhotos || hasCustomerBrief || hasServices)) continue;
 
         eligible.push(biz);
       }

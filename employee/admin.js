@@ -10,6 +10,7 @@
         { label: 'navPipeline', tab: 'saved' },
         { label: 'navWebsites', tab: 'saved', stage: 'has_website' },
         { label: 'navLeads', tab: 'leads' },
+        { label: 'navWebAnalytics', tab: 'web_analytics', adminOnly: true },
         { label: 'navDemoAnalytics', tab: 'demo_analytics' },
         { label: 'navOutreach', tab: 'outreach' }
       ],
@@ -895,6 +896,68 @@
       domainPerYear: '/yr',
       domainSearchAgain: 'Search again',
       domainSearchError: 'Domain search failed',
+      // Website Analytics
+      navWebAnalytics: 'Web Analytics',
+      webAnalyticsTitle: 'Website Analytics',
+      webAnalyticsSubtitle: 'First-party traffic, source, location, and visitor metrics for published sites.',
+      webAnalyticsRefresh: 'Refresh',
+      webAnalyticsViews: 'Views',
+      webAnalyticsVisitors: 'Visitors',
+      webAnalyticsContacts: 'Contact Actions',
+      webAnalyticsSites: 'Tracked Sites',
+      webAnalytics7d: '7 days',
+      webAnalytics30d: '30 days',
+      webAnalytics90d: '90 days',
+      webAnalytics180d: '180 days',
+      webAnalyticsSearchPlaceholder: 'Search business, source, or location...',
+      webAnalyticsMetricViews: 'Views',
+      webAnalyticsMetricVisitors: 'Visitors',
+      webAnalyticsMetricContacts: 'Contact Actions',
+      webAnalyticsMetricPhone: 'Phone Clicks',
+      webAnalyticsMetricDirections: 'Directions',
+      webAnalyticsMetricForms: 'Forms',
+      webAnalyticsMetricLastVisit: 'Last Visit',
+      webAnalyticsSortDesc: 'Highest / latest first',
+      webAnalyticsSortAsc: 'Lowest / earliest first',
+      webAnalyticsChannelsTitle: 'Traffic Channels',
+      webAnalyticsSourcesTitle: 'Specific Sources',
+      webAnalyticsLocationsTitle: 'Locations',
+      webAnalyticsDevicesTitle: 'Devices',
+      webAnalyticsDeviceDesktop: 'Desktop',
+      webAnalyticsDeviceMobile: 'Mobile',
+      webAnalyticsDeviceTablet: 'Tablet',
+      webAnalyticsColBusiness: 'Business',
+      webAnalyticsColChannel: 'Channel',
+      webAnalyticsColViews: 'Views',
+      webAnalyticsColVisitors: 'Visitors',
+      webAnalyticsColContacts: 'Contact Actions',
+      webAnalyticsColSource: 'Top Source',
+      webAnalyticsColLocation: 'Top Location',
+      webAnalyticsColLastVisit: 'Last Visit',
+      webAnalyticsColSite: 'Site',
+      webAnalyticsNoData: 'No website traffic recorded for this filter yet.',
+      webAnalyticsLoading: 'Loading website analytics...',
+      webAnalyticsError: 'Failed to load website analytics.',
+      webAnalyticsAdminOnly: 'Website analytics are available to admin employees only.',
+      webAnalyticsDirect: 'Direct',
+      webAnalyticsUnknown: 'Unknown',
+      webAnalyticsNoWebsite: 'No live site',
+      webAnalyticsPageInfo: 'Showing {0}-{1} of {2}',
+      webAnalyticsBasisUtm: 'Tagged link',
+      webAnalyticsBasisReferrer: 'Referrer',
+      webAnalyticsBasisNone: 'No source signal',
+      webAnalyticsBasisClickId: 'Click ID',
+      webAnalyticsChannelDirect: 'Direct / Unknown',
+      webAnalyticsChannelOrganicSearch: 'Organic Search',
+      webAnalyticsChannelPaidSearch: 'Paid Search',
+      webAnalyticsChannelOrganicSocial: 'Organic Social',
+      webAnalyticsChannelPaidSocial: 'Paid Social',
+      webAnalyticsChannelReferral: 'Referral',
+      webAnalyticsChannelTagged: 'Tagged Campaign',
+      webAnalyticsChannelEmail: 'Email',
+      webAnalyticsChannelMessaging: 'Messaging',
+      webAnalyticsChannelOffline: 'Offline / QR',
+      webAnalyticsChannelInternal: 'Internal',
       // Demo Analytics
       navDemoAnalytics: 'Demo Analytics',
       demoAnalyticsTitle: 'Demo Page Analytics',
@@ -1827,6 +1890,68 @@
       domainPerYear: '/año',
       domainSearchAgain: 'Buscar de nuevo',
       domainSearchError: 'Error al buscar dominios',
+      // Website Analytics
+      navWebAnalytics: 'Analíticas Web',
+      webAnalyticsTitle: 'Analíticas del Sitio Web',
+      webAnalyticsSubtitle: 'Tráfico, fuentes, ubicación y visitantes de los sitios publicados.',
+      webAnalyticsRefresh: 'Actualizar',
+      webAnalyticsViews: 'Vistas',
+      webAnalyticsVisitors: 'Visitantes',
+      webAnalyticsContacts: 'Acciones de Contacto',
+      webAnalyticsSites: 'Sitios Medidos',
+      webAnalytics7d: '7 días',
+      webAnalytics30d: '30 días',
+      webAnalytics90d: '90 días',
+      webAnalytics180d: '180 días',
+      webAnalyticsSearchPlaceholder: 'Buscar negocio, fuente o ubicación...',
+      webAnalyticsMetricViews: 'Vistas',
+      webAnalyticsMetricVisitors: 'Visitantes',
+      webAnalyticsMetricContacts: 'Acciones de Contacto',
+      webAnalyticsMetricPhone: 'Clics en Teléfono',
+      webAnalyticsMetricDirections: 'Direcciones',
+      webAnalyticsMetricForms: 'Formularios',
+      webAnalyticsMetricLastVisit: 'Última Visita',
+      webAnalyticsSortDesc: 'Mayor / más reciente primero',
+      webAnalyticsSortAsc: 'Menor / más antiguo primero',
+      webAnalyticsChannelsTitle: 'Canales de Tráfico',
+      webAnalyticsSourcesTitle: 'Fuentes Específicas',
+      webAnalyticsLocationsTitle: 'Ubicaciones',
+      webAnalyticsDevicesTitle: 'Dispositivos',
+      webAnalyticsDeviceDesktop: 'Escritorio',
+      webAnalyticsDeviceMobile: 'Móvil',
+      webAnalyticsDeviceTablet: 'Tablet',
+      webAnalyticsColBusiness: 'Negocio',
+      webAnalyticsColChannel: 'Canal',
+      webAnalyticsColViews: 'Vistas',
+      webAnalyticsColVisitors: 'Visitantes',
+      webAnalyticsColContacts: 'Acciones de Contacto',
+      webAnalyticsColSource: 'Fuente Principal',
+      webAnalyticsColLocation: 'Ubicación Principal',
+      webAnalyticsColLastVisit: 'Última Visita',
+      webAnalyticsColSite: 'Sitio',
+      webAnalyticsNoData: 'Aún no hay tráfico web para este filtro.',
+      webAnalyticsLoading: 'Cargando analíticas web...',
+      webAnalyticsError: 'Error al cargar analíticas web.',
+      webAnalyticsAdminOnly: 'Las analíticas web solo están disponibles para empleados administradores.',
+      webAnalyticsDirect: 'Directo',
+      webAnalyticsUnknown: 'Desconocido',
+      webAnalyticsNoWebsite: 'Sin sitio publicado',
+      webAnalyticsPageInfo: 'Mostrando {0}-{1} de {2}',
+      webAnalyticsBasisUtm: 'Link etiquetado',
+      webAnalyticsBasisReferrer: 'Referente',
+      webAnalyticsBasisNone: 'Sin señal de fuente',
+      webAnalyticsBasisClickId: 'ID de clic',
+      webAnalyticsChannelDirect: 'Directo / Desconocido',
+      webAnalyticsChannelOrganicSearch: 'Búsqueda Orgánica',
+      webAnalyticsChannelPaidSearch: 'Búsqueda Pagada',
+      webAnalyticsChannelOrganicSocial: 'Social Orgánico',
+      webAnalyticsChannelPaidSocial: 'Social Pagado',
+      webAnalyticsChannelReferral: 'Referencia',
+      webAnalyticsChannelTagged: 'Campaña Etiquetada',
+      webAnalyticsChannelEmail: 'Email',
+      webAnalyticsChannelMessaging: 'Mensajería',
+      webAnalyticsChannelOffline: 'Offline / QR',
+      webAnalyticsChannelInternal: 'Interno',
       // Demo Analytics
       navDemoAnalytics: 'Analíticas Demo',
       demoAnalyticsTitle: 'Analíticas de Páginas Demo',
@@ -1954,6 +2079,9 @@
     document.title = currentLang === 'es'
       ? 'Pipeline de Negocios — Local Business Finder'
       : 'Business Pipeline — Local Business Finder';
+    const webaMetric = document.getElementById('weba-metric-filter')?.value || 'page_views';
+    const webaDirection = document.getElementById('weba-sort-direction')?.value || 'desc';
+    updateWebAnalyticsSortHeader(webaMetric, webaDirection);
   }
 
   // ── Toast Notifications ──
@@ -1972,6 +2100,10 @@
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  function isCurrentEmployeeAdmin() {
+    return !!(window.__employeeAuth && window.__employeeAuth.employee && window.__employeeAuth.employee.role === 'admin');
   }
 
   function renderStars(rating) {
@@ -3044,7 +3176,7 @@
     try {
       let query = supabaseClient
         .from('businesses')
-        .select('*, business_social_profiles(*), business_photos(id, source), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)');
+        .select('*, business_social_profiles(*), business_photos(id, source), business_services(id, name), business_menus(id, item_name), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)');
 
       // Apply filters
       const loc = filterLocation.value.trim();
@@ -3371,6 +3503,7 @@
 
   function renderLeadCard(business) {
     const websiteHtml = getLeadWebsiteLinkHtml(business);
+    const canCreateWebsite = !hasGeneratedWebsite(business) && isBusinessWebsiteReady(business);
     return `
       <article class="lead-card ${business.lead_source === 'advanced_intake' ? 'lead-card-advanced' : ''}" draggable="true" data-id="${business.id}">
         <div class="lead-card-topline">
@@ -3385,6 +3518,7 @@
           ${getLeadStageSelectHtml(business)}
         </div>
         <div class="lead-card-actions">
+          ${canCreateWebsite ? `<button type="button" class="btn btn-primary btn-sm lead-create-website-btn" data-id="${business.id}">${escapeHtml(t('btnCreateWebsite'))}</button>` : ''}
           <button type="button" class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button>
           <button type="button" class="btn btn-secondary btn-sm lead-delete-btn" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}">${escapeHtml(t('leadsDelete'))}</button>
         </div>
@@ -3431,6 +3565,7 @@
       return;
     }
     tbody.innerHTML = businesses.map((business) => {
+      const canCreateWebsite = !hasGeneratedWebsite(business) && isBusinessWebsiteReady(business);
       return `
         <tr>
           <td><strong>${escapeHtml(business.name || '—')}</strong><div class="lead-table-sub">${escapeHtml(extractCity(business.address_full || business.address_city || ''))}</div></td>
@@ -3440,6 +3575,7 @@
           <td>${escapeHtml(formatAdminDateTime(business.created_at))}</td>
           <td>
             <div class="lead-table-actions">
+              ${canCreateWebsite ? `<button type="button" class="btn btn-primary btn-sm lead-create-website-btn" data-id="${business.id}">${escapeHtml(t('btnCreateWebsite'))}</button>` : ''}
               <button type="button" class="btn btn-view btn-sm lead-detail-btn" data-id="${business.id}">${escapeHtml(t('leadsViewDetails'))}</button>
               <button type="button" class="btn btn-secondary btn-sm lead-delete-btn" data-id="${business.id}" data-name="${escapeHtml(business.name || '')}">${escapeHtml(t('leadsDelete'))}</button>
             </div>
@@ -3474,7 +3610,7 @@
     try {
       const { data, error } = await supabaseClient
         .from('businesses')
-        .select('*, generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)')
+        .select('*, business_photos(id, source), business_services(id, name), business_menus(id, item_name), generated_websites(id, template_name, status, site_status, published_url, generated_at, created_at, published_at), business_contacts(*)')
         .in('lead_source', LEAD_SOURCE_VALUES)
         .in('pipeline_status', ['lead', 'website_created', 'interested', 'active_customer', 'demo', 'cold_outreach_ready'])
         .order('created_at', { ascending: false });
@@ -3551,6 +3687,12 @@
       button.addEventListener('click', () => {
         const business = leadsBusinesses.find((item) => String(item.id) === String(button.dataset.id));
         if (business) openDetailModal(business);
+      });
+    });
+    document.querySelectorAll('.lead-create-website-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        const business = leadsBusinesses.find((item) => String(item.id) === String(button.dataset.id));
+        if (business) handleCreateWebsite(business, button);
       });
     });
     document.querySelectorAll('.lead-delete-btn').forEach((button) => {
@@ -3692,15 +3834,74 @@
   }
 
   function getRelatedCount(business, relationName) {
-    const rows = business && Array.isArray(business[relationName]) ? business[relationName] : [];
+    const rows = getRelatedRows(business, relationName);
     if (!rows.length) return 0;
     const countValue = rows[0] && rows[0].count;
     return Number.isFinite(Number(countValue)) ? Number(countValue) : 0;
   }
 
+  function getRelatedRows(business, relationName) {
+    return business && Array.isArray(business[relationName]) ? business[relationName] : [];
+  }
+
   function getGooglePhotoCount(business) {
-    const rows = business && Array.isArray(business.business_photos) ? business.business_photos : [];
+    const rows = getRelatedRows(business, 'business_photos');
     return rows.filter((row) => row && row.source === 'google').length;
+  }
+
+  function hasTextValue(value, minLength = 1) {
+    return String(value || '').trim().length >= minLength;
+  }
+
+  function hasStructuredHours(hours) {
+    if (!hours) return false;
+    if (Array.isArray(hours)) return hours.some((item) => hasTextValue(item));
+    if (typeof hours === 'object') {
+      return Object.values(hours).some((value) => {
+        if (Array.isArray(value)) return value.some((item) => hasTextValue(item));
+        return hasTextValue(value);
+      });
+    }
+    return hasTextValue(hours);
+  }
+
+  function hasCustomerProvidedPhoto(business) {
+    return getRelatedRows(business, 'business_photos').some((photo) => {
+      const source = String(photo && photo.source || '').toLowerCase();
+      return source.startsWith('customer_') || source === 'customer';
+    });
+  }
+
+  function hasCustomerProvidedWebsiteData(business) {
+    if (!business || !hasTextValue(business.name)) return false;
+
+    const cameThroughIntake = LEAD_SOURCE_VALUES.includes(business.lead_source) || isSyntheticPlaceId(business.place_id);
+    if (!cameThroughIntake) return false;
+
+    const hasBasicAnchor = [
+      business.phone,
+      business.whatsapp,
+      business.email,
+      business.address_full,
+      business.address_city,
+      business.category,
+    ].some((value) => hasTextValue(value));
+
+    const hasUsefulContent = [
+      business.description,
+      business.notes,
+      business.founder_description,
+    ].some((value) => hasTextValue(value, 10))
+      || hasStructuredHours(business.hours)
+      || getRelatedRows(business, 'business_services').some((service) => hasTextValue(service && service.name))
+      || getRelatedRows(business, 'business_menus').some((item) => hasTextValue(item && item.item_name))
+      || hasCustomerProvidedPhoto(business);
+
+    return hasBasicAnchor && hasUsefulContent;
+  }
+
+  function isBusinessWebsiteReady(business) {
+    return getEffectiveEnrichmentStatus(business) === 'completed' || hasCustomerProvidedWebsiteData(business);
   }
 
   function getBusinessCreatedAt(business) {
@@ -3784,8 +3985,7 @@
   }
 
   function isBusinessEnriched(business) {
-    const status = getEffectiveEnrichmentStatus(business);
-    return status === 'completed';
+    return isBusinessWebsiteReady(business);
   }
 
   function getEnrichmentStatusBadgeHtml(status) {
@@ -4141,7 +4341,7 @@
       case 'mapsUrl':
         return `<td>${business.maps_url ? `<a href="${escapeHtml(business.maps_url)}" target="_blank" rel="noopener">${escapeHtml(business.maps_url)}</a>` : '<span class="td-empty-placeholder">—</span>'}</td>`;
       case 'enrich':
-        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${getEffectiveEnrichmentStatus(business) === 'completed' ? '\u2713' : t('btnEnrich')}</button></td>`;
+        return `<td class="td-center"><button class="btn btn-view btn-enrich" data-id="${business.id}">${isBusinessWebsiteReady(business) ? '\u2713' : t('btnEnrich')}</button></td>`;
       case 'actions':
         return `<td class="td-center">${business.phone ? `<button class="btn-msg" data-id="${business.id}" data-phone="${escapeHtml(business.phone)}">${t('msgBtnLabel')}</button>` : ''}</td>`;
       case 'delete':
@@ -6930,11 +7130,35 @@
     return true;
   }
 
+  function formatHoursForPrompt(hours) {
+    if (!hours) return [];
+    if (Array.isArray(hours)) {
+      return hours.map((item) => String(item || '').trim()).filter(Boolean);
+    }
+    if (typeof hours === 'object') {
+      return Object.entries(hours).map(([day, value]) => {
+        let displayValue = '';
+        if (Array.isArray(value)) {
+          displayValue = value.map((item) => String(item || '').trim()).filter(Boolean).join(' - ');
+        } else if (value && typeof value === 'object') {
+          displayValue = Object.values(value).map((item) => String(item || '').trim()).filter(Boolean).join(' - ');
+        } else {
+          displayValue = String(value || '').trim();
+        }
+        return displayValue ? `${day}: ${displayValue}` : '';
+      }).filter(Boolean);
+    }
+    return [String(hours || '').trim()].filter(Boolean);
+  }
+
   function compileBusinessDataForPrompt(business, details) {
     const sections = [];
-    const profiles = business.business_social_profiles || [];
-    const reviews = details.reviews || [];
-    const photos = (details.photos || []).filter(isWebsitePhotoEligible);
+    const detailRows = details || {};
+    const profiles = business.business_social_profiles && business.business_social_profiles.length > 0
+      ? business.business_social_profiles
+      : (detailRows.socialProfiles || []);
+    const reviews = detailRows.reviews || [];
+    const photos = (detailRows.photos || []).filter(isWebsitePhotoEligible);
 
     sections.push('=== BUSINESS IDENTITY ===');
     sections.push(`Name: ${business.name}`);
@@ -6963,6 +7187,11 @@
       activeDetails.forEach(([label, val]) => sections.push(`${label}: ${val}`));
     }
 
+    if (hasTextValue(business.notes, 5)) {
+      sections.push('\n=== CUSTOMER INTAKE / NOTES ===');
+      sections.push(business.notes);
+    }
+
     sections.push('\n=== RATINGS & REVIEWS OVERVIEW ===');
     sections.push(`Google Rating: ${business.rating || 'N/A'} / 5`);
     sections.push(`Total Reviews: ${business.review_count || 0}`);
@@ -6985,10 +7214,21 @@
       });
     }
 
+    // Customer-provided reviews from the intake/chat flow
+    const customerReviews = reviews.filter(r => !['google', 'facebook'].includes(String(r.source || '').toLowerCase()));
+    if (customerReviews.length > 0) {
+      sections.push('\n=== CUSTOMER-PROVIDED REVIEWS ===');
+      customerReviews.slice(0, 10).forEach((r, i) => {
+        const text = r.review_text || r.text || '';
+        sections.push(`Customer Review ${i + 1} (${r.rating || 'N/A'}★ by ${r.author_name || 'Customer'}): "${text}"`);
+      });
+    }
+
     // Hours
-    if (business.hours && business.hours.length > 0) {
+    const formattedHours = formatHoursForPrompt(business.hours);
+    if (formattedHours.length > 0) {
       sections.push('\n=== BUSINESS HOURS ===');
-      business.hours.forEach(h => sections.push(h));
+      formattedHours.forEach(h => sections.push(h));
     }
 
     // Social profiles
@@ -7011,7 +7251,7 @@
     }
 
     // Customer-defined services/products
-    const services = details.services || [];
+    const services = detailRows.services || [];
     if (services.length > 0) {
       sections.push('\n=== SERVICES / PRODUCTS (customer-provided) ===');
       services.forEach((s, i) => {
@@ -7715,6 +7955,7 @@
     const reviews = details.reviews || [];
     const socials = details.socialProfiles || [];
     const menus = details.menus || [];
+    const services = details.services || [];
 
     // Photos: 20 pts (5 for any, 15 for 3+)
     const photoCount = photos.filter(isWebsitePhotoEligible).length;
@@ -7764,12 +8005,12 @@
     });
 
     // Description: 10 pts
-    const hasDesc = !!(business.description || business.highlights?.length > 0);
+    const hasDesc = !!(business.description || business.notes || business.founder_description || business.highlights?.length > 0 || services.length > 0);
     checks.push({
       key: 'completenessDescription',
       score: hasDesc ? 10 : 0,
       max: 10,
-      detail: '',
+      detail: services.length > 0 ? `${services.length} services/products` : '',
     });
 
     // Category: 5 pts
@@ -8751,10 +8992,15 @@
   let editingCampaignId = null;
 
   function switchTab(tab) {
+    if (tab === 'web_analytics' && !isCurrentEmployeeAdmin()) {
+      showToast(t('webAnalyticsAdminOnly'), 'error');
+      tab = 'saved';
+    }
     activeTab = tab;
     const sections = {
       saved: ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section'],
       leads: ['leads-section'],
+      web_analytics: ['web-analytics-section'],
       audiences: ['audiences-section'],
       campaigns: ['campaigns-section'],
       messages: ['messaging-section'],
@@ -8771,7 +9017,7 @@
     };
 
     // Hide all sections
-    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section', 'leads-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
+    ['stats-bar', 'pipeline-pills', 'pipeline-search-row', 'filter-section', 'needs-enrichment-section', 'results-section', 'leads-section', 'web-analytics-section', 'audiences-section', 'campaigns-section', 'messaging-section', 'email-section', 'templates-section', 'wa-logs-section', 'products-section', 'customers-section', 'edit-requests-section', 'demo-analytics-section', 'outreach-section', 'earnings-section', 'team-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -8791,11 +9037,11 @@
     if (pipelineAnchor) pipelineAnchor.style.display = (tab === 'saved') ? '' : 'none';
 
     // Update nav active states (dropdown items)
-    ['nav-saved', 'nav-websites', 'nav-leads', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
+    ['nav-saved', 'nav-websites', 'nav-leads', 'nav-web-analytics', 'nav-demo-analytics', 'nav-outreach', 'nav-audiences', 'nav-campaigns', 'nav-messages', 'nav-email', 'nav-templates', 'nav-wa-logs', 'nav-products', 'nav-customers', 'nav-edit-requests', 'nav-earnings', 'nav-team'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('active');
     });
-    const tabToNav = { saved: 'nav-saved', leads: 'nav-leads', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', wa_logs: 'nav-wa-logs', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
+    const tabToNav = { saved: 'nav-saved', leads: 'nav-leads', web_analytics: 'nav-web-analytics', demo_analytics: 'nav-demo-analytics', outreach: 'nav-outreach', audiences: 'nav-audiences', campaigns: 'nav-campaigns', messages: 'nav-messages', email: 'nav-email', templates: 'nav-templates', wa_logs: 'nav-wa-logs', products: 'nav-products', customers: 'nav-customers', edit_requests: 'nav-edit-requests', earnings: 'nav-earnings', team: 'nav-team' };
     const activeNav = document.getElementById(tabToNav[tab]);
     if (activeNav) activeNav.classList.add('active');
     syncSavedPipelineNavActiveState();
@@ -8822,6 +9068,7 @@
     if (tab === 'customers') loadCustomers();
     if (tab === 'edit_requests') loadAdminEditRequests();
     if (tab === 'leads') loadLeadsDashboard();
+    if (tab === 'web_analytics') loadWebAnalytics();
     if (tab === 'demo_analytics') loadDemoAnalytics();
     if (tab === 'outreach') loadOutreach();
     if (tab === 'earnings') loadEarnings();
@@ -13002,6 +13249,283 @@
   const btnInvite = document.getElementById('btn-invite-employee');
   if (btnInvite) btnInvite.addEventListener('click', inviteEmployee);
 
+  // ── Website Analytics ──
+  let webaCurrentOffset = 0;
+  let webaTotalRows = 0;
+  let webaDebounceTimer = null;
+  const WEBA_PAGE_SIZE = 25;
+
+  async function loadWebAnalytics(options) {
+    if (!isCurrentEmployeeAdmin()) return;
+    const preserveOffset = options && options.preserveOffset;
+    if (!preserveOffset) webaCurrentOffset = 0;
+
+    const days = document.getElementById('weba-days-filter')?.value || '30';
+    const search = document.getElementById('weba-search')?.value.trim() || '';
+    const metric = document.getElementById('weba-metric-filter')?.value || 'page_views';
+    const sortDirection = document.getElementById('weba-sort-direction')?.value || 'desc';
+    const tbody = document.getElementById('weba-sites-body');
+    const emptyEl = document.getElementById('weba-empty');
+
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:22px;color:var(--text-muted)">' + escapeHtml(t('webAnalyticsLoading')) + '</td></tr>';
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    updateWebAnalyticsSortHeader(metric, sortDirection);
+
+    try {
+      const params = new URLSearchParams({
+        days: days,
+        search: search,
+        metric: metric,
+        sortDirection: sortDirection,
+        limit: String(WEBA_PAGE_SIZE),
+        offset: String(webaCurrentOffset),
+      });
+      const res = await fetch('/api/analytics/admin-stats?' + params.toString());
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      webaTotalRows = data.total_rows || 0;
+      renderWebAnalytics(data);
+    } catch (err) {
+      console.error('Website analytics load error:', err);
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:22px;color:var(--danger)">' + escapeHtml(t('webAnalyticsError')) + '</td></tr>';
+      }
+      renderWebAnalyticsBreakdowns({ topReferrers: [], topLocations: [], deviceBreakdown: {} });
+      updateWebAnalyticsPagination();
+    }
+  }
+
+  function renderWebAnalytics(data) {
+    const totals = data.totals || {};
+    setText('weba-total-views', formatWebAnalyticsNumber(totals.page_views));
+    setText('weba-unique-visitors', formatWebAnalyticsNumber(totals.unique_visitors));
+    setText('weba-contact-clicks', formatWebAnalyticsNumber(totals.contact_clicks));
+    setText('weba-tracked-sites', formatWebAnalyticsNumber(totals.tracked_sites));
+    renderWebAnalyticsBreakdowns(data);
+    renderWebAnalyticsRows(data.rows || []);
+    updateWebAnalyticsSortHeader(data.metric, data.sortDirection);
+    updateWebAnalyticsPagination();
+  }
+
+  function renderWebAnalyticsBreakdowns(data) {
+    renderWebAnalyticsList(
+      'weba-channels',
+      (data.topChannels || []).map(function (item) {
+        return { label: translateAnalyticsChannel(item.channel), count: item.count || 0 };
+      })
+    );
+    renderWebAnalyticsList(
+      'weba-referrers',
+      (data.topReferrers || []).map(function (item) {
+        return { label: translateAnalyticsLabel(item.source), count: item.count || 0 };
+      })
+    );
+    renderWebAnalyticsList(
+      'weba-locations',
+      (data.topLocations || []).map(function (item) {
+        return { label: translateAnalyticsLabel(item.location), count: item.count || 0 };
+      })
+    );
+    const breakdown = data.deviceBreakdown || {};
+    renderWebAnalyticsList('weba-devices', [
+      { label: t('webAnalyticsDeviceDesktop'), count: breakdown.desktop || 0, suffix: '%' },
+      { label: t('webAnalyticsDeviceMobile'), count: breakdown.mobile || 0, suffix: '%' },
+      { label: t('webAnalyticsDeviceTablet'), count: breakdown.tablet || 0, suffix: '%' },
+    ].filter(function (item) { return item.count > 0; }));
+  }
+
+  function renderWebAnalyticsList(id, rows) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!rows || rows.length === 0) {
+      el.innerHTML = '<div class="weba-list-empty">' + escapeHtml(t('webAnalyticsNoData')) + '</div>';
+      return;
+    }
+    const max = Math.max.apply(null, rows.map(function (row) { return row.count || 0; })) || 1;
+    el.innerHTML = rows.map(function (row) {
+      const pct = Math.max(4, Math.round(((row.count || 0) / max) * 100));
+      const value = formatWebAnalyticsNumber(row.count) + (row.suffix || '');
+      return '<div class="weba-list-row">'
+        + '<div class="weba-list-label" title="' + escapeHtml(row.label) + '">' + escapeHtml(row.label) + '</div>'
+        + '<div class="weba-list-count">' + escapeHtml(value) + '</div>'
+        + '<div class="weba-list-bar"><span style="width:' + pct + '%"></span></div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function renderWebAnalyticsRows(rows) {
+    const tbody = document.getElementById('weba-sites-body');
+    const emptyEl = document.getElementById('weba-empty');
+    if (!tbody) return;
+
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = '';
+      if (emptyEl) emptyEl.style.display = '';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    tbody.innerHTML = rows.map(function (row) {
+      const meta = [row.business_city, row.business_country].filter(Boolean).join(', ') || row.category || '';
+      const sourceNote = formatWebAnalyticsSourceNote(row.top_source_detail);
+      const siteHtml = row.published_url
+        ? '<a class="weba-site-link" href="' + escapeHtml(row.published_url) + '" target="_blank" rel="noopener">' + escapeHtml(row.published_url.replace(/^https?:\/\//, '')) + '</a>'
+        : '<span class="td-empty-placeholder">' + escapeHtml(t('webAnalyticsNoWebsite')) + '</span>';
+      return '<tr>'
+        + '<td class="weba-business-cell"><strong>' + escapeHtml(row.business_name || '—') + '</strong>' + (meta ? '<span class="weba-business-meta">' + escapeHtml(meta) + '</span>' : '') + '</td>'
+        + '<td><span class="weba-channel-badge">' + escapeHtml(translateAnalyticsChannel(row.top_channel || 'Direct / Unknown')) + '</span></td>'
+        + '<td class="td-center">' + escapeHtml(formatWebAnalyticsNumber(row.page_views)) + '</td>'
+        + '<td class="td-center">' + escapeHtml(formatWebAnalyticsNumber(row.unique_visitors)) + '</td>'
+        + '<td class="td-center">' + escapeHtml(formatWebAnalyticsNumber(row.contact_clicks)) + '</td>'
+        + '<td>' + escapeHtml(translateAnalyticsLabel(row.top_source || 'Direct')) + (sourceNote ? '<span class="weba-source-note">' + escapeHtml(sourceNote) + '</span>' : '') + '</td>'
+        + '<td>' + escapeHtml(translateAnalyticsLabel(row.top_location || 'Unknown')) + '</td>'
+        + '<td>' + escapeHtml(row.last_visit ? formatAdminDateTime(row.last_visit) : '—') + '</td>'
+        + '<td>' + siteHtml + '</td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  function updateWebAnalyticsPagination() {
+    const prevBtn = document.getElementById('weba-prev');
+    const nextBtn = document.getElementById('weba-next');
+    const infoEl = document.getElementById('weba-page-info');
+    if (prevBtn) prevBtn.disabled = webaCurrentOffset <= 0;
+    if (nextBtn) nextBtn.disabled = webaCurrentOffset + WEBA_PAGE_SIZE >= webaTotalRows;
+    if (infoEl) {
+      if (!webaTotalRows) {
+        infoEl.textContent = t('webAnalyticsPageInfo', 0, 0, 0);
+      } else {
+        const start = webaCurrentOffset + 1;
+        const end = Math.min(webaCurrentOffset + WEBA_PAGE_SIZE, webaTotalRows);
+        infoEl.textContent = t('webAnalyticsPageInfo', start, end, webaTotalRows);
+      }
+    }
+  }
+
+  function updateWebAnalyticsSortHeader(metric, sortDirection) {
+    document.querySelectorAll('.weba-sort-header[data-metric]').forEach(function (button) {
+      const buttonMetric = button.getAttribute('data-metric');
+      const labelKey = button.getAttribute('data-i18n');
+      const isActive = buttonMetric === metric;
+      const arrow = isActive ? (sortDirection === 'asc' ? '\u2191' : '\u2193') : '\u2195';
+      button.classList.toggle('active', isActive);
+      button.innerHTML = escapeHtml(t(labelKey)) + ' <span aria-hidden="true">' + arrow + '</span>';
+    });
+  }
+
+  function setWebAnalyticsSort(metric) {
+    const metricEl = document.getElementById('weba-metric-filter');
+    const directionEl = document.getElementById('weba-sort-direction');
+    const currentMetric = metricEl ? metricEl.value : 'page_views';
+    const currentDirection = directionEl ? directionEl.value : 'desc';
+    if (metricEl) metricEl.value = metric;
+    if (directionEl) directionEl.value = metric === currentMetric && currentDirection === 'desc' ? 'asc' : 'desc';
+    loadWebAnalytics();
+  }
+
+  function formatWebAnalyticsNumber(value) {
+    const num = Number(value || 0);
+    return num.toLocaleString(currentLang === 'es' ? 'es-MX' : 'en-US');
+  }
+
+  function translateAnalyticsLabel(value) {
+    if (!value || value === 'Unknown') return t('webAnalyticsUnknown');
+    if (value === 'Direct' || value === 'Direct / Unknown') return t('webAnalyticsDirect');
+    return value;
+  }
+
+  function translateAnalyticsChannel(channel) {
+    const keyMap = {
+      'Direct / Unknown': 'webAnalyticsChannelDirect',
+      'Organic Search': 'webAnalyticsChannelOrganicSearch',
+      'Paid Search': 'webAnalyticsChannelPaidSearch',
+      'Organic Social': 'webAnalyticsChannelOrganicSocial',
+      'Paid Social': 'webAnalyticsChannelPaidSocial',
+      'Referral': 'webAnalyticsChannelReferral',
+      'Tagged Campaign': 'webAnalyticsChannelTagged',
+      'Email': 'webAnalyticsChannelEmail',
+      'Messaging': 'webAnalyticsChannelMessaging',
+      'Offline / QR': 'webAnalyticsChannelOffline',
+      'Internal': 'webAnalyticsChannelInternal',
+    };
+    return t(keyMap[channel] || '') || channel || t('webAnalyticsUnknown');
+  }
+
+  function formatWebAnalyticsSourceNote(detail) {
+    if (!detail || typeof detail !== 'object') return '';
+    const pieces = [];
+    if (detail.campaign) pieces.push(detail.campaign);
+    if (detail.medium) pieces.push(detail.medium);
+    if (detail.basis) pieces.push(formatWebAnalyticsBasis(detail.basis));
+    return pieces.filter(Boolean).join(' · ');
+  }
+
+  function formatWebAnalyticsBasis(basis) {
+    if (basis === 'utm') return t('webAnalyticsBasisUtm');
+    if (basis === 'referrer') return t('webAnalyticsBasisReferrer');
+    if (basis === 'none') return t('webAnalyticsBasisNone');
+    if (basis === 'gclid' || basis === 'msclkid' || basis === 'ttclid' || basis === 'fbclid') return t('webAnalyticsBasisClickId');
+    return basis || '';
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  // Website Analytics event listeners
+  ['weba-days-filter', 'weba-metric-filter', 'weba-sort-direction'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', function () {
+        if (activeTab === 'web_analytics') loadWebAnalytics();
+      });
+    }
+  });
+
+  const webaSearchInput = document.getElementById('weba-search');
+  if (webaSearchInput) {
+    webaSearchInput.addEventListener('input', function () {
+      clearTimeout(webaDebounceTimer);
+      webaDebounceTimer = setTimeout(function () {
+        if (activeTab === 'web_analytics') loadWebAnalytics();
+      }, 400);
+    });
+  }
+
+  const webaRefreshBtn = document.getElementById('weba-refresh');
+  if (webaRefreshBtn) {
+    webaRefreshBtn.addEventListener('click', function () {
+      if (activeTab === 'web_analytics') loadWebAnalytics({ preserveOffset: true });
+    });
+  }
+
+  const webaPrevBtn = document.getElementById('weba-prev');
+  if (webaPrevBtn) {
+    webaPrevBtn.addEventListener('click', function () {
+      webaCurrentOffset = Math.max(0, webaCurrentOffset - WEBA_PAGE_SIZE);
+      loadWebAnalytics({ preserveOffset: true });
+    });
+  }
+
+  const webaNextBtn = document.getElementById('weba-next');
+  if (webaNextBtn) {
+    webaNextBtn.addEventListener('click', function () {
+      if (webaCurrentOffset + WEBA_PAGE_SIZE < webaTotalRows) {
+        webaCurrentOffset += WEBA_PAGE_SIZE;
+        loadWebAnalytics({ preserveOffset: true });
+      }
+    });
+  }
+
+  document.querySelectorAll('.weba-sort-header[data-metric]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      setWebAnalyticsSort(button.getAttribute('data-metric'));
+    });
+  });
+
   // ── Demo Analytics ──
   let daCurrentOffset = 0;
   let daSessions = [];
@@ -13423,6 +13947,8 @@
       if (infoEl) infoEl.style.display = '';
       const logoutBtn = document.getElementById('btn-logout');
       if (logoutBtn) logoutBtn.addEventListener('click', () => window.__employeeAuth.signOut());
+      const webAnalyticsTab = document.getElementById('nav-web-analytics');
+      if (webAnalyticsTab) webAnalyticsTab.style.display = isCurrentEmployeeAdmin() ? '' : 'none';
       // Show Team tab for all employees
       const teamTab = document.getElementById('nav-team');
       if (teamTab) teamTab.style.display = '';

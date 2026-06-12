@@ -59,6 +59,36 @@ Every external service the system integrates with — current and planned. Inclu
 | **Cost model** | Free tier (Hobby). Pro $20/month |
 | **Integration** | Fetch from client to `/api/config` endpoint |
 
+### Azure AI Speech / MAI-Transcribe-1
+
+| Field | Value |
+|---|---|
+| **Purpose** | Customer voice-answer transcription in the `/crear-tu-pagina/chat` intake |
+| **Pipeline phase** | Gather |
+| **Auth** | Server-side Speech resource key via `AZURE_SPEECH_API_KEY`; endpoint via `AZURE_SPEECH_ENDPOINT` or region via `AZURE_SPEECH_REGION` |
+| **Client library** | Browser Web Audio API records WAV; no Azure key or SDK is exposed to the client |
+| **Key methods** | `POST /speechtotext/transcriptions:transcribe?api-version=2025-10-15` with `enhancedMode.model = mai-transcribe-1` |
+| **Data sourced** | Transcribed customer answers from microphone audio |
+| **Data produced** | Transcript text inserted into the chat input for customer review/submission |
+| **Rate limits** | Governed by Azure Speech resource quotas |
+| **Cost model** | Usage-based Azure Speech / Foundry billing; MAI-Transcribe-1 preview pricing should be confirmed in Azure before launch |
+| **Integration** | Server-side via `api/public-builder/transcribe-voice.js` |
+
+### OpenAI Audio Transcription
+
+| Field | Value |
+|---|---|
+| **Purpose** | Optional fallback provider for customer voice-answer transcription |
+| **Pipeline phase** | Gather |
+| **Auth** | Server-side `OPENAI_API_KEY` |
+| **Client library** | Same browser WAV recorder as Azure Speech |
+| **Key methods** | `POST /v1/audio/transcriptions` |
+| **Data sourced** | Transcribed customer answers from microphone audio |
+| **Data produced** | Transcript text inserted into the chat input for customer review/submission |
+| **Rate limits** | Governed by OpenAI project limits |
+| **Cost model** | Usage-based audio transcription billing by model |
+| **Integration** | Server-side fallback in `api/public-builder/transcribe-voice.js` when Azure is not configured or `VOICE_TRANSCRIPTION_PROVIDER=openai` |
+
 ### Supabase Auth
 
 | Field | Value |
