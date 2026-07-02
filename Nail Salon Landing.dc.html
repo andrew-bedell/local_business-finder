@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="./image-slot.js"></script>
+<style>
+  :root{
+    /* re-themed: warm near-black brand + GOLD CTA, on white surfaces */
+    --brand: #1A1410;
+    --brand-ink: #FFFFFF;
+    --cta: #C9A24D;
+    --cta-ink: #1A1410;
+
+    --brand-950: #0B0805;
+    --brand-900: #14100D;
+    --brand-800: #1A1410;
+    --brand-700: #2D2419;
+    --brand-600: #4A3D2C;
+    --brand-500: #6B5942;
+    --brand-200: #DCD4C7;
+    --brand-100: #ECE6DA;
+    --brand-50:  #F8F4EB;
+
+    --cta-800: #6B4F1D;
+    --cta-700: #8B6720;
+    --cta-600: #A88436;
+    --cta-500: #C9A24D;
+    --cta-400: #DDB875;
+    --cta-100: #F4E4C1;
+    --cta-50:  #FBF6EB;
+
+    --ink-900: #1A1410;
+    --ink-700: #3A2F25;
+    --ink-500: #6E5F4E;
+    --ink-400: #9D8E7C;
+    --line: #EFE9DD;
+    --line-strong: #E0D7C5;
+    --surface: #FFFFFF;
+    --surface-2: #FAF6EE;
+    --surface-3: #F3ECDC;
+
+    --star: #C9A24D;
+    --shadow-cta: 0 10px 28px rgba(201,162,77,0.45);
+    --shadow-cta-strong: 0 16px 36px rgba(201,162,77,0.55);
+
+    --whatsapp: #25D366;
+    --whatsapp-600: #1FB959;
+    --whatsapp-ink: #053E2E;
+
+    --success: #16A34A;
+    --shadow-sm: 0 1px 2px rgba(11,26,43,0.06), 0 1px 3px rgba(11,26,43,0.10);
+  }
+  html, body { margin:0; padding:0; }
+  body { font-family: 'Manrope', system-ui, sans-serif; color: var(--ink-900); background: var(--surface); -webkit-font-smoothing: antialiased; }
+  *, *::before, *::after { box-sizing: border-box; }
+  img { display:block; max-width:100%; }
+  ::selection { background: var(--cta); color: var(--ink-900); }
+
+  @keyframes nl-fade-up { from { opacity:0; transform: translateY(14px) } to { opacity:1; transform: none } }
+  @keyframes nl-fade { from { opacity:0 } to { opacity:1 } }
+  @keyframes nl-zoom { from { transform: scale(1.08) } to { transform: scale(1) } }
+  @keyframes nl-marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+  @keyframes nl-pulse { 0%,100% { transform: scale(1); opacity:.5 } 50% { transform: scale(1.5); opacity:0 } }
+  @keyframes nl-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }
+  @keyframes nl-pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(37,211,102,.6); }
+    100% { box-shadow: 0 0 0 18px rgba(37,211,102,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</helmet>
+
+<div style="font-family: 'Manrope', system-ui, sans-serif; color: var(--ink-900); overflow-x: hidden; background: var(--surface);">
+
+  <!-- ============ HEADER ============ -->
+  <header id="nl-header" data-screen-label="Header" style="position: fixed; inset: 0 0 auto 0; height: 76px; z-index: 50; display:flex; align-items:center; padding: 0 32px; background: rgba(255,255,255,0); backdrop-filter: blur(0px); transition: background 300ms cubic-bezier(.22,1,.36,1), backdrop-filter 300ms, box-shadow 300ms, border-color 300ms; border-bottom: 1px solid transparent;">
+    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; max-width: 1280px; margin: 0 auto;">
+
+      <!-- Logo -->
+      <a href="#top" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+        <span style="display:inline-grid; place-items:center; width:42px; height:42px;">
+          <svg width="42" height="42" viewBox="0 0 42 42" fill="none" aria-hidden="true">
+            <circle cx="21" cy="21" r="19.5" fill="none" stroke="#C9A24D" stroke-width="1"/>
+            <circle cx="21" cy="21" r="16" fill="#C9A24D"/>
+            <path d="M21 11 C24 14.5, 28 16, 31 16 C28 18, 26 21, 26 24 C24 21, 21 19, 18 19 C20 17, 21 14, 21 11 Z M21 31 C18 27.5, 14 26, 11 26 C14 24, 16 21, 16 18 C18 21, 21 23, 24 23 C22 25, 21 28, 21 31 Z" fill="#FFFFFF" opacity=".95"/>
+          </svg>
+        </span>
+        <span id="nl-wordmark" style="display:flex; flex-direction:column; line-height: 1; color: var(--ink-900); transition: color 300ms;">
+          <span style="font-family: 'Fraunces', serif; font-weight: 600; font-size: 22px; letter-spacing: -0.02em;">Lunaire</span>
+          <span style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 9.5px; letter-spacing: .32em; text-transform: uppercase; color: var(--cta-400); margin-top: 4px;">Nail Atelier</span>
+        </span>
+      </a>
+
+      <nav style="display:flex; align-items:center; gap: 28px;">
+        <a href="#services" style="color: rgba(255,255,255,.85); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.services }}</a>
+        <a href="#gallery" style="color: var(--ink-700); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.gallery }}</a>
+        <a href="#reviews" style="color: var(--ink-700); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.reviews }}</a>
+        <a href="#loyalty" style="color: var(--ink-700); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.rewards }}</a>
+
+        <!-- Lang toggle -->
+        <div style="display:flex; align-items:center; gap: 2px; padding: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;" class="nl-langwrap">
+          <button onclick="{{ setEs }}" style="padding: 6px 14px; border:none; cursor:pointer; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight:800; font-size: 11px; letter-spacing:.12em; transition: all 200ms; background: {{ esBg }}; color: {{ esColor }};">ES</button>
+          <button onclick="{{ setEn }}" style="padding: 6px 14px; border:none; cursor:pointer; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight:800; font-size: 11px; letter-spacing:.12em; transition: all 200ms; background: {{ enBg }}; color: {{ enColor }};">EN</button>
+        </div>
+
+        <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap:8px; padding: 12px 22px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; letter-spacing:.02em; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
+          {{ T.ctaIcon }} {{ T.nav.cta }}
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section id="top" data-screen-label="Hero" style="position:relative; min-height: 100vh; padding: 76px 32px 64px; color: var(--ink-900); isolation:isolate; overflow:hidden; background: var(--surface-2);">
+
+    <!-- bright hero background photo -->
+    <div style="position:absolute; inset:0; z-index:-2; animation: nl-zoom 18s cubic-bezier(.22,1,.36,1) forwards;">
+      <image-slot id="hero-bg" style="width:100%; height:100%;" shape="rect" placeholder="Drop a bright, airy hero photo" src="https://images.unsplash.com/photo-1632344004415-b9f1ad1fc1e1?auto=format&fit=crop&w=2000&q=85"></image-slot>
+    </div>
+
+    <!-- soft cream wash so headline is legible AND it feels bright -->
+    <div style="position:absolute; inset:0; z-index:-1; background: linear-gradient(100deg, rgba(255,251,243,.92) 0%, rgba(255,251,243,.78) 38%, rgba(255,251,243,.42) 70%, rgba(255,251,243,.18) 100%);"></div>
+    <!-- gold glow accent -->
+    <div style="position:absolute; right: -180px; top:24%; width: 580px; height: 580px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.40), transparent 65%); z-index:-1; filter: blur(28px); animation: nl-float 11s ease-in-out infinite;"></div>
+    <div style="position:absolute; left: -120px; bottom: -120px; width: 380px; height: 380px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.22), transparent 70%); z-index:-1; filter: blur(20px);"></div>
+
+    <div style="max-width:1280px; margin: 0 auto; display:grid; grid-template-columns: 1.15fr .85fr; gap: 72px; align-items: center; padding-top: 80px;">
+
+      <!-- LEFT: copy + form -->
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:10px; padding: 8px 14px; background: #fff; border:1px solid var(--line-strong); border-radius: 999px; margin-bottom: 28px; animation: nl-fade-up 700ms cubic-bezier(.22,1,.36,1) 80ms forwards; box-shadow: 0 4px 14px rgba(26,20,16,.08);">
+          <span style="display:inline-block; position:relative; width:8px; height:8px;">
+            <span style="position:absolute; inset:0; border-radius:50%; background: var(--cta-600);"></span>
+            <span style="position:absolute; inset:0; border-radius:50%; background: var(--cta); animation: nl-pulse 2s ease-out infinite;"></span>
+          </span>
+          <span style="font-family:'Archivo',sans-serif; font-weight:700; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color: var(--ink-900);">{{ T.hero.kicker }}</span>
+        </div>
+
+        <h1 style="font-family:'Fraunces', serif; font-weight: 500; font-size: clamp(3.2rem, 6.4vw, 6rem); line-height: 0.96; letter-spacing: -0.035em; margin: 0 0 24px; text-wrap: balance; color: var(--ink-900); animation: nl-fade-up 800ms cubic-bezier(.22,1,.36,1) 160ms forwards;">
+          {{ T.hero.h1a }}<br>
+          <em style="font-style: italic; font-weight: 400; background: linear-gradient(90deg, #8B6720, #C9A24D 50%, #8B6720); -webkit-background-clip: text; background-clip: text; color: transparent;">{{ T.hero.h1b }}</em>
+        </h1>
+
+        <p style="font-size: 19px; line-height: 1.55; color: var(--ink-700); max-width: 540px; margin: 0 0 36px; animation: nl-fade-up 800ms cubic-bezier(.22,1,.36,1) 260ms forwards;">
+          {{ T.hero.sub }}
+        </p>
+
+        <!-- LEAD FORM -->
+        <form id="book" onsubmit="{{ onSubmitLead }}" style="background: #fff; color: var(--ink-900); border-radius: 22px; padding: 28px; max-width: 540px; box-shadow: 0 30px 70px rgba(26,20,16,.18); border: 1px solid var(--line); animation: nl-fade-up 800ms cubic-bezier(.22,1,.36,1) 360ms forwards;">
+          <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: 18px; gap: 16px;">
+            <div style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.01em;">{{ T.form.title }} <span style="color: var(--cta-600);">{{ T.form.titleAccent }}</span></div>
+            <div style="display:flex; align-items:center; gap:6px; font-size: 12px; color: var(--ink-500); font-weight:600; white-space: nowrap;">
+              <i data-lucide="shield-check" style="width:14px; height:14px; stroke-width:2.4; color: var(--success);"></i> {{ T.form.noSpam }}
+            </div>
+          </div>
+          <sc-if value="{{ leadSent }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 26px 8px; text-align:center;">
+              <div style="font-family:'Fraunces',serif; font-size: 28px; font-weight: 600; line-height:1.1; margin-bottom: 8px;">{{ T.form.successTitle }} ✨</div>
+              <div style="color: var(--ink-500);">{{ T.form.successBody }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <input type="text" placeholder="{{ T.form.firstName }}" required style="padding: 14px 16px; border: 1.5px solid var(--line-strong); border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 500; background: var(--surface-2); transition: border-color 180ms, box-shadow 180ms, background 180ms;" class="nl-field">
+              <input type="tel" placeholder="{{ T.form.phone }}" required style="padding: 14px 16px; border: 1.5px solid var(--line-strong); border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 500; background: var(--surface-2);" class="nl-field">
+            </div>
+            <select style="width:100%; padding: 14px 16px; border: 1.5px solid var(--line-strong); border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 600; background: var(--surface-2); margin-bottom: 14px; color: var(--ink-900);" class="nl-field">
+              <sc-for list="{{ T.form.options }}" as="opt" hint-placeholder-count="5">
+                <option>{{ opt }}</option>
+              </sc-for>
+            </select>
+            <button type="submit" style="width:100%; padding: 18px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 16px; letter-spacing: 0.01em; border:none; border-radius: 14px; box-shadow: {{ T.ctaShadow }}; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap: 10px;" class="nl-cta-btn">
+              {{ T.ctaIcon }} {{ T.form.submit }}
+            </button>
+            <div style="font-size: 12px; color: var(--ink-400); text-align:center; margin-top: 12px;">{{ T.form.reassurance }}</div>
+          </sc-if>
+        </form>
+
+        <!-- mini trust strip -->
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap: 24px; margin-top: 28px; animation: nl-fade-up 900ms cubic-bezier(.22,1,.36,1) 480ms forwards;">
+          <div style="display:flex; align-items:center; gap: 8px;">
+            <div style="display:flex; gap:2px;">
+              <i data-lucide="star" style="width:18px; height:18px; fill: var(--star); stroke: var(--star);"></i>
+              <i data-lucide="star" style="width:18px; height:18px; fill: var(--star); stroke: var(--star);"></i>
+              <i data-lucide="star" style="width:18px; height:18px; fill: var(--star); stroke: var(--star);"></i>
+              <i data-lucide="star" style="width:18px; height:18px; fill: var(--star); stroke: var(--star);"></i>
+              <i data-lucide="star" style="width:18px; height:18px; fill: var(--star); stroke: var(--star);"></i>
+            </div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--ink-900);">4.9 · <span style="color: var(--ink-500); font-weight: 500;">{{ T.hero.trust1 }}</span></div>
+          </div>
+          <div style="width:1px; height: 24px; background: var(--line-strong);"></div>
+          <div style="display:flex; align-items:center; gap: 8px; font-size:14px; font-weight:600; color: var(--ink-700);">
+            <i data-lucide="badge-check" style="width:18px; height:18px; stroke-width:2.4; color: var(--cta-600);"></i> {{ T.hero.trust2 }}
+          </div>
+          <div style="width:1px; height: 24px; background: var(--line-strong);"></div>
+          <div style="display:flex; align-items:center; gap: 8px; font-size:14px; font-weight:600; color: var(--ink-700);">
+            <i data-lucide="award" style="width:18px; height:18px; stroke-width:2.4; color: var(--cta-600);"></i> {{ T.hero.trust3 }}
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: image collage -->
+      <div style="position:relative; height: 620px; animation: nl-fade 1000ms cubic-bezier(.22,1,.36,1) 300ms forwards;">
+        <div style="position:absolute; top: 0; right: 40px; width: 280px; height: 360px; border-radius: 200px 200px 24px 24px; overflow:hidden; box-shadow: 0 30px 60px rgba(26,20,16,.22); transform: rotate(-3deg); border: 4px solid #fff;">
+          <image-slot id="hero-img-1" style="width:100%; height:100%;" shape="rect" placeholder="Manicure detail" src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85"></image-slot>
+        </div>
+        <div style="position:absolute; top: 220px; right: 240px; width: 240px; height: 300px; border-radius: 24px; overflow:hidden; box-shadow: 0 30px 60px rgba(26,20,16,.22); transform: rotate(4deg); border: 4px solid #fff;">
+          <image-slot id="hero-img-2" style="width:100%; height:100%;" shape="rect" placeholder="Nail art" src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85"></image-slot>
+        </div>
+        <div style="position:absolute; bottom: 0; right: 0; width: 220px; height: 220px; border-radius: 50%; overflow:hidden; box-shadow: 0 30px 60px rgba(26,20,16,.22); border: 4px solid #fff;">
+          <image-slot id="hero-img-3" style="width:100%; height:100%;" shape="circle" placeholder="Pedicure" src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85"></image-slot>
+        </div>
+        <!-- floating chip -->
+        <div style="position:absolute; bottom: 60px; left: 0; background: #fff; color: var(--ink-900); border-radius: 16px; padding: 14px 18px; box-shadow: 0 20px 40px rgba(26,20,16,.18); display:flex; align-items:center; gap: 12px; animation: nl-float 6s ease-in-out infinite; border: 1px solid var(--line);">
+          <div style="width:42px; height:42px; border-radius: 50%; background: linear-gradient(135deg, var(--cta-400), var(--cta-700)); display:grid; place-items:center; color:#fff;">
+            <i data-lucide="sparkles" style="width:20px; height:20px; stroke-width:2.4;"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 14px; font-family:'Archivo',sans-serif;">{{ T.hero.bookingsCount }}</div>
+            <div style="font-size: 12px; color: var(--ink-500);">{{ T.hero.bookingsLabel }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MARQUEE ============ -->
+  <section style="background: var(--brand-900); color: rgba(255,255,255,.78); padding: 22px 0; overflow:hidden;">
+    <div style="display:flex; gap: 64px; width: max-content; animation: nl-marquee 42s linear infinite; font-family:'Fraunces',serif; font-style: italic; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap;">
+      <sc-for list="{{ T.marqueeLoop }}" as="m" hint-placeholder-count="10">
+        <span><span style="color: var(--cta);">✦</span> &nbsp;{{ m }}</span>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ============ PILLARS ============ -->
+  <section data-screen-label="Pillars" style="padding: 120px 32px; background: var(--surface);">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div style="display:grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: end; margin-bottom: 72px;">
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.pillars.kicker }}</div>
+          <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0;">{{ T.pillars.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.pillars.h2b }}</em>{{ T.pillars.h2c }}</h2>
+        </div>
+        <p style="font-size: 18px; line-height: 1.6; color: var(--ink-500); max-width: 520px; justify-self: end; margin: 0;">{{ T.pillars.intro }}</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+        <sc-for list="{{ T.pillars.cards }}" as="p" hint-placeholder-count="4">
+          <div style="position:relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: 24px; padding: 32px 28px 28px; overflow: hidden; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+            <div style="position:absolute; top:-30px; right:-30px; width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, var(--cta-100), transparent 70%);"></div>
+            <div style="position:relative; width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, var(--cta), var(--cta-700)); display:grid; place-items:center; color:#fff; margin-bottom: 24px; box-shadow: var(--shadow-cta);">
+              <i data-lucide="{{ p.icon }}" style="width:26px; height:26px; stroke-width:2.4;"></i>
+            </div>
+            <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 10px;">{{ p.kicker }}</div>
+            <h3 style="font-family:'Fraunces',serif; font-weight: 600; font-size: 26px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 14px;">{{ p.title }}</h3>
+            <p style="color: var(--ink-500); font-size: 15px; line-height: 1.55; margin: 0;">{{ p.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES + PRICES ============ -->
+  <section id="services" data-screen-label="Services" style="padding: 120px 32px; background: var(--brand-50); position:relative; overflow:hidden;">
+    <div style="position:absolute; top:-100px; left:-100px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, var(--cta-100), transparent 70%);"></div>
+    <div style="max-width: 1280px; margin: 0 auto; position:relative;">
+      <div style="display:flex; align-items: end; justify-content: space-between; gap: 32px; flex-wrap: wrap; margin-bottom: 56px;">
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.services.kicker }}</div>
+          <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0; max-width: 800px;">{{ T.services.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.services.h2b }}</em></h2>
+        </div>
+        <div style="display:flex; gap: 8px; background: #fff; padding: 6px; border-radius: 999px; border:1px solid var(--line); box-shadow: var(--shadow-sm);">
+          <button onclick="{{ setFilterHands }}" style="padding: 12px 22px; border-radius: 999px; border:none; cursor:pointer; font-family:'Archivo',sans-serif; font-weight:700; font-size: 14px; transition: all 200ms; background: {{ filterHandsBg }}; color: {{ filterHandsColor }};">{{ T.services.filters.hands }}</button>
+          <button onclick="{{ setFilterFeet }}" style="padding: 12px 22px; border-radius: 999px; border:none; cursor:pointer; font-family:'Archivo',sans-serif; font-weight:700; font-size: 14px; transition: all 200ms; background: {{ filterFeetBg }}; color: {{ filterFeetColor }};">{{ T.services.filters.feet }}</button>
+          <button onclick="{{ setFilterArt }}" style="padding: 12px 22px; border-radius: 999px; border:none; cursor:pointer; font-family:'Archivo',sans-serif; font-weight:700; font-size: 14px; transition: all 200ms; background: {{ filterArtBg }}; color: {{ filterArtColor }};">{{ T.services.filters.art }}</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+        <sc-for list="{{ visibleServices }}" as="svc" hint-placeholder-count="6">
+          <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; overflow:hidden; display:flex; flex-direction:column; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms; position:relative;" class="nl-service">
+            <div style="height: 220px; position:relative; overflow:hidden; background: var(--surface-3);">
+              <div role="img" aria-label="{{ svc.name }}" style="width:100%; height:100%; background-image: url('{{ svc.img }}'); background-size: cover; background-position: center; transition: transform 600ms cubic-bezier(.22,1,.36,1);" class="nl-service-img"></div>
+              <sc-if value="{{ svc.tag }}" hint-placeholder-val="true">
+                <div style="position:absolute; top: 16px; left: 16px;">
+                  <span style="background: var(--cta); color: var(--ink-900); padding: 6px 12px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 4px 12px rgba(201,162,77,.4);">{{ svc.tag }}</span>
+                </div>
+              </sc-if>
+            </div>
+            <div style="padding: 24px; display:flex; flex-direction:column; flex:1;">
+              <div style="font-family:'Archivo',sans-serif; font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color: var(--ink-400); margin-bottom: 8px;">{{ svc.kicker }}</div>
+              <h3 style="font-family:'Fraunces',serif; font-weight: 600; font-size: 24px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 10px;">{{ svc.name }}</h3>
+              <p style="color: var(--ink-500); font-size: 14px; line-height: 1.5; margin: 0 0 20px; flex:1;">{{ svc.desc }}</p>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding-top: 18px; border-top: 1px solid var(--line); gap: 12px;">
+                <div style="display:flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+                  <sc-if value="{{ svc.was }}" hint-placeholder-val="true">
+                    <span style="font-family: ui-monospace, monospace; font-size: 13px; color: var(--ink-400); text-decoration: line-through;">{{ svc.was }}</span>
+                  </sc-if>
+                  <span style="font-family: ui-monospace, monospace; font-weight: 700; font-size: 22px; color: var(--ink-900); letter-spacing: -0.02em;">{{ svc.price }}</span>
+                  <span style="font-size: 11px; color: var(--ink-400); font-weight: 600;">/ {{ svc.dur }} {{ T.minLabel }}</span>
+                </div>
+                <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 6px; padding: 10px 16px; background: var(--ink-900); color:#fff; font-family:'Archivo',sans-serif; font-weight:700; font-size:13px; border-radius: 999px; text-decoration:none; transition: all 200ms; white-space: nowrap;" class="nl-book-mini">
+                  {{ T.bookShort }} <i data-lucide="arrow-right" style="width:14px; height:14px; stroke-width: 2.6;"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Discount banner -->
+      <div style="margin-top: 40px; padding: 32px 40px; background: linear-gradient(110deg, var(--ink-900) 0%, var(--brand-700) 100%); color:#fff; border-radius: 24px; display:flex; align-items:center; justify-content:space-between; gap: 32px; flex-wrap: wrap; position:relative; overflow:hidden;">
+        <div style="position:absolute; right:-50px; top:-50px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(201,162,77,.4), transparent 65%);"></div>
+        <div style="position:relative;">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-400); margin-bottom: 10px;">{{ T.duo.kicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 500; font-size: 32px; line-height: 1.1; letter-spacing: -0.02em;">{{ T.duo.title }} <em style="color: var(--cta-400);">{{ T.duo.titleAccent }}</em></div>
+        </div>
+        <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="position:relative; display:inline-flex; align-items:center; gap: 10px; padding: 18px 30px; background: var(--cta); color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:15px; border-radius: 999px; box-shadow: var(--shadow-cta); text-decoration:none;" class="nl-cta-btn">
+          {{ T.duo.cta }} <i data-lucide="arrow-right" style="width:18px; height:18px; stroke-width: 2.6;"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY ============ -->
+  <section id="gallery" data-screen-label="Gallery" style="padding: 120px 32px; background: var(--surface);">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div style="text-align:center; margin-bottom: 64px;">
+        <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.gallery.kicker }}</div>
+        <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0 0 16px;">{{ T.gallery.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.gallery.h2b }}</em></h2>
+        <p style="font-size: 18px; color: var(--ink-500); max-width: 600px; margin: 0 auto;">{{ T.gallery.sub }}</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 180px; gap: 14px;">
+        <div style="grid-column: span 2; grid-row: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-1" style="width:100%; height:100%;" shape="rect" placeholder="Manicure set" src="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[0] }}</div>
+        </div>
+        <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-2" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[1] }}</div>
+        </div>
+        <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-3" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[2] }}</div>
+        </div>
+        <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-4" style="width:100%; height:100%;" shape="rect" placeholder="Nail art" src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[3] }}</div>
+        </div>
+        <div style="grid-column: span 2; grid-row: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-5" style="width:100%; height:100%;" shape="rect" placeholder="Pedicure" src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[4] }}</div>
+        </div>
+        <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-6" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[5] }}</div>
+        </div>
+        <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
+          <image-slot id="gal-7" style="width:100%; height:100%;" shape="rect" placeholder="Salon room" src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[6] }}</div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top: 48px;">
+        <a href="https://instagram.com" target="_blank" style="display:inline-flex; align-items:center; gap: 10px; padding: 16px 28px; background: transparent; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size: 15px; border: 2px solid var(--ink-900); border-radius: 999px; text-decoration:none; transition: all 200ms;" class="nl-ghost-btn">
+          {{ T.gallery.more }} <i data-lucide="instagram" style="width:18px; height:18px; stroke-width:2.4;"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REVIEWS ============ -->
+  <section id="reviews" data-screen-label="Reviews" style="padding: 120px 32px; background: var(--surface-2);">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 64px; align-items: center; margin-bottom: 64px;">
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.reviews.kicker }}</div>
+          <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0 0 28px;"><em style="font-style: italic; color: var(--cta-600);">{{ T.reviews.h2a }}</em> {{ T.reviews.h2b }}</h2>
+
+          <div style="display:flex; gap: 16px; margin-bottom: 28px;">
+            <sc-for list="{{ T.reviews.platforms }}" as="pl" hint-placeholder-count="3">
+              <div style="background:#fff; padding: 20px; border-radius: 16px; border:1px solid var(--line); flex:1;">
+                <div style="font-family:'Fraunces',serif; font-size: 36px; font-weight: 700; line-height:1; color: var(--ink-900);">{{ pl.score }}</div>
+                <div style="display:flex; gap:1px; margin: 6px 0;">
+                  <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                  <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                  <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                  <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                  <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                </div>
+                <div style="font-size: 12px; color: var(--ink-500); font-weight: 600;">{{ pl.name }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <sc-for list="{{ T.reviews.list }}" as="r" hint-placeholder-count="4">
+            <div style="background:#fff; border:1px solid var(--line); border-radius: 20px; padding: 26px; display:flex; flex-direction:column; gap: 14px;">
+              <div style="display:flex; gap: 2px;">
+                <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+                <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+              </div>
+              <p style="font-family:'Fraunces',serif; font-size: 19px; line-height: 1.4; font-weight: 500; margin: 0; color: var(--ink-900);">"{{ r.quote }}"</p>
+              <div style="display:flex; align-items:center; gap: 12px; margin-top: auto;">
+                <div style="width:36px; height:36px; border-radius:50%; background: linear-gradient(135deg, var(--cta), var(--cta-700)); color:#fff; display:grid; place-items:center; font-family:'Archivo',sans-serif; font-weight:800; font-size: 13px;">{{ r.initials }}</div>
+                <div>
+                  <div style="font-weight: 700; font-size: 14px;">{{ r.name }}</div>
+                  <div style="font-size: 12px; color: var(--ink-500);">{{ r.meta }}</div>
+                </div>
+                <i data-lucide="badge-check" style="width:18px; height:18px; stroke-width:2.4; color: var(--success); margin-left:auto;"></i>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LOYALTY ============ -->
+  <section id="loyalty" data-screen-label="Loyalty" style="padding: 120px 32px; background: var(--surface); position:relative; overflow:hidden;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div style="display:grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center;">
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.loyalty.kicker }}</div>
+          <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0 0 24px;">{{ T.loyalty.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.loyalty.h2b }}</em></h2>
+          <p style="font-size: 18px; line-height: 1.6; color: var(--ink-500); margin: 0 0 36px; max-width: 520px;">{{ T.loyalty.intro }}</p>
+
+          <div style="display:flex; flex-direction:column; gap: 14px; margin-bottom: 36px;">
+            <div style="display:flex; align-items:center; gap: 16px; padding: 18px 22px; background: var(--surface-2); border-radius: 16px; border:1px solid var(--line);">
+              <div style="font-family:'Fraunces',serif; font-weight:700; font-size: 22px; color: var(--cta-600); width: 90px;">200 ✿</div>
+              <div style="flex:1; font-weight: 600;">{{ T.loyalty.t1 }}</div>
+              <i data-lucide="check-circle-2" style="width:22px; height:22px; stroke-width:2.4; color: var(--success);"></i>
+            </div>
+            <div style="display:flex; align-items:center; gap: 16px; padding: 18px 22px; background: var(--surface-2); border-radius: 16px; border:1px solid var(--line);">
+              <div style="font-family:'Fraunces',serif; font-weight:700; font-size: 22px; color: var(--cta-600); width: 90px;">600 ✿</div>
+              <div style="flex:1; font-weight: 600;">{{ T.loyalty.t2 }}</div>
+              <i data-lucide="check-circle-2" style="width:22px; height:22px; stroke-width:2.4; color: var(--success);"></i>
+            </div>
+            <div style="display:flex; align-items:center; gap: 16px; padding: 18px 22px; background: linear-gradient(110deg, var(--ink-900), var(--brand-700)); color:#fff; border-radius: 16px;">
+              <div style="font-family:'Fraunces',serif; font-weight:700; font-size: 22px; color: var(--cta-400); width: 90px;">1200 ✿</div>
+              <div style="flex:1; font-weight: 600;">{{ T.loyalty.t3 }}</div>
+              <i data-lucide="crown" style="width:22px; height:22px; stroke-width:2.4; color: var(--cta);"></i>
+            </div>
+          </div>
+          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 10px; padding: 18px 30px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:15px; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
+            {{ T.ctaIcon }} {{ T.loyalty.cta }}
+          </a>
+        </div>
+
+        <!-- Loyalty card mock -->
+        <div style="position:relative; height: 520px;">
+          <div style="position:absolute; top: 40px; left: 0; width: 100%; max-width: 420px; background: linear-gradient(135deg, var(--ink-900) 0%, var(--brand-700) 50%, var(--cta-700) 100%); color:#fff; border-radius: 28px; padding: 32px; box-shadow: 0 40px 80px rgba(26,20,16,.35); transform: rotate(-3deg); transition: transform 400ms cubic-bezier(.22,1,.36,1);" class="nl-card-tilt">
+            <div style="display:flex; justify-content: space-between; align-items: start; margin-bottom: 40px;">
+              <div>
+                <div style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing:.18em; text-transform:uppercase; color: rgba(255,255,255,.6);">{{ T.loyalty.cardKicker }}</div>
+                <div style="font-family:'Fraunces',serif; font-style: italic; font-weight: 500; font-size: 26px; margin-top: 6px;">Lunaire</div>
+              </div>
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--cta); display:grid; place-items:center; box-shadow: 0 8px 20px rgba(201,162,77,.5);">
+                <i data-lucide="sparkles" style="width:22px; height:22px; stroke-width:2.4; color: var(--ink-900);"></i>
+              </div>
+            </div>
+            <div style="font-family: ui-monospace, monospace; font-size: 18px; letter-spacing: .32em; margin-bottom: 32px; color: rgba(255,255,255,.85);">★ ★ ★ ★ &nbsp; 8421</div>
+            <div style="display:flex; justify-content: space-between; align-items: end;">
+              <div>
+                <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color: rgba(255,255,255,.6);">{{ T.loyalty.cardSince }}</div>
+                <div style="font-weight: 700; font-size: 16px; margin-top: 4px;">{{ T.loyalty.cardDate }}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color: rgba(255,255,255,.6);">{{ T.loyalty.cardPetals }}</div>
+                <div style="font-family:'Fraunces',serif; font-weight: 700; font-size: 36px; line-height: 1; color: var(--cta);">847 ✿</div>
+              </div>
+            </div>
+          </div>
+          <!-- birthday ticket -->
+          <div style="position:absolute; bottom: 0; right: 0; width: 260px; background:#fff; border: 2px dashed var(--line-strong); border-radius: 20px; padding: 24px; transform: rotate(5deg); box-shadow: 0 20px 40px rgba(26,20,16,.10);">
+            <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 6px;">{{ T.loyalty.bdayKicker }}</div>
+            <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 38px; line-height: 1; letter-spacing: -0.02em; color: var(--ink-900);">30% off</div>
+            <div style="font-size: 13px; color: var(--ink-500); margin-top: 8px;">{{ T.loyalty.bdayBody }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SOCIAL ============ -->
+  <section data-screen-label="Social" style="padding: 96px 32px; background: var(--brand-50);">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap: 32px; margin-bottom: 40px;">
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 14px;">@LUNAIRENAILS</div>
+          <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1; letter-spacing: -0.03em; margin: 0;">{{ T.social.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.social.h2b }}</em></h2>
+        </div>
+        <div style="display:flex; gap: 14px;">
+          <a href="https://instagram.com" target="_blank" style="display:inline-flex; align-items:center; gap: 8px; padding: 14px 22px; background:#fff; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:700; font-size:14px; border-radius: 999px; border:1px solid var(--line); text-decoration:none;" class="nl-social-btn">
+            <i data-lucide="instagram" style="width:18px; height:18px; stroke-width:2.4;"></i> 48k
+          </a>
+          <a href="https://tiktok.com" target="_blank" style="display:inline-flex; align-items:center; gap: 8px; padding: 14px 22px; background:#fff; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:700; font-size:14px; border-radius: 999px; border:1px solid var(--line); text-decoration:none;" class="nl-social-btn">
+            <i data-lucide="music-2" style="width:18px; height:18px; stroke-width:2.4;"></i> TikTok · 22k
+          </a>
+          <a href="https://pinterest.com" target="_blank" style="display:inline-flex; align-items:center; gap: 8px; padding: 14px 22px; background:#fff; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:700; font-size:14px; border-radius: 999px; border:1px solid var(--line); text-decoration:none;" class="nl-social-btn">
+            <i data-lucide="pin" style="width:18px; height:18px; stroke-width:2.4;"></i> Pinterest
+          </a>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+        <sc-for list="{{ socials }}" as="s" hint-placeholder-count="6">
+          <a href="https://instagram.com" target="_blank" style="aspect-ratio: 1/1; border-radius: 16px; overflow:hidden; position:relative; display:block; background: var(--surface-3);" class="nl-gal">
+            <div style="width:100%; height:100%; background-image: url('{{ s.img }}'); background-size: cover; background-position: center; transition: transform 500ms cubic-bezier(.22,1,.36,1);" class="nl-service-img"></div>
+            <div style="position:absolute; left: 10px; bottom: 10px; display:flex; align-items:center; gap: 6px; background: rgba(0,0,0,.55); color:#fff; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">
+              <i data-lucide="heart" style="width:12px; height:12px; stroke-width:2.4;"></i> {{ s.likes }}
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AHORATENGOPAGINA PITCH ============ -->
+  <section data-screen-label="AhoraTengoPagina Pitch" style="padding: 128px 32px; background: #FFFFFF; color: var(--ink-900); position:relative; overflow:hidden;">
+    <!-- soft accents -->
+    <div style="position:absolute; left: -180px; top: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.20), transparent 65%); filter: blur(20px);"></div>
+    <div style="position:absolute; right: -180px; bottom: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(37,111,219,.14), transparent 65%); filter: blur(20px);"></div>
+
+    <div style="max-width: 1180px; margin: 0 auto; position:relative;">
+
+      <!-- Brand lockup -->
+      <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom: 48px;">
+        <div style="display:inline-flex; align-items:center; gap: 10px; padding: 8px 16px; background: var(--surface-2); border:1px solid var(--line); border-radius: 999px; margin-bottom: 24px;">
+          <span style="width:8px; height:8px; border-radius:50%; background: var(--cta);"></span>
+          <span style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-700);">{{ T.atp.kicker }}</span>
+        </div>
+        <img src="assets/ahoratengopagina-logo.png" alt="AhoraTengoPagina.com" style="height: 68px; width: auto; margin-bottom: 20px;">
+        <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 13px; letter-spacing:.28em; text-transform:uppercase; color: var(--ink-500);">.COM</div>
+      </div>
+
+      <!-- Headline -->
+      <div style="text-align:center; max-width: 860px; margin: 0 auto 24px;">
+        <h2 style="font-family:'Fraunces',serif; font-weight: 400; font-size: clamp(2.5rem, 5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 20px;">{{ T.atp.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.atp.h2b }}</em></h2>
+        <p style="font-size: 19px; line-height: 1.55; color: var(--ink-500); margin: 0;">{{ T.atp.intro }}</p>
+      </div>
+
+      <!-- The "one customer" pitch strip -->
+      <div style="margin: 56px auto 64px; max-width: 940px; background: linear-gradient(110deg, var(--ink-900) 0%, var(--brand-700) 100%); color:#fff; border-radius: 24px; padding: 36px 40px; display:flex; align-items:center; gap: 32px; flex-wrap: wrap; box-shadow: 0 30px 60px rgba(26,20,16,.18);">
+        <div style="width: 68px; height: 68px; border-radius: 20px; background: var(--cta); display:grid; place-items:center; flex-shrink: 0; box-shadow: var(--shadow-cta);">
+          <i data-lucide="trending-down" style="width:34px; height:34px; stroke-width:2.4; color: var(--ink-900);"></i>
+        </div>
+        <div style="flex:1; min-width: 280px;">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta); margin-bottom: 8px;">{{ T.atp.mathKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 500; font-size: 26px; line-height: 1.2; letter-spacing: -0.01em;">{{ T.atp.mathBody }}</div>
+        </div>
+      </div>
+
+      <!-- Package cards -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 940px; margin: 0 auto 56px;">
+
+        <!-- Starter $299 -->
+        <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-500); margin-bottom: 8px;">{{ T.atp.pkgAKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgAName }}</div>
+          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
+            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$299</span>
+            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="height: 1px; background: var(--line); margin-bottom: 24px;"></div>
+          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
+            <sc-for list="{{ T.atp.pkgAFeatures }}" as="f" hint-placeholder-count="5">
+              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
+                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-600); flex-shrink:0; margin-top: 2px;"></i>
+                <span>{{ f }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--ink-900); color:#fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; transition: all 200ms;" class="nl-book-mini">
+            {{ T.atp.pkgACta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+
+        <!-- Pro $499 (featured) -->
+        <div style="background: linear-gradient(160deg, #FFFDF6 0%, #FFF6E0 100%); border: 2px solid var(--cta); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; box-shadow: 0 30px 60px rgba(201,162,77,.25); transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+          <div style="position:absolute; top: -14px; right: 32px; padding: 6px 14px; background: var(--cta); color: var(--ink-900); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 6px 16px rgba(201,162,77,.5);">{{ T.atp.pkgBTag }}</div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-700); margin-bottom: 8px;">{{ T.atp.pkgBKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgBName }}</div>
+          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
+            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$499</span>
+            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="height: 1px; background: var(--cta-100); margin-bottom: 24px;"></div>
+          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
+            <sc-for list="{{ T.atp.pkgBFeatures }}" as="f" hint-placeholder-count="6">
+              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
+                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-700); flex-shrink:0; margin-top: 2px;"></i>
+                <span>{{ f }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--cta); color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; box-shadow: var(--shadow-cta); transition: all 200ms;" class="nl-cta-btn">
+            {{ T.atp.pkgBCta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Bottom CTAs -->
+      <div style="display:flex; justify-content:center; gap: 16px; flex-wrap: wrap;">
+        <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
+          {{ T.ctaIcon }} {{ T.atp.cta1 }}
+        </a>
+        <a href="https://ahoratengopagina.com" target="_blank" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: transparent; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; border: 2px solid var(--ink-900); text-decoration:none;" class="nl-ghost-btn">
+          {{ T.atp.cta2 }}
+        </a>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap: 36px; flex-wrap:wrap; margin-top: 48px; font-size: 14px; color: var(--ink-500);">
+        <sc-for list="{{ T.atp.checks }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; gap: 8px;"><i data-lucide="check" style="width:16px; height:16px; stroke-width:2.6; color: var(--cta-600);"></i> {{ c }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer style="background: var(--brand-900); color: rgba(255,255,255,.7); padding: 64px 32px 32px;">
+    <div style="max-width: 1280px; margin: 0 auto;">
+      <div style="display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,.1);">
+        <div>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px;">
+            <svg width="38" height="38" viewBox="0 0 42 42" fill="none" aria-hidden="true">
+              <circle cx="21" cy="21" r="16" fill="#C9A24D"/>
+              <path d="M21 11 C24 14.5, 28 16, 31 16 C28 18, 26 21, 26 24 C24 21, 21 19, 18 19 C20 17, 21 14, 21 11 Z M21 31 C18 27.5, 14 26, 11 26 C14 24, 16 21, 16 18 C18 21, 21 23, 24 23 C22 25, 21 28, 21 31 Z" fill="#FFFFFF" opacity=".95"/>
+            </svg>
+            <span style="display:flex; flex-direction:column; line-height: 1; color:#fff;">
+              <span style="font-family: 'Fraunces', serif; font-weight: 600; font-size: 20px; letter-spacing: -0.02em;">Lunaire</span>
+              <span style="font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 9px; letter-spacing: .32em; text-transform: uppercase; color: var(--cta-400); margin-top: 4px;">Nail Atelier</span>
+            </span>
+          </div>
+          <p style="font-size:14px; line-height: 1.6; max-width: 360px; margin: 0 0 20px;">{{ T.footer.about }}</p>
+          <div style="display:flex; gap: 10px;">
+            <a href="#" style="width:36px; height:36px; border-radius:50%; background: rgba(255,255,255,.08); display:grid; place-items:center; color:#fff; transition: all 200ms;" class="nl-foot-ico"><i data-lucide="instagram" style="width:16px; height:16px;"></i></a>
+            <a href="#" style="width:36px; height:36px; border-radius:50%; background: rgba(255,255,255,.08); display:grid; place-items:center; color:#fff;" class="nl-foot-ico"><i data-lucide="facebook" style="width:16px; height:16px;"></i></a>
+            <a href="#" style="width:36px; height:36px; border-radius:50%; background: rgba(255,255,255,.08); display:grid; place-items:center; color:#fff;" class="nl-foot-ico"><i data-lucide="music-2" style="width:16px; height:16px;"></i></a>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#fff; margin-bottom: 18px;">{{ T.footer.col1Title }}</div>
+          <div style="display:flex; flex-direction: column; gap: 10px; font-size: 14px;">
+            <sc-for list="{{ T.footer.col1 }}" as="x" hint-placeholder-count="4">
+              <a href="#" style="color:rgba(255,255,255,.7);">{{ x }}</a>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#fff; margin-bottom: 18px;">{{ T.footer.col2Title }}</div>
+          <div style="display:flex; flex-direction: column; gap: 10px; font-size: 14px;">
+            <sc-for list="{{ T.footer.col2 }}" as="x" hint-placeholder-count="4">
+              <a href="#" style="color:rgba(255,255,255,.7);">{{ x }}</a>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:#fff; margin-bottom: 18px;">{{ T.footer.col3Title }}</div>
+          <div style="display:flex; flex-direction: column; gap: 10px; font-size: 14px;">
+            <sc-for list="{{ T.footer.col3 }}" as="x" hint-placeholder-count="4">
+              <div>{{ x }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content: space-between; padding-top: 28px; font-size: 12px; color: rgba(255,255,255,.5); flex-wrap:wrap; gap: 12px;">
+        <div>{{ T.footer.copy }}</div>
+        <div>{{ T.footer.builtBy }} <a href="https://ahoratengopagina.com" style="color: var(--cta); font-weight: 600;">AhoraTengoPagina.com</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ STICKY CTA BAR ============ -->
+  <div id="nl-sticky" style="position: fixed; left:50%; transform: translate(-50%, 140%); bottom: 24px; z-index: 60; background:#fff; border: 1px solid var(--line); border-radius: 999px; padding: 8px 8px 8px 22px; box-shadow: 0 20px 50px rgba(26,20,16,.2); display:flex; align-items:center; gap: 18px; transition: transform 400ms cubic-bezier(.22,1,.36,1);">
+    <div style="display:flex; align-items:center; gap: 10px;">
+      <div style="display:flex; gap: 1px;">
+        <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+        <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+        <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+        <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+        <i data-lucide="star" style="width:14px; height:14px; fill: var(--star); stroke: var(--star);"></i>
+      </div>
+      <span style="font-weight: 700; font-size: 13px;">{{ T.sticky.label }}</span>
+    </div>
+    <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 6px; padding: 12px 22px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
+      {{ T.ctaIcon }} {{ T.sticky.cta }}
+    </a>
+  </div>
+
+  <!-- ============ WHATSAPP FAB (ES only) ============ -->
+  <sc-if value="{{ showWhatsappFab }}" hint-placeholder-val="{{ false }}">
+    <a href="https://wa.me/525555550148" target="_blank" id="nl-wa-fab" style="position: fixed; right: 24px; bottom: 24px; z-index: 55; width: 60px; height: 60px; border-radius: 50%; background: var(--whatsapp); color: #fff; display:grid; place-items:center; box-shadow: 0 10px 30px rgba(37,211,102,.45); text-decoration:none; animation: nl-pulse-ring 2s ease-out infinite;">
+      <i data-lucide="message-circle" style="width:28px; height:28px; stroke-width:2.4;"></i>
+    </a>
+  </sc-if>
+
+  <!-- interactive styles -->
+  <style>
+    .nl-cta-btn { transition: transform 220ms cubic-bezier(.22,1,.36,1), filter 220ms, box-shadow 220ms; }
+    .nl-cta-btn:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 16px 36px rgba(201,162,77,.55) !important; }
+    .nl-cta-btn:active { transform: scale(.985); filter: brightness(.95); }
+    .nl-ghost-btn:hover { background: var(--ink-900); color: #fff; transform: translateY(-2px); }
+    .nl-ghost-dark:hover { background: rgba(255,255,255,.08); }
+    .nl-nav:hover { color: var(--ink-900) !important; }
+    .nl-field:focus { outline: none; border-color: var(--cta) !important; box-shadow: 0 0 0 4px var(--cta-100) !important; background: #fff !important; }
+    .nl-pillar:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(26,20,16,.10); }
+    .nl-service:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(26,20,16,.12); }
+    .nl-service:hover .nl-service-img { transform: scale(1.06); }
+    .nl-book-mini:hover { background: var(--cta) !important; color: var(--ink-900) !important; transform: translateY(-1px); }
+    .nl-gal { transition: transform 300ms cubic-bezier(.22,1,.36,1); }
+    .nl-gal:hover { transform: scale(1.02); z-index: 2; }
+    .nl-gal:hover .nl-service-img { transform: scale(1.08); }
+    .nl-social-btn:hover { background: var(--ink-900) !important; color: #fff !important; transform: translateY(-2px); }
+    .nl-foot-ico:hover { background: var(--cta) !important; color: var(--ink-900) !important; }
+    .nl-card-tilt:hover { transform: rotate(-1deg) translateY(-6px); }
+    /* scrolled header — light surface */
+    #nl-header.is-scrolled { background: rgba(255,255,255,.92) !important; backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line), 0 8px 24px rgba(26,20,16,.06); border-bottom-color: var(--line) !important; }
+    #nl-header.is-scrolled .nl-nav { color: var(--ink-700) !important; }
+    #nl-header.is-scrolled #nl-wordmark { color: var(--ink-900) !important; }
+    #nl-header.is-scrolled .nl-langwrap { background: var(--surface-2) !important; border-color: var(--line) !important; }
+    #nl-sticky.is-shown { transform: translate(-50%, 0) !important; }
+  </style>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    leadSent: false,
+    filter: 'all',
+    lang: 'es',  // Spanish default per user
+  };
+
+  componentDidMount() {
+    const drawIcons = () => { if (window.lucide && window.lucide.createIcons) window.lucide.createIcons(); };
+    drawIcons();
+    this._iconInterval = setInterval(drawIcons, 600);
+    setTimeout(() => clearInterval(this._iconInterval), 3000);
+
+    this._onScroll = () => {
+      const y = window.scrollY || 0;
+      const header = document.getElementById('nl-header');
+      const sticky = document.getElementById('nl-sticky');
+      if (header) header.classList.toggle('is-scrolled', y > 120);
+      if (sticky) sticky.classList.toggle('is-shown', y > window.innerHeight * 0.8);
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this._onScroll);
+    clearInterval(this._iconInterval);
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    // Only re-draw icons when something user-visible changed (lang / filter / form),
+    // not on every render — re-running createIcons swaps <i>→<svg> which triggers
+    // React reconciliation and re-fires the hero's entrance animations.
+    if (!prevState || prevState.lang !== this.state.lang || prevState.filter !== this.state.filter || prevState.leadSent !== this.state.leadSent) {
+      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+    }
+  }
+
+  renderVals() {
+    const lang = this.state.lang;
+    const isEs = lang === 'es';
+
+    // ---------- COPY DICT ----------
+    const ES = {
+      nav: { services: 'Servicios', gallery: 'Galería', reviews: 'Reseñas', rewards: 'Recompensas', cta: 'Reservar por WhatsApp' },
+      hero: {
+        kicker: 'Agenda abierta · junio y julio',
+        h1a: 'Uñas que se sienten como',
+        h1b: 'un pequeño lujo',
+        sub: 'Manicuras y pedicuras hiperespecializadas, una atmósfera silenciosa y una higiene de estándar clínico. Reservadas por más de 2,400 clientas habituales en la ciudad.',
+        trust1: '1,284 reseñas en Google',
+        trust2: 'Esterilización de grado hospitalario',
+        trust3: '"Mejor Salón 2025" — CityMag',
+        bookingsCount: '+312 reservas',
+        bookingsLabel: 'este mes',
+      },
+      form: {
+        title: 'Reserva tu primera visita —',
+        titleAccent: '20% off',
+        noSpam: 'Sin spam',
+        firstName: 'Nombre',
+        phone: 'Tu celular',
+        options: [
+          'Elige un servicio…',
+          'Manicura signature — $820 MXN',
+          'Constructor en gel — $1,330 MXN',
+          'Pedicura spa — $1,110 MXN',
+          'Mani + pedi dúo — $1,680 MXN',
+          'Arte personalizado — desde $425 MXN',
+        ],
+        submit: 'Quiero mi 20% de descuento',
+        reassurance: 'Te escribimos por WhatsApp en menos de 10 minutos. Sin spam, te lo prometemos.',
+        successTitle: '¡Estás en la lista!',
+        successBody: 'Acabamos de escribirte por WhatsApp para confirmar. Nos vemos pronto.',
+      },
+      marqueeLoop: [
+        'Esterilización de grado hospitalario',
+        'Esmaltes veganos y 10-libre',
+        'Técnicas certificadas máster',
+        'Recompensas en cada visita',
+        'Sin cita previa, bienvenidas',
+        'Esterilización de grado hospitalario',
+        'Esmaltes veganos y 10-libre',
+        'Técnicas certificadas máster',
+        'Recompensas en cada visita',
+        'Sin cita previa, bienvenidas',
+      ],
+      pillars: {
+        kicker: 'Las cuatro cosas que importan',
+        h2a: 'Lo que separa a un',
+        h2b: 'gran salón',
+        h2c: ' del resto.',
+        intro: 'Cualquiera puede pintar una uña. Un gran salón se construye sobre cuatro compromisos sin concesiones — y los sientes desde que entras por la puerta.',
+        cards: [
+          { icon: 'gem',          kicker: '01 · Especialización', title: 'Un menú muy especializado.', body: 'Constructor en gel, e-file rusa, gel japonés, cromos, degradados, manicura estructurada — cada técnica entrenada en un oficio específico, no en todos a la vez.' },
+          { icon: 'wind',         kicker: '02 · Atmósfera',       title: 'Una sala inmersiva y relajante.', body: 'Playlists suaves, luz difusa, sillas ergonómicas, té de cortesía. La sala tiene un cupo máximo de seis personas para que nunca se sienta como una fila.' },
+          { icon: 'shield-check', kicker: '03 · Higiene',         title: 'Higiene impecable, auditada.', body: 'Herramientas en autoclave, limas de un solo uso, liners frescos en cada pedicura, extractor HEPA en cada estación. Los logs de inspección se publican cada semana.' },
+          { icon: 'crown',        kicker: '04 · Recompensas',     title: 'Lealtad que te devuelve valor.', body: 'Ganas un Pétalo por cada peso. Esmalte gratis a los 200. Manicura signature gratis a los 600. Semana de cumpleaños: 30% off automático — sin app, sin tarjeta, sin letra chica.' },
+        ],
+      },
+      services: {
+        kicker: 'Servicios y precios',
+        h2a: 'Cada servicio, cada precio —',
+        h2b: 'sin sorpresas al pagar.',
+        filters: { hands: 'Manos', feet: 'Pies', art: 'Arte' },
+      },
+      minLabel: 'min',
+      bookShort: 'Reservar',
+      duo: {
+        kicker: 'Dúo · termina el domingo',
+        title: 'Mani + Pedi juntos —',
+        titleAccent: 'ahorra $410 MXN',
+        cta: 'Llévate el dúo · $1,680 MXN',
+      },
+      gallery: {
+        kicker: 'Trabajo reciente',
+        h2a: 'Algunos sets de la silla',
+        h2b: 'esta semana.',
+        sub: 'Etiquetados por técnica. Toca cualquier imagen para ver la artista, la forma y el código del esmalte.',
+        tags: [
+          'Constructor en gel · almendra',
+          'Cromo',
+          'Francés · clásico',
+          'Arte pintado a mano',
+          'Pedicura spa',
+          'Degradado · pasteles',
+          'El espacio',
+        ],
+        more: 'Mira 600+ más en Instagram',
+      },
+      reviews: {
+        kicker: 'Amadas por miles',
+        h2a: '4.9 estrellas',
+        h2b: 'de 1,284 reseñas.',
+        platforms: [
+          { score: '4.9', name: 'Google' },
+          { score: '5.0', name: 'Yelp' },
+          { score: '4.9', name: 'Booksy' },
+        ],
+        list: [
+          { initials:'AM', name:'Amelia M.', meta:'Constructor en gel · hace 2 semanas', quote:'La sala está tan tranquila que olvidas que viniste a "hacerte algo". El mejor constructor que me he puesto en cinco años.' },
+          { initials:'SR', name:'Sofía R.', meta:'Pedicura spa · el mes pasado',          quote:'De verdad hacen lo que dice el menú. Piedras calientes, masaje real, liner nuevo, sin prisas. Vale cada peso.' },
+          { initials:'KT', name:'Kim T.',   meta:'Mani signature · hace 3 semanas',       quote:'Soy quisquillosa con la higiene. Abren las herramientas autoclavadas frente a ti. Solo eso me hizo cambiarme.' },
+          { initials:'DV', name:'Dani V.',  meta:'Arte · la semana pasada',               quote:'Le mostré a Mei una referencia de Pinterest y la clavó (chiste intencional). El detalle es irreal.' },
+        ],
+      },
+      loyalty: {
+        kicker: 'Recompensas Pétalo',
+        h2a: 'Volver debería',
+        h2b: 'sentirse premiado.',
+        intro: 'Cada peso que gastas gana un Pétalo. Los Pétalos se acumulan entre servicios, nunca caducan y desbloquean valor real — no "puntos" vagos. Sin app, sin tarjeta que perder.',
+        t1: 'Upgrade de esmalte premium gratis',
+        t2: 'Manicura signature gratis',
+        t3: 'VIP: mani + pedi + bebida, va por nosotras',
+        cta: 'Empieza a juntar Pétalos',
+        cardKicker: 'Tarjeta Pétalo',
+        cardSince: 'Miembro desde',
+        cardDate: 'Mayo 2024',
+        cardPetals: 'Pétalos',
+        bdayKicker: 'Semana de cumpleaños',
+        bdayBody: 'Automático. Sin código, sin app.',
+      },
+      social: {
+        h2a: 'Sigue el trabajo,',
+        h2b: 'en vivo desde la silla.',
+      },
+      atp: {
+        kicker: 'Hecho por AhoraTengoPagina.com',
+        h2a: '¿Quieres que tu negocio se vea así en internet —',
+        h2b: 'o mejor?',
+        intro: 'Nosotros armamos tu página web completa: diseño, copy, fotos, formulario y WhatsApp. Tú te dedicas a atender a tus clientes; nosotros nos dedicamos a que te encuentren.',
+        mathKicker: 'Haz la cuenta',
+        mathBody: 'Solo con perder UN cliente al mes por no tener página, ya pagaste esto — y te sobra dinero. No firmar hoy te está costando más que el paquete.',
+        pkgAKicker: 'Paquete Inicial',
+        pkgAName: 'Empieza a existir en Google.',
+        pkgAFeatures: [
+          'Página web profesional de una sección',
+          'Diseño a la medida de tu negocio',
+          'Formulario de contacto + botón de WhatsApp',
+          'Optimizada para celular y Google',
+          'Publicada en 7 días',
+        ],
+        pkgACta: 'Empezar con el Inicial',
+        pkgBKicker: 'Paquete Pro',
+        pkgBName: 'La página completa que te trae clientes.',
+        pkgBTag: 'Más popular',
+        pkgBFeatures: [
+          'Todo lo del paquete Inicial, más:',
+          'Hasta 5 secciones (servicios, galería, reseñas…)',
+          'Galería de fotos y reseñas de clientes',
+          'Reservas y pagos en línea si los necesitas',
+          'Google Maps, redes sociales y SEO local',
+          'Publicada en 14 días',
+        ],
+        pkgBCta: 'Quiero el paquete Pro',
+        pkgOnce: 'USD · pago único',
+        cta1: 'Hablar por WhatsApp ahora',
+        cta2: 'Ver AhoraTengoPagina.com',
+        checks: [
+          'Sin mensualidades sorpresa',
+          'Tú eres dueña de tu página',
+          'Soporte real en español',
+          'Si no te gusta, no la publicamos',
+        ],
+      },
+      footer: {
+        about: 'Un salón construido sobre el oficio y el silencio. Abierto todos los días de 9 a 20 h. Polanco 142, con cita o sin ella.',
+        col1Title: 'Servicios',
+        col1: ['Manicuras', 'Pedicuras', 'Constructor en gel', 'Arte de uñas'],
+        col2Title: 'Salón',
+        col2: ['Sobre nosotras', 'Política de higiene', 'Tarjetas de regalo', 'Trabaja con nosotras'],
+        col3Title: 'Visita',
+        col3: ['Polanco 142', 'CDMX 11550', '+52 55 5555 0148', 'hola@lunairenails.mx'],
+        copy: '© 2026 Lunaire Nail Atelier · Todos los derechos reservados.',
+        builtBy: 'Sitio hecho por',
+      },
+      sticky: { label: 'Primera visita · 20% off', cta: 'Reservar' },
+    };
+
+    const EN = {
+      nav: { services: 'Services', gallery: 'Gallery', reviews: 'Reviews', rewards: 'Rewards', cta: 'Book now' },
+      hero: {
+        kicker: 'Now booking · June & July',
+        h1a: 'Nails that feel like',
+        h1b: 'a small luxury',
+        sub: 'Hyper-specialized manicures and pedicures, a hush-quiet atmosphere, and hygiene held to a clinical standard. Booked by 2,400+ regulars across the city.',
+        trust1: '1,284 Google reviews',
+        trust2: 'Hospital-grade sterilization',
+        trust3: '"Best Salon 2025" — CityMag',
+        bookingsCount: '+312 bookings',
+        bookingsLabel: 'this month',
+      },
+      form: {
+        title: 'Book your first visit —',
+        titleAccent: '20% off',
+        noSpam: 'No spam',
+        firstName: 'First name',
+        phone: 'Mobile number',
+        options: [
+          'Choose a service…',
+          'Signature manicure — $820 MXN',
+          'Builder gel set — $1,330 MXN',
+          'Spa pedicure — $1,110 MXN',
+          'Mani + pedi duo — $1,680 MXN',
+          'Custom nail art — from $425 MXN',
+        ],
+        submit: 'Claim my 20% off',
+        reassurance: "We'll text you within 10 minutes. No spam — promise.",
+        successTitle: "You're on the list",
+        successBody: 'We just texted you to confirm. See you soon.',
+      },
+      marqueeLoop: [
+        'Hospital-grade sterilization',
+        'Vegan & 10-free polishes',
+        'Master-certified technicians',
+        'Loyalty rewards on every visit',
+        'Walk-ins welcome',
+        'Hospital-grade sterilization',
+        'Vegan & 10-free polishes',
+        'Master-certified technicians',
+        'Loyalty rewards on every visit',
+        'Walk-ins welcome',
+      ],
+      pillars: {
+        kicker: 'The four things that matter',
+        h2a: 'What separates a',
+        h2b: 'great salon',
+        h2c: ' from the rest.',
+        intro: 'Anyone can paint a nail. A great salon is built on four uncompromising commitments — and you feel each one the moment you walk in.',
+        cards: [
+          { icon: 'gem',          kicker: '01 · Specialization', title: 'Hyper-specialized service menu.', body: 'Builder gel, Russian e-file, Japanese gel, chrome, ombré, structured manicures — every technician trained on a specific craft, not all of them at once.' },
+          { icon: 'wind',         kicker: '02 · Atmosphere',     title: 'An immersive, relaxing room.',     body: 'Hushed playlists, diffused light, ergonomic chairs, complimentary tea. The room is capped at six guests so it never feels like a queue.' },
+          { icon: 'shield-check', kicker: '03 · Hygiene',        title: 'Flawless, audited hygiene.',       body: 'Autoclaved tools, single-use files, fresh pedi liners every guest, HEPA dust extraction at every station. Inspection logs posted publicly every week.' },
+          { icon: 'crown',        kicker: '04 · Rewards',        title: 'Loyalty that pays you back.',      body: 'Earn one Petal per peso. Free polish at 200. Free signature mani at 600. Birthday week is automatic 30% off — no app, no card, no fine print.' },
+        ],
+      },
+      services: {
+        kicker: 'Services & pricing',
+        h2a: 'Every service, every price —',
+        h2b: 'no surprises at checkout.',
+        filters: { hands: 'Hands', feet: 'Feet', art: 'Nail art' },
+      },
+      minLabel: 'min',
+      bookShort: 'Book',
+      duo: {
+        kicker: 'Duo deal · ends Sunday',
+        title: 'Mani + Pedi together —',
+        titleAccent: 'save $410 MXN',
+        cta: 'Grab the duo · $1,680 MXN',
+      },
+      gallery: {
+        kicker: 'Recent work',
+        h2a: "A few sets from",
+        h2b: "this week's chair.",
+        sub: 'Tagged by technique. Tap any tile to see the artist, the shape, the polish code.',
+        tags: [
+          'Builder gel · almond',
+          'Chrome',
+          'French · classic',
+          'Hand-painted art',
+          'Spa pedicure',
+          'Ombré · pastel',
+          'The room',
+        ],
+        more: 'See 600+ more on Instagram',
+      },
+      reviews: {
+        kicker: 'Loved by thousands',
+        h2a: '4.9 stars',
+        h2b: 'from 1,284 reviews.',
+        platforms: [
+          { score: '4.9', name: 'Google' },
+          { score: '5.0', name: 'Yelp' },
+          { score: '4.9', name: 'Booksy' },
+        ],
+        list: [
+          { initials:'AM', name:'Amelia M.', meta:'Builder gel · 2 weeks ago',    quote:'The room is so calm you forget you came to "get something done." Best builder set I have had in five years.' },
+          { initials:'SR', name:'Sofia R.',  meta:'Spa pedicure · last month',     quote:'They actually do what the menu says. Hot stones, real massage, fresh liner, no rushing. Worth every peso.' },
+          { initials:'KT', name:'Kim T.',    meta:'Signature mani · 3 weeks ago', quote:'I am picky about hygiene. They open autoclaved tools in front of you. That alone made me switch.' },
+          { initials:'DV', name:'Dani V.',   meta:'Nail art · last week',         quote:'Showed Mei a Pinterest reference and she nailed it (pun intended). The detail is unreal.' },
+        ],
+      },
+      loyalty: {
+        kicker: 'Petal rewards',
+        h2a: 'Coming back',
+        h2b: 'should feel rewarding.',
+        intro: 'Every peso you spend earns one Petal. Petals stack across services, never expire, and unlock real value — not vague "points." No app to download, no card to lose.',
+        t1: 'Free polish upgrade',
+        t2: 'Free signature manicure',
+        t3: 'VIP: mani + pedi + drink, on us',
+        cta: 'Start earning Petals',
+        cardKicker: 'Petal card',
+        cardSince: 'Member since',
+        cardDate: 'May 2024',
+        cardPetals: 'Petals',
+        bdayKicker: 'Birthday week',
+        bdayBody: 'Automatic. No code, no app.',
+      },
+      social: {
+        h2a: 'Follow the work,',
+        h2b: 'live from the chair.',
+      },
+      atp: {
+        kicker: 'Built by AhoraTengoPagina.com',
+        h2a: 'Want your business to look this good online —',
+        h2b: 'or better?',
+        intro: "We build your whole website: design, copy, photos, contact form and WhatsApp button. You focus on serving your clients; we make sure they can find you.",
+        mathKicker: 'Do the math',
+        mathBody: 'Losing just ONE customer a month because you have no website already covers this — with money to spare. Not signing up today is costing you more than the package itself.',
+        pkgAKicker: 'Starter package',
+        pkgAName: 'Start showing up on Google.',
+        pkgAFeatures: [
+          'Professional one-page website',
+          'Custom-designed for your business',
+          'Contact form + WhatsApp button',
+          'Mobile and Google-optimized',
+          'Live in 7 days',
+        ],
+        pkgACta: 'Start with Starter',
+        pkgBKicker: 'Pro package',
+        pkgBName: 'The full site that brings clients in.',
+        pkgBTag: 'Most popular',
+        pkgBFeatures: [
+          'Everything in Starter, plus:',
+          'Up to 5 sections (services, gallery, reviews…)',
+          'Photo gallery and customer reviews',
+          'Online booking &amp; payments if you need them',
+          'Google Maps, social links and local SEO',
+          'Live in 14 days',
+        ],
+        pkgBCta: 'I want the Pro package',
+        pkgOnce: 'USD · one-time',
+        cta1: 'Talk to us on WhatsApp',
+        cta2: 'Visit AhoraTengoPagina.com',
+        checks: [
+          'No surprise monthly fees',
+          'You own your website',
+          'Real support in Spanish &amp; English',
+          "If you don't love it, we don't publish it",
+        ],
+      },
+      footer: {
+        about: 'A nail salon built on craft and quiet. Open daily 9am–8pm. Polanco 142, by appointment or walk-in.',
+        col1Title: 'Services',
+        col1: ['Manicures', 'Pedicures', 'Builder gel', 'Nail art'],
+        col2Title: 'Salon',
+        col2: ['About', 'Hygiene policy', 'Gift cards', 'Careers'],
+        col3Title: 'Visit',
+        col3: ['Polanco 142', 'Mexico City 11550', '+52 55 5555 0148', 'hello@lunairenails.mx'],
+        copy: '© 2026 Lunaire Nail Atelier · All rights reserved.',
+        builtBy: 'Site built by',
+      },
+      sticky: { label: 'First visit · 20% off', cta: 'Book' },
+    };
+
+    const T_base = isEs ? ES : EN;
+
+    // ---------- SERVICES (shared, MXN prices) ----------
+    const servicesEs = [
+      { cat:'hands', kicker:'30 min', name:'Manicura express',    desc:'Forma, cutícula, brillo, esmalte de una capa. La sesión "tengo 30 minutos".',                            price:'$650 MXN',   was:null,           dur:30,  tag:null,            img:'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=85' },
+      { cat:'hands', kicker:'60 min', name:'Manicura signature',  desc:'Trabajo completo de cutícula, masaje de manos, esmalte premium, top coat. La favorita de todos los días.', price:'$820 MXN',   was:'$1,020 MXN',  dur:60,  tag:'20% OFF',        img:'https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85' },
+      { cat:'hands', kicker:'90 min', name:'Constructor en gel',  desc:'Gel estructurado para largo y fuerza. Aguanta de 3 a 4 semanas sin levantarse.',                       price:'$1,330 MXN', was:null,           dur:90,  tag:'POPULAR',        img:'https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=900&q=85' },
+      { cat:'feet',  kicker:'60 min', name:'Pedicura spa',        desc:'Remojo tibio, exfoliación, mascarilla, masaje de pies y pantorrilla, esmalte. El botón de reset.',     price:'$1,110 MXN', was:null,           dur:60,  tag:null,            img:'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85' },
+      { cat:'feet',  kicker:'90 min', name:'Pedicura deluxe',      desc:'Piedras calientes, parafina, masaje extendido, gel de larga duración.',                             price:'$1,510 MXN', was:null,           dur:90,  tag:null,            img:'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=900&q=85' },
+      { cat:'feet',  kicker:'120 min', name:'Mani + pedi dúo',     desc:'Manicura signature y pedicura spa juntas. Ahorras $410 MXN.',                                       price:'$1,680 MXN', was:'$2,090 MXN',  dur:120, tag:'MEJOR VALOR',    img:'https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85' },
+      { cat:'art',   kicker:'+15 min', name:'Arte pintado a mano', desc:'Diseño personalizado, micropintura, florales, abstracto. Precio por uña a solicitud.',              price:'$425 MXN',   was:null,           dur:15,  tag:null,            img:'https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85' },
+      { cat:'art',   kicker:'+20 min', name:'Cromo y foil',        desc:'Cromo espejo, foils holográficos, perlados. La luz se queda siempre.',                              price:'$595 MXN',   was:null,           dur:20,  tag:null,            img:'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=85' },
+      { cat:'art',   kicker:'+10 min', name:'Accentos de cristal', desc:'Cristales Swarovski y CZ colocados a mano. Desde un acento único hasta full bling.',                price:'$310 MXN',   was:null,           dur:10,  tag:null,            img:'https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=900&q=85' },
+    ];
+    const servicesEn = [
+      { cat:'hands', kicker:'30 min', name:'Express manicure',     desc:'Shape, cuticle, buff, single-coat polish. The "I have 30 minutes" set.',                              price:'$650 MXN',   was:null,           dur:30,  tag:null,            img:servicesEs[0].img },
+      { cat:'hands', kicker:'60 min', name:'Signature manicure',   desc:'Full cuticle work, hand massage, premium polish, top coat. The everyday icon.',                       price:'$820 MXN',   was:'$1,020 MXN',  dur:60,  tag:'20% OFF',        img:servicesEs[1].img },
+      { cat:'hands', kicker:'90 min', name:'Builder gel set',      desc:'Structured gel for length and strength. Lasts 3–4 weeks without a chip.',                            price:'$1,330 MXN', was:null,           dur:90,  tag:'POPULAR',        img:servicesEs[2].img },
+      { cat:'feet',  kicker:'60 min', name:'Spa pedicure',         desc:'Warm soak, exfoliation, mask, foot & calf massage, polish. The reset button.',                       price:'$1,110 MXN', was:null,           dur:60,  tag:null,            img:servicesEs[3].img },
+      { cat:'feet',  kicker:'90 min', name:'Deluxe pedicure',      desc:'Hot stones, paraffin wrap, extended massage, long-wear gel finish.',                                  price:'$1,510 MXN', was:null,           dur:90,  tag:null,            img:servicesEs[4].img },
+      { cat:'feet',  kicker:'120 min', name:'Mani + pedi duo',     desc:'Our signature manicure and spa pedicure together. Save $410 MXN.',                                    price:'$1,680 MXN', was:'$2,090 MXN',  dur:120, tag:'BEST VALUE',     img:servicesEs[5].img },
+      { cat:'art',   kicker:'+15 min', name:'Hand-painted art',    desc:'Custom design, micro-painting, florals, abstract. Per-nail pricing on request.',                      price:'$425 MXN',   was:null,           dur:15,  tag:null,            img:servicesEs[6].img },
+      { cat:'art',   kicker:'+20 min', name:'Chrome & foil',       desc:'Mirror chrome, holographic foils, pearl finishes. Light catches every time.',                          price:'$595 MXN',   was:null,           dur:20,  tag:null,            img:servicesEs[7].img },
+      { cat:'art',   kicker:'+10 min', name:'Crystal accents',     desc:'Swarovski and CZ stones, hand-set. From a single accent to full bling.',                              price:'$310 MXN',   was:null,           dur:10,  tag:null,            img:servicesEs[8].img },
+    ];
+    const services = isEs ? servicesEs : servicesEn;
+    const f = this.state.filter;
+    const visibleServices = f === 'all' ? services : services.filter(s => s.cat === f);
+
+    // ---------- CTA THEME (ES → WhatsApp; EN → form anchor) ----------
+    const waNumber = '525555550148';
+    const waMsg = isEs ? 'Hola%20Lunaire%2C%20me%20gustar%C3%ADa%20reservar%20una%20cita.' : 'Hi%20Lunaire%2C%20I%27d%20like%20to%20book%20an%20appointment.';
+    const waHref = `https://wa.me/${waNumber}?text=${waMsg}`;
+
+    T_base.ctaHref = isEs ? waHref : '#book';
+    T_base.ctaTarget = isEs ? '_blank' : '_self';
+    T_base.ctaBg = isEs ? 'var(--whatsapp)' : 'var(--cta)';
+    T_base.ctaInk = isEs ? '#FFFFFF' : 'var(--ink-900)';
+    T_base.ctaShadow = isEs ? '0 10px 28px rgba(37,211,102,0.45)' : 'var(--shadow-cta)';
+    // CTA icon: a small React element so the i tag can carry props
+    T_base.ctaIcon = React.createElement('i', { 'data-lucide': isEs ? 'message-circle' : 'arrow-right', style: { width: 16, height: 16, strokeWidth: 2.6 } });
+
+    // ---------- Filter chip styles ----------
+    const activeBg = 'var(--ink-900)';
+    const activeColor = '#FFFFFF';
+    const idleBg = 'transparent';
+    const idleColor = 'var(--ink-900)';
+    const handsActive = f === 'hands';
+    const feetActive  = f === 'feet';
+    const artActive   = f === 'art';
+
+    // ---------- Lang toggle styles ----------
+    const langActiveBg = 'var(--ink-900)';
+    const langActiveColor = '#FFFFFF';
+    const langIdleBg = 'transparent';
+    const langIdleColor = 'var(--ink-700)';
+
+    // ---------- Socials ----------
+    const socials = [
+      { img:'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=600&q=85', likes:'2.1k' },
+      { img:'https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=600&q=85', likes:'1.8k' },
+      { img:'https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=600&q=85', likes:'3.4k' },
+      { img:'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=600&q=85', likes:'980' },
+      { img:'https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=600&q=85', likes:'2.7k' },
+      { img:'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=600&q=85', likes:'1.2k' },
+    ];
+
+    return {
+      T: T_base,
+      formOpen: !this.state.leadSent,
+      leadSent: this.state.leadSent,
+      onSubmitLead: (e) => { e.preventDefault(); this.setState({ leadSent: true }); },
+
+      visibleServices,
+      setFilterHands: () => this.setState({ filter: handsActive ? 'all' : 'hands' }),
+      setFilterFeet:  () => this.setState({ filter: feetActive  ? 'all' : 'feet'  }),
+      setFilterArt:   () => this.setState({ filter: artActive   ? 'all' : 'art'   }),
+
+      filterHandsBg: handsActive ? activeBg : idleBg,
+      filterHandsColor: handsActive ? activeColor : idleColor,
+      filterFeetBg:  feetActive  ? activeBg : idleBg,
+      filterFeetColor: feetActive ? activeColor : idleColor,
+      filterArtBg:   artActive   ? activeBg : idleBg,
+      filterArtColor: artActive  ? activeColor : idleColor,
+
+      setEs: () => this.setState({ lang: 'es' }),
+      setEn: () => this.setState({ lang: 'en' }),
+      esBg:    isEs ? langActiveBg : langIdleBg,
+      esColor: isEs ? langActiveColor : langIdleColor,
+      enBg:    !isEs ? langActiveBg : langIdleBg,
+      enColor: !isEs ? langActiveColor : langIdleColor,
+
+      showWhatsappFab: isEs,
+      socials,
+    };
+  }
+}
+</script>
+</body>
+</html>
