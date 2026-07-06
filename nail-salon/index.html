@@ -581,6 +581,10 @@
             <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$299</span>
             <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
           </div>
+          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--cta); color: var(--cta-ink); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 6px 16px rgba(201,162,77,.35);">
+            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
+            <span>{{ T.atp.pkgSpeed }}</span>
+          </div>
           <div style="height: 1px; background: var(--line); margin-bottom: 24px;"></div>
           <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
             <sc-for list="{{ T.atp.pkgAFeatures }}" as="f" hint-placeholder-count="5">
@@ -603,6 +607,10 @@
           <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
             <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$499</span>
             <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--ink-900); color: #fff; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 8px 20px rgba(26,20,16,.28);">
+            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
+            <span>{{ T.atp.pkgSpeed }}</span>
           </div>
           <div style="height: 1px; background: var(--cta-100); margin-bottom: 24px;"></div>
           <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
@@ -925,7 +933,7 @@ class Component extends DCLogic {
           'Diseño a la medida de tu negocio',
           'Formulario de contacto + botón de WhatsApp',
           'Optimizada para celular y Google',
-          'Publicada en 7 días',
+          '$20 MXN en créditos de Google Ads incluidos',
         ],
         pkgACta: 'Empezar con el Inicial',
         pkgBKicker: 'Paquete Pro',
@@ -937,9 +945,10 @@ class Component extends DCLogic {
           'Galería de fotos y reseñas de clientes',
           'Reservas y pagos en línea si los necesitas',
           'Google Maps, redes sociales y SEO local',
-          'Publicada en 14 días',
+          '$35 MXN en créditos de Google Ads incluidos',
         ],
         pkgBCta: 'Quiero el paquete Pro',
+        pkgSpeed: 'Entrega exprés — publicada en 20–30 minutos',
         pkgOnce: 'MXN · pago único',
         cta1: 'Hablar por WhatsApp ahora',
         cta2: 'Ver AhoraTengoPagina.com',
@@ -1101,7 +1110,7 @@ class Component extends DCLogic {
           'Custom-designed for your business',
           'Contact form + WhatsApp button',
           'Mobile and Google-optimized',
-          'Live in 7 days',
+          '$20 MXN in Google Ads credits included',
         ],
         pkgACta: 'Start with Starter',
         pkgBKicker: 'Pro package',
@@ -1113,9 +1122,10 @@ class Component extends DCLogic {
           'Photo gallery and customer reviews',
           'Online booking &amp; payments if you need them',
           'Google Maps, social links and local SEO',
-          'Live in 14 days',
+          '$35 MXN in Google Ads credits included',
         ],
         pkgBCta: 'I want the Pro package',
+        pkgSpeed: 'Express delivery — live in 20–30 minutes',
         pkgOnce: 'MXN · one-time',
         cta1: 'Talk to us on WhatsApp',
         cta2: 'Visit AhoraTengoPagina.com',
