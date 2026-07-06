@@ -56,6 +56,7 @@
     { "source": "/checkout/confirmacion", "destination": "/checkout/confirmacion.html" },
     { "source": "/checkout/:id", "destination": "/checkout/index.html" },
     { "source": "/sitio/:slug", "destination": "/api/sitio/serve?slug=:slug" },
+    { "source": "/nail-salon", "destination": "/nail-salon/index.html" },
     { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
     { "source": "/editorial", "destination": "/editorial.html" },
     { "source": "/about", "destination": "/about.html" },
