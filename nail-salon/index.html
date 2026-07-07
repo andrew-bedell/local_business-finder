@@ -63,7 +63,7 @@
     --shadow-sm: 0 1px 2px rgba(11,26,43,0.06), 0 1px 3px rgba(11,26,43,0.10);
   }
   html, body { margin:0; padding:0; }
-  body { font-family: 'Manrope', system-ui, sans-serif; color: var(--ink-900); background: var(--surface); -webkit-font-smoothing: antialiased; }
+  body { font-family: 'Manrope', system-ui, sans-serif; color: var(--ink-900); background: var(--surface); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   *, *::before, *::after { box-sizing: border-box; }
   img { display:block; max-width:100%; }
   ::selection { background: var(--cta); color: var(--ink-900); }
@@ -84,10 +84,201 @@
 </style>
 </helmet>
 
-<div style="font-family: 'Manrope', system-ui, sans-serif; color: var(--ink-900); overflow-x: hidden; background: var(--surface);">
+<div style="font-family: 'Manrope', system-ui, sans-serif; color: var(--ink-900); background: var(--surface);">
+
+  <!-- ============ ATP HERO (agency pitch first) ============ -->
+  <section id="atp" data-screen-label="ATP Hero" style="position:relative; padding: 32px 32px 96px; background: #FFFFFF; overflow:hidden;">
+    <div style="position:absolute; left: -180px; top: 60px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.22), transparent 65%); filter: blur(20px);"></div>
+    <div style="position:absolute; right: -180px; bottom: -80px; width: 520px; height: 520px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.16), transparent 65%); filter: blur(24px);"></div>
+
+    <div style="max-width: 1180px; margin: 0 auto; position:relative;">
+
+      <!-- ATP top bar -->
+      <div style="display:flex; align-items:center; justify-content:space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 72px;">
+        <img src="/nail-salon/assets/ahoratengopagina-logo.png" alt="AhoraTengoPagina.com" style="height: 44px; width: auto;">
+        <div style="display:flex; align-items:center; gap: 16px;">
+          <div style="display:flex; align-items:center; gap: 2px; padding: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;">
+            <button onclick="{{ setEs }}" style="padding: 6px 14px; border:none; cursor:pointer; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight:800; font-size: 11px; letter-spacing:.12em; transition: all 200ms; background: {{ esBg }}; color: {{ esColor }};">ES</button>
+            <button onclick="{{ setEn }}" style="padding: 6px 14px; border:none; cursor:pointer; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight:800; font-size: 11px; letter-spacing:.12em; transition: all 200ms; background: {{ enBg }}; color: {{ enColor }};">EN</button>
+          </div>
+          <a href="{{ atpWaHref }}" target="_blank" style="display:inline-flex; align-items:center; gap:8px; padding: 12px 22px; background: var(--whatsapp); color: #fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; box-shadow: 0 10px 28px rgba(37,211,102,0.45); text-decoration:none;" class="nl-cta-btn">
+            <i data-lucide="message-circle" style="width:16px; height:16px; stroke-width:2.6;"></i> WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <!-- Headline -->
+      <div style="text-align:center; max-width: 900px; margin: 0 auto;">
+        <div style="display:inline-flex; align-items:center; gap:10px; padding: 8px 16px; background: var(--surface-2); border:1px solid var(--line); border-radius: 999px; margin-bottom: 28px;">
+          <span style="width:8px; height:8px; border-radius:50%; background: var(--cta);"></span>
+          <span style="font-family:'Archivo',sans-serif; font-weight:800; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-700);">{{ T.atp.topKicker }}</span>
+        </div>
+        <h1 style="font-family:'Fraunces',serif; font-weight: 450; font-size: clamp(2.8rem, 5.6vw, 5.2rem); line-height: 0.98; letter-spacing: -0.035em; margin: 0 0 24px; text-wrap: balance;">
+          {{ T.atp.h1a }} <em style="font-style: italic; background: linear-gradient(90deg, #8B6720, #C9A24D 50%, #8B6720); -webkit-background-clip: text; background-clip: text; color: transparent;">{{ T.atp.h1b }}</em>
+        </h1>
+        <p style="font-size: 20px; line-height: 1.55; color: var(--ink-500); max-width: 680px; margin: 0 auto 40px;">{{ T.atp.heroSub }}</p>
+        <div style="display:flex; justify-content:center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;">
+          <a href="{{ atpWaHref }}" target="_blank" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: var(--whatsapp); color: #fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; box-shadow: 0 10px 28px rgba(37,211,102,0.45); text-decoration:none;" class="nl-cta-btn">
+            <i data-lucide="message-circle" style="width:18px; height:18px; stroke-width:2.6;"></i> {{ T.atp.heroCta }}
+          </a>
+          <a href="#demo" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: transparent; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; border: 2px solid var(--ink-900); text-decoration:none;" class="nl-ghost-btn">
+            {{ T.atp.heroCta2 }} <i data-lucide="arrow-down" style="width:18px; height:18px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+        <div style="font-size: 13px; color: var(--ink-400); font-weight: 600;">{{ T.atp.heroNote }}</div>
+      </div>
+
+      <!-- Loss-aversion cards -->
+      <div class="nl-grid-3" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 72px;">
+        <sc-for list="{{ T.atp.losses }}" as="l" hint-placeholder-count="3">
+          <div style="background: var(--surface-2); border: 1px solid var(--line); border-radius: 24px; padding: 32px 28px; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+            <div style="width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, var(--ink-900), var(--brand-700)); display:grid; place-items:center; color: var(--cta); margin-bottom: 22px;">
+              <i data-lucide="{{ l.icon }}" style="width:26px; height:26px; stroke-width:2.4;"></i>
+            </div>
+            <h3 style="font-family:'Fraunces',serif; font-weight: 600; font-size: 24px; line-height: 1.12; letter-spacing: -0.02em; margin: 0 0 12px;">{{ l.title }}</h3>
+            <p style="color: var(--ink-500); font-size: 15px; line-height: 1.55; margin: 0;">{{ l.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- One-customer math strip -->
+      <div style="margin-top: 32px; background: linear-gradient(110deg, var(--ink-900) 0%, var(--brand-700) 100%); color:#fff; border-radius: 24px; padding: 36px 40px; display:flex; align-items:center; gap: 32px; flex-wrap: wrap; box-shadow: 0 30px 60px rgba(26,20,16,.18);">
+        <div style="width: 68px; height: 68px; border-radius: 20px; background: var(--cta); display:grid; place-items:center; flex-shrink: 0; box-shadow: var(--shadow-cta);">
+          <i data-lucide="trending-down" style="width:34px; height:34px; stroke-width:2.4; color: var(--ink-900);"></i>
+        </div>
+        <div style="flex:1; min-width: 280px;">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta); margin-bottom: 8px;">{{ T.atp.mathKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 500; font-size: 26px; line-height: 1.2; letter-spacing: -0.01em;">{{ T.atp.mathBody }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ATP OFFER + PACKAGES ============ -->
+  <section data-screen-label="ATP Packages" style="padding: 96px 32px; background: var(--brand-50); position:relative; overflow:hidden;">
+    <div style="position:absolute; top:-120px; right:-120px; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, var(--cta-100), transparent 70%);"></div>
+    <div style="max-width: 1180px; margin: 0 auto; position:relative;">
+
+      <!-- Free month banner -->
+      <div style="text-align:center; margin-bottom: 56px;">
+        <div style="display:inline-flex; align-items:center; gap: 10px; padding: 10px 20px; background: var(--cta); color: var(--ink-900); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; box-shadow: var(--shadow-cta); margin-bottom: 24px;">
+          <i data-lucide="gift" style="width:16px; height:16px; stroke-width:2.6;"></i> {{ T.atp.freeKicker }}
+        </div>
+        <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.2rem, 4.2vw, 3.6rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 16px;">{{ T.atp.freeTitle }}</h2>
+        <p style="font-size: 18px; color: var(--ink-500); max-width: 620px; margin: 0 auto;">{{ T.atp.freeBody }}</p>
+      </div>
+
+      <!-- Benefits row -->
+      <div class="nl-grid-3" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 64px;">
+        <sc-for list="{{ T.atp.benefits }}" as="bn" hint-placeholder-count="3">
+          <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 32px 28px; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+            <div style="width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, var(--cta), var(--cta-700)); display:grid; place-items:center; color:#fff; margin-bottom: 22px; box-shadow: var(--shadow-cta);">
+              <i data-lucide="{{ bn.icon }}" style="width:26px; height:26px; stroke-width:2.4;"></i>
+            </div>
+            <h3 style="font-family:'Fraunces',serif; font-weight: 600; font-size: 24px; line-height: 1.12; letter-spacing: -0.02em; margin: 0 0 12px;">{{ bn.title }}</h3>
+            <p style="color: var(--ink-500); font-size: 15px; line-height: 1.55; margin: 0;">{{ bn.body }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- Speed + ad credits boost strip -->
+      <div style="margin: 0 auto 64px; max-width: 940px; background: linear-gradient(160deg, #FFFDF6 0%, #FFF6E0 100%); border: 2px solid var(--cta); border-radius: 24px; padding: 36px 40px; display:flex; align-items:center; gap: 32px; flex-wrap: wrap; box-shadow: 0 30px 60px rgba(201,162,77,.22);">
+        <div style="display:flex; gap: 12px; flex-shrink: 0;">
+          <div style="width: 64px; height: 64px; border-radius: 20px; background: var(--cta); display:grid; place-items:center; box-shadow: var(--shadow-cta);">
+            <i data-lucide="zap" style="width:32px; height:32px; stroke-width:2.4; color: var(--ink-900);"></i>
+          </div>
+          <div style="width: 64px; height: 64px; border-radius: 20px; background: var(--ink-900); display:grid; place-items:center;">
+            <i data-lucide="megaphone" style="width:32px; height:32px; stroke-width:2.4; color: var(--cta);"></i>
+          </div>
+        </div>
+        <div style="flex:1; min-width: 280px;">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-700); margin-bottom: 8px;">{{ T.atp.boostKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 10px; color: var(--ink-900);">{{ T.atp.boostTitle }}</div>
+          <div style="font-size: 15px; line-height: 1.6; color: var(--ink-500);">{{ T.atp.boostBody }}</div>
+        </div>
+      </div>
+
+      <!-- Package cards -->
+      <div class="nl-grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 940px; margin: 0 auto 48px;">
+
+        <!-- Starter $299 -->
+        <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-500); margin-bottom: 8px;">{{ T.atp.pkgAKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgAName }}</div>
+          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
+            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$299</span>
+            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="display:inline-flex; align-self: flex-start; align-items:center; gap: 6px; padding: 6px 12px; background: var(--cta-50); border: 1px solid var(--cta-100); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--cta-700); margin-bottom: 24px;">
+            <i data-lucide="gift" style="width:13px; height:13px; stroke-width:2.6;"></i> {{ T.atp.freeBadge }}
+          </div>
+          <div style="height: 1px; background: var(--line); margin-bottom: 24px;"></div>
+          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
+            <sc-for list="{{ T.atp.pkgAFeatures }}" as="f" hint-placeholder-count="5">
+              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
+                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-600); flex-shrink:0; margin-top: 2px;"></i>
+                <span>{{ f }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="{{ atpWaHref }}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--ink-900); color:#fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; transition: all 200ms;" class="nl-book-mini">
+            {{ T.atp.pkgACta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+
+        <!-- Pro $499 (featured) -->
+        <div style="background: linear-gradient(160deg, #FFFDF6 0%, #FFF6E0 100%); border: 2px solid var(--cta); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; box-shadow: 0 30px 60px rgba(201,162,77,.25); transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+          <div style="position:absolute; top: -14px; right: 32px; padding: 6px 14px; background: var(--cta); color: var(--ink-900); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 6px 16px rgba(201,162,77,.5);">{{ T.atp.pkgBTag }}</div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-700); margin-bottom: 8px;">{{ T.atp.pkgBKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgBName }}</div>
+          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 8px;">
+            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$499</span>
+            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="display:inline-flex; align-self: flex-start; align-items:center; gap: 6px; padding: 6px 12px; background: #fff; border: 1px solid var(--cta); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--cta-700); margin-bottom: 24px;">
+            <i data-lucide="gift" style="width:13px; height:13px; stroke-width:2.6;"></i> {{ T.atp.freeBadge }}
+          </div>
+          <div style="height: 1px; background: var(--cta-100); margin-bottom: 24px;"></div>
+          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
+            <sc-for list="{{ T.atp.pkgBFeatures }}" as="f" hint-placeholder-count="6">
+              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
+                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-700); flex-shrink:0; margin-top: 2px;"></i>
+                <span>{{ f }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="{{ atpWaHref }}" target="_blank" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--cta); color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; box-shadow: var(--shadow-cta); transition: all 200ms;" class="nl-cta-btn">
+            {{ T.atp.pkgBCta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap: 36px; flex-wrap:wrap; font-size: 14px; color: var(--ink-500);">
+        <sc-for list="{{ T.atp.checks }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; gap: 8px;"><i data-lucide="check" style="width:16px; height:16px; stroke-width:2.6; color: var(--cta-600);"></i> {{ c }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DEMO DIVIDER ============ -->
+  <section id="demo" data-screen-label="Demo Divider" style="padding: 88px 32px; background: var(--brand-950); color:#fff; text-align:center; position:relative; overflow:hidden;">
+    <div style="position:absolute; left: 50%; top: 50%; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(201,162,77,.20), transparent 60%); transform: translate(-50%,-50%);"></div>
+    <div style="max-width: 820px; margin: 0 auto; position:relative;">
+      <div style="display:inline-flex; align-items:center; gap: 10px; padding: 8px 16px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius: 999px; margin-bottom: 24px;">
+        <span style="width:8px; height:8px; border-radius:50%; background: var(--cta);"></span>
+        <span style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase;">{{ T.atp.demoKicker }}</span>
+      </div>
+      <h2 style="font-family:'Fraunces',serif; font-weight: 400; font-size: clamp(2.2rem, 4.4vw, 3.6rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 18px;">{{ T.atp.demoTitle }} <em style="font-style: italic; color: var(--cta);">{{ T.atp.demoTitleAccent }}</em></h2>
+      <p style="font-size: 18px; line-height: 1.55; color: rgba(255,255,255,.72); margin: 0 0 32px;">{{ T.atp.demoBody }}</p>
+      <div style="display:inline-grid; place-items:center; width: 52px; height: 52px; border-radius: 50%; background: var(--cta); color: var(--ink-900); animation: nl-float 3s ease-in-out infinite; box-shadow: var(--shadow-cta);">
+        <i data-lucide="arrow-down" style="width:24px; height:24px; stroke-width:2.8;"></i>
+      </div>
+    </div>
+  </section>
 
   <!-- ============ HEADER ============ -->
-  <header id="nl-header" data-screen-label="Header" style="position: fixed; inset: 0 0 auto 0; height: 76px; z-index: 50; display:flex; align-items:center; padding: 0 32px; background: rgba(255,255,255,0); backdrop-filter: blur(0px); transition: background 300ms cubic-bezier(.22,1,.36,1), backdrop-filter 300ms, box-shadow 300ms, border-color 300ms; border-bottom: 1px solid transparent;">
+  <header id="nl-header" data-screen-label="Header" style="position: sticky; top: 0; height: 76px; z-index: 50; display:flex; align-items:center; padding: 0 32px; background: rgba(255,255,255,0); backdrop-filter: blur(0px); transition: background 300ms cubic-bezier(.22,1,.36,1), backdrop-filter 300ms, box-shadow 300ms, border-color 300ms; border-bottom: 1px solid transparent;">
     <div style="display:flex; align-items:center; justify-content:space-between; width:100%; max-width: 1280px; margin: 0 auto;">
 
       <!-- Logo -->
@@ -105,7 +296,7 @@
         </span>
       </a>
 
-      <nav style="display:flex; align-items:center; gap: 28px;">
+      <nav style="display:flex; align-items:center; gap: 28px;" class="nl-topnav">
         <a href="#services" style="color: rgba(255,255,255,.85); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.services }}</a>
         <a href="#gallery" style="color: var(--ink-700); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.gallery }}</a>
         <a href="#reviews" style="color: var(--ink-700); font-weight:600; font-size:14px; letter-spacing: .02em;" class="nl-nav">{{ T.nav.reviews }}</a>
@@ -124,145 +315,12 @@
     </div>
   </header>
 
-  <!-- ============ AHORATENGOPAGINA PITCH ============ -->
-  <section data-screen-label="AhoraTengoPagina Pitch" style="padding: 128px 32px; background: #FFFFFF; color: var(--ink-900); position:relative; overflow:hidden;">
-    <!-- soft accents -->
-    <div style="position:absolute; left: -180px; top: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.20), transparent 65%); filter: blur(20px);"></div>
-    <div style="position:absolute; right: -180px; bottom: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(37,111,219,.14), transparent 65%); filter: blur(20px);"></div>
-
-    <div style="max-width: 1180px; margin: 0 auto; position:relative;">
-
-      <!-- Brand lockup -->
-      <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom: 48px;">
-        <div style="display:inline-flex; align-items:center; gap: 10px; padding: 8px 16px; background: var(--surface-2); border:1px solid var(--line); border-radius: 999px; margin-bottom: 24px;">
-          <span style="width:8px; height:8px; border-radius:50%; background: var(--cta);"></span>
-          <span style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-700);">{{ T.atp.kicker }}</span>
-        </div>
-        <img src="/nail-salon/assets/ahoratengopagina-logo.png" alt="AhoraTengoPagina.com" style="height: 68px; width: auto; margin-bottom: 20px;">
-        <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 13px; letter-spacing:.28em; text-transform:uppercase; color: var(--ink-500);">.COM</div>
-      </div>
-
-      <!-- Headline -->
-      <div style="text-align:center; max-width: 860px; margin: 0 auto 24px;">
-        <h2 style="font-family:'Fraunces',serif; font-weight: 400; font-size: clamp(2.5rem, 5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 20px;">{{ T.atp.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.atp.h2b }}</em></h2>
-        <p style="font-size: 19px; line-height: 1.55; color: var(--ink-500); margin: 0;">{{ T.atp.intro }}</p>
-      </div>
-
-      <!-- Satisfied owner success story -->
-      <div style="margin: 56px auto 0; max-width: 940px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 28px; padding: 28px; display:flex; align-items:center; gap: 36px; flex-wrap: wrap; box-shadow: 0 24px 56px rgba(26,20,16,.10);">
-        <div style="position:relative; width: 232px; height: 280px; flex-shrink:0; border-radius: 22px; overflow:hidden; box-shadow: 0 18px 44px rgba(26,20,16,.20);">
-          <image-slot id="owner-photo" style="width:100%; height:100%;" shape="rect" placeholder="Foto de una dueña de salón feliz con su nueva página web" src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=700&q=85"></image-slot>
-          <div style="position:absolute; left: 14px; bottom: 14px; display:inline-flex; align-items:center; gap:6px; padding: 7px 12px; background: rgba(255,255,255,.94); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight:800; font-size: 11px; letter-spacing:.04em; color: var(--ink-900); box-shadow: 0 6px 16px rgba(26,20,16,.16);">
-            <i data-lucide="badge-check" style="width:14px; height:14px; stroke-width:2.6; color: var(--cta-600);"></i>
-            <span>{{ T.atp.ownerBadge }}</span>
-          </div>
-        </div>
-        <div style="flex:1; min-width: 280px;">
-          <div style="display:inline-flex; gap:3px; margin-bottom: 16px; color: var(--cta);">
-            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
-            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
-            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
-            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
-            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
-          </div>
-          <div style="font-family:'Fraunces',serif; font-style: italic; font-weight: 500; font-size: 24px; line-height: 1.38; letter-spacing: -0.01em; color: var(--ink-900); margin-bottom: 22px;">“{{ T.atp.ownerQuote }}”</div>
-          <div style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 15px; color: var(--ink-900);">{{ T.atp.ownerName }}</div>
-          <div style="font-size: 14px; color: var(--ink-500); margin-top: 2px;">{{ T.atp.ownerRole }}</div>
-        </div>
-      </div>
-
-      <!-- The "one customer" pitch strip -->
-      <div style="margin: 56px auto 64px; max-width: 940px; background: linear-gradient(110deg, var(--ink-900) 0%, var(--brand-700) 100%); color:#fff; border-radius: 24px; padding: 36px 40px; display:flex; align-items:center; gap: 32px; flex-wrap: wrap; box-shadow: 0 30px 60px rgba(26,20,16,.18);">
-        <div style="width: 68px; height: 68px; border-radius: 20px; background: var(--cta); display:grid; place-items:center; flex-shrink: 0; box-shadow: var(--shadow-cta);">
-          <i data-lucide="trending-down" style="width:34px; height:34px; stroke-width:2.4; color: var(--ink-900);"></i>
-        </div>
-        <div style="flex:1; min-width: 280px;">
-          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta); margin-bottom: 8px;">{{ T.atp.mathKicker }}</div>
-          <div style="font-family:'Fraunces',serif; font-weight: 500; font-size: 26px; line-height: 1.2; letter-spacing: -0.01em;">{{ T.atp.mathBody }}</div>
-        </div>
-      </div>
-
-      <!-- Package cards -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 940px; margin: 0 auto 56px;">
-
-        <!-- Starter $299 -->
-        <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
-          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-500); margin-bottom: 8px;">{{ T.atp.pkgAKicker }}</div>
-          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgAName }}</div>
-          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
-            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$299</span>
-            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
-          </div>
-          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--cta); color: var(--cta-ink); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 6px 16px rgba(201,162,77,.35);">
-            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
-            <span>{{ T.atp.pkgSpeed }}</span>
-          </div>
-          <div style="height: 1px; background: var(--line); margin-bottom: 24px;"></div>
-          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
-            <sc-for list="{{ T.atp.pkgAFeatures }}" as="f" hint-placeholder-count="5">
-              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
-                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-600); flex-shrink:0; margin-top: 2px;"></i>
-                <span>{{ f }}</span>
-              </div>
-            </sc-for>
-          </div>
-          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--ink-900); color:#fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; transition: all 200ms;" class="nl-book-mini">
-            {{ T.atp.pkgACta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
-          </a>
-        </div>
-
-        <!-- Pro $499 (featured) -->
-        <div style="background: linear-gradient(160deg, #FFFDF6 0%, #FFF6E0 100%); border: 2px solid var(--cta); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; box-shadow: 0 30px 60px rgba(201,162,77,.25); transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
-          <div style="position:absolute; top: -14px; right: 32px; padding: 6px 14px; background: var(--cta); color: var(--ink-900); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 6px 16px rgba(201,162,77,.5);">{{ T.atp.pkgBTag }}</div>
-          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-700); margin-bottom: 8px;">{{ T.atp.pkgBKicker }}</div>
-          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgBName }}</div>
-          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
-            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$499</span>
-            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
-          </div>
-          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--ink-900); color: #fff; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 8px 20px rgba(26,20,16,.28);">
-            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
-            <span>{{ T.atp.pkgSpeed }}</span>
-          </div>
-          <div style="height: 1px; background: var(--cta-100); margin-bottom: 24px;"></div>
-          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
-            <sc-for list="{{ T.atp.pkgBFeatures }}" as="f" hint-placeholder-count="6">
-              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
-                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-700); flex-shrink:0; margin-top: 2px;"></i>
-                <span>{{ f }}</span>
-              </div>
-            </sc-for>
-          </div>
-          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--cta); color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; box-shadow: var(--shadow-cta); transition: all 200ms;" class="nl-cta-btn">
-            {{ T.atp.pkgBCta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- Bottom CTAs -->
-      <div style="display:flex; justify-content:center; gap: 16px; flex-wrap: wrap;">
-        <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
-          {{ T.ctaIcon }} {{ T.atp.cta1 }}
-        </a>
-        <a href="https://ahoratengopagina.com" target="_blank" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: transparent; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; border: 2px solid var(--ink-900); text-decoration:none;" class="nl-ghost-btn">
-          {{ T.atp.cta2 }}
-        </a>
-      </div>
-
-      <div style="display:flex; justify-content:center; gap: 36px; flex-wrap:wrap; margin-top: 48px; font-size: 14px; color: var(--ink-500);">
-        <sc-for list="{{ T.atp.checks }}" as="c" hint-placeholder-count="4">
-          <div style="display:flex; align-items:center; gap: 8px;"><i data-lucide="check" style="width:16px; height:16px; stroke-width:2.6; color: var(--cta-600);"></i> {{ c }}</div>
-        </sc-for>
-      </div>
-    </div>
-  </section>
-
   <!-- ============ HERO ============ -->
-  <section id="top" data-screen-label="Hero" style="position:relative; min-height: 100vh; padding: 76px 32px 64px; color: var(--ink-900); isolation:isolate; overflow:hidden; background: var(--surface-2);">
+  <section id="top" data-screen-label="Hero" style="position:relative; min-height: 100vh; padding: 24px 32px 64px; color: var(--ink-900); isolation:isolate; overflow:hidden; background: var(--surface-2);">
 
     <!-- bright hero background photo -->
     <div style="position:absolute; inset:0; z-index:-2; animation: nl-zoom 18s cubic-bezier(.22,1,.36,1) forwards;">
-      <image-slot id="hero-bg" style="width:100%; height:100%;" shape="rect" placeholder="Drop a bright, airy hero photo" src="https://images.unsplash.com/photo-1632344004415-b9f1ad1fc1e1?auto=format&fit=crop&w=2000&q=85"></image-slot>
+      <image-slot id="hero-bg" style="width:100%; height:100%;" shape="rect" placeholder="Drop a bright, airy hero photo" src="https://images.unsplash.com/photo-1632344004415-b9f1ad1fc1e1?auto=format&fit=crop&w=2000&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1632344004415-b9f1ad1fc1e1"></image-slot>
     </div>
 
     <!-- soft cream wash so headline is legible AND it feels bright -->
@@ -271,7 +329,7 @@
     <div style="position:absolute; right: -180px; top:24%; width: 580px; height: 580px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.40), transparent 65%); z-index:-1; filter: blur(28px); animation: nl-float 11s ease-in-out infinite;"></div>
     <div style="position:absolute; left: -120px; bottom: -120px; width: 380px; height: 380px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.22), transparent 70%); z-index:-1; filter: blur(20px);"></div>
 
-    <div style="max-width:1280px; margin: 0 auto; display:grid; grid-template-columns: 1.15fr .85fr; gap: 72px; align-items: center; padding-top: 80px;">
+    <div class="nl-hero-grid" style="max-width:1280px; margin: 0 auto; display:grid; grid-template-columns: 1.15fr .85fr; gap: 72px; align-items: center; padding-top: 48px;">
 
       <!-- LEFT: copy + form -->
       <div>
@@ -307,7 +365,7 @@
             </div>
           </sc-if>
           <sc-if value="{{ formOpen }}" hint-placeholder-val="{{ true }}">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div class="nl-form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
               <input type="text" placeholder="{{ T.form.firstName }}" required style="padding: 14px 16px; border: 1.5px solid var(--line-strong); border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 500; background: var(--surface-2); transition: border-color 180ms, box-shadow 180ms, background 180ms;" class="nl-field">
               <input type="tel" placeholder="{{ T.form.phone }}" required style="padding: 14px 16px; border: 1.5px solid var(--line-strong); border-radius: 12px; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 500; background: var(--surface-2);" class="nl-field">
             </div>
@@ -347,15 +405,15 @@
       </div>
 
       <!-- RIGHT: image collage -->
-      <div style="position:relative; height: 620px; animation: nl-fade 1000ms cubic-bezier(.22,1,.36,1) 300ms forwards;">
+      <div class="nl-collage" style="position:relative; height: 620px; animation: nl-fade 1000ms cubic-bezier(.22,1,.36,1) 300ms forwards;">
         <div style="position:absolute; top: 0; right: 40px; width: 280px; height: 360px; border-radius: 200px 200px 24px 24px; overflow:hidden; box-shadow: 0 30px 60px rgba(26,20,16,.22); transform: rotate(-3deg); border: 4px solid #fff;">
-          <image-slot id="hero-img-1" style="width:100%; height:100%;" shape="rect" placeholder="Manicure detail" src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="hero-img-1" style="width:100%; height:100%;" shape="rect" placeholder="Manicure detail" src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1610992015732-2449b76344bc"></image-slot>
         </div>
         <div style="position:absolute; top: 220px; right: 240px; width: 240px; height: 300px; border-radius: 24px; overflow:hidden; box-shadow: 0 30px 60px rgba(26,20,16,.22); transform: rotate(4deg); border: 4px solid #fff;">
-          <image-slot id="hero-img-2" style="width:100%; height:100%;" shape="rect" placeholder="Nail art" src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="hero-img-2" style="width:100%; height:100%;" shape="rect" placeholder="Nail art" src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1604902396830-aca29e19b067"></image-slot>
         </div>
         <div style="position:absolute; bottom: 0; right: 0; width: 220px; height: 220px; border-radius: 50%; overflow:hidden; box-shadow: 0 30px 60px rgba(26,20,16,.22); border: 4px solid #fff;">
-          <image-slot id="hero-img-3" style="width:100%; height:100%;" shape="circle" placeholder="Pedicure" src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="hero-img-3" style="width:100%; height:100%;" shape="circle" placeholder="Pedicure" src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1632345031435-8727f6897d53"></image-slot>
         </div>
         <!-- floating chip -->
         <div style="position:absolute; bottom: 60px; left: 0; background: #fff; color: var(--ink-900); border-radius: 16px; padding: 14px 18px; box-shadow: 0 20px 40px rgba(26,20,16,.18); display:flex; align-items:center; gap: 12px; animation: nl-float 6s ease-in-out infinite; border: 1px solid var(--line);">
@@ -383,7 +441,7 @@
   <!-- ============ PILLARS ============ -->
   <section data-screen-label="Pillars" style="padding: 120px 32px; background: var(--surface);">
     <div style="max-width: 1280px; margin: 0 auto;">
-      <div style="display:grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: end; margin-bottom: 72px;">
+      <div class="nl-sec-head" style="display:grid; grid-template-columns: 1fr 1.4fr; gap: 80px; align-items: end; margin-bottom: 72px;">
         <div>
           <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.pillars.kicker }}</div>
           <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0;">{{ T.pillars.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.pillars.h2b }}</em>{{ T.pillars.h2c }}</h2>
@@ -391,7 +449,7 @@
         <p style="font-size: 18px; line-height: 1.6; color: var(--ink-500); max-width: 520px; justify-self: end; margin: 0;">{{ T.pillars.intro }}</p>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+      <div class="nl-grid-4" style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
         <sc-for list="{{ T.pillars.cards }}" as="p" hint-placeholder-count="4">
           <div style="position:relative; background: var(--surface-2); border: 1px solid var(--line); border-radius: 24px; padding: 32px 28px 28px; overflow: hidden; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
             <div style="position:absolute; top:-30px; right:-30px; width: 130px; height: 130px; border-radius: 50%; background: radial-gradient(circle, var(--cta-100), transparent 70%);"></div>
@@ -423,7 +481,7 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+      <div class="nl-grid-3" style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
         <sc-for list="{{ visibleServices }}" as="svc" hint-placeholder-count="6">
           <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; overflow:hidden; display:flex; flex-direction:column; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms; position:relative;" class="nl-service">
             <div style="height: 220px; position:relative; overflow:hidden; background: var(--surface-3);">
@@ -478,33 +536,33 @@
         <p style="font-size: 18px; color: var(--ink-500); max-width: 600px; margin: 0 auto;">{{ T.gallery.sub }}</p>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 180px; gap: 14px;">
+      <div class="nl-bento" style="display:grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 180px; gap: 14px;">
         <div style="grid-column: span 2; grid-row: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-1" style="width:100%; height:100%;" shape="rect" placeholder="Manicure set" src="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-1" style="width:100%; height:100%;" shape="rect" placeholder="Manicure set" src="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1604654894610-df63bc536371"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[0] }}</div>
         </div>
         <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-2" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-2" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1610992015732-2449b76344bc?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1610992015732-2449b76344bc"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[1] }}</div>
         </div>
         <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-3" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-3" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1632345031435-8727f6897d53"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[2] }}</div>
         </div>
         <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-4" style="width:100%; height:100%;" shape="rect" placeholder="Nail art" src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-4" style="width:100%; height:100%;" shape="rect" placeholder="Nail art" src="https://images.unsplash.com/photo-1604902396830-aca29e19b067?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1604902396830-aca29e19b067"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[3] }}</div>
         </div>
         <div style="grid-column: span 2; grid-row: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-5" style="width:100%; height:100%;" shape="rect" placeholder="Pedicure" src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-5" style="width:100%; height:100%;" shape="rect" placeholder="Pedicure" src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1519014816548-bf5fe059798b"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[4] }}</div>
         </div>
         <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-6" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-6" style="width:100%; height:100%;" shape="rect" placeholder="Nail set" src="https://images.unsplash.com/photo-1607779097040-26e80aa78e66?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1607779097040-26e80aa78e66"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[5] }}</div>
         </div>
         <div style="grid-column: span 2; border-radius: 24px; overflow:hidden; position:relative; background: var(--surface-3);" class="nl-gal">
-          <image-slot id="gal-7" style="width:100%; height:100%;" shape="rect" placeholder="Salon room" src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=900&q=85"></image-slot>
+          <image-slot id="gal-7" style="width:100%; height:100%;" shape="rect" placeholder="Salon room" src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=900&q=85" credit="Photo on Unsplash" credit-href="https://unsplash.com/photos/photo-1598440947619-2c35fc9aa908"></image-slot>
           <div style="position:absolute; left: 16px; bottom: 16px; background: rgba(255,255,255,.95); padding: 8px 14px; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 700; font-size: 12px; color: var(--ink-900);">{{ T.gallery.tags[6] }}</div>
         </div>
       </div>
@@ -520,7 +578,7 @@
   <!-- ============ REVIEWS ============ -->
   <section id="reviews" data-screen-label="Reviews" style="padding: 120px 32px; background: var(--surface-2);">
     <div style="max-width: 1280px; margin: 0 auto;">
-      <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 64px; align-items: center; margin-bottom: 64px;">
+      <div class="nl-reviews-grid" style="display:grid; grid-template-columns: 1fr 2fr; gap: 64px; align-items: center; margin-bottom: 64px;">
         <div>
           <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.reviews.kicker }}</div>
           <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0 0 28px;"><em style="font-style: italic; color: var(--cta-600);">{{ T.reviews.h2a }}</em> {{ T.reviews.h2b }}</h2>
@@ -542,7 +600,7 @@
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="nl-grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <sc-for list="{{ T.reviews.list }}" as="r" hint-placeholder-count="4">
             <div style="background:#fff; border:1px solid var(--line); border-radius: 20px; padding: 26px; display:flex; flex-direction:column; gap: 14px;">
               <div style="display:flex; gap: 2px;">
@@ -571,7 +629,7 @@
   <!-- ============ LOYALTY ============ -->
   <section id="loyalty" data-screen-label="Loyalty" style="padding: 120px 32px; background: var(--surface); position:relative; overflow:hidden;">
     <div style="max-width: 1280px; margin: 0 auto;">
-      <div style="display:grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center;">
+      <div class="nl-loyalty-grid" style="display:grid; grid-template-columns: 1.1fr 1fr; gap: 80px; align-items: center;">
         <div>
           <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-600); margin-bottom: 18px;">{{ T.loyalty.kicker }}</div>
           <h2 style="font-family:'Fraunces',serif; font-weight: 500; font-size: clamp(2.5rem, 4.5vw, 4rem); line-height: 1; letter-spacing: -0.03em; margin: 0 0 24px;">{{ T.loyalty.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.loyalty.h2b }}</em></h2>
@@ -655,7 +713,7 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+      <div class="nl-grid-6" style="display:grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
         <sc-for list="{{ socials }}" as="s" hint-placeholder-count="6">
           <a href="https://instagram.com" target="_blank" style="aspect-ratio: 1/1; border-radius: 16px; overflow:hidden; position:relative; display:block; background: var(--surface-3);" class="nl-gal">
             <div style="width:100%; height:100%; background-image: url('{{ s.img }}'); background-size: cover; background-position: center; transition: transform 500ms cubic-bezier(.22,1,.36,1);" class="nl-service-img"></div>
@@ -668,11 +726,10 @@
     </div>
   </section>
 
-
   <!-- ============ FOOTER ============ -->
   <footer style="background: var(--brand-900); color: rgba(255,255,255,.7); padding: 64px 32px 32px;">
     <div style="max-width: 1280px; margin: 0 auto;">
-      <div style="display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,.1);">
+      <div class="nl-foot-grid" style="display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; border-bottom: 1px solid rgba(255,255,255,.1);">
         <div>
           <div style="display:flex; align-items:center; gap:12px; margin-bottom: 20px;">
             <svg width="38" height="38" viewBox="0 0 42 42" fill="none" aria-hidden="true">
@@ -772,6 +829,40 @@
     #nl-header.is-scrolled #nl-wordmark { color: var(--ink-900) !important; }
     #nl-header.is-scrolled .nl-langwrap { background: var(--surface-2) !important; border-color: var(--line) !important; }
     #nl-sticky.is-shown { transform: translate(-50%, 0) !important; }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 1080px) {
+      .nl-hero-grid { grid-template-columns: 1fr !important; gap: 48px !important; padding-top: 40px !important; }
+      .nl-collage { display: none !important; }
+      .nl-sec-head { grid-template-columns: 1fr !important; gap: 24px !important; }
+      .nl-sec-head > p { justify-self: start !important; }
+      .nl-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+      .nl-grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+      .nl-reviews-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+      .nl-loyalty-grid { grid-template-columns: 1fr !important; gap: 56px !important; }
+      .nl-grid-6 { grid-template-columns: repeat(3, 1fr) !important; }
+      .nl-foot-grid { grid-template-columns: 1fr 1fr !important; gap: 36px !important; }
+      .nl-bento { grid-auto-rows: 150px !important; }
+    }
+    @media (max-width: 860px) {
+      .nl-topnav > a.nl-nav { display: none !important; }
+    }
+    @media (max-width: 640px) {
+      section[data-screen-label] { padding-left: 20px !important; padding-right: 20px !important; }
+      section[data-screen-label]:not([data-screen-label="Hero"]) { padding-top: 72px !important; padding-bottom: 72px !important; }
+      #nl-header { padding: 0 16px !important; }
+      .nl-grid-4, .nl-grid-3, .nl-grid-2 { grid-template-columns: 1fr !important; }
+      .nl-form-row { grid-template-columns: 1fr !important; }
+      .nl-bento { grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 150px !important; }
+      .nl-bento > div { grid-column: span 1 !important; grid-row: span 1 !important; }
+      .nl-bento > div:nth-child(1), .nl-bento > div:nth-child(5) { grid-column: span 2 !important; grid-row: span 2 !important; }
+      .nl-grid-6 { grid-template-columns: repeat(2, 1fr) !important; }
+      .nl-foot-grid { grid-template-columns: 1fr !important; }
+      footer { padding: 48px 20px 24px !important; }
+      #nl-sticky { max-width: calc(100vw - 24px); padding-left: 14px !important; gap: 10px !important; }
+      #nl-sticky > div > div { display: none !important; }
+      #nl-wa-fab { right: 16px !important; bottom: 88px !important; }
+    }
   </style>
 
 </div>
@@ -791,11 +882,13 @@ class Component extends DCLogic {
     setTimeout(() => clearInterval(this._iconInterval), 3000);
 
     this._onScroll = () => {
-      const y = window.scrollY || 0;
       const header = document.getElementById('nl-header');
       const sticky = document.getElementById('nl-sticky');
-      if (header) header.classList.toggle('is-scrolled', y > 120);
-      if (sticky) sticky.classList.toggle('is-shown', y > window.innerHeight * 0.8);
+      const hero = document.getElementById('top');
+      // header is sticky below the ATP intro: solid bg once it's pinned to the viewport top
+      if (header) header.classList.toggle('is-scrolled', header.getBoundingClientRect().top <= 1 && (window.scrollY || 0) > 10);
+      // salon sticky CTA bar: only after the Lunaire hero has scrolled past
+      if (sticky && hero) sticky.classList.toggle('is-shown', hero.getBoundingClientRect().bottom < 0);
     };
     window.addEventListener('scroll', this._onScroll, { passive: true });
     this._onScroll();
@@ -944,16 +1037,29 @@ class Component extends DCLogic {
         h2b: 'en vivo desde la silla.',
       },
       atp: {
-        kicker: 'Hecho por AhoraTengoPagina.com',
-        h2a: '¿Quieres que tu negocio se vea así en internet —',
-        h2b: 'o mejor?',
-        intro: 'Nosotros armamos tu página web completa: diseño, copy, fotos, formulario y WhatsApp. Tú te dedicas a atender a tus clientes; nosotros nos dedicamos a que te encuentren.',
-        ownerBadge: 'Historia real de una clienta',
-        ownerQuote: 'Desde que AhoraTengoPagina me armó mi página, aparezco en Google y me llegan clientas nuevas cada semana. Pasar mi negocio a estar en línea fue lo mejor que hice — hoy tengo la agenda llena.',
-        ownerName: 'María Fernanda Ríos',
-        ownerRole: 'Dueña de salón · Clienta de AhoraTengoPagina',
+        topKicker: 'Para dueñas y dueños de salones de uñas',
+        h1a: 'Cada día sin página web,',
+        h1b: 'tu salón pierde citas.',
+        heroSub: 'AhoraTengoPagina.com crea la página profesional de tu salón: más alcance, más clientas nuevas y más citas cada día — mientras tú te dedicas a hacer uñas.',
+        heroCta: 'Quiero mi mes GRATIS',
+        heroCta2: 'Ver una demo en vivo',
+        heroNote: 'Regístrate hoy: tu primer mes es gratis. Sin compromiso.',
+        losses: [
+          { icon: 'calendar-x', title: 'Citas que nunca llegan', body: 'Quien te busca en Google y no te encuentra, reserva con el salón que sí aparece. Esas citas ya eran tuyas — y las estás regalando.' },
+          { icon: 'users', title: 'Clientas que se van con la competencia', body: 'Hoy casi todas buscan en internet antes de elegir salón. Sin página, ni siquiera estás en la lista de opciones.' },
+          { icon: 'wallet', title: 'Dinero que deja de entrar', body: 'Cada clienta perdida golpea directo tu economía. Una sola al mes ya cuesta más que tu página completa.' },
+        ],
+        freeKicker: 'Oferta de hoy',
+        freeTitle: 'Regístrate hoy y tu primer mes es GRATIS.',
+        freeBody: 'Después, solo $299 MXN el paquete básico o $499 MXN el avanzado. Pruébalo un mes entero sin pagar nada.',
+        freeBadge: '1er mes gratis',
+        benefits: [
+          { icon: 'globe', title: 'Mucho mayor alcance', body: 'Tu salón visible 24/7 para toda tu zona — no solo para quien pasa frente al local. Google, Maps y redes trabajando por ti.' },
+          { icon: 'user-plus', title: 'Más clientas nuevas', body: 'Tu galería, tus reseñas y tus precios convencen antes de que te escriban. La página vende tu trabajo mientras duermes.' },
+          { icon: 'calendar-check', title: 'Más citas cada día', body: 'Reservas en línea y botón de WhatsApp directo: cada visita a tu página puede convertirse en una cita en tu agenda.' },
+        ],
         mathKicker: 'Haz la cuenta',
-        mathBody: 'Solo con perder UN cliente al mes por no tener página, ya pagaste esto — y te sobra dinero. No firmar hoy te está costando más que el paquete.',
+        mathBody: 'Solo con perder UNA clienta al mes por no tener página, ya pagaste esto — y te sobra dinero. No registrarte hoy te está costando más que el paquete.',
         pkgAKicker: 'Paquete Inicial',
         pkgAName: 'Empieza a existir en Google.',
         pkgAFeatures: [
@@ -961,7 +1067,8 @@ class Component extends DCLogic {
           'Diseño a la medida de tu negocio',
           'Formulario de contacto + botón de WhatsApp',
           'Optimizada para celular y Google',
-          '$20 MXN en créditos de Google Ads incluidos',
+          'Créditos de Facebook y Google incluidos',
+          'Publicada en 20–30 minutos',
         ],
         pkgACta: 'Empezar con el Inicial',
         pkgBKicker: 'Paquete Pro',
@@ -973,15 +1080,20 @@ class Component extends DCLogic {
           'Galería de fotos y reseñas de clientes',
           'Reservas y pagos en línea si los necesitas',
           'Google Maps, redes sociales y SEO local',
-          '$35 MXN en créditos de Google Ads incluidos',
+          'Más créditos de Facebook y Google para publicidad',
+          'Publicada en 20–30 minutos',
         ],
         pkgBCta: 'Quiero el paquete Pro',
-        pkgSpeed: 'Entrega exprés — publicada en 20–30 minutos',
-        pkgOnce: 'MXN · pago único',
-        cta1: 'Hablar por WhatsApp ahora',
-        cta2: 'Ver AhoraTengoPagina.com',
+        pkgOnce: 'MXN',
+        boostKicker: 'Incluido en ambos paquetes',
+        boostTitle: 'Tu página lista en 20–30 minutos + créditos de Facebook y Google.',
+        boostBody: 'No esperas semanas: tu página se publica el mismo día, en cuestión de minutos. Y con tus créditos de publicidad, tu salón aparece como primera opción cuando te buscan en Facebook y Google — empujando gente a tu página desde el día uno.',
+        demoKicker: 'Demo en vivo',
+        demoTitle: 'Así se vería tu salón en internet —',
+        demoTitleAccent: 'desliza y compruébalo.',
+        demoBody: 'Lo que sigue es Lunaire Nail Atelier, una página de muestra hecha por nosotros de principio a fin. Imagina la tuya: tus fotos, tus precios, tus reseñas.',
         checks: [
-          'Sin mensualidades sorpresa',
+          'Primer mes gratis, sin compromiso',
           'Tú eres dueña de tu página',
           'Soporte real en español',
           'Si no te gusta, no la publicamos',
@@ -1125,16 +1237,29 @@ class Component extends DCLogic {
         h2b: 'live from the chair.',
       },
       atp: {
-        kicker: 'Built by AhoraTengoPagina.com',
-        h2a: 'Want your business to look this good online —',
-        h2b: 'or better?',
-        intro: "We build your whole website: design, copy, photos, contact form and WhatsApp button. You focus on serving your clients; we make sure they can find you.",
-        ownerBadge: 'A real client story',
-        ownerQuote: 'Since AhoraTengoPagina built my page, I show up on Google and new clients reach me every week. Moving my business online was the best decision I made — my calendar stays full now.',
-        ownerName: 'María Fernanda Ríos',
-        ownerRole: 'Salon owner · AhoraTengoPagina client',
+        topKicker: 'For nail salon owners',
+        h1a: 'Every day without a website,',
+        h1b: 'your salon loses appointments.',
+        heroSub: 'AhoraTengoPagina.com builds your salon a professional website: bigger reach, more new clients and more appointments every day — while you focus on doing nails.',
+        heroCta: 'Claim my FREE month',
+        heroCta2: 'See a live demo',
+        heroNote: 'Sign up today: your first month is free. No commitment.',
+        losses: [
+          { icon: 'calendar-x', title: 'Appointments that never arrive', body: "Someone searches Google, can't find you, and books with the salon that does show up. Those appointments were yours — and you're giving them away." },
+          { icon: 'users', title: 'Clients going to your competition', body: "Almost everyone checks online before choosing a salon. Without a website, you're not even on the list of options." },
+          { icon: 'wallet', title: "Money that stops coming in", body: 'Every lost client hits your bottom line directly. Just one a month already costs more than your entire website.' },
+        ],
+        freeKicker: "Today's offer",
+        freeTitle: 'Sign up today and your first month is FREE.',
+        freeBody: 'After that, just $299 MXN for the basic package or $499 MXN for the advanced one. Try it a full month without paying a thing.',
+        freeBadge: '1st month free',
+        benefits: [
+          { icon: 'globe', title: 'Much bigger reach', body: 'Your salon visible 24/7 to your whole area — not just people walking past the door. Google, Maps and social all working for you.' },
+          { icon: 'user-plus', title: 'More new clients', body: 'Your gallery, reviews and prices do the convincing before they even text you. The page sells your work while you sleep.' },
+          { icon: 'calendar-check', title: 'More appointments daily', body: 'Online booking and a direct WhatsApp button: every page visit can become an appointment on your calendar.' },
+        ],
         mathKicker: 'Do the math',
-        mathBody: 'Losing just ONE customer a month because you have no website already covers this — with money to spare. Not signing up today is costing you more than the package itself.',
+        mathBody: 'Losing just ONE client a month because you have no website already covers this — with money to spare. Not signing up today is costing you more than the package itself.',
         pkgAKicker: 'Starter package',
         pkgAName: 'Start showing up on Google.',
         pkgAFeatures: [
@@ -1142,7 +1267,8 @@ class Component extends DCLogic {
           'Custom-designed for your business',
           'Contact form + WhatsApp button',
           'Mobile and Google-optimized',
-          '$20 MXN in Google Ads credits included',
+          'Facebook & Google credits included',
+          'Live in 20–30 minutes',
         ],
         pkgACta: 'Start with Starter',
         pkgBKicker: 'Pro package',
@@ -1154,17 +1280,22 @@ class Component extends DCLogic {
           'Photo gallery and customer reviews',
           'Online booking &amp; payments if you need them',
           'Google Maps, social links and local SEO',
-          '$35 MXN in Google Ads credits included',
+          'Extra Facebook & Google ad credits',
+          'Live in 20–30 minutes',
         ],
         pkgBCta: 'I want the Pro package',
-        pkgSpeed: 'Express delivery — live in 20–30 minutes',
-        pkgOnce: 'MXN · one-time',
-        cta1: 'Talk to us on WhatsApp',
-        cta2: 'Visit AhoraTengoPagina.com',
+        pkgOnce: 'MXN',
+        boostKicker: 'Included in both packages',
+        boostTitle: 'Your site live in 20–30 minutes + Facebook & Google credits.',
+        boostBody: "No weeks of waiting: your page goes live the same day, in minutes. And with your ad credits, your salon shows up as the first option when people search on Facebook and Google — pushing people to your website from day one.",
+        demoKicker: 'Live demo',
+        demoTitle: 'This is what your salon could look like online —',
+        demoTitleAccent: 'scroll and see.',
+        demoBody: "What follows is Lunaire Nail Atelier, a sample page we built end to end. Now picture yours: your photos, your prices, your reviews.",
         checks: [
-          'No surprise monthly fees',
+          'First month free, no commitment',
           'You own your website',
-          'Real support in Spanish &amp; English',
+          'Real support in Spanish & English',
           "If you don't love it, we don't publish it",
         ],
       },
@@ -1275,6 +1406,7 @@ class Component extends DCLogic {
       enColor: !isEs ? langActiveColor : langIdleColor,
 
       showWhatsappFab: isEs,
+      atpWaHref: `https://wa.me/${waNumber}?text=${isEs ? 'Hola%2C%20quiero%20mi%20mes%20gratis%20de%20AhoraTengoPagina.com%20para%20mi%20sal%C3%B3n.' : 'Hi%2C%20I%20want%20my%20free%20month%20from%20AhoraTengoPagina.com%20for%20my%20salon.'}`,
       socials,
     };
   }
