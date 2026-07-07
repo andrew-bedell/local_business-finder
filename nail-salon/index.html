@@ -124,6 +124,139 @@
     </div>
   </header>
 
+  <!-- ============ AHORATENGOPAGINA PITCH ============ -->
+  <section data-screen-label="AhoraTengoPagina Pitch" style="padding: 128px 32px; background: #FFFFFF; color: var(--ink-900); position:relative; overflow:hidden;">
+    <!-- soft accents -->
+    <div style="position:absolute; left: -180px; top: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.20), transparent 65%); filter: blur(20px);"></div>
+    <div style="position:absolute; right: -180px; bottom: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(37,111,219,.14), transparent 65%); filter: blur(20px);"></div>
+
+    <div style="max-width: 1180px; margin: 0 auto; position:relative;">
+
+      <!-- Brand lockup -->
+      <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom: 48px;">
+        <div style="display:inline-flex; align-items:center; gap: 10px; padding: 8px 16px; background: var(--surface-2); border:1px solid var(--line); border-radius: 999px; margin-bottom: 24px;">
+          <span style="width:8px; height:8px; border-radius:50%; background: var(--cta);"></span>
+          <span style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-700);">{{ T.atp.kicker }}</span>
+        </div>
+        <img src="/nail-salon/assets/ahoratengopagina-logo.png" alt="AhoraTengoPagina.com" style="height: 68px; width: auto; margin-bottom: 20px;">
+        <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 13px; letter-spacing:.28em; text-transform:uppercase; color: var(--ink-500);">.COM</div>
+      </div>
+
+      <!-- Headline -->
+      <div style="text-align:center; max-width: 860px; margin: 0 auto 24px;">
+        <h2 style="font-family:'Fraunces',serif; font-weight: 400; font-size: clamp(2.5rem, 5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 20px;">{{ T.atp.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.atp.h2b }}</em></h2>
+        <p style="font-size: 19px; line-height: 1.55; color: var(--ink-500); margin: 0;">{{ T.atp.intro }}</p>
+      </div>
+
+      <!-- Satisfied owner success story -->
+      <div style="margin: 56px auto 0; max-width: 940px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 28px; padding: 28px; display:flex; align-items:center; gap: 36px; flex-wrap: wrap; box-shadow: 0 24px 56px rgba(26,20,16,.10);">
+        <div style="position:relative; width: 232px; height: 280px; flex-shrink:0; border-radius: 22px; overflow:hidden; box-shadow: 0 18px 44px rgba(26,20,16,.20);">
+          <image-slot id="owner-photo" style="width:100%; height:100%;" shape="rect" placeholder="Foto de una dueña de salón feliz con su nueva página web" src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=700&q=85"></image-slot>
+          <div style="position:absolute; left: 14px; bottom: 14px; display:inline-flex; align-items:center; gap:6px; padding: 7px 12px; background: rgba(255,255,255,.94); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight:800; font-size: 11px; letter-spacing:.04em; color: var(--ink-900); box-shadow: 0 6px 16px rgba(26,20,16,.16);">
+            <i data-lucide="badge-check" style="width:14px; height:14px; stroke-width:2.6; color: var(--cta-600);"></i>
+            <span>{{ T.atp.ownerBadge }}</span>
+          </div>
+        </div>
+        <div style="flex:1; min-width: 280px;">
+          <div style="display:inline-flex; gap:3px; margin-bottom: 16px; color: var(--cta);">
+            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
+            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
+            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
+            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
+            <i data-lucide="star" style="width:18px; height:18px; fill:currentColor; stroke-width:0;"></i>
+          </div>
+          <div style="font-family:'Fraunces',serif; font-style: italic; font-weight: 500; font-size: 24px; line-height: 1.38; letter-spacing: -0.01em; color: var(--ink-900); margin-bottom: 22px;">“{{ T.atp.ownerQuote }}”</div>
+          <div style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 15px; color: var(--ink-900);">{{ T.atp.ownerName }}</div>
+          <div style="font-size: 14px; color: var(--ink-500); margin-top: 2px;">{{ T.atp.ownerRole }}</div>
+        </div>
+      </div>
+
+      <!-- The "one customer" pitch strip -->
+      <div style="margin: 56px auto 64px; max-width: 940px; background: linear-gradient(110deg, var(--ink-900) 0%, var(--brand-700) 100%); color:#fff; border-radius: 24px; padding: 36px 40px; display:flex; align-items:center; gap: 32px; flex-wrap: wrap; box-shadow: 0 30px 60px rgba(26,20,16,.18);">
+        <div style="width: 68px; height: 68px; border-radius: 20px; background: var(--cta); display:grid; place-items:center; flex-shrink: 0; box-shadow: var(--shadow-cta);">
+          <i data-lucide="trending-down" style="width:34px; height:34px; stroke-width:2.4; color: var(--ink-900);"></i>
+        </div>
+        <div style="flex:1; min-width: 280px;">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta); margin-bottom: 8px;">{{ T.atp.mathKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 500; font-size: 26px; line-height: 1.2; letter-spacing: -0.01em;">{{ T.atp.mathBody }}</div>
+        </div>
+      </div>
+
+      <!-- Package cards -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 940px; margin: 0 auto 56px;">
+
+        <!-- Starter $299 -->
+        <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-500); margin-bottom: 8px;">{{ T.atp.pkgAKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgAName }}</div>
+          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
+            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$299</span>
+            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--cta); color: var(--cta-ink); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 6px 16px rgba(201,162,77,.35);">
+            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
+            <span>{{ T.atp.pkgSpeed }}</span>
+          </div>
+          <div style="height: 1px; background: var(--line); margin-bottom: 24px;"></div>
+          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
+            <sc-for list="{{ T.atp.pkgAFeatures }}" as="f" hint-placeholder-count="5">
+              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
+                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-600); flex-shrink:0; margin-top: 2px;"></i>
+                <span>{{ f }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--ink-900); color:#fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; transition: all 200ms;" class="nl-book-mini">
+            {{ T.atp.pkgACta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+
+        <!-- Pro $499 (featured) -->
+        <div style="background: linear-gradient(160deg, #FFFDF6 0%, #FFF6E0 100%); border: 2px solid var(--cta); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; box-shadow: 0 30px 60px rgba(201,162,77,.25); transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
+          <div style="position:absolute; top: -14px; right: 32px; padding: 6px 14px; background: var(--cta); color: var(--ink-900); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 6px 16px rgba(201,162,77,.5);">{{ T.atp.pkgBTag }}</div>
+          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-700); margin-bottom: 8px;">{{ T.atp.pkgBKicker }}</div>
+          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgBName }}</div>
+          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
+            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$499</span>
+            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
+          </div>
+          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--ink-900); color: #fff; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 8px 20px rgba(26,20,16,.28);">
+            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
+            <span>{{ T.atp.pkgSpeed }}</span>
+          </div>
+          <div style="height: 1px; background: var(--cta-100); margin-bottom: 24px;"></div>
+          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
+            <sc-for list="{{ T.atp.pkgBFeatures }}" as="f" hint-placeholder-count="6">
+              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
+                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-700); flex-shrink:0; margin-top: 2px;"></i>
+                <span>{{ f }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--cta); color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; box-shadow: var(--shadow-cta); transition: all 200ms;" class="nl-cta-btn">
+            {{ T.atp.pkgBCta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Bottom CTAs -->
+      <div style="display:flex; justify-content:center; gap: 16px; flex-wrap: wrap;">
+        <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
+          {{ T.ctaIcon }} {{ T.atp.cta1 }}
+        </a>
+        <a href="https://ahoratengopagina.com" target="_blank" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: transparent; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; border: 2px solid var(--ink-900); text-decoration:none;" class="nl-ghost-btn">
+          {{ T.atp.cta2 }}
+        </a>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap: 36px; flex-wrap:wrap; margin-top: 48px; font-size: 14px; color: var(--ink-500);">
+        <sc-for list="{{ T.atp.checks }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex; align-items:center; gap: 8px;"><i data-lucide="check" style="width:16px; height:16px; stroke-width:2.6; color: var(--cta-600);"></i> {{ c }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ HERO ============ -->
   <section id="top" data-screen-label="Hero" style="position:relative; min-height: 100vh; padding: 76px 32px 64px; color: var(--ink-900); isolation:isolate; overflow:hidden; background: var(--surface-2);">
 
@@ -535,115 +668,6 @@
     </div>
   </section>
 
-  <!-- ============ AHORATENGOPAGINA PITCH ============ -->
-  <section data-screen-label="AhoraTengoPagina Pitch" style="padding: 128px 32px; background: #FFFFFF; color: var(--ink-900); position:relative; overflow:hidden;">
-    <!-- soft accents -->
-    <div style="position:absolute; left: -180px; top: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(201,162,77,.20), transparent 65%); filter: blur(20px);"></div>
-    <div style="position:absolute; right: -180px; bottom: 80px; width: 460px; height: 460px; border-radius:50%; background: radial-gradient(circle, rgba(37,111,219,.14), transparent 65%); filter: blur(20px);"></div>
-
-    <div style="max-width: 1180px; margin: 0 auto; position:relative;">
-
-      <!-- Brand lockup -->
-      <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom: 48px;">
-        <div style="display:inline-flex; align-items:center; gap: 10px; padding: 8px 16px; background: var(--surface-2); border:1px solid var(--line); border-radius: 999px; margin-bottom: 24px;">
-          <span style="width:8px; height:8px; border-radius:50%; background: var(--cta);"></span>
-          <span style="font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-700);">{{ T.atp.kicker }}</span>
-        </div>
-        <img src="/nail-salon/assets/ahoratengopagina-logo.png" alt="AhoraTengoPagina.com" style="height: 68px; width: auto; margin-bottom: 20px;">
-        <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 13px; letter-spacing:.28em; text-transform:uppercase; color: var(--ink-500);">.COM</div>
-      </div>
-
-      <!-- Headline -->
-      <div style="text-align:center; max-width: 860px; margin: 0 auto 24px;">
-        <h2 style="font-family:'Fraunces',serif; font-weight: 400; font-size: clamp(2.5rem, 5vw, 4.4rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0 0 20px;">{{ T.atp.h2a }} <em style="font-style: italic; color: var(--cta-600);">{{ T.atp.h2b }}</em></h2>
-        <p style="font-size: 19px; line-height: 1.55; color: var(--ink-500); margin: 0;">{{ T.atp.intro }}</p>
-      </div>
-
-      <!-- The "one customer" pitch strip -->
-      <div style="margin: 56px auto 64px; max-width: 940px; background: linear-gradient(110deg, var(--ink-900) 0%, var(--brand-700) 100%); color:#fff; border-radius: 24px; padding: 36px 40px; display:flex; align-items:center; gap: 32px; flex-wrap: wrap; box-shadow: 0 30px 60px rgba(26,20,16,.18);">
-        <div style="width: 68px; height: 68px; border-radius: 20px; background: var(--cta); display:grid; place-items:center; flex-shrink: 0; box-shadow: var(--shadow-cta);">
-          <i data-lucide="trending-down" style="width:34px; height:34px; stroke-width:2.4; color: var(--ink-900);"></i>
-        </div>
-        <div style="flex:1; min-width: 280px;">
-          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta); margin-bottom: 8px;">{{ T.atp.mathKicker }}</div>
-          <div style="font-family:'Fraunces',serif; font-weight: 500; font-size: 26px; line-height: 1.2; letter-spacing: -0.01em;">{{ T.atp.mathBody }}</div>
-        </div>
-      </div>
-
-      <!-- Package cards -->
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 940px; margin: 0 auto 56px;">
-
-        <!-- Starter $299 -->
-        <div style="background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
-          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--ink-500); margin-bottom: 8px;">{{ T.atp.pkgAKicker }}</div>
-          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgAName }}</div>
-          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
-            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$299</span>
-            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
-          </div>
-          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--cta); color: var(--cta-ink); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 6px 16px rgba(201,162,77,.35);">
-            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
-            <span>{{ T.atp.pkgSpeed }}</span>
-          </div>
-          <div style="height: 1px; background: var(--line); margin-bottom: 24px;"></div>
-          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
-            <sc-for list="{{ T.atp.pkgAFeatures }}" as="f" hint-placeholder-count="5">
-              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
-                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-600); flex-shrink:0; margin-top: 2px;"></i>
-                <span>{{ f }}</span>
-              </div>
-            </sc-for>
-          </div>
-          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--ink-900); color:#fff; font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; transition: all 200ms;" class="nl-book-mini">
-            {{ T.atp.pkgACta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
-          </a>
-        </div>
-
-        <!-- Pro $499 (featured) -->
-        <div style="background: linear-gradient(160deg, #FFFDF6 0%, #FFF6E0 100%); border: 2px solid var(--cta); border-radius: 24px; padding: 36px; display:flex; flex-direction:column; position:relative; box-shadow: 0 30px 60px rgba(201,162,77,.25); transition: transform 300ms cubic-bezier(.22,1,.36,1), box-shadow 300ms;" class="nl-pillar">
-          <div style="position:absolute; top: -14px; right: 32px; padding: 6px 14px; background: var(--cta); color: var(--ink-900); border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 6px 16px rgba(201,162,77,.5);">{{ T.atp.pkgBTag }}</div>
-          <div style="font-family:'Archivo',sans-serif; font-weight:800; font-size: 12px; letter-spacing:.18em; text-transform:uppercase; color: var(--cta-700); margin-bottom: 8px;">{{ T.atp.pkgBKicker }}</div>
-          <div style="font-family:'Fraunces',serif; font-weight: 600; font-size: 32px; line-height: 1; letter-spacing: -0.02em; margin-bottom: 20px;">{{ T.atp.pkgBName }}</div>
-          <div style="display:flex; align-items: baseline; gap: 8px; margin-bottom: 28px;">
-            <span style="font-family: ui-monospace, monospace; font-weight: 800; font-size: 56px; letter-spacing: -0.03em; color: var(--ink-900);">$499</span>
-            <span style="font-size: 15px; color: var(--ink-500); font-weight: 600;">{{ T.atp.pkgOnce }}</span>
-          </div>
-          <div style="display:inline-flex; align-items:center; gap: 8px; align-self:flex-start; margin-bottom: 24px; padding: 9px 15px; background: var(--ink-900); color: #fff; border-radius: 999px; font-family:'Archivo',sans-serif; font-weight: 800; font-size: 12.5px; letter-spacing: .02em; box-shadow: 0 8px 20px rgba(26,20,16,.28);">
-            <i data-lucide="zap" style="width:15px; height:15px; stroke-width:2.8; flex-shrink:0;"></i>
-            <span>{{ T.atp.pkgSpeed }}</span>
-          </div>
-          <div style="height: 1px; background: var(--cta-100); margin-bottom: 24px;"></div>
-          <div style="display:flex; flex-direction:column; gap: 12px; flex:1; margin-bottom: 28px;">
-            <sc-for list="{{ T.atp.pkgBFeatures }}" as="f" hint-placeholder-count="6">
-              <div style="display:flex; align-items:flex-start; gap: 12px; font-size: 15px; color: var(--ink-700);">
-                <i data-lucide="check" style="width:18px; height:18px; stroke-width:2.6; color: var(--cta-700); flex-shrink:0; margin-top: 2px;"></i>
-                <span>{{ f }}</span>
-              </div>
-            </sc-for>
-          </div>
-          <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; justify-content:center; gap: 8px; padding: 16px 24px; background: var(--cta); color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:14px; border-radius: 999px; text-decoration:none; box-shadow: var(--shadow-cta); transition: all 200ms;" class="nl-cta-btn">
-            {{ T.atp.pkgBCta }} <i data-lucide="arrow-right" style="width:16px; height:16px; stroke-width:2.6;"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- Bottom CTAs -->
-      <div style="display:flex; justify-content:center; gap: 16px; flex-wrap: wrap;">
-        <a href="{{ T.ctaHref }}" target="{{ T.ctaTarget }}" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: {{ T.ctaBg }}; color: {{ T.ctaInk }}; font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; box-shadow: {{ T.ctaShadow }}; text-decoration:none;" class="nl-cta-btn">
-          {{ T.ctaIcon }} {{ T.atp.cta1 }}
-        </a>
-        <a href="https://ahoratengopagina.com" target="_blank" style="display:inline-flex; align-items:center; gap: 10px; padding: 20px 34px; background: transparent; color: var(--ink-900); font-family:'Archivo',sans-serif; font-weight:800; font-size:16px; border-radius: 999px; border: 2px solid var(--ink-900); text-decoration:none;" class="nl-ghost-btn">
-          {{ T.atp.cta2 }}
-        </a>
-      </div>
-
-      <div style="display:flex; justify-content:center; gap: 36px; flex-wrap:wrap; margin-top: 48px; font-size: 14px; color: var(--ink-500);">
-        <sc-for list="{{ T.atp.checks }}" as="c" hint-placeholder-count="4">
-          <div style="display:flex; align-items:center; gap: 8px;"><i data-lucide="check" style="width:16px; height:16px; stroke-width:2.6; color: var(--cta-600);"></i> {{ c }}</div>
-        </sc-for>
-      </div>
-    </div>
-  </section>
 
   <!-- ============ FOOTER ============ -->
   <footer style="background: var(--brand-900); color: rgba(255,255,255,.7); padding: 64px 32px 32px;">
@@ -924,6 +948,10 @@ class Component extends DCLogic {
         h2a: '¿Quieres que tu negocio se vea así en internet —',
         h2b: 'o mejor?',
         intro: 'Nosotros armamos tu página web completa: diseño, copy, fotos, formulario y WhatsApp. Tú te dedicas a atender a tus clientes; nosotros nos dedicamos a que te encuentren.',
+        ownerBadge: 'Historia real de una clienta',
+        ownerQuote: 'Desde que AhoraTengoPagina me armó mi página, aparezco en Google y me llegan clientas nuevas cada semana. Pasar mi negocio a estar en línea fue lo mejor que hice — hoy tengo la agenda llena.',
+        ownerName: 'María Fernanda Ríos',
+        ownerRole: 'Dueña de salón · Clienta de AhoraTengoPagina',
         mathKicker: 'Haz la cuenta',
         mathBody: 'Solo con perder UN cliente al mes por no tener página, ya pagaste esto — y te sobra dinero. No firmar hoy te está costando más que el paquete.',
         pkgAKicker: 'Paquete Inicial',
@@ -1101,6 +1129,10 @@ class Component extends DCLogic {
         h2a: 'Want your business to look this good online —',
         h2b: 'or better?',
         intro: "We build your whole website: design, copy, photos, contact form and WhatsApp button. You focus on serving your clients; we make sure they can find you.",
+        ownerBadge: 'A real client story',
+        ownerQuote: 'Since AhoraTengoPagina built my page, I show up on Google and new clients reach me every week. Moving my business online was the best decision I made — my calendar stays full now.',
+        ownerName: 'María Fernanda Ríos',
+        ownerRole: 'Salon owner · AhoraTengoPagina client',
         mathKicker: 'Do the math',
         mathBody: 'Losing just ONE customer a month because you have no website already covers this — with money to spare. Not signing up today is costing you more than the package itself.',
         pkgAKicker: 'Starter package',
