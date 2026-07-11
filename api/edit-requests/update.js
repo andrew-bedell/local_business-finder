@@ -107,8 +107,6 @@ export default async function handler(req, res) {
 
         if (custs?.[0]?.email) {
           const portalUrl = 'https://ahoratengopagina.com/mipagina';
-          const emailFrom = 'AhoraTengoPagina <andres@ahoratengopagina.com>';
-          const emailReplyTo = 'andres@ahoratengopagina.com';
 
           let emailContent;
           if (status === 'completed') {
@@ -129,7 +127,7 @@ export default async function handler(req, res) {
             });
           }
 
-          await sendEmail({ to: custs[0].email, ...emailContent, from: emailFrom, replyTo: emailReplyTo });
+          await sendEmail({ to: custs[0].email, ...emailContent });
         }
       } catch (emailErr) {
         console.warn('Edit request email error (non-blocking):', emailErr);

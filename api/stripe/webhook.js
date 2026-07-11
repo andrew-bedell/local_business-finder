@@ -139,8 +139,6 @@ export default async function handler(req, res) {
               const businessName = await getBusinessNameFromCustomer(customer, supabaseUrl, supabaseHeaders);
               const origin = 'https://ahoratengopagina.com';
               const portalUrl = origin + '/mipagina';
-              const emailFrom = 'AhoraTengoPagina <andres@ahoratengopagina.com>';
-              const emailReplyTo = 'andres@ahoratengopagina.com';
 
               // Send branded welcome email (first payment only — check if auth user was just created)
               try {
@@ -149,7 +147,7 @@ export default async function handler(req, res) {
                   businessName: businessName || '',
                   loginUrl: portalUrl,
                 });
-                await sendEmail({ to: customer.email, ...welcomeContent, from: emailFrom, replyTo: emailReplyTo });
+                await sendEmail({ to: customer.email, ...welcomeContent });
               } catch (emailErr) {
                 console.warn('Welcome email error (non-blocking):', emailErr);
               }
@@ -163,7 +161,7 @@ export default async function handler(req, res) {
                   currency: invoice.currency,
                   periodEnd: invoice.lines?.data?.[0]?.period?.end,
                 });
-                await sendEmail({ to: customer.email, ...paymentContent, from: emailFrom, replyTo: emailReplyTo });
+                await sendEmail({ to: customer.email, ...paymentContent });
               } catch (emailErr) {
                 console.warn('Payment confirmation email error (non-blocking):', emailErr);
               }
@@ -184,7 +182,7 @@ export default async function handler(req, res) {
                       selectBaseUrl,
                       token,
                     });
-                    await sendEmail({ to: customer.email, ...domainContent, from: emailFrom, replyTo: emailReplyTo });
+                    await sendEmail({ to: customer.email, ...domainContent });
                   }
                 }
               } catch (domainErr) {
@@ -204,7 +202,7 @@ export default async function handler(req, res) {
                     portalUrl,
                     whatsappPhone,
                   });
-                  await sendEmail({ to: customer.email, ...onboardingContent, from: emailFrom, replyTo: emailReplyTo });
+                  await sendEmail({ to: customer.email, ...onboardingContent });
                 } catch (onboardErr) {
                   console.warn('Onboarding email error (non-blocking):', onboardErr);
                 }
@@ -246,8 +244,6 @@ export default async function handler(req, res) {
               await sendEmail({
                 to: customer.email,
                 ...failedContent,
-                from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-                replyTo: 'andres@ahoratengopagina.com',
               });
             }
           } catch (emailErr) {
@@ -305,8 +301,6 @@ export default async function handler(req, res) {
               await sendEmail({
                 to: customer.email,
                 ...changeContent,
-                from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-                replyTo: 'andres@ahoratengopagina.com',
               });
             }
           } catch (emailErr) {
@@ -371,8 +365,6 @@ export default async function handler(req, res) {
             await sendEmail({
               to: customer.email,
               ...cancelContent,
-              from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-              replyTo: 'andres@ahoratengopagina.com',
             });
           }
         } catch (emailErr) {

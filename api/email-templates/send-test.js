@@ -68,8 +68,6 @@ export default async function handler(req, res) {
       subject: resolvedSubject,
       html: resolvedHtml,
       ...(resolvedText ? { text: resolvedText } : {}),
-      from: 'AhoraTengoPagina <andres@ahoratengopagina.com>',
-      replyTo: 'andres@ahoratengopagina.com',
     });
 
     if (!result.success) {
